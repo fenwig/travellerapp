@@ -24,6 +24,8 @@
       <button class="tab-btn" onclick="showTab('tasks')">Tasks</button>
       <button class="tab-btn" onclick="showTab('combat')">Combat</button>
       <button class="tab-btn" onclick="showTab('encounters')">Encounters</button>
+      <button class="tab-btn" onclick="showTab('healing')">Healing</button>
+      <button class="tab-btn" onclick="showTab('vehicles')">Vehicles</button>
     </div>
 
     <!-- SKILLS TAB -->
@@ -547,6 +549,80 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- HEALING TAB -->
+    <div id="tab-healing" class="tab-content" style="display:none">
+
+      <!-- Medical Treatment -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Medical Treatment</h2>
+
+        <div class="rule-card">
+          <div class="rule-card-title">First Aid</div>
+          <div class="rule-formula">Medic (EDU) check — restores characteristic points equal to Effect (minimum 1)</div>
+          <p class="rule-body">Points restored are divided as desired among all damaged physical characteristics. First aid must be initiated <strong>within one minute</strong> of the injury, requires at least a basic medikit, and can only be successfully applied <strong>once</strong> per injury.</p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Medical Care</div>
+          <div class="rule-formula">3 + END DM + Medic skill = characteristic points restored per day</div>
+          <p class="rule-body">Available when only one or two physical characteristics are damaged (after first aid), or after surgery has restored one characteristic to its maximum. Requires a <strong>hospital or sickbay</strong> and full bed rest. Points are divided evenly among all damaged characteristics.</p>
+          <p class="rule-body">High-tech hospitals typically use Slow Drug to hasten recovery.</p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Surgery</div>
+          <p class="rule-body">Required when all three physical characteristics are damaged after first aid. Restores characteristic points equal to the Effect of a Medic (EDU) check. Requires a <strong>hospital or sickbay</strong>.</p>
+          <p class="rule-body" style="color:#ff7a6a"><strong>Warning:</strong> a failed surgery check causes the patient to lose an additional 3 + Effect characteristic points. Once one characteristic is restored to its maximum, the patient qualifies for medical care instead.</p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Augmentation &amp; Medical Care</div>
+          <p class="rule-body">Cybernetic or genetic implants interfere with treatment. All Medic checks suffer a <strong>negative DM equal to the difference in Tech Level</strong> between the medical facility and the Traveller's highest relevant implant.</p>
+          <p class="rule-body" style="color:#4a9ab8; font-size:0.84rem; font-style:italic">Example: TL13 implant treated in a TL10 hospital → DM−3 to all Medic checks.</p>
+        </div>
+      </div>
+
+      <!-- Natural Healing -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Natural Healing</h2>
+
+        <div class="rule-card-row">
+          <div class="rule-card rule-card-half">
+            <div class="rule-card-title">Normal Rest</div>
+            <div class="rule-formula">1D + END DM per day of full rest</div>
+            <p class="rule-body">Characteristic points restored each day. Divide among all damaged characteristics as desired.</p>
+          </div>
+          <div class="rule-card rule-card-half">
+            <div class="rule-card-title">After Surgery</div>
+            <div class="rule-formula">END DM only per day of rest</div>
+            <p class="rule-body">If the END DM is negative, the Traveller continues to deteriorate without medical care. Surgery cases rarely heal naturally.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unconsciousness -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Unconsciousness</h2>
+        <div class="rule-card">
+          <p class="rule-body">An unconscious Traveller may make an <strong>END check after every minute</strong>. Success means they regain consciousness. Each failed check grants a cumulative <strong>DM+1</strong> to the next attempt.</p>
+        </div>
+      </div>
+
+      <!-- Mental Characteristics -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Mental Characteristics</h2>
+        <div class="rule-card">
+          <p class="rule-body">INT and EDU damage (such as memory loss) heals at <strong>1 point per characteristic per day</strong> unless otherwise specified. PSI damage follows its own rules.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- VEHICLES TAB -->
+    <div id="tab-vehicles" class="tab-content" style="display:none">
+      <p style="color:#4a9ab8; margin-bottom: 1.5rem; font-size: 0.9rem;">Coming soon — Vehicles reference (Core Rulebook p.155)</p>
     </div>
 
   </div>
