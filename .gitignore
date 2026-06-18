@@ -12,3 +12,6 @@ Thumbs.db
 
 # Node (if added later)
 node_modules/
+
+# Source PDFs — kept local only, not pushed to GitHub
+docs/sourcebooks/
