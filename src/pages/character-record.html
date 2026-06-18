@@ -5,7 +5,140 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Character Record — Traveller</title>
   <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/skills-data.js"></script>
+  <style>
+    /* ── Header ── */
+    .char-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      background: rgba(13,21,32,0.92);
+      border: 1px solid #0a4a60;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .char-portrait {
+      width: 90px; height: 90px;
+      border-radius: 6px;
+      border: 2px solid #0a4a60;
+      background: #0d1520;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #4a9ab8; font-size: 11px; text-align: center;
+    }
+    .char-identity { flex: 1; min-width: 200px; }
+    .char-name { font-size: 1.5rem; color: #00e5ff; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .char-meta { display: flex; flex-wrap: wrap; gap: 10px 24px; color: #b0d8e8; font-size: 0.85rem; margin-bottom: 6px; }
+    .char-meta span { color: #4a9ab8; margin-right: 4px; }
+    .char-roles { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+    .role-badge { background: rgba(0,229,255,0.08); border: 1px solid #0a4a60; border-radius: 4px; padding: 3px 10px; font-size: 0.78rem; color: #00e5ff; }
+    .status-badge { display: inline-block; padding: 3px 12px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .status-active   { background: rgba(0,255,170,0.12);  color: #00ffaa; border: 1px solid #00ffaa44; }
+    .status-deceased { background: rgba(255,90,74,0.12);   color: #ff5a4a; border: 1px solid #ff5a4a44; }
+    .status-archived { background: rgba(74,154,184,0.12);  color: #4a9ab8; border: 1px solid #4a9ab844; }
+    .char-header-actions { display: flex; align-items: flex-start; gap: 10px; flex-shrink: 0; }
+
+    /* ── Buttons ── */
+    .btn { padding: 7px 18px; border-radius: 5px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; transition: opacity 0.15s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #00e5ff; color: #080d12; }
+    .btn-ghost   { background: transparent; color: #00e5ff; border: 1px solid #00e5ff; }
+    .btn-sm { padding: 4px 12px; font-size: 0.78rem; }
+
+    /* ── Characteristics ── */
+    .char-stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 18px; }
+    .stat-box { background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 6px; padding: 10px 6px; text-align: center; }
+    .stat-label { font-size: 0.7rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .stat-value { font-size: 1.6rem; color: #00e5ff; font-weight: 700; line-height: 1; }
+    .stat-dm    { font-size: 0.75rem; color: #b0d8e8; margin-top: 3px; }
+    .stat-input { width: 48px; font-size: 1.3rem; color: #00e5ff; background: transparent; border: none; border-bottom: 1px solid #0a4a60; text-align: center; outline: none; }
+
+    /* ── Section headings ── */
+    .cr-section { margin-bottom: 22px; }
+    .cr-section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: #4a9ab8; border-bottom: 1px solid #0a4a60; padding-bottom: 5px; margin-bottom: 10px; }
+
+    /* ── Skills ── */
+    .skill-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: rgba(13,21,32,0.7); border: 1px solid #0a4a60; border-radius: 5px; margin-bottom: 5px; font-size: 0.85rem; color: #b0d8e8; }
+    .skill-name { flex: 1; color: #00e5ff; }
+    .skill-level-badge { background: rgba(0,229,255,0.1); border: 1px solid #0a4a60; border-radius: 3px; padding: 1px 8px; color: #00e5ff; font-weight: 700; font-size: 0.85rem; min-width: 28px; text-align: center; }
+    .skill-level-input { width: 40px; background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #00e5ff; font-weight: 700; text-align: center; font-size: 0.85rem; outline: none; }
+    .skill-remove { color: #ff5a4a; cursor: pointer; font-size: 1rem; line-height: 1; padding: 0 2px; background: none; border: none; }
+
+    /* ── Training ── */
+    .training-box { background: rgba(0,229,255,0.04); border: 1px solid #0a4a60; border-radius: 6px; padding: 12px 16px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+    .training-field { display: flex; flex-direction: column; gap: 3px; }
+    .training-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: #4a9ab8; }
+    .training-value { color: #b0d8e8; font-size: 0.9rem; }
+    .training-select, .training-input { background: #0d1520; border: 1px solid #0a4a60; border-radius: 4px; color: #b0d8e8; padding: 4px 8px; font-size: 0.85rem; outline: none; }
+    .training-number { width: 60px; }
+
+    /* ── Gear tables ── */
+    .gear-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 6px; }
+    .gear-table th { color: #4a9ab8; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 8px; text-align: left; border-bottom: 1px solid #0a4a60; }
+    .gear-table td { padding: 6px 8px; color: #b0d8e8; border-bottom: 1px solid rgba(10,74,96,0.3); vertical-align: middle; }
+    .gear-table tr:last-child td { border-bottom: none; }
+    .gear-table input, .gear-table select { background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; font-size: 0.82rem; width: 100%; outline: none; padding: 1px 2px; }
+    .gear-table td.td-actions { width: 30px; text-align: center; }
+    .add-row-btn { background: transparent; border: 1px dashed #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 5px 14px; font-size: 0.78rem; cursor: pointer; margin-top: 4px; transition: border-color 0.15s, color 0.15s; }
+    .add-row-btn:hover { border-color: #00e5ff; color: #00e5ff; }
+
+    /* ── Finances ── */
+    .finances-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .finance-box { background: rgba(13,21,32,0.7); border: 1px solid #0a4a60; border-radius: 6px; padding: 10px 14px; }
+    .finance-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: #4a9ab8; margin-bottom: 4px; }
+    .finance-value { font-size: 1.1rem; color: #00e5ff; font-weight: 600; }
+    .finance-input { background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #00e5ff; font-size: 1.1rem; font-weight: 600; width: 100%; outline: none; }
+
+    /* ── Career rows ── */
+    .career-row { display: grid; grid-template-columns: 30px 1fr 1fr 60px 130px 1fr 24px; gap: 8px; align-items: center; padding: 7px 10px; background: rgba(13,21,32,0.7); border: 1px solid #0a4a60; border-radius: 5px; margin-bottom: 5px; font-size: 0.82rem; color: #b0d8e8; }
+    .career-term { color: #4a9ab8; text-align: center; font-size: 0.75rem; }
+
+    /* ── Associates ── */
+    .associate-row { display: flex; align-items: center; gap: 10px; padding: 7px 10px; background: rgba(13,21,32,0.7); border: 1px solid #0a4a60; border-radius: 5px; margin-bottom: 5px; font-size: 0.85rem; }
+    .assoc-type-badge { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 8px; border-radius: 3px; font-weight: 600; flex-shrink: 0; }
+    .type-ally    { background: rgba(0,255,170,0.1);  color: #00ffaa; }
+    .type-contact { background: rgba(0,229,255,0.1);  color: #00e5ff; }
+    .type-rival   { background: rgba(255,180,0,0.1);  color: #ffb400; }
+    .type-enemy   { background: rgba(255,90,74,0.1);  color: #ff5a4a; }
+    .assoc-name { color: #00e5ff; flex-shrink: 0; min-width: 100px; }
+    .assoc-desc { color: #b0d8e8; flex: 1; font-size: 0.8rem; }
+
+    /* ── Notes ── */
+    .notes-textarea { width: 100%; min-height: 130px; background: rgba(13,21,32,0.7); border: 1px solid #0a4a60; border-radius: 6px; color: #b0d8e8; font-size: 0.88rem; padding: 12px; resize: vertical; outline: none; font-family: inherit; line-height: 1.55; box-sizing: border-box; }
+    .notes-textarea:focus { border-color: #00e5ff; }
+
+    /* ── Wounds ── */
+    .wound-row { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; background: rgba(13,21,32,0.7); border: 1px solid #0a4a60; border-radius: 5px; margin-bottom: 5px; }
+    .wound-fields { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .wound-desc-input, .wound-med-input { background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; font-size: 0.85rem; outline: none; width: 100%; }
+    .wound-med-label { font-size: 0.68rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ── Inline forms ── */
+    .inline-form { background: rgba(13,21,32,0.95); border: 1px solid #0a4a60; border-radius: 6px; padding: 14px 16px; margin-top: 8px; display: none; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+    .inline-form.open { display: flex; }
+    .inline-form select, .inline-form input { background: #0d1520; border: 1px solid #0a4a60; border-radius: 4px; color: #b0d8e8; padding: 5px 8px; font-size: 0.85rem; outline: none; }
+    .inline-form select { width: 120px; }
+    .inline-form input  { flex: 1; min-width: 120px; }
+
+    /* ── Save bar ── */
+    .save-bar { position: sticky; bottom: 0; background: rgba(8,13,18,0.97); border-top: 1px solid #0a4a60; padding: 10px 0; display: flex; gap: 10px; align-items: center; margin-top: 24px; }
+    .save-msg { font-size: 0.82rem; color: #4a9ab8; }
+    .save-msg.ok  { color: #00ffaa; }
+    .save-msg.err { color: #ff5a4a; }
+
+    /* ── Empty state ── */
+    .page-msg { color: #4a9ab8; font-size: 0.9rem; padding: 40px 0; text-align: center; }
+
+    /* ── Edit mode toggle ── */
+    .edit-only { display: none; }
+    body.editing .edit-only { display: inline-flex; }
+    body.editing .view-only { display: none !important; }
+  </style>
 </head>
 <body>
 
@@ -38,17 +171,906 @@
 
     <main class="page-main">
       <h1 class="page-title">CHARACTER RECORD</h1>
-      <p class="placeholder-msg">Coming soon — character stats, skills, equipment and notes.</p>
+
+      <div id="no-char-msg" class="page-msg" style="display:none">
+        No active character found. <a href="character-creation.html" style="color:#00e5ff">Create one here.</a>
+      </div>
+
+      <div id="char-body" style="display:none">
+
+        <!-- ── Header ── -->
+        <div class="char-header">
+          <div class="char-portrait" id="portrait-wrap">No Portrait</div>
+          <div class="char-identity">
+            <div class="char-name" id="disp-name">—</div>
+            <div class="char-meta">
+              <div><span>Species</span><span id="disp-species">—</span></div>
+              <div><span>Homeworld</span><span id="disp-homeworld">—</span></div>
+              <div><span>Age</span><span id="disp-age">—</span></div>
+            </div>
+            <div class="char-roles">
+              <div class="role-badge" id="disp-primary">—</div>
+              <div class="role-badge" id="disp-secondary" style="display:none"></div>
+            </div>
+          </div>
+          <div class="char-header-actions">
+            <span class="status-badge" id="status-badge">Active</span>
+            <button class="btn btn-ghost view-only" id="edit-btn" onclick="enterEditMode()" style="display:none">Edit</button>
+            <button class="btn btn-primary edit-only" onclick="saveAll()">Save</button>
+            <button class="btn btn-ghost edit-only" onclick="cancelEdit()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- ── Tabs ── -->
+        <div class="tab-nav">
+          <button class="tab-btn active" onclick="showTab('stats', this)">Stats &amp; Skills</button>
+          <button class="tab-btn" onclick="showTab('gear', this)">Gear &amp; Finances</button>
+          <button class="tab-btn" onclick="showTab('career', this)">Career &amp; Associates</button>
+          <button class="tab-btn" onclick="showTab('notes', this)">Notes</button>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             TAB 1 — STATS & SKILLS
+        ══════════════════════════════════════ -->
+        <div id="tab-stats" class="tab-content">
+
+          <div class="cr-section">
+            <div class="cr-section-title">Characteristics</div>
+            <div class="char-stats-grid" id="stats-grid"></div>
+          </div>
+
+          <div class="cr-section">
+            <div class="cr-section-title">Skills</div>
+            <div id="skills-list"></div>
+            <div class="edit-only" style="margin-top:8px">
+              <button class="add-row-btn" onclick="openAddSkill()">+ Add Skill</button>
+              <div id="add-skill-form" class="inline-form">
+                <select id="new-skill-name" onchange="populateSpecialty()">
+                  <option value="">— Select skill —</option>
+                </select>
+                <select id="new-skill-specialty" style="display:none">
+                  <option value="">— Specialty —</option>
+                </select>
+                <input type="number" id="new-skill-level" placeholder="Level" min="0" max="4" style="width:70px;flex:none" />
+                <button class="btn btn-primary btn-sm" onclick="addSkill()">Add</button>
+                <button class="btn btn-ghost btn-sm" onclick="closeAddSkill()">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="cr-section">
+            <div class="cr-section-title">Skill Training</div>
+            <div class="training-box">
+              <div class="training-field">
+                <div class="training-label">Skill</div>
+                <div class="training-value view-only" id="disp-train-skill">—</div>
+                <select class="training-select edit-only" id="edit-train-skill" onchange="populateTrainSpecialty()">
+                  <option value="">— None —</option>
+                </select>
+              </div>
+              <div class="training-field" id="train-specialty-wrap" style="display:none">
+                <div class="training-label">Specialty</div>
+                <div class="training-value view-only" id="disp-train-specialty">—</div>
+                <select class="training-select edit-only" id="edit-train-specialty"></select>
+              </div>
+              <div class="training-field">
+                <div class="training-label">Weeks Complete</div>
+                <div class="training-value view-only" id="disp-train-weeks">0</div>
+                <input class="training-select training-number edit-only" type="number" id="edit-train-weeks" min="0" value="0" />
+              </div>
+              <div class="training-field">
+                <div class="training-label">Periods Complete</div>
+                <div class="training-value view-only" id="disp-train-periods">0</div>
+                <input class="training-select training-number edit-only" type="number" id="edit-train-periods" min="0" value="0" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ══════════════════════════════════════
+             TAB 2 — GEAR & FINANCES
+        ══════════════════════════════════════ -->
+        <div id="tab-gear" class="tab-content" style="display:none">
+
+          <div class="cr-section">
+            <div class="cr-section-title">Armour</div>
+            <table class="gear-table">
+              <thead><tr><th>Type</th><th>Protection</th><th>Rad</th><th>Kg</th><th>Options</th><th class="edit-only"></th></tr></thead>
+              <tbody id="armour-tbody"></tbody>
+            </table>
+            <button class="add-row-btn edit-only" onclick="addArmourRow()">+ Add Armour</button>
+          </div>
+
+          <div class="cr-section">
+            <div class="cr-section-title">Weapons</div>
+            <table class="gear-table">
+              <thead><tr><th>Name</th><th>TL</th><th>Range</th><th>Damage</th><th>Kg</th><th>Mag</th><th>Traits</th><th class="edit-only"></th></tr></thead>
+              <tbody id="weapons-tbody"></tbody>
+            </table>
+            <button class="add-row-btn edit-only" onclick="addWeaponRow()">+ Add Weapon</button>
+          </div>
+
+          <div class="cr-section">
+            <div class="cr-section-title">Augments</div>
+            <table class="gear-table">
+              <thead><tr><th>Type</th><th>TL</th><th>Improvement</th><th class="edit-only"></th></tr></thead>
+              <tbody id="augments-tbody"></tbody>
+            </table>
+            <button class="add-row-btn edit-only" onclick="addAugmentRow()">+ Add Augment</button>
+          </div>
+
+          <div class="cr-section">
+            <div class="cr-section-title">Equipment</div>
+            <table class="gear-table">
+              <thead><tr><th>Type</th><th>Mass (kg)</th><th class="edit-only"></th></tr></thead>
+              <tbody id="equipment-tbody"></tbody>
+            </table>
+            <button class="add-row-btn edit-only" onclick="addEquipmentRow()">+ Add Equipment</button>
+          </div>
+
+          <div class="cr-section">
+            <div class="cr-section-title">Finances (Credits)</div>
+            <div class="finances-grid">
+              <div class="finance-box">
+                <div class="finance-label">Cash on Hand</div>
+                <div class="view-only finance-value" id="disp-cash">0</div>
+                <input class="finance-input edit-only" type="number" id="edit-cash" value="0" />
+              </div>
+              <div class="finance-box">
+                <div class="finance-label">Pension</div>
+                <div class="view-only finance-value" id="disp-pension">0</div>
+                <input class="finance-input edit-only" type="number" id="edit-pension" value="0" />
+              </div>
+              <div class="finance-box">
+                <div class="finance-label">Debt</div>
+                <div class="view-only finance-value" id="disp-debt">0</div>
+                <input class="finance-input edit-only" type="number" id="edit-debt" value="0" />
+              </div>
+              <div class="finance-box">
+                <div class="finance-label">Living Costs / mo</div>
+                <div class="view-only finance-value" id="disp-living">0</div>
+                <input class="finance-input edit-only" type="number" id="edit-living" value="0" />
+              </div>
+              <div class="finance-box">
+                <div class="finance-label">Ship Payment / mo</div>
+                <div class="view-only finance-value" id="disp-ship-pay">0</div>
+                <input class="finance-input edit-only" type="number" id="edit-ship-pay" value="0" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ══════════════════════════════════════
+             TAB 3 — CAREER & ASSOCIATES
+        ══════════════════════════════════════ -->
+        <div id="tab-career" class="tab-content" style="display:none">
+
+          <div class="cr-section">
+            <div class="cr-section-title">Career History</div>
+            <div style="font-size:0.7rem;color:#4a9ab8;display:grid;grid-template-columns:30px 1fr 1fr 60px 130px 1fr 24px;gap:8px;padding:0 10px 6px;text-transform:uppercase;letter-spacing:0.06em">
+              <div>#</div><div>Career</div><div>Assignment</div><div>Rank</div><div>Rank Title</div><div>Notes</div><div></div>
+            </div>
+            <div id="careers-list"></div>
+            <button class="add-row-btn edit-only" onclick="addCareerRow()">+ Add Career Term</button>
+          </div>
+
+          <div class="cr-section">
+            <div class="cr-section-title">People You Know</div>
+            <div id="associates-list"></div>
+            <div class="edit-only">
+              <button class="add-row-btn" onclick="toggleAssocForm()">+ Add Person</button>
+              <div id="assoc-form" class="inline-form">
+                <select id="new-assoc-type">
+                  <option value="ally">Ally</option>
+                  <option value="contact">Contact</option>
+                  <option value="rival">Rival</option>
+                  <option value="enemy">Enemy</option>
+                </select>
+                <input type="text" id="new-assoc-name" placeholder="Name" style="max-width:180px" />
+                <input type="text" id="new-assoc-desc" placeholder="Description" />
+                <button class="btn btn-primary btn-sm" onclick="addAssociate()">Add</button>
+                <button class="btn btn-ghost btn-sm" onclick="toggleAssocForm()">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ══════════════════════════════════════
+             TAB 4 — NOTES
+        ══════════════════════════════════════ -->
+        <div id="tab-notes" class="tab-content" style="display:none">
+
+          <div class="cr-section">
+            <div class="cr-section-title">Background Notes</div>
+            <div class="view-only" id="disp-background" style="color:#b0d8e8;font-size:0.88rem;white-space:pre-wrap;min-height:40px"></div>
+            <textarea class="notes-textarea edit-only" id="edit-background" placeholder="Personality, quirks, outlook on life..."></textarea>
+          </div>
+
+          <div class="cr-section">
+            <div class="cr-section-title">Previous History</div>
+            <div class="view-only" id="disp-history" style="color:#b0d8e8;font-size:0.88rem;white-space:pre-wrap;min-height:40px"></div>
+            <textarea class="notes-textarea edit-only" id="edit-history" placeholder="Career history, notable events, connections with other Travellers..."></textarea>
+          </div>
+
+          <div class="cr-section">
+            <div class="cr-section-title">Wounds &amp; Injuries</div>
+            <div id="wounds-list"></div>
+            <button class="add-row-btn edit-only" onclick="addWoundRow()">+ Add Wound</button>
+          </div>
+
+        </div>
+
+        <!-- Save bar -->
+        <div class="save-bar edit-only">
+          <button class="btn btn-primary" onclick="saveAll()">Save Changes</button>
+          <button class="btn btn-ghost" onclick="cancelEdit()">Cancel</button>
+          <span class="save-msg" id="save-msg"></span>
+        </div>
+
+      </div><!-- /char-body -->
     </main>
   </div>
 
-  <script src="../js/supabase-config.js"></script>
-  <script src="../js/sidebar.js"></script>
-  <script>
-    async function doSignOut() {
-      await supabaseClient.auth.signOut();
-      window.location.href = '../../index.html';
+<script>
+// ── State ──────────────────────────────────────────────────
+let currentUser = null;
+let character   = null;
+let isOwner     = false;
+
+let pendingArmour     = [];
+let pendingWeapons    = [];
+let pendingAugments   = [];
+let pendingEquipment  = [];
+let pendingCareers    = [];
+let pendingAssociates = [];
+let pendingWounds     = [];
+
+const CHARS = [
+  { key: 'str',      label: 'STR' },
+  { key: 'dex',      label: 'DEX' },
+  { key: 'end_stat', label: 'END' },
+  { key: 'int_stat', label: 'INT' },
+  { key: 'edu',      label: 'EDU' },
+  { key: 'soc',      label: 'SOC' }
+];
+
+function charDM(v) {
+  if (v === 0)  return '−3';
+  if (v <= 2)   return '−2';
+  if (v <= 5)   return '−1';
+  if (v <= 8)   return '+0';
+  if (v <= 11)  return '+1';
+  if (v <= 14)  return '+2';
+  return '+3';
+}
+
+// ── Init ───────────────────────────────────────────────────
+async function init() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) { window.location.href = '../../index.html'; return; }
+  currentUser = session.user;
+  document.getElementById('sidebar-user').textContent =
+    currentUser.user_metadata?.display_name || currentUser.email;
+
+  populateSkillDropdowns();
+  await loadCharacter();
+}
+
+async function loadCharacter() {
+  const { data, error } = await supabaseClient
+    .from('characters')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .eq('status', 'active')
+    .single();
+
+  if (error || !data) {
+    document.getElementById('no-char-msg').style.display = 'block';
+    return;
+  }
+
+  character = data;
+  isOwner   = (character.user_id === currentUser.id);
+  document.getElementById('char-body').style.display = 'block';
+  if (isOwner) document.getElementById('edit-btn').style.display = 'inline-flex';
+
+  renderHeader();
+  renderStats();
+  renderSkills();
+  renderTraining();
+  renderFinances();
+  renderNotes();
+  await renderGear();
+  await renderCareers();
+  await renderAssociates();
+  await renderWounds();
+}
+
+// ── Header ─────────────────────────────────────────────────
+function renderHeader() {
+  document.getElementById('disp-name').textContent      = character.name || '—';
+  document.getElementById('disp-species').textContent   = character.species || '—';
+  document.getElementById('disp-homeworld').textContent = character.homeworld || '—';
+  document.getElementById('disp-age').textContent       = character.age || '—';
+  document.getElementById('disp-primary').textContent   = character.primary_role || '—';
+  const sec = character.secondary_role;
+  if (sec) {
+    const el = document.getElementById('disp-secondary');
+    el.textContent    = sec;
+    el.style.display  = 'inline-block';
+  }
+  const badge = document.getElementById('status-badge');
+  const s = character.status || 'active';
+  badge.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+  badge.className   = 'status-badge status-' + s;
+}
+
+// ── Stats ──────────────────────────────────────────────────
+function renderStats() {
+  const grid = document.getElementById('stats-grid');
+  grid.innerHTML = CHARS.map(c => {
+    const val = character[c.key] ?? 7;
+    return `
+      <div class="stat-box">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-value view-only" id="disp-${c.key}">${val}</div>
+        <input class="stat-input edit-only" type="number" id="edit-${c.key}" value="${val}" min="0" max="15" />
+        <div class="stat-dm" id="dm-${c.key}">${charDM(val)}</div>
+      </div>`;
+  }).join('');
+
+  // Live DM update while editing
+  CHARS.forEach(c => {
+    const input = document.getElementById('edit-' + c.key);
+    if (input) input.addEventListener('input', () => {
+      document.getElementById('dm-' + c.key).textContent = charDM(parseInt(input.value) || 0);
+    });
+  });
+}
+
+// ── Skills ─────────────────────────────────────────────────
+function renderSkills() {
+  const list   = document.getElementById('skills-list');
+  const skills = character.skills || {};
+  const keys   = Object.keys(skills);
+
+  if (keys.length === 0) {
+    list.innerHTML = '<div style="color:#4a9ab8;font-size:0.85rem;padding:6px 0">No skills recorded.</div>';
+    return;
+  }
+
+  list.innerHTML = keys.map(key => {
+    const s     = skills[key];
+    const label = s.specialty
+      ? `${s.name || key} <span style="color:#4a9ab8">(${s.specialty})</span>`
+      : (s.name || key);
+    return `
+      <div class="skill-row" data-key="${key}">
+        <div class="skill-name">${label}</div>
+        <div class="skill-level-badge view-only">${s.level}</div>
+        <input class="skill-level-input edit-only" type="number" min="0" max="4" value="${s.level}"
+               onchange="updateSkillLevel('${key}', this.value)" />
+        <button class="skill-remove edit-only" onclick="removeSkill('${key}')">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function updateSkillLevel(key, val) {
+  if (character.skills[key]) character.skills[key].level = parseInt(val) || 0;
+}
+
+function removeSkill(key) {
+  delete character.skills[key];
+  renderSkills();
+}
+
+function populateSkillDropdowns() {
+  const addSel   = document.getElementById('new-skill-name');
+  const trainSel = document.getElementById('edit-train-skill');
+  SKILLS.forEach(s => {
+    addSel.innerHTML   += `<option value="${s.name}">${s.name}</option>`;
+    trainSel.innerHTML += `<option value="${s.name}">${s.name}</option>`;
+  });
+}
+
+function populateSpecialty() {
+  const name  = document.getElementById('new-skill-name').value;
+  const skill = SKILLS.find(s => s.name === name);
+  const sel   = document.getElementById('new-skill-specialty');
+  if (skill && skill.specialties.length > 0) {
+    sel.innerHTML    = '<option value="">— Specialty —</option>' +
+      skill.specialties.map(sp => `<option value="${sp.name}">${sp.name}</option>`).join('');
+    sel.style.display = 'block';
+  } else {
+    sel.innerHTML = ''; sel.style.display = 'none';
+  }
+}
+
+function populateTrainSpecialty() {
+  const name  = document.getElementById('edit-train-skill').value;
+  const skill = SKILLS.find(s => s.name === name);
+  const sel   = document.getElementById('edit-train-specialty');
+  const wrap  = document.getElementById('train-specialty-wrap');
+  if (skill && skill.specialties.length > 0) {
+    sel.innerHTML = '<option value="">— None —</option>' +
+      skill.specialties.map(sp => `<option value="${sp.name}">${sp.name}</option>`).join('');
+    wrap.style.display = 'flex';
+  } else {
+    sel.innerHTML = ''; wrap.style.display = 'none';
+  }
+}
+
+function openAddSkill()  { document.getElementById('add-skill-form').classList.add('open'); }
+function closeAddSkill() { document.getElementById('add-skill-form').classList.remove('open'); }
+
+function addSkill() {
+  const name  = document.getElementById('new-skill-name').value;
+  const spec  = document.getElementById('new-skill-specialty').value;
+  const level = parseInt(document.getElementById('new-skill-level').value) || 0;
+  if (!name) return;
+  const key = spec ? `${name}|${spec}` : name;
+  if (!character.skills) character.skills = {};
+  character.skills[key] = { name, specialty: spec || null, level };
+  renderSkills();
+  closeAddSkill();
+  document.getElementById('new-skill-name').value = '';
+  document.getElementById('new-skill-specialty').style.display = 'none';
+  document.getElementById('new-skill-level').value = '';
+}
+
+// ── Training ───────────────────────────────────────────────
+function renderTraining() {
+  document.getElementById('disp-train-skill').textContent    = character.training_skill       || '—';
+  document.getElementById('disp-train-specialty').textContent= character.training_specialty    || '—';
+  document.getElementById('disp-train-weeks').textContent    = character.training_weeks_complete   ?? 0;
+  document.getElementById('disp-train-periods').textContent  = character.training_periods_complete ?? 0;
+  document.getElementById('edit-train-skill').value          = character.training_skill       || '';
+  document.getElementById('edit-train-weeks').value          = character.training_weeks_complete   ?? 0;
+  document.getElementById('edit-train-periods').value        = character.training_periods_complete ?? 0;
+  if (character.training_skill) {
+    populateTrainSpecialty();
+    document.getElementById('edit-train-specialty').value = character.training_specialty || '';
+  }
+}
+
+// ── Finances ───────────────────────────────────────────────
+function renderFinances() {
+  const set = (id, val) => {
+    document.getElementById('disp-' + id).textContent = (val || 0).toLocaleString();
+    document.getElementById('edit-' + id).value       = val || 0;
+  };
+  set('cash',     character.cash_on_hand);
+  set('pension',  character.pension);
+  set('debt',     character.debt);
+  set('living',   character.living_costs);
+  set('ship-pay', character.ship_payment);
+}
+
+// ── Gear ───────────────────────────────────────────────────
+async function renderGear() {
+  const [a, w, aug, eq] = await Promise.all([
+    supabaseClient.from('character_armour').select('*').eq('character_id', character.id),
+    supabaseClient.from('character_weapons').select('*').eq('character_id', character.id),
+    supabaseClient.from('character_augments').select('*').eq('character_id', character.id),
+    supabaseClient.from('character_equipment').select('*').eq('character_id', character.id)
+  ]);
+  renderArmour(a.data || []);
+  renderWeapons(w.data || []);
+  renderAugments(aug.data || []);
+  renderEquipment(eq.data || []);
+}
+
+function none(cols) {
+  return `<tr><td colspan="${cols}" style="color:#4a9ab8;font-size:0.82rem">None</td></tr>`;
+}
+
+function renderArmour(rows) {
+  document.getElementById('armour-tbody').innerHTML = rows.length
+    ? rows.map(r => `<tr data-id="${r.id}">
+        <td>${r.type}</td><td>${r.protection}</td><td>${r.rad}</td>
+        <td>${r.kg}</td><td>${r.options || ''}</td>
+        <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingArmour','${r.id}',this)">✕</button></td>
+      </tr>`).join('')
+    : none(6);
+}
+
+function addArmourRow() {
+  const tbody = document.getElementById('armour-tbody');
+  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  const tr = document.createElement('tr');
+  tr.dataset.id = 'new-' + Date.now();
+  tr.innerHTML = `
+    <td><input placeholder="Type" /></td>
+    <td><input type="number" placeholder="0" style="width:50px" /></td>
+    <td><input type="number" placeholder="0" style="width:50px" /></td>
+    <td><input type="number" placeholder="0" step="0.01" style="width:60px" /></td>
+    <td><input placeholder="Options" /></td>
+    <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+  pendingArmour.push({ action: 'add', tr });
+}
+
+function renderWeapons(rows) {
+  document.getElementById('weapons-tbody').innerHTML = rows.length
+    ? rows.map(r => `<tr data-id="${r.id}">
+        <td>${r.name}</td><td>${r.tl ?? ''}</td><td>${r.range || ''}</td>
+        <td>${r.damage || ''}</td><td>${r.kg}</td><td>${r.magazine ?? ''}</td>
+        <td>${r.traits || ''}</td>
+        <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingWeapons','${r.id}',this)">✕</button></td>
+      </tr>`).join('')
+    : none(8);
+}
+
+function addWeaponRow() {
+  const tbody = document.getElementById('weapons-tbody');
+  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  const tr = document.createElement('tr');
+  tr.dataset.id = 'new-' + Date.now();
+  tr.innerHTML = `
+    <td><input placeholder="Name" /></td>
+    <td><input type="number" placeholder="TL" style="width:45px" /></td>
+    <td><input placeholder="Range" style="width:80px" /></td>
+    <td><input placeholder="Damage" style="width:70px" /></td>
+    <td><input type="number" placeholder="0" step="0.01" style="width:55px" /></td>
+    <td><input type="number" placeholder="Mag" style="width:50px" /></td>
+    <td><input placeholder="Traits" /></td>
+    <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+  pendingWeapons.push({ action: 'add', tr });
+}
+
+function renderAugments(rows) {
+  document.getElementById('augments-tbody').innerHTML = rows.length
+    ? rows.map(r => `<tr data-id="${r.id}">
+        <td>${r.type}</td><td>${r.tl ?? ''}</td><td>${r.improvement || ''}</td>
+        <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingAugments','${r.id}',this)">✕</button></td>
+      </tr>`).join('')
+    : none(4);
+}
+
+function addAugmentRow() {
+  const tbody = document.getElementById('augments-tbody');
+  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  const tr = document.createElement('tr');
+  tr.dataset.id = 'new-' + Date.now();
+  tr.innerHTML = `
+    <td><input placeholder="Type" /></td>
+    <td><input type="number" placeholder="TL" style="width:45px" /></td>
+    <td><input placeholder="Improvement" /></td>
+    <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+  pendingAugments.push({ action: 'add', tr });
+}
+
+function renderEquipment(rows) {
+  document.getElementById('equipment-tbody').innerHTML = rows.length
+    ? rows.map(r => `<tr data-id="${r.id}">
+        <td>${r.type}</td><td>${r.mass}</td>
+        <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingEquipment','${r.id}',this)">✕</button></td>
+      </tr>`).join('')
+    : none(3);
+}
+
+function addEquipmentRow() {
+  const tbody = document.getElementById('equipment-tbody');
+  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  const tr = document.createElement('tr');
+  tr.dataset.id = 'new-' + Date.now();
+  tr.innerHTML = `
+    <td><input placeholder="Type" /></td>
+    <td><input type="number" placeholder="0" step="0.01" style="width:70px" /></td>
+    <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+  pendingEquipment.push({ action: 'add', tr });
+}
+
+function queueDelete(pendingArr, id, btn) {
+  window[pendingArr].push({ action: 'delete', id });
+  btn.closest('tr').remove();
+}
+
+// ── Careers ────────────────────────────────────────────────
+async function renderCareers() {
+  const { data } = await supabaseClient
+    .from('character_careers').select('*')
+    .eq('character_id', character.id).order('term_order');
+
+  const list = document.getElementById('careers-list');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div style="color:#4a9ab8;font-size:0.85rem;padding:6px 0">No career history recorded.</div>';
+    return;
+  }
+  list.innerHTML = data.map(r => `
+    <div class="career-row" data-id="${r.id}">
+      <div class="career-term">${r.term_order}</div>
+      <div>${r.career}</div>
+      <div style="color:#4a9ab8">${r.assignment || '—'}</div>
+      <div>${r.rank ?? 0}</div>
+      <div>${r.rank_title || '—'}</div>
+      <div style="color:#4a9ab8;font-size:0.78rem">${r.notes || ''}</div>
+      <button class="skill-remove edit-only" onclick="queueCareerDelete('${r.id}',this)">✕</button>
+    </div>`).join('');
+}
+
+function addCareerRow() {
+  const list = document.getElementById('careers-list');
+  const div  = document.createElement('div');
+  div.className  = 'career-row';
+  div.dataset.id = 'new-' + Date.now();
+  div.innerHTML  = `
+    <input type="number" placeholder="#" style="width:28px;background:transparent;border:none;border-bottom:1px solid #0a4a60;color:#4a9ab8;text-align:center;outline:none" />
+    <input placeholder="Career" style="background:transparent;border:none;border-bottom:1px solid #0a4a60;color:#b0d8e8;outline:none;width:100%" />
+    <input placeholder="Assignment" style="background:transparent;border:none;border-bottom:1px solid #0a4a60;color:#4a9ab8;outline:none;width:100%" />
+    <input type="number" placeholder="0" style="width:40px;background:transparent;border:none;border-bottom:1px solid #0a4a60;color:#b0d8e8;outline:none" />
+    <input placeholder="Rank title" style="background:transparent;border:none;border-bottom:1px solid #0a4a60;color:#b0d8e8;outline:none;width:100%" />
+    <input placeholder="Notes" style="background:transparent;border:none;border-bottom:1px solid #0a4a60;color:#4a9ab8;outline:none;width:100%" />
+    <button class="skill-remove edit-only" onclick="this.closest('.career-row').remove()">✕</button>`;
+  list.appendChild(div);
+  pendingCareers.push({ action: 'add', div });
+}
+
+function queueCareerDelete(id, btn) {
+  pendingCareers.push({ action: 'delete', id });
+  btn.closest('.career-row').remove();
+}
+
+// ── Associates ─────────────────────────────────────────────
+async function renderAssociates() {
+  const { data } = await supabaseClient
+    .from('character_associates').select('*').eq('character_id', character.id);
+
+  const list = document.getElementById('associates-list');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div style="color:#4a9ab8;font-size:0.85rem;padding:6px 0">None recorded.</div>';
+    return;
+  }
+  list.innerHTML = data.map(r => `
+    <div class="associate-row" data-id="${r.id}">
+      <span class="assoc-type-badge type-${r.type}">${r.type}</span>
+      <span class="assoc-name">${r.name}</span>
+      <span class="assoc-desc">${r.description || ''}</span>
+      <button class="skill-remove edit-only" onclick="queueAssocDelete('${r.id}',this)">✕</button>
+    </div>`).join('');
+}
+
+function toggleAssocForm() {
+  document.getElementById('assoc-form').classList.toggle('open');
+}
+
+function addAssociate() {
+  const type = document.getElementById('new-assoc-type').value;
+  const name = document.getElementById('new-assoc-name').value.trim();
+  const desc = document.getElementById('new-assoc-desc').value.trim();
+  if (!name) return;
+  pendingAssociates.push({ action: 'add', data: { type, name, description: desc } });
+
+  const list = document.getElementById('associates-list');
+  const empty = list.querySelector('div[style]');
+  if (empty) empty.remove();
+  list.innerHTML += `
+    <div class="associate-row">
+      <span class="assoc-type-badge type-${type}">${type}</span>
+      <span class="assoc-name">${name}</span>
+      <span class="assoc-desc">${desc}</span>
+      <button class="skill-remove edit-only" onclick="this.closest('.associate-row').remove()">✕</button>
+    </div>`;
+  document.getElementById('new-assoc-name').value = '';
+  document.getElementById('new-assoc-desc').value = '';
+  toggleAssocForm();
+}
+
+function queueAssocDelete(id, btn) {
+  pendingAssociates.push({ action: 'delete', id });
+  btn.closest('.associate-row').remove();
+}
+
+// ── Wounds ─────────────────────────────────────────────────
+async function renderWounds() {
+  const { data } = await supabaseClient
+    .from('character_wounds').select('*')
+    .eq('character_id', character.id).order('created_at');
+
+  const list = document.getElementById('wounds-list');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div style="color:#4a9ab8;font-size:0.85rem;padding:6px 0">No wounds recorded.</div>';
+    return;
+  }
+  list.innerHTML = data.map(r => `
+    <div class="wound-row" data-id="${r.id}">
+      <div class="wound-fields">
+        <div style="color:#ff5a4a;font-size:0.85rem">${r.description}</div>
+        ${r.medication ? `<div style="font-size:0.78rem;color:#4a9ab8">Medication: ${r.medication}</div>` : ''}
+      </div>
+      <button class="skill-remove edit-only" onclick="queueWoundDelete('${r.id}',this)">✕</button>
+    </div>`).join('');
+}
+
+function addWoundRow() {
+  const list = document.getElementById('wounds-list');
+  const empty = list.querySelector('div[style]');
+  if (empty) empty.remove();
+  const div = document.createElement('div');
+  div.className  = 'wound-row';
+  div.dataset.id = 'new-' + Date.now();
+  div.innerHTML  = `
+    <div class="wound-fields">
+      <input class="wound-desc-input" placeholder="Description of wound or injury" />
+      <div class="wound-med-label" style="margin-top:4px">Medication / Treatment</div>
+      <input class="wound-med-input" placeholder="Optional" />
+    </div>
+    <button class="skill-remove edit-only" onclick="this.closest('.wound-row').remove()">✕</button>`;
+  list.appendChild(div);
+  pendingWounds.push({ action: 'add', div });
+}
+
+function queueWoundDelete(id, btn) {
+  pendingWounds.push({ action: 'delete', id });
+  btn.closest('.wound-row').remove();
+}
+
+// ── Notes ──────────────────────────────────────────────────
+function renderNotes() {
+  document.getElementById('disp-background').textContent = character.background_notes || '';
+  document.getElementById('disp-history').textContent    = character.previous_history  || '';
+  document.getElementById('edit-background').value       = character.background_notes || '';
+  document.getElementById('edit-history').value          = character.previous_history  || '';
+}
+
+// ── Edit mode ──────────────────────────────────────────────
+function enterEditMode() {
+  if (!isOwner) return;
+  document.body.classList.add('editing');
+}
+
+function cancelEdit() {
+  document.body.classList.remove('editing');
+  clearPending();
+  loadCharacter();
+}
+
+function clearPending() {
+  pendingArmour=[]; pendingWeapons=[]; pendingAugments=[];
+  pendingEquipment=[]; pendingCareers=[]; pendingAssociates=[]; pendingWounds=[];
+}
+
+// ── Save ───────────────────────────────────────────────────
+async function saveAll() {
+  const msg = document.getElementById('save-msg');
+  msg.textContent = 'Saving…'; msg.className = 'save-msg';
+
+  try {
+    // Main character row
+    const update = {};
+    CHARS.forEach(c => {
+      update[c.key] = parseInt(document.getElementById('edit-' + c.key)?.value) || 0;
+    });
+    update.cash_on_hand              = parseInt(document.getElementById('edit-cash').value)      || 0;
+    update.pension                   = parseInt(document.getElementById('edit-pension').value)    || 0;
+    update.debt                      = parseInt(document.getElementById('edit-debt').value)       || 0;
+    update.living_costs              = parseInt(document.getElementById('edit-living').value)     || 0;
+    update.ship_payment              = parseInt(document.getElementById('edit-ship-pay').value)   || 0;
+    update.training_skill            = document.getElementById('edit-train-skill').value    || null;
+    update.training_specialty        = document.getElementById('edit-train-specialty').value || null;
+    update.training_weeks_complete   = parseInt(document.getElementById('edit-train-weeks').value)   || 0;
+    update.training_periods_complete = parseInt(document.getElementById('edit-train-periods').value) || 0;
+    update.background_notes          = document.getElementById('edit-background').value || null;
+    update.previous_history          = document.getElementById('edit-history').value    || null;
+    update.skills                    = character.skills || {};
+
+    const { error } = await supabaseClient.from('characters').update(update).eq('id', character.id);
+    if (error) throw error;
+
+    // Armour
+    for (const p of pendingArmour) {
+      if (p.action === 'delete') { await supabaseClient.from('character_armour').delete().eq('id', p.id); }
+      else {
+        const i = p.tr.querySelectorAll('input');
+        if (i[0].value) await supabaseClient.from('character_armour').insert({
+          character_id: character.id,
+          type: i[0].value, protection: parseInt(i[1].value)||0,
+          rad: parseInt(i[2].value)||0, kg: parseFloat(i[3].value)||0, options: i[4].value||null
+        });
+      }
     }
-  </script>
+
+    // Weapons
+    for (const p of pendingWeapons) {
+      if (p.action === 'delete') { await supabaseClient.from('character_weapons').delete().eq('id', p.id); }
+      else {
+        const i = p.tr.querySelectorAll('input');
+        if (i[0].value) await supabaseClient.from('character_weapons').insert({
+          character_id: character.id,
+          name: i[0].value, tl: parseInt(i[1].value)||null, range: i[2].value||null,
+          damage: i[3].value||null, kg: parseFloat(i[4].value)||0,
+          magazine: parseInt(i[5].value)||null, traits: i[6].value||null
+        });
+      }
+    }
+
+    // Augments
+    for (const p of pendingAugments) {
+      if (p.action === 'delete') { await supabaseClient.from('character_augments').delete().eq('id', p.id); }
+      else {
+        const i = p.tr.querySelectorAll('input');
+        if (i[0].value) await supabaseClient.from('character_augments').insert({
+          character_id: character.id,
+          type: i[0].value, tl: parseInt(i[1].value)||null, improvement: i[2].value||null
+        });
+      }
+    }
+
+    // Equipment
+    for (const p of pendingEquipment) {
+      if (p.action === 'delete') { await supabaseClient.from('character_equipment').delete().eq('id', p.id); }
+      else {
+        const i = p.tr.querySelectorAll('input');
+        if (i[0].value) await supabaseClient.from('character_equipment').insert({
+          character_id: character.id, type: i[0].value, mass: parseFloat(i[1].value)||0
+        });
+      }
+    }
+
+    // Careers
+    for (const p of pendingCareers) {
+      if (p.action === 'delete') { await supabaseClient.from('character_careers').delete().eq('id', p.id); }
+      else {
+        const i = p.div.querySelectorAll('input');
+        if (i[1].value) await supabaseClient.from('character_careers').insert({
+          character_id: character.id,
+          term_order: parseInt(i[0].value)||1, career: i[1].value,
+          assignment: i[2].value||null, rank: parseInt(i[3].value)||0,
+          rank_title: i[4].value||null, notes: i[5].value||null, terms_served: 1
+        });
+      }
+    }
+
+    // Associates
+    for (const p of pendingAssociates) {
+      if (p.action === 'delete') { await supabaseClient.from('character_associates').delete().eq('id', p.id); }
+      else await supabaseClient.from('character_associates').insert({ character_id: character.id, ...p.data });
+    }
+
+    // Wounds
+    for (const p of pendingWounds) {
+      if (p.action === 'delete') { await supabaseClient.from('character_wounds').delete().eq('id', p.id); }
+      else {
+        const i = p.div.querySelectorAll('input');
+        if (i[0].value) await supabaseClient.from('character_wounds').insert({
+          character_id: character.id, description: i[0].value, medication: i[1].value||null
+        });
+      }
+    }
+
+    msg.textContent = 'Saved!'; msg.className = 'save-msg ok';
+    setTimeout(() => {
+      document.body.classList.remove('editing');
+      clearPending();
+      loadCharacter();
+    }, 800);
+
+  } catch (err) {
+    msg.textContent = 'Error: ' + err.message;
+    msg.className   = 'save-msg err';
+  }
+}
+
+// ── Tabs & sign out ────────────────────────────────────────
+function showTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).style.display = 'block';
+  btn.classList.add('active');
+}
+
+async function doSignOut() {
+  await supabaseClient.auth.signOut();
+  window.location.href = '../../index.html';
+}
+
+init();
+</script>
 </body>
 </html>
