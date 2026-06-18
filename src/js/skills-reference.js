@@ -19,9 +19,11 @@ function buildSkillCard(skill) {
   const specialtiesHTML = skill.specialties.length
     ? `<div class="skill-specialties">
         <div class="skill-specialties-title">Specialities</div>
-        <div class="specialty-list">
-          ${skill.specialties.map(s => `<span class="specialty-tag">${s}</span>`).join('')}
-        </div>
+        ${skill.specialties.map(s => `
+          <div class="specialty-item">
+            <span class="specialty-name">${s.name}</span>
+            <span class="specialty-desc">${s.desc}</span>
+          </div>`).join('')}
       </div>`
     : '';
 
