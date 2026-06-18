@@ -25,10 +25,10 @@
       <a href="character-creation.html" class="sidebar-nav-item">Character Creation</a>
       <div class="sidebar-group-label">Reference</div>
       <a href="general-rules.html" class="sidebar-nav-item">General Rules</a>
-      <a href="skills.html" class="sidebar-nav-item">Skills</a>
+      <a href="combat.html" class="sidebar-nav-item">Combat</a>
       <a href="vehicles.html" class="sidebar-nav-item active">Vehicles</a>
       <a href="spacecraft-operations.html" class="sidebar-nav-item">Spacecraft Operations</a>
-      <a href="spacecraft-combat.html" class="sidebar-nav-item">Spacecraft Combat</a>
+      <a href="equipment.html" class="sidebar-nav-item">Equipment</a>
       <a href="trade.html" class="sidebar-nav-item">Trade</a>
       <div class="sidebar-signout">
         <button onclick="doSignOut()">Sign Out</button>
@@ -40,8 +40,8 @@
 
       <div class="tab-nav">
         <button class="tab-btn active" onclick="showTab('movement')">Movement</button>
-        <button class="tab-btn" onclick="showTab('combat')">Combat</button>
         <button class="tab-btn" onclick="showTab('damage')">Damage &amp; Repair</button>
+        <button class="tab-btn" onclick="showTab('equipment')">Equipment</button>
       </div>
 
       <!-- MOVEMENT TAB -->
@@ -135,79 +135,90 @@
 
       </div>
 
-      <!-- COMBAT TAB -->
-      <div id="tab-combat" class="tab-content" style="display:none">
+      <!-- EQUIPMENT TAB -->
+      <div id="tab-equipment" class="tab-content" style="display:none">
 
         <div class="ref-section">
-          <h2 class="ref-section-title">Vehicles in Combat</h2>
+          <h2 class="ref-section-title">Vehicle Equipment</h2>
           <div class="rule-card">
-            <p class="rule-body">Vehicles move on the <strong>driver's Initiative</strong>. The driver must spend a <strong>Minor Action</strong> each round for normal control (straight road, simple manoeuvres). Navigating obstacles, conducting evasion or pursuing a target requires a <strong>Significant Action</strong>. <em style="color:#4a9ab8">Core Rulebook p.138</em></p>
-          </div>
-          <div class="rule-card-row">
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Closed Vehicle</div>
-              <p class="rule-body">Occupants inside a closed vehicle <strong>cannot be directly attacked</strong> — they are not visible to attackers outside.</p>
-              <p class="rule-body">Passengers may fire out, but only through available windows or firing ports. Up to <strong>2 people per fire arc</strong> in a civilian vehicle; <strong>1 per arc</strong> in a military vehicle.</p>
-              <p class="rule-body">Mounted weapons cannot attack targets within <strong>5% of their range</strong>.</p>
-            </div>
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Open Vehicle</div>
-              <p class="rule-body">Passengers in open vehicles <strong>can be directly attacked</strong> and have <strong>no cover</strong> from the vehicle itself.</p>
-              <p class="rule-body">Passengers may fire in <strong>any direction</strong> without restriction.</p>
-            </div>
+            <p class="rule-body" style="margin-bottom:12px">The following items can be found on vehicles as standard or added later. Equipment and weapons may be mounted on any vehicle with enough spare cargo space. Items massing less than <strong>250kg</strong> do not require any cargo space. <em style="color:#4a9ab8">Core Rulebook p.142</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Equipment</th><th>TL</th><th>Tons</th><th>Cost</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Autopilot</td><td>5</td><td>—</td><td>Cr2,000</td></tr>
+                <tr><td class="td-cyan">Communications (basic)</td><td>4</td><td>—</td><td>Cr500</td></tr>
+                <tr><td class="td-cyan">Communications (TL6 — 50km)</td><td>6</td><td>—</td><td>Cr1,000</td></tr>
+                <tr><td class="td-cyan">Communications (TL8 — 500km + satellite)</td><td>8</td><td>—</td><td>Cr2,000</td></tr>
+                <tr><td class="td-cyan">Communications (TL15 — 5,000km)</td><td>15</td><td>0.5</td><td>Cr4,000</td></tr>
+                <tr><td class="td-cyan">Entertainment System</td><td>5</td><td>—</td><td>Cr200</td></tr>
+                <tr><td class="td-cyan">Navigation (basic)</td><td>5</td><td>—</td><td>Cr2,000</td></tr>
+                <tr><td class="td-cyan">Navigation (improved)</td><td>9</td><td>—</td><td>Cr10,000</td></tr>
+                <tr><td class="td-cyan">Navigation (advanced)</td><td>13</td><td>—</td><td>Cr50,000</td></tr>
+                <tr><td class="td-cyan">Off-road modification</td><td>—</td><td>—</td><td>50% of vehicle cost</td></tr>
+                <tr><td class="td-cyan">Sensors (basic)</td><td>5</td><td>—</td><td>Cr5,000</td></tr>
+                <tr><td class="td-cyan">Sensors (improved)</td><td>8</td><td>—</td><td>Cr15,000</td></tr>
+                <tr><td class="td-cyan">Sensors (advanced)</td><td>12</td><td>0.25</td><td>Cr25,000</td></tr>
+                <tr><td class="td-cyan">Short Term Life Support</td><td>4</td><td>—</td><td>Cr10,000 per person</td></tr>
+                <tr><td class="td-cyan">Turret</td><td>—</td><td>see notes</td><td>Cr10,000 per ton</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
         <div class="ref-section">
-          <h2 class="ref-section-title">Vehicular Actions</h2>
-          <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">All of the following are <strong>Significant Actions</strong> for the driver. All skill checks use the vehicle's <strong>Agility</strong> as a DM.</p>
+          <h2 class="ref-section-title">Equipment Descriptions</h2>
 
           <div class="rule-card">
-            <div class="rule-card-title">Dogfight</div>
-            <p class="rule-body">Requires both vehicles to be within one kilometre and one Speed Band of each other. Both drivers make <strong>opposed skill checks</strong>. The winner chooses which fire arc their vehicle sits in on the enemy, and which fire arc the enemy is in on their own vehicle. Winner gains <strong>DM+2</strong> to all attack rolls that round; loser suffers <strong>DM−2</strong>. A draw means neither may attack unless they have a turret.</p>
-            <p class="rule-body">If the dogfight continues, the previous winner applies the difference from last round's check as a positive DM to this round.</p>
+            <div class="rule-card-title">Autopilot</div>
+            <p class="rule-body">At TL5, autopilots function only on aircraft and sea vessels; available to all vehicles at TL9. Allows fully autonomous operation. Treated as Drive, Flyer or Seafarer skill level 0, increasing by +1 every two Tech Levels to a maximum of 3. Cost is +Cr5,000 per skill level above 0.</p>
           </div>
 
           <div class="rule-card">
-            <div class="rule-card-title">Evasive Action</div>
-            <p class="rule-body">The driver makes a skill check. The <strong>Effect</strong> acts as a <strong>negative DM</strong> to all attacks against the vehicle and its passengers that round. The same Effect also penalises any attacks made from the vehicle — the sudden movement disrupts outgoing fire too.</p>
+            <div class="rule-card-title">Communications</div>
+            <p class="rule-body">Standard range is <strong>5km</strong>. Range can be multiplied by itself by doubling the cost. TL8+ systems can communicate with overhead satellites and use lasers or masers for secure, un-interceptable signals.</p>
           </div>
 
           <div class="rule-card">
-            <div class="rule-card-title">Manoeuvre</div>
-            <p class="rule-body">Basic vehicle control — <strong>no skill check required</strong>. Avoid large or obvious obstacles, move to destination, shift out of one enemy fire arc into another, or change which fire arc a target is in. More extreme manoeuvres require Stunt.</p>
+            <div class="rule-card-title">Navigation</div>
+            <p class="rule-body"><strong>Basic:</strong> DM+1 to all Navigation checks. <strong>Improved:</strong> DM+2. <strong>Advanced:</strong> DM+3.</p>
           </div>
 
           <div class="rule-card">
-            <div class="rule-card-title">Ram</div>
-            <p class="rule-body">Deliberately driving into another vehicle or obstacle. Requires a successful skill check. Affected by Dodge and Evasive Action as normal. The referee may grant bonuses or declare the attempt automatic if the target is very large or stationary. On success, apply Collision damage.</p>
+            <div class="rule-card-title">Off-Road Modification</div>
+            <p class="rule-body">Any Drive skill vehicle may be modified to go off-road. Lowers maximum Speed by <strong>one Speed Band</strong>. Costs <strong>50% of the vehicle's original purchase price</strong>. Vehicles must be designed with aquatic drives in mind — cannot be retrofitted.</p>
           </div>
 
           <div class="rule-card">
-            <div class="rule-card-title">Stunt</div>
-            <p class="rule-body">A successful skill check lets the driver perform dramatic manoeuvres — two wheels, stunning aerobatics, skimming over obstacles. Can place a target in an additional fire arc, set up a task chain, or achieve up to three Manoeuvre actions at once. Referee sets difficulty based on the action attempted.</p>
+            <div class="rule-card-title">Sensors</div>
+            <p class="rule-body">Basic sensors have a range of 1km. For every 3 Tech Levels above TL5, increase sensor cost by +50%. <strong>Improved:</strong> DM+1 to Electronics (sensors), range 5km. <strong>Advanced:</strong> DM+2 to Electronics (sensors), range 25km.</p>
           </div>
 
           <div class="rule-card">
-            <div class="rule-card-title">Weave</div>
-            <p class="rule-body">In obstacle-heavy environments (city streets, tunnels), the driver chooses a <strong>weaving score</strong> from 1 to their current Speed Band Number, applied as a <strong>negative DM</strong> to their own skill check. Failure = crashed into an obstacle. Success forces any pursuers to match the same check at the same penalty, or break off pursuit.</p>
+            <div class="rule-card-title">Short Term Life Support</div>
+            <p class="rule-body">Provides a breathable atmosphere inside a closed vehicle for <strong>one day</strong> regardless of exterior conditions. Cost is per person supported.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Turret</div>
+            <p class="rule-body">Allows a vehicle-mounted weapon to track any target within line of sight, removing fire arc restrictions. Turret mass equals the weapons it holds. Cost is <strong>Cr10,000 per ton</strong>. A vehicle may mount one weapon per 10 points of Hull (or part thereof).</p>
           </div>
         </div>
 
         <div class="ref-section">
           <h2 class="ref-section-title">Vehicle Weapons</h2>
           <div class="rule-card">
-            <p class="rule-body" style="margin-bottom:12px">Attacking with ranged weapons mounted on a vehicle uses the same rules as normal combat with the following exceptions. <em style="color:#4a9ab8">Core Rulebook p.139</em></p>
+            <p class="rule-body" style="margin-bottom:12px">All vehicle weapons require the <strong>Heavy Weapons (vehicle)</strong> skill. Ranges are in <strong>kilometres</strong>; mass in <strong>tons</strong>. <em style="color:#4a9ab8">Core Rulebook p.142</em></p>
             <table class="ref-table">
               <thead>
-                <tr><th>Rule</th><th>Detail</th></tr>
+                <tr><th>Weapon</th><th>TL</th><th>Range</th><th>Damage</th><th>Tons</th><th>Cost</th><th>Mag</th><th>Mag Cost</th><th>Traits</th></tr>
               </thead>
               <tbody>
-                <tr><td class="td-cyan">Skill</td><td>Firing a vehicle-mounted weapon uses <strong>Heavy Weapons (vehicle)</strong>.</td></tr>
-                <tr><td class="td-cyan">Range</td><td>Weapon range is listed in <strong>kilometres</strong>, not metres.</td></tr>
-                <tr><td class="td-cyan">Minimum range</td><td>Closed-vehicle weapons cannot attack targets within <strong>5% of the weapon's range</strong> — not designed for close targets.</td></tr>
-                <tr><td class="td-cyan">Extreme range</td><td>Without the Scope trait, all attacks beyond <strong>1 kilometre</strong> are automatically Extreme range (not 100 metres as for foot Travellers).</td></tr>
-                <tr><td class="td-cyan">Fire arcs</td><td>Weapons are restricted to their mounted fire arc unless in a turret.</td></tr>
+                <tr><td class="td-cyan">Cannon</td><td>8</td><td>2</td><td>8D</td><td>2.5</td><td>Cr400,000</td><td>30</td><td>Cr5,000</td><td>Blast 10</td></tr>
+                <tr><td class="td-cyan">Heavy Machinegun</td><td>6</td><td>1</td><td>4D</td><td>0.1</td><td>Cr4,500</td><td>100</td><td>Cr400</td><td>Auto 3</td></tr>
+                <tr><td class="td-cyan">Laser Cannon</td><td>9</td><td>2.5</td><td>1DD</td><td>6</td><td>Cr100,000</td><td>—</td><td>—</td><td>AP 10</td></tr>
+                <tr><td class="td-cyan">Light Autocannon</td><td>6</td><td>1</td><td>6D</td><td>0.25</td><td>Cr10,000</td><td>500</td><td>Cr1,000</td><td>Auto 3</td></tr>
               </tbody>
             </table>
           </div>

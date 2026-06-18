@@ -25,10 +25,10 @@
       <a href="character-creation.html" class="sidebar-nav-item">Character Creation</a>
       <div class="sidebar-group-label">Reference</div>
       <a href="general-rules.html" class="sidebar-nav-item">General Rules</a>
-      <a href="skills.html" class="sidebar-nav-item">Skills</a>
+      <a href="combat.html" class="sidebar-nav-item">Combat</a>
       <a href="vehicles.html" class="sidebar-nav-item">Vehicles</a>
       <a href="spacecraft-operations.html" class="sidebar-nav-item active">Spacecraft Operations</a>
-      <a href="spacecraft-combat.html" class="sidebar-nav-item">Spacecraft Combat</a>
+      <a href="equipment.html" class="sidebar-nav-item">Equipment</a>
       <a href="trade.html" class="sidebar-nav-item">Trade</a>
       <div class="sidebar-signout">
         <button onclick="doSignOut()">Sign Out</button>
@@ -39,46 +39,14 @@
       <h1 class="page-title">SPACECRAFT OPERATIONS</h1>
 
       <div class="tab-nav">
-        <button class="tab-btn active" onclick="showTab('finance')">Finance</button>
-        <button class="tab-btn" onclick="showTab('travel')">Space Travel</button>
+        <button class="tab-btn active" onclick="showTab('travel')">Space Travel</button>
         <button class="tab-btn" onclick="showTab('operations')">Operations</button>
         <button class="tab-btn" onclick="showTab('tech')">Spacecraft Tech</button>
+        <button class="tab-btn" onclick="showTab('finance')">Finance</button>
       </div>
 
       <!-- FINANCE TAB -->
-      <div id="tab-finance" class="tab-content">
-
-        <div class="ref-section">
-          <h2 class="ref-section-title">Spacecraft Types</h2>
-          <div class="rule-card">
-            <table class="ref-table">
-              <thead>
-                <tr><th>Type</th><th>Definition</th></tr>
-              </thead>
-              <tbody>
-                <tr><td class="td-cyan">Ship</td><td>Any spacecraft of 100 tons or more.</td></tr>
-                <tr><td class="td-cyan">Small Craft</td><td>Any spacecraft under 100 tons. Cannot jump between star systems.</td></tr>
-                <tr><td class="td-cyan">Capital Ship</td><td>A ship exceeding 5,000 tons.</td></tr>
-                <tr><td class="td-cyan">System Ship</td><td>A ship without a jump drive — confined to one star system.</td></tr>
-              </tbody>
-            </table>
-            <p class="rule-body" style="margin-top:10px">Size, components and cargo are measured in <strong>displacement tons</strong>. One displacement ton displaces the same volume as one ton of liquid hydrogen — roughly <strong>14 cubic metres</strong>. <em style="color:#4a9ab8">Core Rulebook p.149</em></p>
-          </div>
-          <div class="rule-card-row">
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Streamlined Hull</div>
-              <p class="rule-body">Designed to fly through atmosphere. Features wings or a lifting body. No penalties for atmospheric entry.</p>
-            </div>
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Partially Streamlined</div>
-              <p class="rule-body">Can enter atmospheres and skim gas giants. Extremely ungainly — all Pilot checks made at <strong>DM−2</strong> in atmosphere (except Atmosphere 3 or less).</p>
-            </div>
-          </div>
-          <div class="rule-card">
-            <div class="rule-card-title">Unstreamlined Hull</div>
-            <p class="rule-body">Completely non-aerodynamic. Must make a <strong>Pilot check at DM−4</strong> when entering any atmosphere, and again <strong>every minute</strong> of flight. Each failed check inflicts <strong>1D damage, ignoring Armour</strong>.</p>
-          </div>
-        </div>
+      <div id="tab-finance" class="tab-content" style="display:none">
 
         <div class="ref-section">
           <h2 class="ref-section-title">Ship Mortgage</h2>
@@ -138,7 +106,7 @@
         <div class="ref-section">
           <h2 class="ref-section-title">Skipping on Debts</h2>
           <div class="rule-card">
-            <p class="rule-body" style="margin-bottom:10px">Each time the ship enters a new system, roll <strong>2D + modifiers</strong>. On <strong>8+</strong>, the Travellers are hunted by ship tracers or naval vessels. <em style="color:#4a9ab8">Core Rulebook p.153</em></p>
+            <p class="rule-body" style="margin-bottom:10px">Each time the ship enters a new system, roll <strong>2D + modifiers</strong>. On <strong>8+</strong>, the Travellers are hunted by skip tracers or naval vessels. <em style="color:#4a9ab8">Core Rulebook p.153</em></p>
             <table class="ref-table">
               <thead>
                 <tr><th>Condition</th><th>DM</th></tr>
@@ -161,25 +129,7 @@
       </div>
 
       <!-- SPACE TRAVEL TAB -->
-      <div id="tab-travel" class="tab-content" style="display:none">
-
-        <div class="ref-section">
-          <h2 class="ref-section-title">Units of Measurement</h2>
-          <div class="rule-card">
-            <table class="ref-table">
-              <thead>
-                <tr><th>Unit</th><th>Distance</th></tr>
-              </thead>
-              <tbody>
-                <tr><td class="td-cyan">Astronomical Unit (AU)</td><td>149,597,870 km — Earth–Sun distance</td></tr>
-                <tr><td class="td-cyan">Light Second</td><td>299,792 km</td></tr>
-                <tr><td class="td-cyan">Light Minute</td><td>17,987,547 km</td></tr>
-                <tr><td class="td-cyan">Light Year</td><td>9,460,730,472,580 km</td></tr>
-                <tr><td class="td-cyan">Parsec</td><td>30.857 × 10¹² km — 3.262 light years</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+      <div id="tab-travel" class="tab-content">
 
         <div class="ref-section">
           <h2 class="ref-section-title">Preparing for Jump</h2>
@@ -280,10 +230,60 @@
           </div>
         </div>
 
+        <div class="ref-section">
+          <h2 class="ref-section-title">Units of Measurement</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Unit</th><th>Distance</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Astronomical Unit (AU)</td><td>149,597,870 km — Earth–Sun distance</td></tr>
+                <tr><td class="td-cyan">Light Second</td><td>299,792 km</td></tr>
+                <tr><td class="td-cyan">Light Minute</td><td>17,987,547 km</td></tr>
+                <tr><td class="td-cyan">Light Year</td><td>9,460,730,472,580 km</td></tr>
+                <tr><td class="td-cyan">Parsec</td><td>30.857 × 10¹² km — 3.262 light years</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- OPERATIONS TAB -->
       <div id="tab-operations" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Spacecraft Types</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Type</th><th>Definition</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Ship</td><td>Any spacecraft of 100 tons or more.</td></tr>
+                <tr><td class="td-cyan">Small Craft</td><td>Any spacecraft under 100 tons. Cannot jump between star systems.</td></tr>
+                <tr><td class="td-cyan">Capital Ship</td><td>A ship exceeding 5,000 tons.</td></tr>
+                <tr><td class="td-cyan">System Ship</td><td>A ship without a jump drive — confined to one star system.</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:10px">Size, components and cargo are measured in <strong>displacement tons</strong>. One displacement ton displaces the same volume as one ton of liquid hydrogen — roughly <strong>14 cubic metres</strong>. <em style="color:#4a9ab8">Core Rulebook p.149</em></p>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Streamlined Hull</div>
+              <p class="rule-body">Designed to fly through atmosphere. Features wings or a lifting body. No penalties for atmospheric entry.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Partially Streamlined</div>
+              <p class="rule-body">Can enter atmospheres and skim gas giants. Extremely ungainly — all Pilot checks made at <strong>DM−2</strong> in atmosphere (except Atmosphere 3 or less).</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Unstreamlined Hull</div>
+            <p class="rule-body">Completely non-aerodynamic. Must make a <strong>Pilot check at DM−4</strong> when entering any atmosphere, and again <strong>every minute</strong> of flight. Each failed check inflicts <strong>1D damage, ignoring Armour</strong>.</p>
+          </div>
+        </div>
 
         <div class="ref-section">
           <h2 class="ref-section-title">Power</h2>

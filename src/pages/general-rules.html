@@ -25,10 +25,10 @@
       <a href="character-creation.html" class="sidebar-nav-item">Character Creation</a>
       <div class="sidebar-group-label">Reference</div>
       <a href="general-rules.html" class="sidebar-nav-item active">General Rules</a>
-      <a href="skills.html" class="sidebar-nav-item">Skills</a>
+      <a href="combat.html" class="sidebar-nav-item">Combat</a>
       <a href="vehicles.html" class="sidebar-nav-item">Vehicles</a>
       <a href="spacecraft-operations.html" class="sidebar-nav-item">Spacecraft Operations</a>
-      <a href="spacecraft-combat.html" class="sidebar-nav-item">Spacecraft Combat</a>
+      <a href="equipment.html" class="sidebar-nav-item">Equipment</a>
       <a href="trade.html" class="sidebar-nav-item">Trade</a>
       <div class="sidebar-signout">
         <button onclick="doSignOut()">Sign Out</button>
@@ -41,7 +41,7 @@
       <!-- Tab Navigation -->
       <div class="tab-nav">
         <button class="tab-btn active" onclick="showTab('tasks')">Tasks</button>
-        <button class="tab-btn" onclick="showTab('combat')">Combat</button>
+        <button class="tab-btn" onclick="showTab('skills')">Skills</button>
         <button class="tab-btn" onclick="showTab('encounters')">Encounters</button>
         <button class="tab-btn" onclick="showTab('healing')">Healing</button>
       </div>
@@ -190,216 +190,20 @@
 
       </div>
 
-      <!-- COMBAT TAB -->
-      <div id="tab-combat" class="tab-content" style="display:none">
-
-        <div class="ref-section">
-          <h2 class="ref-section-title">Combat Sequence</h2>
-          <div class="rule-card">
-            <div class="rule-card-title">Round Structure</div>
-            <p class="rule-body">Combat is divided into <strong>rounds</strong> of approximately 6 seconds. At the start of combat, each side makes an <strong>Initiative</strong> check — Dexterity + Tactics (military) if trained, or straight DEX DM if not. The Effect of the winning side's check is added to every combatant on that side. Combatants act in order from highest Initiative to lowest.</p>
-            <div class="rule-formula">Initiative = 2D + Tactics (military) + INT or DEX DM</div>
+      <!-- SKILLS TAB -->
+      <div id="tab-skills" class="tab-content" style="display:none">
+        <div class="skill-controls">
+          <input type="text" id="skill-search" placeholder="Search skills..." oninput="filterSkills()" />
+          <div class="filter-row">
+            <button class="filter-btn active" onclick="filterCategory('all', this)">All</button>
+            <button class="filter-btn" onclick="filterCategory('combat', this)">Combat</button>
+            <button class="filter-btn" onclick="filterCategory('social', this)">Social</button>
+            <button class="filter-btn" onclick="filterCategory('technical', this)">Technical</button>
+            <button class="filter-btn" onclick="filterCategory('spacecraft', this)">Spacecraft</button>
+            <button class="filter-btn" onclick="filterCategory('physical', this)">Physical</button>
           </div>
         </div>
-
-        <div class="ref-section">
-          <h2 class="ref-section-title">Action Summary</h2>
-          <div class="rule-formula">1 Significant Action + 1 Minor Action &nbsp;—or—&nbsp; up to 3 Minor Actions &nbsp;+&nbsp; Reactions (each costs DM−1 on next actions) &nbsp;+&nbsp; Free Actions</div>
-          <div class="rule-card-row">
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Significant Actions</div>
-              <table class="ref-table">
-                <tbody>
-                  <tr><td class="td-cyan">Attack</td><td>Make a melee or ranged attack against a target.</td></tr>
-                  <tr><td class="td-cyan">Leadership</td><td>INT/EDU/SOC check. Effect = number of DM+1 bonuses granted to allies.</td></tr>
-                  <tr><td class="td-cyan">Miscellaneous</td><td>Any action requiring full attention: first aid, bypassing security, psionics, boarding a vehicle.</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Minor Actions</div>
-              <table class="ref-table">
-                <tbody>
-                  <tr><td class="td-cyan">Aim</td><td>DM+1 to next ranged attack. Stack up to DM+6.</td></tr>
-                  <tr><td class="td-cyan">Change Stance</td><td>Stand, crouch, or go prone.</td></tr>
-                  <tr><td class="td-cyan">Draw / Reload</td><td>Ready a weapon or reload an empty one.</td></tr>
-                  <tr><td class="td-cyan">Move</td><td>Move up to your Movement score in metres (humans: 6m).</td></tr>
-                  <tr><td class="td-cyan">Miscellaneous</td><td>Low-effort tasks: spotting a position, picking something up.</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <p class="ref-note">Free Actions — shouting a warning, pressing a button — require no action and are unlimited each round at the referee's discretion.</p>
-        </div>
-
-        <div class="ref-section">
-          <h2 class="ref-section-title">Attack Rolls</h2>
-          <div class="rule-card-row">
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Melee Attack</div>
-              <div class="rule-formula">2D + Melee (speciality) + STR DM</div>
-              <p class="rule-body">Target number is <strong>Average (8+)</strong>. On a hit, add STR DM and Effect to the weapon's damage roll.</p>
-            </div>
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Ranged Attack</div>
-              <div class="rule-formula">2D + Gun Combat (speciality) + DEX DM</div>
-              <p class="rule-body">Target number is <strong>Average (8+)</strong>. Some weapons use Heavy Weapons or Athletics (dexterity).</p>
-            </div>
-          </div>
-          <div class="rule-card">
-            <div class="rule-card-title">Common Attack Modifiers</div>
-            <table class="ref-table">
-              <thead><tr><th>Condition</th><th>DM</th></tr></thead>
-              <tbody>
-                <tr><td>Aiming (Minor Action, stackable)</td><td class="td-bonus">+1 per action (max +6)</td></tr>
-                <tr><td>Laser sight (while aiming)</td><td class="td-bonus">+1</td></tr>
-                <tr><td>Target at Short Range (within ¼ weapon range)</td><td class="td-bonus">+1</td></tr>
-                <tr><td>Target at Long Range (1–2× weapon range)</td><td class="td-penalty">−2</td></tr>
-                <tr><td>Target at Extreme Range (2–4× weapon range)</td><td class="td-penalty">−4</td></tr>
-                <tr><td>Range &gt;100m without Scope trait</td><td class="td-penalty">−4 (auto Extreme)</td></tr>
-                <tr><td>Target in cover</td><td class="td-penalty">−2</td></tr>
-                <tr><td>Target prone</td><td class="td-penalty">−1</td></tr>
-                <tr><td>Target fast-moving</td><td class="td-penalty">−1 per full 10m of movement</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="ref-section">
-          <h2 class="ref-section-title">Reactions</h2>
-          <p class="rule-body" style="margin-bottom:12px; font-size:0.88rem; color:#b0d8e8;">Reactions are performed outside your normal turn. Each one applies <strong style="color:#ff5a4a">DM−1</strong> to your next set of actions.</p>
-          <div class="rule-card-row">
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Dodge</div>
-              <p class="rule-body">Inflicts a penalty to the attacker's roll equal to your <strong>DEX DM</strong> or <strong>Athletics (dexterity)</strong>, whichever is higher.</p>
-            </div>
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Parry</div>
-              <p class="rule-body">In close combat only. Inflicts your <strong>Melee skill level</strong> as a negative DM to the attacker's roll.</p>
-            </div>
-          </div>
-          <div class="rule-card">
-            <div class="rule-card-title">Dive for Cover</div>
-            <p class="rule-body">Ranged attacks only. Inflicts <strong>DM−2</strong> on every attacker targeting you this round. You may dive behind any object within 1.5 metres. <strong>Cost:</strong> you forfeit your next actions entirely.</p>
-          </div>
-        </div>
-
-        <div class="ref-section">
-          <h2 class="ref-section-title">Damage &amp; Armour</h2>
-          <div class="rule-card">
-            <div class="rule-card-title">Damage</div>
-            <div class="rule-formula">Damage = Weapon dice + Effect of attack roll &nbsp;(+ STR DM for melee)</div>
-            <p class="rule-body">Damage is applied to <strong>END</strong> first. If END reaches 0, excess damage goes to either <strong>STR or DEX</strong> (target's choice). If either reaches 0, the Traveller falls unconscious. If all three reach 0, the Traveller is <strong>killed</strong>.</p>
-          </div>
-          <div class="rule-card-row">
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Armour</div>
-              <p class="rule-body">Armour's <strong>Protection score</strong> is subtracted from damage before it is applied. An attack with <strong>Effect 6+</strong> always inflicts at least 1 point of damage. Weapons with the <strong>AP</strong> trait ignore a portion of armour equal to their AP score.</p>
-            </div>
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Cover Protection</div>
-              <table class="ref-table">
-                <thead><tr><th>Cover Type</th><th>Bonus</th></tr></thead>
-                <tbody>
-                  <tr><td>Vegetation</td><td class="td-bonus">+2</td></tr>
-                  <tr><td>Tree Trunk</td><td class="td-bonus">+6</td></tr>
-                  <tr><td>Stone Wall</td><td class="td-bonus">+8</td></tr>
-                  <tr><td>Civilian Vehicle</td><td class="td-bonus">+10</td></tr>
-                  <tr><td>Armoured Vehicle</td><td class="td-bonus">+15</td></tr>
-                  <tr><td>Fortifications</td><td class="td-bonus">+20</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="ref-section">
-          <h2 class="ref-section-title">Weapon Traits</h2>
-          <div class="rule-card">
-            <table class="ref-table">
-              <thead><tr><th>Trait</th><th>Effect</th></tr></thead>
-              <tbody>
-                <tr><td class="td-cyan">AP X</td><td>Armour Piercing — ignores X points of Protection.</td></tr>
-                <tr><td class="td-cyan">Auto X</td><td><strong>Single:</strong> normal attack. <strong>Burst:</strong> add Auto score to damage. <strong>Full Auto:</strong> make Auto score attacks against separate targets within 6m.</td></tr>
-                <tr><td class="td-cyan">Blast X</td><td>Deals damage to all targets within X metres of the hit point. No Dodge reactions allowed.</td></tr>
-                <tr><td class="td-cyan">Bulky</td><td>Requires STR 9+ to use without penalty.</td></tr>
-                <tr><td class="td-cyan">Radiation</td><td>Target receives 2D × 20 rads on hit.</td></tr>
-                <tr><td class="td-cyan">Scope</td><td>Removes the automatic Extreme Range penalty for attacks beyond 100m when aiming.</td></tr>
-                <tr><td class="td-cyan">Smart</td><td>Gains DM equal to the difference between weapon TL and target TL (minimum DM+1, maximum DM+6).</td></tr>
-                <tr><td class="td-cyan">Stun</td><td>Non-lethal. Damage only depletes END. If END reaches 0, target is incapacitated.</td></tr>
-                <tr><td class="td-cyan">Very Bulky</td><td>Requires STR 12+ to use without penalty.</td></tr>
-                <tr><td class="td-cyan">Zero-G</td><td>Can be fired in zero or low gravity without an Athletics (dexterity) check.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="special-divider">
-          <div class="special-divider-line"></div>
-          <div class="special-divider-label">Special Situations</div>
-          <div class="special-divider-line"></div>
-        </div>
-
-        <div class="special-card" id="sc-melee">
-          <div class="special-card-header" onclick="toggleSpecial('sc-melee')">
-            <span class="special-card-title">Melee &amp; Close Combat Rules</span>
-            <span class="special-card-chevron">▼</span>
-          </div>
-          <div class="special-card-body">
-            <p class="rule-body">When a Traveller is within <strong>2 metres</strong> of an enemy they are in close combat.</p>
-            <table class="ref-table" style="margin-top:10px; margin-bottom:14px">
-              <tbody>
-                <tr><td style="width:40%">Melee attacks</td><td>Freely available to both combatants.</td></tr>
-                <tr><td>Target restriction</td><td>Neither combatant may attack anyone other than those they are locked with.</td></tr>
-                <tr><td>Single-handed ranged weapons</td><td>Pistols may be fired in close combat, but can be parried.</td></tr>
-                <tr><td>Large weapons</td><td>Rifles and two-handed weapons may only be used as clubs.</td></tr>
-                <tr><td>Moving out of close combat</td><td>Grants the enemy an immediate free attack at <strong>DM+2</strong>.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="special-card" id="sc-grapple">
-          <div class="special-card-header" onclick="toggleSpecial('sc-grapple')">
-            <span class="special-card-title">Grappling</span>
-            <span class="special-card-chevron">▼</span>
-          </div>
-          <div class="special-card-body">
-            <p class="rule-body">To grapple, make an <strong>opposed Melee (unarmed)</strong> check using either STR or DEX DM. The winner may choose one of the following:</p>
-            <table class="ref-table" style="margin-top:10px">
-              <tbody>
-                <tr><td>Force opponent prone</td><td></td></tr>
-                <tr><td>Disarm opponent</td><td>Effect 6+: you may take the weapon.</td></tr>
-                <tr><td>Throw opponent</td><td>1D metres, 1D damage. Ends the grapple.</td></tr>
-                <tr><td>Inflict damage</td><td>2 + Effect of the check, ignores armour.</td></tr>
-                <tr><td>Attack with pistol or small blade</td><td>Normal weapon damage.</td></tr>
-                <tr><td>Escape</td><td>Move away as a normal movement action.</td></tr>
-                <tr><td>Drag opponent</td><td>Up to 3 metres.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="special-card" id="sc-dual">
-          <div class="special-card-header" onclick="toggleSpecial('sc-dual')">
-            <span class="special-card-title">Dual Weapons</span>
-            <span class="special-card-chevron">▼</span>
-          </div>
-          <div class="special-card-body">
-            <p class="rule-body">A Traveller may wield two single-handed weapons simultaneously. Both attack rolls suffer <strong style="color:#ff5a4a">DM−2</strong>. They may not aim with either weapon.</p>
-          </div>
-        </div>
-
-        <div class="special-card" id="sc-extended">
-          <div class="special-card-header" onclick="toggleSpecial('sc-extended')">
-            <span class="special-card-title">Extended Actions in Combat</span>
-            <span class="special-card-chevron">▼</span>
-          </div>
-          <div class="special-card-body">
-            <p class="rule-body">If a Traveller <strong>takes damage</strong> while performing an Extended Action, they must immediately make a check using the same skill. The damage taken is applied as a <strong style="color:#ff5a4a">negative DM</strong>. Failure with <strong>Effect −6 or worse</strong>: the task is ruined and must be restarted.</p>
-          </div>
-        </div>
-
+        <div id="skill-grid" class="skill-grid"></div>
       </div>
 
       <!-- ENCOUNTERS TAB -->
@@ -528,6 +332,8 @@
   </div>
 
   <script src="../js/supabase-config.js"></script>
+  <script src="../js/skills-data.js"></script>
+  <script src="../js/skills-reference.js"></script>
   <script src="../js/sidebar.js"></script>
   <script>
     function showTab(tab) {
