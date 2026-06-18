@@ -44,7 +44,7 @@
         <button class="tab-btn" onclick="showTab('sequence')">Combat Sequence</button>
         <button class="tab-btn" onclick="showTab('weapons')">Weapons &amp; Damage</button>
         <button class="tab-btn" onclick="showTab('missiles')">Missiles</button>
-        <button class="tab-btn" onclick="showTab('dogfight')">Dogfighting &amp; Boarding</button>
+        <button class="tab-btn" onclick="showTab('boarding')">Boarding</button>
       </div>
 
       <!-- SETUP & CREW TAB -->
@@ -284,6 +284,47 @@
           </div>
         </div>
 
+        <div class="special-divider">
+          <div class="special-divider-line"></div>
+          <div class="special-divider-label">Dogfighting</div>
+          <div class="special-divider-line"></div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Dogfighting</h2>
+          <div class="rule-card">
+            <p class="rule-body">When spacecraft are within <strong>Close or Adjacent range</strong> (10km or less), or directly engaging vehicles or Travellers, combat switches to <strong>six-second rounds</strong> using the normal vehicle combat rules. The three-step space combat sequence does not apply. <em style="color:#4a9ab8">Core Rulebook p.173</em></p>
+            <p class="rule-body" style="margin-top:8px">Dogfighting is <strong>automatic</strong> when hostile vessels are within close range — it does not cost an action. To escape, a ship needs greater Thrust than its enemy, or the enemy must be willing to let it leave. Resolve the dogfight fully before returning to space combat six-minute rounds.</p>
+          </div>
+
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Dogfight Resolution</div>
+            <p class="rule-body" style="margin-bottom:10px">At the start of every dogfight round, both pilots make <strong>opposed Pilot checks</strong>. The winner chooses their fire arc positioning and gains <strong>DM+2</strong> to all attack rolls; the loser suffers <strong>DM−2</strong>. A draw means neither can attack with fixed weapons. If the dogfight continues, the prior winner applies the difference from last round's check as a positive DM to this round's opposed check.</p>
+            <table class="ref-table">
+              <thead><tr><th>Condition</th><th>DM</th></tr></thead>
+              <tbody>
+                <tr><td>Ship is 50–99 tons</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Ship is 100 tons</td><td class="td-penalty">−2</td></tr>
+                <tr><td>Each additional 100 tons above 100</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Each additional enemy in dogfight after first</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Each point of Thrust dedicated to dogfighting</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Spacecraft dogfighting vehicles (additional)</td><td class="td-penalty">−2</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Dogfighting Notes</div>
+            <table class="ref-table">
+              <tbody>
+                <tr><td style="width:40%">Turret weapons</td><td>Can fire into any arc — dogfight usually only imposes attack roll penalties, not arc restrictions.</td></tr>
+                <tr><td>Distant enemies</td><td>Ships in a dogfight cannot attack at further ranges; ships outside cannot attack in without risk of friendly fire.</td></tr>
+                <tr><td>Spacecraft vs vehicles</td><td>Spacecraft suffer DM−2 — designed for vast distances, not atmospheric knife-fights. They can operate at any Speed Band, typically Hypersonic when entering atmosphere.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       <!-- WEAPONS & DAMAGE TAB -->
@@ -384,7 +425,16 @@
           <div class="rule-card">
             <div class="rule-card-title">Critical Hit Effects by Severity</div>
             <div style="overflow-x:auto">
-            <table class="ref-table" style="font-size:0.78rem; min-width:700px">
+            <table class="ref-table" style="font-size:0.78rem; min-width:700px; table-layout:fixed; width:100%">
+              <colgroup>
+                <col style="width:13%">
+                <col style="width:14.5%">
+                <col style="width:14.5%">
+                <col style="width:14.5%">
+                <col style="width:14.5%">
+                <col style="width:14.5%">
+                <col style="width:14.5%">
+              </colgroup>
               <thead>
                 <tr><th>Location</th><th>Sev 1</th><th>Sev 2</th><th>Sev 3</th><th>Sev 4</th><th>Sev 5</th><th>Sev 6</th></tr>
               </thead>
@@ -582,41 +632,277 @@
 
       </div>
 
-      <!-- DOGFIGHTING & BOARDING TAB -->
-      <div id="tab-dogfight" class="tab-content" style="display:none">
+      <!-- BOARDING TAB -->
+      <div id="tab-boarding" class="tab-content" style="display:none">
 
+        <!-- Overview & Requirements -->
         <div class="ref-section">
-          <h2 class="ref-section-title">Dogfighting</h2>
+          <h2 class="ref-section-title">Boarding Actions</h2>
           <div class="rule-card">
-            <p class="rule-body">When spacecraft are within <strong>Close or Adjacent range</strong> (10km or less), or directly engaging vehicles or Travellers, combat switches to <strong>six-second rounds</strong> using the normal vehicle combat rules. The three-step space combat sequence does not apply — use vehicle dogfight rules instead. <em style="color:#4a9ab8">Core Rulebook p.173</em></p>
-            <p class="rule-body" style="margin-top:8px">Dogfighting is <strong>automatic</strong> when hostile vessels are within close range — it does not cost an action. To escape, a ship needs greater Thrust than its enemy, or the enemy must be willing to let it leave.</p>
+            <p class="rule-body">Boarding actions range from a routine naval inspection to a full corridor firefight. They occur when ships are at <strong>Adjacent range</strong> (within 1km) and are initiated during the <strong>Actions Step</strong>. <em style="color:#4a9ab8">Core Rulebook p.175, High Guard p.125</em></p>
+            <p class="rule-body" style="margin-top:10px">Players may opt to <strong>play out any boarding action at Ground scale</strong> — attackers fight through ship corridors making their own tactical decisions. The abstract resolution tables at the bottom of this tab are for boarding actions the players are <strong>not directly involved in</strong>.</p>
+          </div>
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Requirements</div>
+            <p class="rule-body" style="margin-bottom:10px">The ship being boarded must be <strong>inert or unable to evade</strong> — not operating its manoeuvre drive voluntarily or due to disablement.</p>
+            <table class="ref-table">
+              <tbody>
+                <tr><td class="td-cyan" style="width:30%">Routine Inspection</td><td>Ship voluntarily allows boarding. No combat assumed.</td></tr>
+                <tr><td class="td-cyan">Forced Boarding</td><td>Attacker must have <strong>superior Thrust</strong> — a ship with Thrust parity or better can evade indefinitely. Attacker must also establish docking, linkage, or spatial parity before boarding can proceed.</td></tr>
+                <tr><td class="td-cyan">Salvage / Exploratory</td><td>Derelict or disabled ship. Approach, Contact and Entry are assumed. Conflict only occurs if something unexpected is discovered aboard.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 5-Phase Process -->
+        <div class="ref-section">
+          <h2 class="ref-section-title">Boarding Action Phases</h2>
+          <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">All boarding actions — from routine inspection to hostile takeover — follow five phases. <em style="color:#4a9ab8">High Guard p.126</em></p>
+
+          <div class="rule-card">
+            <div class="rule-card-title" style="color:#00e5ff">Phase 1 — Approach</div>
+            <p class="rule-body" style="margin-bottom:8px">Request, demand, or force access to the target ship.</p>
+            <table class="ref-table">
+              <tbody>
+                <tr><td style="width:30%"><strong>Accepted</strong></td><td>Proceed to Contact.</td></tr>
+                <tr><td><strong>Declined</strong></td><td>Apply censure and/or attack. Engage in space combat to debilitate the ship, establish superior Thrust, then close distance for boarding.</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">If the target ship has fuel and jump range, jumping out of the system ends the Approach immediately.</p>
           </div>
 
-          <div class="rule-card" style="margin-top:12px">
-            <div class="rule-card-title">Dogfight Resolution</div>
-            <p class="rule-body" style="margin-bottom:10px">At the start of every dogfight round, both pilots make <strong>opposed Pilot checks</strong> with the following modifiers. The winner chooses their fire arc positioning and gains DM+2 to all attack rolls; the loser suffers DM−2. A draw means neither can attack with fixed weapons.</p>
-            <p class="rule-body" style="margin-bottom:10px">If the dogfight continues, the prior round's winner applies the difference between that round's opposed check as a positive DM to the next.</p>
+          <div class="rule-card" style="margin-top:10px">
+            <div class="rule-card-title" style="color:#00e5ff">Phase 2 — Contact</div>
+            <p class="rule-body" style="margin-bottom:8px">Establish a physical connection with the target ship.</p>
             <table class="ref-table">
-              <thead><tr><th>Condition</th><th>DM</th></tr></thead>
               <tbody>
-                <tr><td>Ship is 50–99 tons</td><td class="td-penalty">−1</td></tr>
-                <tr><td>Ship is 100 tons</td><td class="td-penalty">−2</td></tr>
-                <tr><td>Each additional 100 tons above 100</td><td class="td-penalty">−1</td></tr>
-                <tr><td>Each additional enemy in dogfight after first</td><td class="td-penalty">−1</td></tr>
-                <tr><td>Each point of Thrust dedicated to dogfighting</td><td class="td-bonus">+1</td></tr>
-                <tr><td>Spacecraft dogfighting vehicles</td><td class="td-penalty">−2 (additional)</td></tr>
+                <tr><td style="width:30%"><strong>Standard Docking</strong></td><td>Mate airlocks — Average (8+) Pilot check. Forced linkage apparatus adds DM+2.</td></tr>
+                <tr><td><strong>Breaching Tube</strong></td><td>Cuts through unarmoured hull in under 2 minutes. Creates sealed passage — no decompression risk. Fastest forced entry option.</td></tr>
+                <tr><td><strong>Free Board</strong></td><td>Vacc-suited boarders leap across in open space. Extremely dangerous but avoids risk of reverse boarding. Sandcasters can be used against free boarders with deadly results.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card" style="margin-top:10px">
+            <div class="rule-card-title" style="color:#00e5ff">Phase 3 — Entry</div>
+            <p class="rule-body" style="margin-bottom:8px">Gain access to the ship's interior.</p>
+            <table class="ref-table">
+              <tbody>
+                <tr><td style="width:30%"><strong>Entrance Allowed</strong></td><td>Proceed to Secure (routine) or Conflict (hostile).</td></tr>
+                <tr><td><strong>Entrance Denied</strong></td><td>Force entry via intrusion software, explosives, cutting tools, personal weapons, or breaching tube. See Entry Methods below.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card" style="margin-top:10px">
+            <div class="rule-card-title" style="color:#00e5ff">Phase 4 — Conflict</div>
+            <p class="rule-body" style="margin-bottom:8px">Combat within the ship's corridors and compartments. See Combat Aboard Ship below.</p>
+            <table class="ref-table">
+              <tbody>
+                <tr><td style="width:30%"><strong>Defend entry point</strong></td><td>Crew holds the breach and tries to repel the boarding party.</td></tr>
+                <tr><td><strong>Limited objectives</strong></td><td>Boarding party targets a specific area — cargo, a prisoner, a person.</td></tr>
+                <tr><td><strong>Full takeover</strong></td><td>Boarding party must secure Bridge, Engineering, and Gunnery. The Bridge is the priority — all other section controls are accessible from there. Override from another section: <strong>Formidable (14+) Electronics (computers)</strong> check (1D minutes, EDU).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card" style="margin-top:10px">
+            <div class="rule-card-title" style="color:#00e5ff">Phase 5 — Secure</div>
+            <p class="rule-body" style="margin-bottom:8px">All fighting has ceased. One side has full control.</p>
+            <table class="ref-table">
+              <tbody>
+                <tr><td style="width:30%"><strong>Boarders win</strong></td><td>Secure Bridge, Engineering, Gunnery and/or cargo. Round up crew, remove booby traps, verify key systems.</td></tr>
+                <tr><td><strong>Limited objective</strong></td><td>Phase complete once objectives achieved and boarding party returns to their own ship.</td></tr>
+                <tr><td><strong>Defenders win</strong></td><td>All boarders killed, captured, or forced back. Ship is secured once no boarders remain a threat.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Routine Inspections -->
+        <div class="ref-section">
+          <h2 class="ref-section-title">Routine Inspections</h2>
+          <div class="rule-card">
+            <p class="rule-body">A standard inconvenience for spacers. Ships of 100–1,000 tons typically warrant a party of <strong>4–12 personnel</strong>, sometimes including armed marines in boarding vacc suits or combat armour. Typical duties: cargo bay searches, bridge and transponder checks, crew interviews, engineering and fuel inspections. <em style="color:#4a9ab8">High Guard p.125</em></p>
+          </div>
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Inspection Frequency — Average (8+) on arrival in system</div>
+            <table class="ref-table">
+              <thead><tr><th>Event / Condition</th><th>DM</th></tr></thead>
+              <tbody>
+                <tr><td>Low population (code 5 or less)</td><td class="td-penalty">−2</td></tr>
+                <tr><td>Law Level 0–2</td><td class="td-penalty">−2</td></tr>
+                <tr><td>Law Level 3–5</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Law Level 6–9</td><td>+0</td></tr>
+                <tr><td>Law Level A+</td><td class="td-bonus">+2</td></tr>
+                <tr><td>Government type 7 or A+</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Naval Base present</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Amber Zone</td><td class="td-bonus">+2</td></tr>
+                <tr><td>Red Zone</td><td class="td-bonus">+4</td></tr>
+                <tr><td>Other (war, political strife, pandemic, etc.)</td><td class="td-bonus">+1</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Forced Boarding & Tumbling Ships -->
+        <div class="ref-section">
+          <h2 class="ref-section-title">Forced Boarding</h2>
+          <div class="rule-card">
+            <p class="rule-body">Pirates board for plunder; naval patrols force boarding if a ship evades inspection or is suspected of criminal activity. The Approach phase resolves via space combat and ends when the target ship is subdued. <em style="color:#4a9ab8">High Guard p.128</em></p>
+          </div>
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Tumbling Ships</div>
+            <p class="rule-body" style="margin-bottom:10px">A pilot may induce a tumble to prevent boarding. Conventional docking is impossible against a tumbling ship. Severity = the negative DM applied to all docking and hull-contact attempts.</p>
+            <table class="ref-table">
+              <thead><tr><th>Action</th><th>Check</th><th>Result</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">Induce tumble</td><td>Routine (6+) Pilot (D3 rounds, DEX)</td><td>Success: Severity = D3 + Effect. Fail: inconvenient rotation only — DM−1 to docking attempts.</td></tr>
+                <tr><td class="td-cyan">Cancel (auto)</td><td>Automatic ship systems</td><td>Reduces severity by 1 per space combat round.</td></tr>
+                <tr><td class="td-cyan">Cancel (pilot)</td><td>Average (8+) Pilot (DEX) at DM−Severity</td><td>Success: tumble cancelled. Fail: Effect becomes new severity.</td></tr>
+                <tr><td class="td-cyan">Ram to reduce</td><td>Difficult (10+) Pilot (DEX)</td><td>Success: severity −1. Fail: both ships take (2 + |Effect|)D damage. Armour applies.</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">Forced linkage apparatus: stops a tumble without damage risk, and adds DM+2 to subsequent Contact steps.</p>
+          </div>
+        </div>
+
+        <!-- Entry Methods -->
+        <div class="ref-section">
+          <h2 class="ref-section-title">Entry Methods</h2>
+          <p class="rule-body" style="margin-bottom:12px; font-size:0.88rem; color:#b0d8e8;">When entrance is denied, the boarding party must force their way in. <em style="color:#4a9ab8">High Guard p.130</em></p>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead><tr><th>Method</th><th>Check</th><th>Notes</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">Force airlock (mechanical)</td><td>Formidable (14+) Mechanic (2D rounds, STR)</td><td>+1D rounds to fully open after success. Exposes party to attacks through the gap.</td></tr>
+                <tr><td class="td-cyan">Force maintenance hatch / cargo door</td><td>Very Difficult (12+) Mechanic (2D rounds, STR)</td><td>Easier than airlock but may cause explosive decompression if air not evacuated.</td></tr>
+                <tr><td class="td-cyan">Breach with energy weapon</td><td>Routine (6+) Gun Combat (energy) (DEX)</td><td>Short/Close range only. Fail: Traveller takes 1D per negative point of Effect (ricochet/blowback).</td></tr>
+                <tr><td class="td-cyan">Breach with slug weapon</td><td>Average (8+) Gun Combat (slug) (DEX)</td><td>Same range and fail condition as energy weapon.</td></tr>
+                <tr><td class="td-cyan">Cutting tool</td><td>Average (8+) Mechanic (DEX)</td><td>Removes Cut Rate + Effect in Resilience per round. See tables below.</td></tr>
+                <tr><td class="td-cyan">Breaching tube</td><td>—</td><td>Cuts through unarmoured hull in under 2 minutes. Sealed passage — no decompression. Fastest forced option.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card-row" style="margin-top:12px">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Cutting Tools</div>
+              <table class="ref-table">
+                <thead><tr><th>Tool</th><th>TL</th><th>Cut Rate</th><th>Cost</th></tr></thead>
+                <tbody>
+                  <tr><td class="td-cyan">Emergency Cutter</td><td>10</td><td>1</td><td>Cr1,000</td></tr>
+                  <tr><td class="td-cyan">Rescue Cutter</td><td>9</td><td>3</td><td>Cr3,000</td></tr>
+                  <tr><td class="td-cyan">Heavy-Duty Cutter</td><td>11</td><td>6</td><td>Cr5,000</td></tr>
+                  <tr><td class="td-cyan">Assault Cutter</td><td>12</td><td>8</td><td>Cr6,000</td></tr>
+                  <tr><td class="td-cyan">Advanced (+2 TLs)</td><td>varies</td><td>+2</td><td>+25%</td></tr>
+                </tbody>
+              </table>
+              <p class="ref-note">Most ships carry an Emergency Cutter in the ship's locker.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Component Resilience</div>
+              <table class="ref-table">
+                <thead><tr><th>Component</th><th>Holed</th><th>Full Breach</th></tr></thead>
+                <tbody>
+                  <tr><td class="td-cyan">Hatch, unarmoured</td><td>4</td><td>15</td></tr>
+                  <tr><td class="td-cyan">Airlock, unarmoured</td><td>6</td><td>25</td></tr>
+                  <tr><td class="td-cyan">Hatch, armoured</td><td>6+Armour</td><td>25+Armour</td></tr>
+                  <tr><td class="td-cyan">Airlock, armoured</td><td>10+Armour</td><td>35+Armour</td></tr>
+                  <tr><td class="td-cyan">Hull, unarmoured</td><td>50</td><td>250</td></tr>
+                  <tr><td class="td-cyan">Hull, armoured</td><td>100+10×Armour</td><td>400+20×Armour</td></tr>
+                </tbody>
+              </table>
+              <p class="ref-note">Holed = personnel entry possible. Full Breach = open passage.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weapons & Armour -->
+        <div class="ref-section">
+          <h2 class="ref-section-title">Weapons &amp; Armour</h2>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Weapon Penalties</div>
+              <p class="rule-body" style="margin-bottom:8px; font-size:0.85rem; color:#b0d8e8;">Preferred: snub pistol or laser pistol (Zero-G trait, minimal system damage on miss). Blade of choice: the cutlass. Weapons with recoil are dangerous in zero-G. Grenades are strongly discouraged — random, destructive, prone to friendly fire. <em style="color:#4a9ab8">High Guard p.131</em></p>
+              <table class="ref-table">
+                <thead><tr><th>Weapon Type</th><th>DM</th></tr></thead>
+                <tbody>
+                  <tr><td>Pistols, blades</td><td>+0</td></tr>
+                  <tr><td>Carbine, accelerator rifle</td><td class="td-penalty">−1</td></tr>
+                  <tr><td>Rifle, laser rifle</td><td class="td-penalty">−2</td></tr>
+                  <tr><td>Heavy weapons</td><td class="td-penalty">−4</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Armour Penalties</div>
+              <p class="rule-body" style="margin-bottom:8px; font-size:0.85rem; color:#b0d8e8;">Boarding vacc suit is preferred — good protection, no penalty. Heavier armour trades mobility for protection.</p>
+              <table class="ref-table">
+                <thead><tr><th>Armour</th><th>DM to Physical</th></tr></thead>
+                <tbody>
+                  <tr><td class="td-cyan">Boarding vacc suit</td><td>+0</td></tr>
+                  <tr><td class="td-cyan">Combat environment suit</td><td>+0 (fails in vacuum after D3×10 min)</td></tr>
+                  <tr><td class="td-cyan">Combat armour</td><td class="td-penalty">−1</td></tr>
+                  <tr><td class="td-cyan">Battle dress</td><td class="td-penalty">−2</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Combat Aboard Ship -->
+        <div class="ref-section">
+          <h2 class="ref-section-title">Combat Aboard Ship</h2>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Stacking</div>
+            <p class="rule-body" style="margin-bottom:10px">In tight ship corridors, combatants form a stack. The front person absorbs most attacks. <em style="color:#4a9ab8">High Guard p.132</em></p>
+            <table class="ref-table">
+              <tbody>
+                <tr><td style="width:55%">After a successful hit, roll 2D — <strong>9 or less</strong></td><td>Front target in the stack is hit.</td></tr>
+                <tr><td>After a successful hit, roll 2D — <strong>10–12</strong></td><td>Another random member of the group is hit instead.</td></tr>
+                <tr><td>To target a specific non-front person</td><td>Must roll <strong>10+</strong> on 2D first — fail means the front person is the target.</td></tr>
               </tbody>
             </table>
           </div>
 
           <div class="rule-card" style="margin-top:12px">
-            <div class="rule-card-title">Dogfighting Notes</div>
+            <div class="rule-card-title">Missed Shots</div>
+            <p class="rule-body" style="margin-bottom:10px">All fired rounds must strike something. Hard surfaces ricochet; soft targets absorb. Ships with <strong>armoured bulkheads</strong> apply DM−1 to these rolls.</p>
+            <table class="ref-table">
+              <thead><tr><th>2D</th><th>Result</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">1–3</td><td>Bounces back — roll 8+ to hit a random member of the <strong>attacking</strong> group.</td></tr>
+                <tr><td class="td-cyan">4–5</td><td>Ricochets — roll 8+ to hit a random member of the <strong>opposing</strong> group.</td></tr>
+                <tr><td class="td-cyan">6–8</td><td>Minor system damaged (ceiling lights, door controls, etc.).</td></tr>
+                <tr><td class="td-cyan">9–10</td><td>Round embeds in non-critical item (furniture, wall panel, etc.).</td></tr>
+                <tr><td class="td-cyan">11–12</td><td>Critical system damaged (airlock controls, fuel line, bridge controls, etc.).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Damage Thresholds</div>
+            <table class="ref-table">
+              <thead><tr><th>Weapon Damage</th><th>Minor System</th><th>Critical System</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">1–3D</td><td>Damaged — Average (8+) Mechanic (2D min, EDU) + spare parts to repair.</td><td>Superficially damaged, remains functional.</td></tr>
+                <tr><td class="td-cyan">4–5D</td><td>Destroyed — requires full replacement.</td><td>Damaged — Average (8+) Mechanic (1D×10 min, EDU) + spare parts.</td></tr>
+                <tr><td class="td-cyan">6D+</td><td>Destroyed — requires full replacement.</td><td>Destroyed, cascading failures, must be completely replaced.</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">Grenades and Blast weapons automatically count as 6D+.</p>
+          </div>
+
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Fuel System Danger</div>
+            <p class="rule-body" style="margin-bottom:10px">Ruptured fuel lines can cause catastrophic explosions. Most tanks have baffles limiting damage to one compartment. <em style="color:#4a9ab8">High Guard p.133</em></p>
             <table class="ref-table">
               <tbody>
-                <tr><td style="width:45%">Turret weapons</td><td>Can fire into any arc — dogfight usually only applies attack roll penalties, not restrictions.</td></tr>
-                <tr><td>Distant enemies</td><td>Ships in a dogfight cannot attack ships at further ranges; ships outside cannot attack into a dogfight without risk of friendly fire.</td></tr>
-                <tr><td>Round length</td><td>Dogfights use 6-second rounds. Resolve fully before returning to space combat 6-minute rounds.</td></tr>
-                <tr><td>Spacecraft vs vehicles</td><td>Spacecraft suffer DM−2 when dogfighting vehicles; they are designed for vast distances, not atmospheric knife-fights.</td></tr>
+                <tr><td style="width:40%">Explosion in vacuum</td><td><strong>8D damage, Blast 10.</strong> Non-vacuum-sealed armour: no protection. Vacc suits: full protection.</td></tr>
+                <tr><td>Explosion with atmosphere present</td><td><strong>3DD damage.</strong> Oxygen dramatically amplifies the blast.</td></tr>
               </tbody>
             </table>
           </div>
@@ -624,19 +910,14 @@
 
         <div class="special-divider">
           <div class="special-divider-line"></div>
-          <div class="special-divider-label">Boarding Actions</div>
+          <div class="special-divider-label">Abstract Resolution — NPC Boarding</div>
           <div class="special-divider-line"></div>
         </div>
 
         <div class="ref-section">
-          <h2 class="ref-section-title">Boarding Actions</h2>
           <div class="rule-card">
-            <p class="rule-body">When two ships are at <strong>Adjacent range</strong> (within 1km), marines may launch a boarding action during the <strong>Actions Step</strong>. The action takes <strong>2D rounds</strong> to resolve. <em style="color:#4a9ab8">Core Rulebook p.175</em></p>
-          </div>
-
-          <div class="rule-card" style="margin-top:12px">
-            <div class="rule-card-title">Resolving a Boarding Action</div>
-            <p class="rule-body" style="margin-bottom:10px">Both sides roll <strong>2D</strong> and apply modifiers below. The defender subtracts their total from the attacker's. Compare the result on the Boarding Actions table.</p>
+            <div class="rule-card-title">Resolving a Boarding Action (Abstract)</div>
+            <p class="rule-body" style="margin-bottom:10px">Use when players are <strong>not directly involved</strong>. Both sides roll <strong>2D</strong> and apply modifiers. The defender subtracts their total from the attacker's, then compare on the results table. <em style="color:#4a9ab8">Core Rulebook p.175</em></p>
             <table class="ref-table">
               <thead><tr><th>Modifier</th><th>DM</th></tr></thead>
               <tbody>
@@ -649,9 +930,8 @@
               </tbody>
             </table>
           </div>
-
           <div class="rule-card" style="margin-top:12px">
-            <div class="rule-card-title">Boarding Action Results</div>
+            <div class="rule-card-title">Results</div>
             <table class="ref-table">
               <thead><tr><th>Result</th><th>Outcome</th></tr></thead>
               <tbody>
@@ -660,11 +940,10 @@
                 <tr><td style="color:#b0d8e8">−1 to −3</td><td>Fighting continues in 1D rounds; defender gains DM+2. Ship being boarded loses 2D Hull.</td></tr>
                 <tr><td style="color:#b0d8e8">0</td><td>Fighting continues in 1D rounds, no modifier change.</td></tr>
                 <tr><td class="td-bonus">1 to 3</td><td>Fighting continues in 1D rounds; attacker gains DM+2. Ship being boarded loses 2D Hull.</td></tr>
-                <tr><td class="td-bonus">4 to 6</td><td>Boarding successful. Ship takes 1D damage (ignores armour). Attacker takes control after another 2D rounds of pacification.</td></tr>
+                <tr><td class="td-bonus">4 to 6</td><td>Boarding successful. Ship takes 1D damage (ignores armour). Attacker takes control after 2D rounds of pacification.</td></tr>
                 <tr><td class="td-bonus">7 or more</td><td>Attackers storm the ship and take control immediately.</td></tr>
               </tbody>
             </table>
-            <p class="ref-note">On a "fighting continues" result the referee may opt to play out the action at Ground scale — attackers have gained entry and must fight through the ship's corridors.</p>
           </div>
         </div>
 

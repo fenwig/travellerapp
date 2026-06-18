@@ -308,140 +308,106 @@
 
         <div class="ref-section">
           <h2 class="ref-section-title">Critical Hit Effects</h2>
-
           <div class="rule-card">
-            <div class="rule-card-title">Fuel</div>
-            <table class="ref-table">
-              <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
+            <div style="overflow-x:auto">
+            <table class="ref-table" style="font-size:0.78rem; min-width:700px; table-layout:fixed; width:100%">
+              <colgroup>
+                <col style="width:13%">
+                <col style="width:14.5%">
+                <col style="width:14.5%">
+                <col style="width:14.5%">
+                <col style="width:14.5%">
+                <col style="width:14.5%">
+                <col style="width:14.5%">
+              </colgroup>
+              <thead>
+                <tr><th>Location</th><th>Sev 1</th><th>Sev 2</th><th>Sev 3</th><th>Sev 4</th><th>Sev 5</th><th>Sev 6</th></tr>
+              </thead>
               <tbody>
-                <tr><td class="td-cyan">1</td><td>Fuel leak — will run dry in 2D hours.</td></tr>
-                <tr><td class="td-cyan">2</td><td>Fuel leak — will run dry in 1D hours.</td></tr>
-                <tr><td class="td-cyan">3</td><td>Fuel leak — will run dry in 1D minutes.</td></tr>
-                <tr><td class="td-cyan">4</td><td>Fuel leak — will run dry in 1D rounds.</td></tr>
-                <tr><td class="td-cyan">5</td><td>Fuel explodes. Hull Severity +1.</td></tr>
-                <tr><td class="td-cyan">6</td><td>Fuel explodes. Hull Severity +1D.</td></tr>
+                <tr>
+                  <td class="td-cyan">Fuel</td>
+                  <td>Leak — runs dry in 2D hours</td>
+                  <td>Leak — runs dry in 1D hours</td>
+                  <td>Leak — runs dry in 1D minutes</td>
+                  <td>Leak — runs dry in 1D rounds</td>
+                  <td>Fuel explodes; Hull Sev +1</td>
+                  <td>Fuel explodes; Hull Sev +1D</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Power Plant</td>
+                  <td>Speed −1 Band</td>
+                  <td>Speed −D3 Bands</td>
+                  <td>Speed −1D Bands</td>
+                  <td>Speed reduced to zero</td>
+                  <td>Speed to zero; Hull Sev +1</td>
+                  <td>Speed to zero; Hull Sev +1D</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Weapon</td>
+                  <td>Random weapon DM−2</td>
+                  <td>Random weapon disabled</td>
+                  <td>Random weapon destroyed</td>
+                  <td>Random weapon explodes; Hull Sev +1</td>
+                  <td>Random weapon explodes; Hull Sev +1</td>
+                  <td>Random weapon explodes; Hull Sev +1</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Armour</td>
+                  <td>Facing armour −1D</td>
+                  <td>Facing armour −1D</td>
+                  <td>Facing armour −1D</td>
+                  <td>Facing armour −2D</td>
+                  <td>Facing armour −2D; Hull Sev +1</td>
+                  <td>Facing armour −2D; Hull Sev +1</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Hull</td>
+                  <td>1D damage</td>
+                  <td>2D damage</td>
+                  <td>3D damage; watercraft takes on water</td>
+                  <td>4D damage; watercraft sinks in 1D hours</td>
+                  <td>5D damage; watercraft sinks in 1D minutes</td>
+                  <td>6D damage; watercraft sinks in D3 rounds</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Cargo</td>
+                  <td>10% cargo destroyed</td>
+                  <td>1D×10% cargo destroyed</td>
+                  <td>2D×10% cargo destroyed</td>
+                  <td>All cargo destroyed</td>
+                  <td>All cargo destroyed; Hull Sev +1</td>
+                  <td>All cargo destroyed; Hull Sev +1</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Occupants</td>
+                  <td>Random occupant 1D damage</td>
+                  <td>Random occupant 2D damage</td>
+                  <td>D3 occupants take 2D damage</td>
+                  <td>1D occupants take 2D damage</td>
+                  <td>D3 occupants take 3D damage</td>
+                  <td>All occupants take 4D damage</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Drive System</td>
+                  <td>Control checks DM−1</td>
+                  <td>Control DM−2; Speed −1 Band</td>
+                  <td>Control DM−3; Speed −D3 Bands</td>
+                  <td>Control DM−4; Speed −1D Bands</td>
+                  <td>Speed reduced to zero</td>
+                  <td>Speed to zero; Hull Sev +1</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Systems</td>
+                  <td>DM−2 to all comms, sensors &amp; computer checks</td>
+                  <td>Roll 1D: lose Comms (1–2), Sensors (3–4), or Computer (5–6)</td>
+                  <td>Roll 1D: lose Comms (1–2), Sensors (3–4), or Computer (5–6)</td>
+                  <td>Roll 1D: lose Comms (1–2), Sensors (3–4), or Computer (5–6)</td>
+                  <td>Hull Sev +1</td>
+                  <td>Hull Sev +1</td>
+                </tr>
               </tbody>
             </table>
-          </div>
-
-          <div class="rule-card">
-            <div class="rule-card-title">Power Plant</div>
-            <table class="ref-table">
-              <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
-              <tbody>
-                <tr><td class="td-cyan">1</td><td>Speed reduced by one Band.</td></tr>
-                <tr><td class="td-cyan">2</td><td>Speed reduced by D3 Bands.</td></tr>
-                <tr><td class="td-cyan">3</td><td>Speed reduced by 1D Bands.</td></tr>
-                <tr><td class="td-cyan">4</td><td>Speed reduced to zero.</td></tr>
-                <tr><td class="td-cyan">5</td><td>Speed reduced to zero. Hull Severity +1.</td></tr>
-                <tr><td class="td-cyan">6</td><td>Speed reduced to zero. Hull Severity +1D.</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="rule-card">
-            <div class="rule-card-title">Weapon</div>
-            <table class="ref-table">
-              <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
-              <tbody>
-                <tr><td class="td-cyan">1</td><td>Random weapon suffers DM−2 when used.</td></tr>
-                <tr><td class="td-cyan">2</td><td>Random weapon disabled.</td></tr>
-                <tr><td class="td-cyan">3</td><td>Random weapon destroyed.</td></tr>
-                <tr><td class="td-cyan">4</td><td>Random weapon explodes. Hull Severity +1.</td></tr>
-                <tr><td class="td-cyan">5</td><td>Random weapon explodes. Hull Severity +1.</td></tr>
-                <tr><td class="td-cyan">6</td><td>Random weapon explodes. Hull Severity +1.</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="rule-card">
-            <div class="rule-card-title">Armour</div>
-            <table class="ref-table">
-              <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
-              <tbody>
-                <tr><td class="td-cyan">1</td><td>Armour on the facing hit reduced by −1D.</td></tr>
-                <tr><td class="td-cyan">2</td><td>Armour on the facing hit reduced by −1D.</td></tr>
-                <tr><td class="td-cyan">3</td><td>Armour on the facing hit reduced by −1D.</td></tr>
-                <tr><td class="td-cyan">4</td><td>Armour on the facing hit reduced by −2D.</td></tr>
-                <tr><td class="td-cyan">5</td><td>Armour on facing reduced by −2D. Hull Severity +1.</td></tr>
-                <tr><td class="td-cyan">6</td><td>Armour on facing reduced by −2D. Hull Severity +1.</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="rule-card">
-            <div class="rule-card-title">Hull</div>
-            <table class="ref-table">
-              <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
-              <tbody>
-                <tr><td class="td-cyan">1</td><td>Vehicle suffers 1D damage.</td></tr>
-                <tr><td class="td-cyan">2</td><td>Vehicle suffers 2D damage.</td></tr>
-                <tr><td class="td-cyan">3</td><td>Vehicle suffers 3D damage. Watercraft will start to take on water.</td></tr>
-                <tr><td class="td-cyan">4</td><td>Vehicle suffers 4D damage. Watercraft will sink in 1D hours.</td></tr>
-                <tr><td class="td-cyan">5</td><td>Vehicle suffers 5D damage. Watercraft sink in 1D minutes.</td></tr>
-                <tr><td class="td-cyan">6</td><td>Vehicle suffers 6D damage. Watercraft sink in D3 rounds.</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="rule-card">
-            <div class="rule-card-title">Cargo</div>
-            <table class="ref-table">
-              <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
-              <tbody>
-                <tr><td class="td-cyan">1</td><td>10% of cargo destroyed.</td></tr>
-                <tr><td class="td-cyan">2</td><td>1D × 10% of cargo destroyed.</td></tr>
-                <tr><td class="td-cyan">3</td><td>2D × 10% of cargo destroyed.</td></tr>
-                <tr><td class="td-cyan">4</td><td>All cargo destroyed.</td></tr>
-                <tr><td class="td-cyan">5</td><td>All cargo destroyed. Hull Severity +1.</td></tr>
-                <tr><td class="td-cyan">6</td><td>All cargo destroyed. Hull Severity +1.</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="rule-card">
-            <div class="rule-card-title">Occupants</div>
-            <table class="ref-table">
-              <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
-              <tbody>
-                <tr><td class="td-cyan">1</td><td>Random occupant takes 1D damage.</td></tr>
-                <tr><td class="td-cyan">2</td><td>Random occupant takes 2D damage.</td></tr>
-                <tr><td class="td-cyan">3</td><td>D3 occupants take 2D damage.</td></tr>
-                <tr><td class="td-cyan">4</td><td>1D occupants take 2D damage.</td></tr>
-                <tr><td class="td-cyan">5</td><td>D3 occupants take 3D damage.</td></tr>
-                <tr><td class="td-cyan">6</td><td>All occupants take 4D damage.</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="rule-card">
-            <div class="rule-card-title">Drive System</div>
-            <table class="ref-table">
-              <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
-              <tbody>
-                <tr><td class="td-cyan">1</td><td>All checks to control vehicle suffer DM−1.</td></tr>
-                <tr><td class="td-cyan">2</td><td>All checks to control vehicle suffer DM−2 and speed reduced by one band.</td></tr>
-                <tr><td class="td-cyan">3</td><td>All checks to control vehicle suffer DM−3 and speed reduced by D3 bands.</td></tr>
-                <tr><td class="td-cyan">4</td><td>All checks to control vehicle suffer DM−4 and speed reduced by 1D bands.</td></tr>
-                <tr><td class="td-cyan">5</td><td>Speed reduced to zero.</td></tr>
-                <tr><td class="td-cyan">6</td><td>Speed reduced to zero. Hull Severity +1.</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="rule-card">
-            <div class="rule-card-title">Systems</div>
-            <table class="ref-table">
-              <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
-              <tbody>
-                <tr><td class="td-cyan">1</td><td>All checks to use comms, sensors and computers suffer DM−2.</td></tr>
-                <tr><td class="td-cyan">2</td><td>Roll 1D: 1–2 vehicle loses use of Comms, 3–4 Sensors, 5–6 Computer.</td></tr>
-                <tr><td class="td-cyan">3</td><td>Roll 1D: 1–2 vehicle loses use of Comms, 3–4 Sensors, 5–6 Computer.</td></tr>
-                <tr><td class="td-cyan">4</td><td>Roll 1D: 1–2 vehicle loses use of Comms, 3–4 Sensors, 5–6 Computer.</td></tr>
-                <tr><td class="td-cyan">5</td><td>Hull Severity +1.</td></tr>
-                <tr><td class="td-cyan">6</td><td>Hull Severity +1.</td></tr>
-              </tbody>
-            </table>
+            </div>
           </div>
         </div>
 

@@ -28,6 +28,7 @@
       <a href="combat.html" class="sidebar-nav-item">Combat</a>
       <a href="vehicles.html" class="sidebar-nav-item">Vehicles</a>
       <a href="spacecraft-operations.html" class="sidebar-nav-item active">Spacecraft Operations</a>
+      <a href="spacecraft-combat.html" class="sidebar-nav-item">Spacecraft Combat</a>
       <a href="equipment.html" class="sidebar-nav-item">Equipment</a>
       <a href="trade.html" class="sidebar-nav-item">Trade</a>
       <div class="sidebar-signout">
@@ -41,6 +42,8 @@
       <div class="tab-nav">
         <button class="tab-btn active" onclick="showTab('travel')">Space Travel</button>
         <button class="tab-btn" onclick="showTab('operations')">Operations</button>
+        <button class="tab-btn" onclick="showTab('types')">Types</button>
+        <button class="tab-btn" onclick="showTab('crew')">Crew</button>
         <button class="tab-btn" onclick="showTab('tech')">Spacecraft Tech</button>
         <button class="tab-btn" onclick="showTab('finance')">Finance</button>
       </div>
@@ -254,38 +257,6 @@
       <div id="tab-operations" class="tab-content" style="display:none">
 
         <div class="ref-section">
-          <h2 class="ref-section-title">Spacecraft Types</h2>
-          <div class="rule-card">
-            <table class="ref-table">
-              <thead>
-                <tr><th>Type</th><th>Definition</th></tr>
-              </thead>
-              <tbody>
-                <tr><td class="td-cyan">Ship</td><td>Any spacecraft of 100 tons or more.</td></tr>
-                <tr><td class="td-cyan">Small Craft</td><td>Any spacecraft under 100 tons. Cannot jump between star systems.</td></tr>
-                <tr><td class="td-cyan">Capital Ship</td><td>A ship exceeding 5,000 tons.</td></tr>
-                <tr><td class="td-cyan">System Ship</td><td>A ship without a jump drive — confined to one star system.</td></tr>
-              </tbody>
-            </table>
-            <p class="rule-body" style="margin-top:10px">Size, components and cargo are measured in <strong>displacement tons</strong>. One displacement ton displaces the same volume as one ton of liquid hydrogen — roughly <strong>14 cubic metres</strong>. <em style="color:#4a9ab8">Core Rulebook p.149</em></p>
-          </div>
-          <div class="rule-card-row">
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Streamlined Hull</div>
-              <p class="rule-body">Designed to fly through atmosphere. Features wings or a lifting body. No penalties for atmospheric entry.</p>
-            </div>
-            <div class="rule-card rule-card-half">
-              <div class="rule-card-title">Partially Streamlined</div>
-              <p class="rule-body">Can enter atmospheres and skim gas giants. Extremely ungainly — all Pilot checks made at <strong>DM−2</strong> in atmosphere (except Atmosphere 3 or less).</p>
-            </div>
-          </div>
-          <div class="rule-card">
-            <div class="rule-card-title">Unstreamlined Hull</div>
-            <p class="rule-body">Completely non-aerodynamic. Must make a <strong>Pilot check at DM−4</strong> when entering any atmosphere, and again <strong>every minute</strong> of flight. Each failed check inflicts <strong>1D damage, ignoring Armour</strong>.</p>
-          </div>
-        </div>
-
-        <div class="ref-section">
           <h2 class="ref-section-title">Power</h2>
           <div class="rule-card">
             <p class="rule-body" style="margin-bottom:10px">Every system requires Power from the ship's power plant. Under normal circumstances most ships produce enough to run everything. <em style="color:#4a9ab8">Core Rulebook p.152</em></p>
@@ -418,6 +389,371 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- TYPES TAB -->
+      <div id="tab-types" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Core Definitions</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Type</th><th>Definition</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Ship</td><td>Any spacecraft of 100 tons or more.</td></tr>
+                <tr><td class="td-cyan">Small Craft</td><td>Any spacecraft under 100 tons. Cannot mount jump drives and cannot travel between star systems independently.</td></tr>
+                <tr><td class="td-cyan">Starship</td><td>A ship capable of interstellar travel under its own power via jump drive.</td></tr>
+                <tr><td class="td-cyan">System Ship</td><td>A ship without a jump drive — confined to a single star system. Often cheaper and optimised for in-system roles.</td></tr>
+                <tr><td class="td-cyan">Capital Ship</td><td>A ship exceeding 5,000 tons. Requires Pilot (capital ships) to operate.</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:10px">Size, components and cargo are measured in <strong>displacement tons</strong>. One displacement ton displaces the same volume as one ton of liquid hydrogen — roughly <strong>14 cubic metres</strong>. <em style="color:#4a9ab8">Core Rulebook p.149 / High Guard p.5</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Small Craft</h2>
+          <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">Vessels under 100 tons. Cannot jump independently — typically carried by or operating near a parent ship. <em style="color:#4a9ab8">High Guard p.5–6</em></p>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Boat</div>
+              <p class="rule-body">A generic small craft used for in-system transport, shuttle runs, or utility work. Optimised for short trips rather than combat or survey roles.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Shuttle</div>
+              <p class="rule-body">An interface craft designed to move personnel and cargo between orbit and a planet's surface, or between ships in close proximity. The workhorse of any large ship's small craft complement.</p>
+            </div>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Fighter</div>
+              <p class="rule-body">A small, fast, highly manoeuvrable combat craft. Carries fixed weapons or light turrets and relies on speed and agility rather than armour. Usually launched from carriers or capital ships.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Bomber</div>
+              <p class="rule-body">A heavier combat small craft designed to deliver ordnance against larger ships or planetary targets. Carries missiles, torpedoes, or ortillery weapons. Less agile than a fighter but carries a far greater punch.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Torpedo Boat</div>
+            <p class="rule-body">A small craft built around torpedo delivery. Designed to close rapidly with larger ships and release a salvo before withdrawing. High risk but devastating if the torpedoes reach their target.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Starships</h2>
+          <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">Jump-capable vessels of 100 tons or more. The backbone of interstellar commerce, exploration and light military operations. <em style="color:#4a9ab8">High Guard p.6</em></p>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Blockade Runner</div>
+              <p class="rule-body">A fast, often lightly armed vessel optimised for speed and stealth. Built to slip through hostile or controlled space, evade pursuit, and deliver high-value cargo or passengers where others cannot.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Courier</div>
+              <p class="rule-body">A small, swift vessel dedicated to carrying mail, messages, and critical small parcels between systems. Information moves at jump speed and couriers are the lifeline of interstellar communications.</p>
+            </div>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Q-Ship</div>
+              <p class="rule-body">A disguised warship that presents the appearance of an ordinary merchant vessel. Concealed weapons are revealed only after luring an attacker into close range — a deadly trap for pirates and raiders.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Trader / Merchant</div>
+              <p class="rule-body">A general-purpose commercial vessel for carrying cargo and passengers between systems. Ranges from small free traders operated by independent crews to large subsidised merchants running fixed routes for a corporation or government.</p>
+            </div>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Freighter</div>
+              <p class="rule-body">A large commercial vessel optimised almost entirely for cargo capacity at the expense of speed and comfort. Drive and crew space are minimised; cargo holds are maximised. Common on high-volume trade routes.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Liner</div>
+              <p class="rule-body">A passenger vessel designed for comfort and service. High-end liners offer luxury staterooms, entertainment, and fine dining on regular interstellar routes. Carries some cargo but passenger experience is the primary revenue driver.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Yacht</div>
+            <p class="rule-body">A private vessel owned and operated for personal use by wealthy individuals, nobles, or corporations. Often well-appointed and sometimes armed. Yachts vary widely in size and capability but share a focus on comfort and independence over commercial efficiency.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Military Ships</h2>
+          <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">Warships and support vessels operated by navies, mercenary fleets, or planetary defence forces. <em style="color:#4a9ab8">High Guard p.6–7</em></p>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Cutter</div>
+              <p class="rule-body">A small, fast multi-role warship used for patrol, interception, and customs enforcement. Often the first military vessel encountered in border systems. Well-armed for its size but limited in range and endurance.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Corvette</div>
+              <p class="rule-body">A light warship used for escort duty, patrol, and anti-piracy operations. Larger and more capable than a cutter, corvettes can operate independently for extended periods and carry a small crew complement of marines.</p>
+            </div>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Frigate</div>
+              <p class="rule-body">A mid-sized warship designed for escort and interdiction. Frigates screen larger vessels from fighters and missiles, and are fast enough to run down most merchant ships. A common sight in Imperial border patrols.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Destroyer</div>
+              <p class="rule-body">A fast, heavily armed warship built for fleet screening, anti-small craft warfare, and torpedo attack runs against larger ships. Destroyers sacrifice armour and endurance for speed and firepower.</p>
+            </div>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">System Defence Boat (SDB)</div>
+              <p class="rule-body">A powerful warship without a jump drive, designed solely to defend a single system. SDBs can be extremely well-armed and armoured for their cost because they carry no jump fuel or drive tonnage. A serious threat to any invading fleet that must come to them.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Fleet Escort</div>
+              <p class="rule-body">A warship optimised to protect capital ships from fighters, missiles, and smaller attack craft. Carries extensive point defence and screening weapons. Operates as part of a fleet formation rather than independently.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Troop Ship</div>
+            <p class="rule-body">A military transport designed to move large numbers of soldiers and their equipment between systems. Usually lightly armed and dependent on escort for protection. Carries drop capsules, landing craft, or assault shuttles for planetary insertion.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Capital Ships</h2>
+          <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">Ships exceeding 5,000 tons. Require Pilot (capital ships). The decisive instruments of fleet warfare. <em style="color:#4a9ab8">High Guard p.7</em></p>
+          <div class="rule-card">
+            <div class="rule-card-title">Cruisers</div>
+            <div class="rule-card-row" style="margin-top:10px">
+              <div class="rule-card rule-card-half" style="background:#0d1a24">
+                <div class="rule-card-title" style="font-size:0.8rem">Light Cruiser</div>
+                <p class="rule-body" style="font-size:0.85rem">The smallest capital ship class. Faster and less costly than heavier cruisers, used for independent operations, raiding, and showing the flag in secondary systems.</p>
+              </div>
+              <div class="rule-card rule-card-half" style="background:#0d1a24">
+                <div class="rule-card-title" style="font-size:0.8rem">Heavy Cruiser</div>
+                <p class="rule-body" style="font-size:0.85rem">The standard capital warship. Heavy cruisers balance firepower, armour, and jump range. They form the core of most fleet battle groups and can operate independently for extended campaigns.</p>
+              </div>
+            </div>
+            <div class="rule-card-row" style="margin-top:8px">
+              <div class="rule-card rule-card-half" style="background:#0d1a24">
+                <div class="rule-card-title" style="font-size:0.8rem">Armoured Cruiser</div>
+                <p class="rule-body" style="font-size:0.85rem">A heavily protected variant that trades some offensive firepower for greatly increased armour and screens. Designed to absorb punishment and remain in the battle line longer than standard cruisers.</p>
+              </div>
+              <div class="rule-card rule-card-half" style="background:#0d1a24">
+                <div class="rule-card-title" style="font-size:0.8rem">Strike Cruiser</div>
+                <p class="rule-body" style="font-size:0.85rem">An offensive specialist that maximises firepower over protection. Strike cruisers are built to close quickly and deliver overwhelming damage before withdrawing — less durable but devastating in the opening phase of an engagement.</p>
+              </div>
+            </div>
+          </div>
+          <div class="rule-card" style="margin-top:14px">
+            <div class="rule-card-title">Carriers</div>
+            <div class="rule-card-row" style="margin-top:10px">
+              <div class="rule-card rule-card-half" style="background:#0d1a24">
+                <div class="rule-card-title" style="font-size:0.8rem">Escort Carrier</div>
+                <p class="rule-body" style="font-size:0.85rem">A smaller carrier focused on providing fighter cover for convoys and task forces. Carries fewer fighters than a fleet carrier but can be built faster and in greater numbers. Critical in convoy protection roles.</p>
+              </div>
+              <div class="rule-card rule-card-half" style="background:#0d1a24">
+                <div class="rule-card-title" style="font-size:0.8rem">Assault Carrier</div>
+                <p class="rule-body" style="font-size:0.85rem">Combines fighter operations with a significant marine complement and landing craft. Designed for planetary assault — projects power from orbit to the surface. Often leads AssaultRon (assault squadron) operations.</p>
+              </div>
+            </div>
+            <div class="rule-card" style="background:#0d1a24; margin-top:8px">
+              <div class="rule-card-title" style="font-size:0.8rem">Fleet Carrier</div>
+              <p class="rule-body" style="font-size:0.85rem">The largest carrier class. Carries a massive fighter and small craft complement capable of dominating an entire star system's space. Fleet carriers rarely engage in direct combat — their fighters and escorts do the fighting while the carrier directs operations.</p>
+            </div>
+          </div>
+          <div class="rule-card" style="margin-top:14px">
+            <div class="rule-card-title">Battle Tender</div>
+            <p class="rule-body">A large support vessel designed to transport and service non-jump-capable system ships and battle riders across interstellar distances. The battle tender carries these powerful but jumpless vessels to the fight, then releases them for combat while acting as a mobile base. Allows navies to field highly effective system warships anywhere in their territory.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CREW TAB -->
+      <div id="tab-crew" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <p class="rule-body" style="margin-bottom:20px; font-size:0.88rem; color:#b0d8e8;">Each crew role carries distinct responsibilities aboard ship. Select a role to expand its full description. <em style="color:#4a9ab8">High Guard p.85–99</em></p>
+
+          <!-- Administrator -->
+          <div class="special-card" id="crew-administrator">
+            <div class="special-card-header" onclick="toggleSpecial('crew-administrator')">
+              <span>Administrator</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body">The administrator role is only present on large spacecraft — 2,000 tons or more for commercial ships and 1,000 tons or more for military craft. These ships are rarely privately owned and are usually corporate or government property. An administrator may be in command of the ship or its mission, overseeing a staff of accountants, clerks, pursers, personnel managers, liaison officers, quartermasters, and others.</p>
+              <p class="rule-body" style="margin-top:8px">Administrators track fuel, supplies, cargo, and work schedules, and oversee voyage progress and mission milestones. On freighters and military ships, their job is to ensure the mission is accomplished efficiently by handling all the details the operational crew does not have time for. The best admins are sticklers for process — "if you play by the rules, you win the game" is a common refrain.</p>
+              <p class="rule-body" style="margin-top:8px">The administrator's role extends beyond the ship's hull. A good admin knows the laws, customs, and cultures of every world on the route — smoothing over problems with docking clearance, customs inspections, or port authority disputes. On military ships, admins are expert procurers, skilled at stretching limited budgets and finding quality supplies. Some administrators also serve as the ship's attorney, drawing on legal precedents when adjudication is required.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Key skills:</strong> Admin, Advocate, Broker — <strong>Required:</strong> Ships 2,000+ tons (commercial), 1,000+ tons (military)</p>
+            </div>
+          </div>
+
+          <!-- Astrogator -->
+          <div class="special-card" id="crew-astrogator">
+            <div class="special-card-header" onclick="toggleSpecial('crew-astrogator')">
+              <span>Astrogator</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body">Astrogators are only required on jump-capable spacecraft. The astrogator's primary job is to plot the ship's course through jumpspace — calculating departure point, jump distance, and estimated arrival point using the astrogation computer, but also understanding astronomy and jumpspace physics well enough to perform the calculations manually if necessary.</p>
+              <p class="rule-body" style="margin-top:8px">Jumps of one parsec are relatively straightforward, but difficulty increases significantly with distance. Ships with longer jump ratings require more experienced astrogators to avoid misjumps. When a ship needs to jump early — before reaching the 100-diameter safe limit — the astrogator's accuracy becomes critical, as errors under these conditions are far more dangerous.</p>
+              <p class="rule-body" style="margin-top:8px">Astrogators also play a key role in normal space, working with the pilot and sensor operator to track position and nearby objects. When coming out of jump, the first question is always "Where am I?" — the astrogator analyses sensor array data, library programs, and starport feeds to establish position. They can also synchronise fleet jumps so multiple ships exit jumpspace together, which is vital for military operations and convoy security.</p>
+              <p class="rule-body" style="margin-top:8px">Deep space jumps — far from any gravity wells — require advanced triangulation techniques and are among the most demanding tasks an astrogator faces. The astrogator role is the only one in Charted Space that most species do not automate. It is considered as much an art form as a technical discipline.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Key skills:</strong> Astrogation, Navigation — <strong>Required:</strong> Jump-capable ships only</p>
+            </div>
+          </div>
+
+          <!-- Captain -->
+          <div class="special-card" id="crew-captain">
+            <div class="special-card-header" onclick="toggleSpecial('crew-captain')">
+              <span>Captain</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body">The captain is the ship's leading officer, assigned to command for a specified period or indefinitely. The captain executes their duty under the rules of the region in which the ship operates — Imperial law in most of Charted Space — and the policies of the ship's owner, whether that is a navy, merchant line, scout service, or private patron.</p>
+              <p class="rule-body" style="margin-top:8px">Being captain does not require mastery of every crew role. The captain's job is to know the ship's mission and command the crew to achieve it. Most captains rise through the ranks by demonstrating competence in one or more roles, but exceptions exist — a large merchant captain might be an expert broker, a military captain might understand tactics without ever having manned a turret, and a pirate captain might simply be the toughest person aboard.</p>
+              <p class="rule-body" style="margin-top:8px">On smaller ships, the captain typically doubles as pilot, astrogator, or another crew role. Interstellar custom holds that ships under 100 tons have a "skipper" rather than a full captain. On larger ships, the captain focuses entirely on command — directing crew, liaising with port authorities, making mission-critical decisions, and keeping the ship out of trouble in both the physical and legal sense.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Key skills:</strong> Leadership, Tactics, Admin — <strong>Required:</strong> Ships 100 tons or more (interstellar custom)</p>
+            </div>
+          </div>
+
+          <!-- Engineer -->
+          <div class="special-card" id="crew-engineer">
+            <div class="special-card-header" onclick="toggleSpecial('crew-engineer')">
+              <span>Engineer</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body">An engineer's work is never done. Engineers are responsible for the maintenance and repair of the ship's drives, power plant, and life-support systems. When all systems are running at peak performance their job looks simple — monitor functions and engage the jump drive when called upon. In practice, keeping hundreds of interdependent components operational is demanding work that never truly stops.</p>
+              <p class="rule-body" style="margin-top:8px">Life support is perhaps the least glamourous but most critical responsibility. Engineers maintain atmospheric pressure and oxygen levels, filter carbon dioxide, manage gravitic systems (g-compensation and artificial gravity), oversee water and waste, and ensure early fire detection and suppression. The g-compensation system counters the ship's thrust — if thrust exceeds the system's rating, the engineer can push it further, but only briefly and at risk of damage.</p>
+              <p class="rule-body" style="margin-top:8px">Drive systems include both the manoeuvre drive for normal space and the jump drive for interstellar travel. The jump drive draws power into energy sinks before creating the jump bubble. Its governor manages jump distance and is one of the most complex — and least fully understood — components on any ship. Engineers understand how it works without fully understanding why jumpspace behaves as it does.</p>
+              <p class="rule-body" style="margin-top:8px">Exterior work — hull inspection, turret interfaces, sensor housings, fuel scoops — also falls to the engineer. Most engineers prefer hands-on access over remote drones, requiring vacc suit competence. Monthly maintenance is a significant burden but can be spread throughout the month rather than all at once. Engineers tend to keep their full awareness of the ship's dangers — a fusion reactor, tons of liquid hydrogen fuel, hard vacuum on the other side of the hull — largely to themselves.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Key skills:</strong> Engineer (j-drive, m-drive, power), Mechanic, Electronics — <strong>Required:</strong> All ships with drives</p>
+            </div>
+          </div>
+
+          <!-- Gunner -->
+          <div class="special-card" id="crew-gunner">
+            <div class="special-card-header" onclick="toggleSpecial('crew-gunner')">
+              <span>Gunner</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body">Gunners operate the weapons and defences that ships use in space combat. Over the enormous distances involved, hitting a manoeuvring target requires more than technology — it demands an understanding of psychology and the ability to process analytics under pressure. The best gunners develop a feel for their opponents based on experience and recognisable tendencies. Gunnery is as much an art form as a technical skill.</p>
+              <p class="rule-body" style="margin-top:8px">Gunnery has four specialisations. <strong>Turret gunners</strong> are the gunslingers of the profession — solitary operators relying on reflexes and quick decision-making. Laser turret gunners also perform point defence against incoming missiles and torpedoes. <strong>Sandcaster gunners</strong> deploy laser-mitigating chaff into the space between the ship and enemy fire — unglamorous work that can be the difference between life and death.</p>
+              <p class="rule-body" style="margin-top:8px"><strong>Ortillery gunners</strong> operate orbital strike weapons against planetary targets, accounting for atmospheric density, geography, and distance to ground zero — often under strict time constraints and while the ship is exposed to surface-to-space fire. <strong>Screen gunners</strong> operate nuclear and meson dampeners, protecting capital ships from the weapons that can destroy them in a single hit. <strong>Capital and bay gunners</strong> operate large weapon systems in crews — bay crews must function as a team, while spinal mount crews can number in the hundreds with their own internal hierarchy.</p>
+              <p class="rule-body" style="margin-top:8px">Even during peacetime, the best gunners are never truly idle — they study past battles, run simulations, and drill constantly. In combat, gunnery control can be centralised on the bridge or distributed throughout the ship; capital ships almost always use distributed control so that a single hit cannot silence all weapons at once.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Key skills:</strong> Gunner (turrets, ortillery, screens, capital) — <strong>Required:</strong> Armed ships; 1 per occupied turret</p>
+            </div>
+          </div>
+
+          <!-- Maintenance -->
+          <div class="special-card" id="crew-maintenance">
+            <div class="special-card-header" onclick="toggleSpecial('crew-maintenance')">
+              <span>Maintenance (Drivehands)</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body">Large ships require maintenance staff in addition to engineers to keep all systems healthy when engineers are occupied with core drive and power plant operations. The primary skill is Mechanic, but those with additional Electronics qualifications or a basic understanding of engineering are called <em>drivehands</em> — a title that carries more respect and can command marginally higher pay.</p>
+              <p class="rule-body" style="margin-top:8px">Maintenance workers handle the blue-collar work that keeps a ship liveable and functional: replacing lighting systems, cleaning ventilation shafts, unjamming iris valves, keeping cargo cranes rolling. Engineers tackle the high-tech drive components; maintenance staff handle everything else. Their repairs are often temporary stopgaps pending a permanent fix by an engineer.</p>
+              <p class="rule-body" style="margin-top:8px">During combat, maintenance personnel may be called into hazardous areas to bring critical systems back online after battle damage — work that requires vacc suit competence. Maintenance staff are also responsible for keeping all subordinate craft — ship's boats, fighters, air/rafts, ATVs — properly serviced and ready to operate.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Key skills:</strong> Mechanic, Electronics — <strong>Required:</strong> Commercial ships 1,000+ tons; military ships 500+ tons</p>
+            </div>
+          </div>
+
+          <!-- Marines -->
+          <div class="special-card" id="crew-marines">
+            <div class="special-card-header" onclick="toggleSpecial('crew-marines')">
+              <span>Marines &amp; Ship's Troops</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body"><strong>Ship's troops</strong> are soldiers assigned primarily to defend their own vessel. When docked to another ship, their duties extend to the attached vessel — providing security, conducting inspections, or joining boarding parties. <strong>Marines</strong> share these duties but are additionally trained for orbital drops, raiding, and lift-infantry operations that require capital ships equipped with hangar and vehicle transport capacity.</p>
+              <p class="rule-body" style="margin-top:8px">Both roles require significant training that is mostly conducted off-ship — weapons qualification needs a proper range, and small-unit tactics drills aboard the ship create chaos for the rest of the crew. When not actively on duty, marines and ship's troops risk idleness during jump. Low berths are sometimes used for long transits but are avoided when troops need to arrive combat-ready.</p>
+              <p class="rule-body" style="margin-top:8px">Accommodation is typically in double-occupancy staterooms or a barracks. A barracks environment is preferred for its effect on team cohesion and combat performance. On smaller ships, the unit might be as small as a reinforced squad under a sergeant; on larger vessels, troop contingents can resemble traditional military units with full command structure up to brigadier or general rank.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Key skills:</strong> Gun Combat, Melee, Tactics (military), Vacc Suit — <strong>See:</strong> Spacecraft Combat — Boarding Actions</p>
+            </div>
+          </div>
+
+          <!-- Medic -->
+          <div class="special-card" id="crew-medic">
+            <div class="special-card-header" onclick="toggleSpecial('crew-medic')">
+              <span>Medic</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body">The ship's medic — also called medical officer, ship's doctor, or naval surgeon — is responsible for the physical and mental well-being of all crew and passengers. One medic is required per 120 crew, and one per medical bay is recommended so each bay can handle up to three patients simultaneously. Smaller ships with no formal requirement are still strongly advised to have at least one crew member with Medic skill.</p>
+              <p class="rule-body" style="margin-top:8px">Daily duties include treating illness and wounds, administering medication, operating the medical bay or autodoc, and managing the ship's drug supply. If low berths are fitted, the medic oversees cryogenic placement and revival — journeyman medics perform revivals slowly to reduce the risk of injury. Ships carrying middle passengers should have Medic 1+ aboard; high passengers warrant Medic 2+.</p>
+              <p class="rule-body" style="margin-top:8px">Travellers encounter an enormous variety of pathogens, venoms, radiation sources, and alien hazards across Charted Space. Worlds on the frontier may harbour entirely unknown microbes or flora that defeat standard vaccines and treatments. The ship's medic must be prepared to improvise and adapt, often without the equipment available at a major starport. Military medics may deploy into the field with troops, requiring cross-training in Navigation, Recon, and Survival.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Key skills:</strong> Medic — <strong>Required:</strong> 1 per 120 crew; strongly recommended on all ships</p>
+            </div>
+          </div>
+
+          <!-- Officer -->
+          <div class="special-card" id="crew-officer">
+            <div class="special-card-header" onclick="toggleSpecial('crew-officer')">
+              <span>Officer</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body">Officers manage departments, maintain watches, and ensure the crew and ship perform to standard. Commercial ships require one officer per 20 crew; military ships require one per 10 crew. On any ship large enough to have multiple departments, officers form the command layer between the captain and the crew — reviewing department readiness, checking in on systems, and reporting findings upward.</p>
+              <p class="rule-body" style="margin-top:8px">Common departments on both civilian and military ships include command, flight, engineering, small craft operations, and medical. Military vessels add marine or ship's troops command, and a master-at-arms. At minimum, three officers are needed to run a continuous watch rotation at any single position. As the officer corps grows, watches are established for all critical departments — bridge, deck, and engineering at a minimum, with cargo, gunnery, stewards, and administration added as crew size warrants.</p>
+              <p class="rule-body" style="margin-top:8px">When not on watch, officers review upcoming mission objectives and prepare for the ship's next destination — whether that means docking preparations, trade negotiations, flag-showing at a friendly port, or battle stations in a conflict zone. Officers are expected to be the most informed members of the crew short of the captain, and the captain relies on them to stay that way.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Required:</strong> 1 per 20 crew (commercial); 1 per 10 crew (military)</p>
+            </div>
+          </div>
+
+          <!-- Pilot -->
+          <div class="special-card" id="crew-pilot">
+            <div class="special-card-header" onclick="toggleSpecial('crew-pilot')">
+              <span>Pilot</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body">The pilot flies the ship in normal space and within planetary atmospheres where the hull design permits. Pilot skill is divided into three specialisations: <strong>Small Craft</strong> (under 100 tons), <strong>Spacecraft</strong> (100–4,999 tons), and <strong>Capital Ships</strong> (5,000 tons and above). Knowledge of one imparts partial understanding of the others, but the experience of flying each is significantly different.</p>
+              <p class="rule-body" style="margin-top:8px">Small craft pilots prioritise precision and delicacy — launching from tubes, recovering aboard moving ships, flying nimble fighters in atmosphere. Spacecraft pilots must manage wilderness fuel scooping, atmospheric landings of much larger hulls, and the complexity of carrying a full crew and passengers whose safety is always in mind. Cargo-optimised traders give pilots little thrust to work with, demanding creativity under pressure.</p>
+              <p class="rule-body" style="margin-top:8px">Capital ship pilots operate at an entirely different level. Moving a capital ship is like moving a small mountain — lateral thrust (roughly 25% of forward thrust) and reverse thrust (10%) are used constantly for manoeuvres that would be considered trivial on smaller vessels. Capital ship pilots must maintain acute situational awareness of the dozens of small craft and support ships operating in close proximity at all times. In fleet combat, they provide firing platforms for the gunners by continuously adjusting the ship's facing.</p>
+              <p class="rule-body" style="margin-top:8px">The pilot is the most connected crew member aboard ship — working continuously with the astrogator, engineer, sensor operator, and gunners. During jumpspace transit there is little flying to do, giving pilots time to cross-train and prepare for the next destination. Coming out of jump requires immediate preparation: new laws, new traffic, new hazards.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Key skills:</strong> Pilot (small craft / spacecraft / capital ships) — <strong>Required:</strong> All ships</p>
+            </div>
+          </div>
+
+          <!-- Purser -->
+          <div class="special-card" id="crew-purser">
+            <div class="special-card-header" onclick="toggleSpecial('crew-purser')">
+              <span>Purser</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body">The purser is responsible for the ship's finances. Found on ships as small as 200-ton tramp traders, the purser handles all freight, cargo, mail, and passenger transactions at every port of call. On a small merchant ship the purser may be the most important crew member of all — and on smaller vessels the captain often doubles in the role.</p>
+              <p class="rule-body" style="margin-top:8px">The key skill is Broker, but the purser's role demands much more. Advocate skill helps navigate the differing legal landscapes of each world — what is legal cargo in one system may be contraband in the next. Admin skill cuts through procedural delays and keeps the ship moving, which matters enormously when the mortgage and operating costs run continuously. Diplomat and Persuade skill help establish the best deals, while Carouse and Streetwise assist in finding passengers, cargo, and freight contacts.</p>
+              <p class="rule-body" style="margin-top:8px">The cadence for tramp traders is to jump into system, work in from the 100-diameter limit to the starport, engage a local brokerage, complete trade, then depart — typically 1–2 weeks per jump, enabling two or sometimes three jumps per month. The purser must be an expert improviser: information travels at jump speed, and circumstances at the next port may be entirely different from what was expected when the ship departed.</p>
+              <p class="rule-body" style="margin-top:8px">On military capital ships the purser's role is entirely different — managing the ship's supply chain under a tight budget, keeping crew morale high through adequate provisioning, and sourcing spares and stores during long deployments in foreign or uncharted territory. Pursers who balance frugality against morale tend to advance rapidly.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Key skills:</strong> Broker, Admin, Advocate, Carouse, Diplomat — <strong>Found on:</strong> Ships 200+ tons; capital ships</p>
+            </div>
+          </div>
+
+          <!-- Sensor Operator -->
+          <div class="special-card" id="crew-sensop">
+            <div class="special-card-header" onclick="toggleSpecial('crew-sensop')">
+              <span>Sensor Operator (Sensop)</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body">The sensor operator — commonly called "sensop" — is responsible for maintaining awareness of everything in the ship's vicinity. On ships operating in dangerous systems, the sensop is critical: pirates, enemy warships, and stealthed vessels may be present before the crew even suspects trouble. An unwatched sensor station when coming out of jump, approaching a gas giant, or entering a contested system is a serious vulnerability.</p>
+              <p class="rule-body" style="margin-top:8px">Enemy ships running on low power with passive-only sensors can remain nearly invisible until they choose to act — the sensop's job is to spot them first. A successful Average (8+) Electronics (sensors) check maintains sensor contact with a target throughout combat, though ships with stealth coatings or emissions absorption grids can break contact whenever they change range bands, forcing the sensop to reacquire.</p>
+              <p class="rule-body" style="margin-top:8px">In combat, the sensop juggles multiple simultaneous tasks: maintaining sensor locks on targets (making them easier to hit), conducting electronic warfare to jam enemy communications or break jams on one's own, and attempting to prematurely detonate or misdirect incoming missile salvos. Multiple sensor stations or a capital ship bridge configuration allows these tasks to be split between operators; on smaller ships, the sensop must prioritise under pressure.</p>
+              <p class="rule-body" style="margin-top:8px">Outside of combat, sensops scan rogue planetoids, derelict ships, and abandoned stations before the ship approaches — providing critical intelligence about what is present on the other side before commitment. Improved and Advanced sensor arrays with densitometers and neural activity scanners greatly expand what a skilled sensop can determine at range.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Key skills:</strong> Electronics (sensors, comms) — <strong>Required:</strong> Recommended on all ships; essential in combat</p>
+            </div>
+          </div>
+
+          <!-- Steward -->
+          <div class="special-card" id="crew-steward">
+            <div class="special-card-header" onclick="toggleSpecial('crew-steward')">
+              <span>Steward</span><span class="special-card-toggle">+</span>
+            </div>
+            <div class="special-card-body" style="display:none">
+              <p class="rule-body">The ship's steward is responsible for the care, feeding, and comfort of crew and passengers, and for maintaining the cleanliness and condition of all accommodation areas. The steward is the busiest crew member during jump — while others have little to do, the steward is actively caring for passengers throughout the week-long transit.</p>
+              <p class="rule-body" style="margin-top:8px"><strong>High passage</strong> passengers receive luxury treatment: well-appointed single staterooms, high-quality meals three times daily, and attentive personal service. One Steward level is required per 10 high passengers. <strong>Middle passage</strong> is more standard — single occupancy with more modest service. One Steward level per 100 middle passengers. <strong>Basic</strong> and <strong>low passage</strong> passengers require minimal steward attention beyond occasional check-ins and automated alerts.</p>
+              <p class="rule-body" style="margin-top:8px">For many passengers the steward is their only point of contact with the crew. Long voyages across multiple jumps can cause "space fatigue" — the steward helps combat this with ship tours, introductions to the captain, and social activity. Stewards who invest Cr1,000 or more per high passenger in quality provisions earn DM+1 when the purser seeks high passage bookings at the next port, and often collect generous tips.</p>
+              <p class="rule-body" style="margin-top:8px">Cross-training in Art (performer), Carouse, Diplomat, or Medic makes a steward far more valuable — entertaining passengers, providing basic medical care, or handling the social complexities of transporting high-status individuals through systems with very different cultural norms.</p>
+              <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><strong>Key skills:</strong> Steward, Carouse, Medic — <strong>Required:</strong> 1 level per 10 high passengers; 1 per 100 middle passengers</p>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       <!-- SPACECRAFT TECH TAB -->
@@ -601,6 +937,15 @@
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
   <script>
+    function toggleSpecial(id) {
+      const card = document.getElementById(id);
+      const body = card.querySelector('.special-card-body');
+      const toggle = card.querySelector('.special-card-toggle');
+      const open = body.style.display === 'block';
+      body.style.display = open ? 'none' : 'block';
+      toggle.textContent = open ? '+' : '−';
+    }
+
     function showTab(tab) {
       document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
