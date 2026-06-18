@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spacecraft Combat — Traveller</title>
   <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -27,6 +28,7 @@
       <a href="combat.html" class="sidebar-nav-item">Combat</a>
       <a href="vehicles.html" class="sidebar-nav-item">Vehicles</a>
       <a href="spacecraft-operations.html" class="sidebar-nav-item">Spacecraft Operations</a>
+      <a href="spacecraft-combat.html" class="sidebar-nav-item active">Spacecraft Combat</a>
       <a href="equipment.html" class="sidebar-nav-item">Equipment</a>
       <a href="trade.html" class="sidebar-nav-item">Trade</a>
       <div class="sidebar-signout">
@@ -36,13 +38,656 @@
 
     <main class="page-main">
       <h1 class="page-title">SPACECRAFT COMBAT</h1>
-      <p class="placeholder-msg">Coming soon — High Guard rules: initiative, range bands, attack rolls, damage, crew actions.</p>
+
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="showTab('setup')">Setup &amp; Crew</button>
+        <button class="tab-btn" onclick="showTab('sequence')">Combat Sequence</button>
+        <button class="tab-btn" onclick="showTab('weapons')">Weapons &amp; Damage</button>
+        <button class="tab-btn" onclick="showTab('missiles')">Missiles</button>
+        <button class="tab-btn" onclick="showTab('dogfight')">Dogfighting &amp; Boarding</button>
+      </div>
+
+      <!-- SETUP & CREW TAB -->
+      <div id="tab-setup" class="tab-content">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Round Structure</h2>
+          <div class="rule-card">
+            <p class="rule-body">Space combat uses a <strong>six-minute combat round</strong> (rather than six seconds used for personal and vehicle combat). Each Traveller on board takes up a duty position and acts once per round. When ships are at Close range (10km or less) or directly engaging vehicles or Travellers, switch to the <strong>Dogfighting rules</strong> using six-second rounds. <em style="color:#4a9ab8">Core Rulebook p.164</em></p>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Combat Steps (each round, in order)</div>
+            <table class="ref-table">
+              <tbody>
+                <tr><td class="td-cyan" style="width:30%">1. Manoeuvre Step</td><td>In Initiative order — each ship allocates Thrust to movement or combat manoeuvring.</td></tr>
+                <tr><td class="td-cyan">2. Attack Step</td><td>In Initiative order — each ship fires weapons or conducts boarding actions.</td></tr>
+                <tr><td class="td-cyan">3. Actions Step</td><td>In Initiative order — crew perform miscellaneous actions: repairs, jumping, reloading, electronic warfare.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Initiative</h2>
+          <div class="rule-formula">2D + Pilot skill + Ship's Thrust score</div>
+          <p class="rule-body" style="font-size:0.88rem; color:#b0d8e8; margin-top:8px">The commander may also make a <strong>Tactics (naval)</strong> check at battle start — the Effect is added to the ship's Initiative. Ships with better pilots and faster drives act first each round.</p>
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Surprise</div>
+            <p class="rule-body">Difficult to achieve in space — few places to hide. Damaged sensors, inattentive operators, asteroids, or feigning neutrality can allow one ship to approach undetected. A surprised ship <strong>cannot take any actions in the first round</strong>.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Range Bands</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:12px">All positions and weapon ranges in space combat use Range Bands. Most encounters begin at <strong>Very Long or Distant</strong> range. Actual combat typically starts at <strong>Long or Medium</strong> once ships close. <em style="color:#4a9ab8">Core Rulebook p.165</em></p>
+            <table class="ref-table">
+              <thead><tr><th>Range Band</th><th>Distance</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">Adjacent</td><td>1km or less</td></tr>
+                <tr><td class="td-cyan">Close</td><td>1–10km</td></tr>
+                <tr><td class="td-cyan">Short</td><td>11–1,250km</td></tr>
+                <tr><td class="td-cyan">Medium</td><td>1,251–10,000km</td></tr>
+                <tr><td class="td-cyan">Long</td><td>10,001–25,000km</td></tr>
+                <tr><td class="td-cyan">Very Long</td><td>25,001–50,000km</td></tr>
+                <tr><td class="td-cyan">Distant</td><td>More than 50,000km</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Crew Duties</h2>
+          <p class="rule-body" style="margin-bottom:12px; font-size:0.88rem; color:#b0d8e8;">Every Traveller participating in a battle must be assigned a duty. Only one <strong>Pilot</strong> and one <strong>Captain</strong>; all other roles can have multiple Travellers. Crew may reassign during battle (costs their Actions Step for that round). <em style="color:#4a9ab8">Core Rulebook p.164</em></p>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead><tr><th>Duty</th><th>Responsibilities</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">Pilot</td><td>Flies the ship — movement, evasive manoeuvres, combat manoeuvring. Only one per ship.</td></tr>
+                <tr><td class="td-cyan">Captain</td><td>Commands the ship — uses Leadership and Tactics skills to improve Initiative. Only one per ship.</td></tr>
+                <tr><td class="td-cyan">Engineer</td><td>Assigned to power plant, manoeuvre drive, or jump drive; also handles damage control and emergency overloads.</td></tr>
+                <tr><td class="td-cyan">Sensor Operator</td><td>Electronic warfare, sensor locks, detecting missiles.</td></tr>
+                <tr><td class="td-cyan">Turret Gunner</td><td>Operates one specific turret. Must declare which turret at the start of combat.</td></tr>
+                <tr><td class="td-cyan">Bay Gunner</td><td>Operates one specific bay weapon.</td></tr>
+                <tr><td class="td-cyan">Marine</td><td>Prepares to repel boarders or launch boarding actions.</td></tr>
+                <tr><td class="td-cyan">Passenger</td><td>Any Traveller not assigned a duty — assumed to be in their stateroom.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Automated Duties (Software)</div>
+            <table class="ref-table">
+              <tbody>
+                <tr><td style="width:45%">Fire Control program</td><td>Acts as a gunner or assists gunners.</td></tr>
+                <tr><td>Auto-Repair software + repair drones</td><td>Performs damage control.</td></tr>
+                <tr><td>Intellect + Expert (engineer)</td><td>Acts as engineer for j-drive, m-drive, or power plant.</td></tr>
+                <tr><td>Intellect + Expert (pilot)</td><td>Acts as pilot.</td></tr>
+                <tr><td>Intellect + Expert (electronics — sensors)</td><td>Acts as sensor operator.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Facing &amp; Fire Arcs</h2>
+          <div class="rule-card">
+            <p class="rule-body">Most spacecraft can spin or rotate freely and carry turret-mounted weapons with wide fire arcs — <strong>tracking facing is usually unnecessary</strong>. Exception: small craft (fighters) with <strong>fixed weapon mounts</strong> must physically point at their target, making facing relevant.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COMBAT SEQUENCE TAB -->
+      <div id="tab-sequence" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Manoeuvre Step</h2>
+          <div class="rule-card">
+            <p class="rule-body">In Initiative order, each pilot allocates their ship's <strong>Thrust</strong> between movement (changing range) and combat manoeuvring. All remaining unspent Thrust after movement may be used as <strong>Evasive Action</strong> reactions later in the round. <em style="color:#4a9ab8">Core Rulebook p.165</em></p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Movement — Ship Movement Table</div>
+            <p class="rule-body" style="margin-bottom:10px">Thrust listed is the amount required to move one Range Band closer or further. A ship can accumulate Thrust across multiple rounds. If two ships close on each other, add their Thrusts; if one flees, subtract the lower from the higher.</p>
+            <table class="ref-table">
+              <thead><tr><th>Range Band</th><th>Distance</th><th>Thrust Required</th><th>Example</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">Adjacent</td><td>1km or less</td><td>1</td><td>Docked ships</td></tr>
+                <tr><td class="td-cyan">Close</td><td>1–10km</td><td>1</td><td>Nearby or dogfighting vessels</td></tr>
+                <tr><td class="td-cyan">Short</td><td>11–1,250km</td><td>2</td><td>Ships in same orbital path</td></tr>
+                <tr><td class="td-cyan">Medium</td><td>1,251–10,000km</td><td>5</td><td>Surface to orbit</td></tr>
+                <tr><td class="td-cyan">Long</td><td>10,001–25,000km</td><td>10</td><td>Near to a planet</td></tr>
+                <tr><td class="td-cyan">Very Long</td><td>25,001–50,000km</td><td>25</td><td>Within jump limit</td></tr>
+                <tr><td class="td-cyan">Distant</td><td>50,000km+</td><td>50</td><td>Distant ships</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">Once a ship moves to Close or Adjacent range, immediately switch to the Dogfighting rules.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Combat Manoeuvring</div>
+            <p class="rule-body" style="margin-bottom:10px">Each remaining Thrust point (after movement) allows one of the following. Each may only be attempted once per round except Evasive Action.</p>
+            <table class="ref-table">
+              <tbody>
+                <tr><td class="td-cyan" style="width:30%">Aid Gunners</td><td>Pilot check to start a task chain with gunners — provides a firing platform bonus.</td></tr>
+                <tr><td class="td-cyan">Docking</td><td>Pilot check required. If unwilling target, opposed Pilot checks — docking ship suffers DM−2. Success allows boarding actions.</td></tr>
+                <tr><td class="td-cyan">Evasive Action</td><td>Each unspent Thrust point allows the ship to dodge one incoming attack. The attack suffers a negative DM equal to the <strong>pilot's skill</strong>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Attack Step</h2>
+          <div class="rule-card">
+            <div class="rule-card-title">Attack Roll</div>
+            <div class="rule-formula">2D + Gunner (appropriate speciality) + DEX DM</div>
+            <p class="rule-body" style="margin-top:8px">Target number is <strong>8+</strong>. A pilot may fire weapons in a single turret at <strong>DM−2</strong>, or fire fixed-mount weapons. Bay Gunners and Turret Gunners each operate one weapon. <em style="color:#4a9ab8">Core Rulebook p.166</em></p>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Common Attack Modifiers</div>
+            <table class="ref-table">
+              <thead><tr><th>Condition</th><th>DM</th></tr></thead>
+              <tbody>
+                <tr><td>Short Range</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Using a Pulse Laser</td><td class="td-bonus">+2</td></tr>
+                <tr><td>Using a Beam Laser</td><td class="td-bonus">+4</td></tr>
+                <tr><td>For every full 1,000 tons of target</td><td class="td-bonus">+1 (max DM+6)</td></tr>
+                <tr><td>Long Range</td><td class="td-penalty">−2</td></tr>
+                <tr><td>Very Long Range</td><td class="td-penalty">−4</td></tr>
+                <tr><td>Distant Range</td><td class="td-penalty">−6</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Reactions</h2>
+          <p class="rule-body" style="margin-bottom:12px; font-size:0.88rem; color:#b0d8e8;">Reactions are declared in response to incoming attacks — outside of normal turn order. <em style="color:#4a9ab8">Core Rulebook p.171</em></p>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Evasive Action (Pilot)</div>
+              <p class="rule-body">Each point of unspent Thrust after movement and combat manoeuvring allows the ship to dodge one incoming attack. The attack suffers a <strong>negative DM equal to the pilot's skill</strong>.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Point Defence (Gunner)</div>
+              <p class="rule-body">A turret-mounted laser can destroy incoming missiles. The weapon cannot also attack this round. Make a <strong>Gunner (turret)</strong> check against the salvo — the Effect removes that many missiles. DM+1 with two lasers in turret; DM+2 with three.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Disperse Sand (Gunner)</div>
+            <p class="rule-body">A sandcaster can block incoming laser attacks. Make a <strong>Gunner (turret)</strong> check against the laser — if successful, add <strong>1D + Effect</strong> to the ship's armour against that attack only. Uses one sand canister. Can also be directed against incoming boarders: success deals <strong>8D damage (Ground scale)</strong> to each target in the boarding party.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Actions Step</h2>
+          <p class="rule-body" style="margin-bottom:12px; font-size:0.88rem; color:#b0d8e8;">After attacks are resolved, each crew member performs one action in Initiative order, limited to their assigned duty. <em style="color:#4a9ab8">Core Rulebook p.171</em></p>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Captain Actions</div>
+            <table class="ref-table">
+              <tbody>
+                <tr><td class="td-cyan" style="width:35%">Improve Initiative</td><td>Leadership check. Effect (even if negative) is applied to the ship's Initiative for the next round only.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Engineer Actions</div>
+            <table class="ref-table">
+              <tbody>
+                <tr><td class="td-cyan" style="width:35%">Jump</td><td>Initiate jump. Hurried conditions raise difficulty by one level on both Astrogation and Engineer (j-drive) checks to bring time down to 1D minutes.</td></tr>
+                <tr><td class="td-cyan">Offline System</td><td>Engineer (power) check — shuts down any number of systems, freeing Power for other uses. Takes another round to bring systems back online.</td></tr>
+                <tr><td class="td-cyan">Overload Drive</td><td>Difficult (10+) Engineer (m-drive) check — increases Thrust by +1 next round. Fail with Effect −6 or worse: m-drive takes Severity 1 critical hit. Cumulative DM−2 each subsequent attempt (reset with 1D hours maintenance).</td></tr>
+                <tr><td class="td-cyan">Overload Plant</td><td>Difficult (10+) Engineer (power) check — increases Power by +10% next round. Fail with Effect −6 or worse: power plant takes Severity 1 critical hit. Cumulative DM−2 each subsequent attempt.</td></tr>
+                <tr><td class="td-cyan">Repair System</td><td>Average (8+) Engineer check — repairs effects of one critical hit. DM equal to negative Severity. Gains cumulative DM+1 per round worked on same hit. Quick repairs last 1D hours only; cannot repair Hull damage or destroyed equipment.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Gunner Actions</div>
+            <table class="ref-table">
+              <tbody>
+                <tr><td class="td-cyan" style="width:35%">Reload Turret</td><td>Reloads a sandcaster or missile rack. The turret cannot attack this round. Any Traveller with the Gunner skill may reload.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Sensor Operator Actions</div>
+            <table class="ref-table">
+              <tbody>
+                <tr><td class="td-cyan" style="width:35%">Sensor Lock</td><td>Electronics (sensors) check — all attacks against the locked target gain <strong>DM+2</strong> until the lock is broken.</td></tr>
+                <tr><td class="td-cyan">Electronic Warfare</td><td>Opposed Electronics (comms) check to jam enemy communications, or Electronics (sensors) to break a sensor lock. Also used as a missile countermeasure (see Missiles tab).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Marine Actions</div>
+            <table class="ref-table">
+              <tbody>
+                <tr><td class="td-cyan" style="width:35%">Boarding Action</td><td>When at Adjacent range, marines may launch a boarding action. Takes 2D rounds to resolve. See Dogfighting &amp; Boarding tab.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Any Crew</div>
+            <table class="ref-table">
+              <tbody>
+                <tr><td class="td-cyan" style="width:35%">Reassignment</td><td>Traveller changes their assigned duty. No other action this round; new duty takes effect next round.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- WEAPONS & DAMAGE TAB -->
+      <div id="tab-weapons" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Spacecraft Scale</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:12px">Spacecraft weapons use a different damage scale to ground weapons. Scale affects both <strong>attack rolls</strong> (easier to hit a large spacecraft with a ground weapon) and <strong>damage</strong> (spacecraft weapons are devastating against ground targets). <em style="color:#4a9ab8">Core Rulebook p.167</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Weapon Scale</th><th>Attacking</th><th>DM to Hit</th><th>Damage</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Ground</td><td>Ground target</td><td class="td-bonus">+0</td><td>×1</td></tr>
+                <tr><td class="td-cyan">Ground</td><td>Spacecraft target</td><td class="td-bonus">+2</td><td>÷10</td></tr>
+                <tr><td class="td-cyan">Spacecraft</td><td>Ground target</td><td class="td-penalty">−2</td><td>×10 (+ Blast 10)</td></tr>
+                <tr><td class="td-cyan">Spacecraft</td><td>Spacecraft target</td><td class="td-bonus">+0</td><td>×1</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">Scaling multiplication/division is applied after all other modifiers including Effect. If an ordinary ground weapon is mounted on a spacecraft, it still uses ground scale.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Spacecraft Weapons</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:12px">All weapons below are Spacecraft scale and require the <strong>Gunner</strong> skill. Maximum ranges are in Range Bands — weapons cannot attack beyond their listed Range Band. <em style="color:#4a9ab8">Core Rulebook p.167</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Weapon</th><th>TL</th><th>Range</th><th>Damage</th><th>Tons</th><th>Cost</th><th>Traits</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Beam Laser</td><td>10</td><td>Medium</td><td>1D</td><td>—</td><td>MCr0.5</td><td>—</td></tr>
+                <tr><td class="td-cyan">Missile Rack</td><td>7</td><td>Special</td><td>4D</td><td>—</td><td>MCr0.75</td><td>Smart</td></tr>
+                <tr><td class="td-cyan">Missile (nuclear)</td><td>—</td><td>Special</td><td>1DD</td><td>—</td><td>—</td><td>Radiation, Smart</td></tr>
+                <tr><td class="td-cyan">Particle Barbette</td><td>11</td><td>Very Long</td><td>4D*</td><td>5</td><td>MCr8</td><td>Radiation</td></tr>
+                <tr><td class="td-cyan">Pulse Laser</td><td>9</td><td>Long</td><td>2D</td><td>—</td><td>MCr1</td><td>—</td></tr>
+                <tr><td class="td-cyan">Sandcaster</td><td>9</td><td>Special</td><td>Special</td><td>—</td><td>MCr0.25</td><td>—</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">*Particle Barbette: after armour, multiply all damage by 3. Nuclear missiles: Cr450,000 per turret refill (12 missiles). Standard missiles: Cr250,000 per turret refill (12 missiles). Sandcasters: Cr25,000 per turret refill (20 canisters).</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Turret Mounts</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:12px">Turrets may be added to any ship of 100 tons or more — one turret per 100 tons of hull. Fixed mounts can only fire directly forward.</p>
+            <table class="ref-table">
+              <thead><tr><th>Mount</th><th>TL</th><th>Tons</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">Single Turret</td><td>7</td><td>1</td><td>MCr0.2</td></tr>
+                <tr><td class="td-cyan">Double Turret</td><td>8</td><td>1</td><td>MCr0.5</td></tr>
+                <tr><td class="td-cyan">Triple Turret</td><td>9</td><td>1</td><td>MCr1</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">Double/triple turrets with weapons of the same type may fire together — one attack roll, but each additional weapon adds +1 per damage die. Different weapon types in the same turret: only one type may fire per round.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Damaging Spacecraft</h2>
+          <div class="rule-card">
+            <div class="rule-card-title">Hull Damage</div>
+            <div class="rule-formula">Damage = Weapon dice + Effect — Armour Protection</div>
+            <p class="rule-body" style="margin-top:8px">Remaining damage is removed from the ship's <strong>Hull</strong>. When Hull reaches zero, the ship is wrecked — totally inoperable, beyond economic repair, with no power or life support. <em style="color:#4a9ab8">Core Rulebook p.168</em></p>
+          </div>
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Sustained Damage</div>
+            <p class="rule-body">Every time a ship takes damage equal to <strong>10% of its starting Hull</strong>, roll 2D on the Critical Hits Location table and apply a <strong>Severity 1</strong> critical hit to that location.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Critical Hits</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:12px">Triggered when an attack roll has <strong>Effect 6+</strong> and causes damage. Roll 2D on the Location table. Severity = Effect − 5. Extra damage from critical hit effects ignores armour. <em style="color:#4a9ab8">Core Rulebook p.168</em></p>
+            <p class="rule-body" style="margin-bottom:12px">If the same location is hit again, use whichever Severity is higher (new or original +1). A location at Severity 6 cannot be hit further — instead it deals <strong>6D extra damage</strong> each time.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Critical Hit Location (2D)</div>
+            <table class="ref-table">
+              <thead><tr><th>Roll</th><th>Location</th><th>Roll</th><th>Location</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">2</td><td>Sensors</td><td class="td-cyan">7</td><td>Hull</td></tr>
+                <tr><td class="td-cyan">3</td><td>Power Plant</td><td class="td-cyan">8</td><td>Manoeuvre Drive</td></tr>
+                <tr><td class="td-cyan">4</td><td>Fuel</td><td class="td-cyan">9</td><td>Cargo</td></tr>
+                <tr><td class="td-cyan">5</td><td>Weapon</td><td class="td-cyan">10</td><td>Jump Drive</td></tr>
+                <tr><td class="td-cyan">6</td><td>Armour</td><td class="td-cyan">11</td><td>Crew</td></tr>
+                <tr><td></td><td></td><td class="td-cyan">12</td><td>Bridge</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">If a location doesn't apply to this ship (e.g. no jump drive), roll again.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Critical Hit Effects by Severity</div>
+            <div style="overflow-x:auto">
+            <table class="ref-table" style="font-size:0.78rem; min-width:700px">
+              <thead>
+                <tr><th>Location</th><th>Sev 1</th><th>Sev 2</th><th>Sev 3</th><th>Sev 4</th><th>Sev 5</th><th>Sev 6</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="td-cyan">Sensors</td>
+                  <td>DM−2 to all sensor checks</td>
+                  <td>Inoperative beyond Medium range</td>
+                  <td>Inoperative beyond Short range</td>
+                  <td>Inoperative beyond Close range</td>
+                  <td>Inoperative beyond Adjacent range</td>
+                  <td>Sensors disabled</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Power Plant</td>
+                  <td>Power reduced by 10%</td>
+                  <td>Power reduced by 10%</td>
+                  <td>Power reduced by 50%</td>
+                  <td>Power reduced to 0</td>
+                  <td>Hull Sev +1; Power to 0</td>
+                  <td>Hull Sev +1D; Power to 0</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Fuel</td>
+                  <td>Leak: −1D tons/hour</td>
+                  <td>Leak: −1D tons/round</td>
+                  <td>Leak: −1D×10% of fuel</td>
+                  <td>Fuel tank destroyed</td>
+                  <td>Tank destroyed; Hull Sev +1</td>
+                  <td>Tank destroyed; Hull Sev +1D</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Weapon</td>
+                  <td>Random weapon DM−1</td>
+                  <td>Random weapon disabled</td>
+                  <td>Random weapon destroyed</td>
+                  <td>Random weapon explodes; Hull Sev +1</td>
+                  <td>D3 weapons explode; Hull Sev +1</td>
+                  <td>1D weapons explode; Hull Sev +1</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Armour</td>
+                  <td>Armour −1</td>
+                  <td>Armour −D3</td>
+                  <td>Armour −1D</td>
+                  <td>Armour −1D</td>
+                  <td>Armour −2D; Hull Sev +1</td>
+                  <td>Armour −2D; Hull Sev +1</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Hull</td>
+                  <td>1D damage</td>
+                  <td>2D damage</td>
+                  <td>3D damage</td>
+                  <td>4D damage</td>
+                  <td>5D damage</td>
+                  <td>6D damage</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">M-Drive</td>
+                  <td>Control checks DM−1</td>
+                  <td>Control DM−1; Thrust −1</td>
+                  <td>Control DM−1; Thrust −1</td>
+                  <td>Control DM−1; Thrust −1</td>
+                  <td>Thrust reduced to 0</td>
+                  <td>Thrust to 0; Hull Sev +1</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Cargo</td>
+                  <td>10% cargo destroyed</td>
+                  <td>1D×10% cargo destroyed</td>
+                  <td>2D×10% cargo destroyed</td>
+                  <td>All cargo destroyed</td>
+                  <td>All cargo destroyed; Hull Sev +1</td>
+                  <td>All cargo destroyed; Hull Sev +1</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">J-Drive</td>
+                  <td>Jump checks DM−2</td>
+                  <td>Jump drive disabled</td>
+                  <td>Jump drive destroyed</td>
+                  <td>Destroyed; Hull Sev +1</td>
+                  <td>Destroyed; Hull Sev +1</td>
+                  <td>Destroyed; Hull Sev +1</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Crew</td>
+                  <td>Random occupant 1D damage</td>
+                  <td>Life support fails in 1D hours</td>
+                  <td>1D occupants take 2D damage</td>
+                  <td>Life support fails in 1D rounds</td>
+                  <td>All occupants take 3D damage</td>
+                  <td>Life support fails</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Bridge</td>
+                  <td>Random station disabled</td>
+                  <td>Computer reboots (offline this round + next)</td>
+                  <td>Computer Bandwidth −50%</td>
+                  <td>Station destroyed; occupant 1D×1D damage</td>
+                  <td>Station destroyed; occupant 1D×1D damage; Hull Sev +1</td>
+                  <td>Computer destroyed</td>
+                </tr>
+              </tbody>
+            </table>
+            </div>
+          </div>
+
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Called Shots</div>
+            <p class="rule-body">At Short range or closer, a ship may attempt a called shot with direct-fire weapons (not missiles). Nominate the target location and attack at <strong>DM−2</strong>. If the attack succeeds and scores a critical hit, the attacker may choose which location is hit.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- MISSILES TAB -->
+      <div id="tab-missiles" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Launching Missiles</h2>
+          <div class="rule-card">
+            <p class="rule-body">Missiles are fired in <strong>salvos</strong> — all missiles launched by a ship at a single target in the same round. A triple turret with three missile racks fires up to 3 missiles; multiple turrets contribute to the same salvo. Each turret holds <strong>12 missiles</strong>. <em style="color:#4a9ab8">Core Rulebook p.172</em></p>
+            <p class="rule-body" style="margin-top:8px">Missiles at Adjacent or Close range <strong>lose the Smart trait</strong> — insufficient time to lock. Missile salvos have effective <strong>Thrust 10</strong>.</p>
+          </div>
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Missile Flight Time</div>
+            <table class="ref-table">
+              <thead><tr><th>Range at Launch</th><th>Rounds to Impact</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">Medium and below</td><td>Immediate</td></tr>
+                <tr><td class="td-cyan">Long</td><td>1 round</td></tr>
+                <tr><td class="td-cyan">Very Long</td><td>4 rounds</td></tr>
+                <tr><td class="td-cyan">Distant</td><td>10 rounds</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">A missile that hasn't reached its target within 10 rounds runs out of fuel and becomes inert.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Detecting Missile Launch</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">When missiles are launched, other ships' sensor operators may immediately attempt to detect them.</p>
+            <table class="ref-table">
+              <tbody>
+                <tr><td style="width:55%">Firing ship already detected</td><td><strong>Routine (6+)</strong> Electronics (sensors)</td></tr>
+                <tr><td>Firing ship not yet detected</td><td><strong>Average (8+)</strong> Electronics (sensors)</td></tr>
+                <tr><td>Every 10 full missiles in salvo</td><td class="td-bonus">DM+1 (max DM+6)</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:10px">Undetected missiles may be spotted at the start of every subsequent round with an <strong>Average (8+)</strong> Electronics (sensors) check.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Countermeasures</h2>
+          <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">As missiles take several rounds to arrive, track how many remain in each salvo — reduce as countermeasures take effect. <em style="color:#4a9ab8">Core Rulebook p.172</em></p>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Electronic Warfare</div>
+            <p class="rule-body">During the <strong>Actions Step</strong>, a sensor operator makes a <strong>Difficult (10+) Electronics (sensors)</strong> check. The Effect removes that many missiles from a single inbound salvo. May be applied to the same salvo multiple times over multiple rounds (effects are cumulative), but only <strong>once per round per salvo</strong> regardless of how many operators are available.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Flee</div>
+            <p class="rule-body">The ship thrusts away from incoming missiles, increasing Range Band. Missiles have extremely long range, so outrunning them is rarely possible — but it may buy time for electronic warfare or to initiate a jump.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Point Defence</div>
+            <p class="rule-body">Performed as a <strong>Reaction</strong> just as a salvo is about to make its attack roll. A turret gunner makes a <strong>Gunner (turret)</strong> check — the Effect removes that many missiles from the salvo. A turret with two lasers grants DM+1; three lasers grants DM+2. A weapon used for point defence cannot also attack this round. Only once per round per gunner.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Missile Attack &amp; Impact</h2>
+          <div class="rule-card">
+            <div class="rule-card-title">Missile Attack Roll</div>
+            <p class="rule-body" style="margin-bottom:10px">When a salvo reaches its target it attacks in the Attack Step. The Gunner skill of the firer and range are <strong>not used</strong> as modifiers. Instead:</p>
+            <table class="ref-table">
+              <tbody>
+                <tr><td style="width:55%">Each missile remaining in salvo</td><td class="td-bonus">DM+1 to attack roll</td></tr>
+                <tr><td>Missiles launched at Distant range</td><td class="td-penalty">DM−2 to attack roll</td></tr>
+                <tr><td>Evasive Action</td><td>Applied as normal</td></tr>
+                <tr><td>Smart trait</td><td>Use higher of missile TL or attacking ship TL</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Impact Damage</div>
+            <p class="rule-body">Roll damage as for a single missile. Deduct armour as normal. <strong>Do not add the Effect</strong> to damage — instead, <strong>multiply damage by the Effect</strong> (Effect cannot exceed the number of missiles remaining in the salvo).</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- DOGFIGHTING & BOARDING TAB -->
+      <div id="tab-dogfight" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Dogfighting</h2>
+          <div class="rule-card">
+            <p class="rule-body">When spacecraft are within <strong>Close or Adjacent range</strong> (10km or less), or directly engaging vehicles or Travellers, combat switches to <strong>six-second rounds</strong> using the normal vehicle combat rules. The three-step space combat sequence does not apply — use vehicle dogfight rules instead. <em style="color:#4a9ab8">Core Rulebook p.173</em></p>
+            <p class="rule-body" style="margin-top:8px">Dogfighting is <strong>automatic</strong> when hostile vessels are within close range — it does not cost an action. To escape, a ship needs greater Thrust than its enemy, or the enemy must be willing to let it leave.</p>
+          </div>
+
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Dogfight Resolution</div>
+            <p class="rule-body" style="margin-bottom:10px">At the start of every dogfight round, both pilots make <strong>opposed Pilot checks</strong> with the following modifiers. The winner chooses their fire arc positioning and gains DM+2 to all attack rolls; the loser suffers DM−2. A draw means neither can attack with fixed weapons.</p>
+            <p class="rule-body" style="margin-bottom:10px">If the dogfight continues, the prior round's winner applies the difference between that round's opposed check as a positive DM to the next.</p>
+            <table class="ref-table">
+              <thead><tr><th>Condition</th><th>DM</th></tr></thead>
+              <tbody>
+                <tr><td>Ship is 50–99 tons</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Ship is 100 tons</td><td class="td-penalty">−2</td></tr>
+                <tr><td>Each additional 100 tons above 100</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Each additional enemy in dogfight after first</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Each point of Thrust dedicated to dogfighting</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Spacecraft dogfighting vehicles</td><td class="td-penalty">−2 (additional)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Dogfighting Notes</div>
+            <table class="ref-table">
+              <tbody>
+                <tr><td style="width:45%">Turret weapons</td><td>Can fire into any arc — dogfight usually only applies attack roll penalties, not restrictions.</td></tr>
+                <tr><td>Distant enemies</td><td>Ships in a dogfight cannot attack ships at further ranges; ships outside cannot attack into a dogfight without risk of friendly fire.</td></tr>
+                <tr><td>Round length</td><td>Dogfights use 6-second rounds. Resolve fully before returning to space combat 6-minute rounds.</td></tr>
+                <tr><td>Spacecraft vs vehicles</td><td>Spacecraft suffer DM−2 when dogfighting vehicles; they are designed for vast distances, not atmospheric knife-fights.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="special-divider">
+          <div class="special-divider-line"></div>
+          <div class="special-divider-label">Boarding Actions</div>
+          <div class="special-divider-line"></div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Boarding Actions</h2>
+          <div class="rule-card">
+            <p class="rule-body">When two ships are at <strong>Adjacent range</strong> (within 1km), marines may launch a boarding action during the <strong>Actions Step</strong>. The action takes <strong>2D rounds</strong> to resolve. <em style="color:#4a9ab8">Core Rulebook p.175</em></p>
+          </div>
+
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Resolving a Boarding Action</div>
+            <p class="rule-body" style="margin-bottom:10px">Both sides roll <strong>2D</strong> and apply modifiers below. The defender subtracts their total from the attacker's. Compare the result on the Boarding Actions table.</p>
+            <table class="ref-table">
+              <thead><tr><th>Modifier</th><th>DM</th></tr></thead>
+              <tbody>
+                <tr><td>Superior Armour</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Superior Weaponry</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Superior Skills and Tactics</td><td class="td-bonus">+2</td></tr>
+                <tr><td>Superior Numbers</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Vastly Superior Numbers</td><td class="td-bonus">+3</td></tr>
+                <tr><td>Defender has no Marines on duty</td><td class="td-penalty">−2</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Boarding Action Results</div>
+            <table class="ref-table">
+              <thead><tr><th>Result</th><th>Outcome</th></tr></thead>
+              <tbody>
+                <tr><td class="td-penalty">−7 or less</td><td>Attackers soundly defeated. Defenders may launch their own boarding action with DM+4.</td></tr>
+                <tr><td class="td-penalty">−4 to −6</td><td>Attackers defeated — must retreat or are killed/captured.</td></tr>
+                <tr><td style="color:#b0d8e8">−1 to −3</td><td>Fighting continues in 1D rounds; defender gains DM+2. Ship being boarded loses 2D Hull.</td></tr>
+                <tr><td style="color:#b0d8e8">0</td><td>Fighting continues in 1D rounds, no modifier change.</td></tr>
+                <tr><td class="td-bonus">1 to 3</td><td>Fighting continues in 1D rounds; attacker gains DM+2. Ship being boarded loses 2D Hull.</td></tr>
+                <tr><td class="td-bonus">4 to 6</td><td>Boarding successful. Ship takes 1D damage (ignores armour). Attacker takes control after another 2D rounds of pacification.</td></tr>
+                <tr><td class="td-bonus">7 or more</td><td>Attackers storm the ship and take control immediately.</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">On a "fighting continues" result the referee may opt to play out the action at Ground scale — attackers have gained entry and must fight through the ship's corridors.</p>
+          </div>
+        </div>
+
+      </div>
+
     </main>
   </div>
 
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
   <script>
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).style.display = 'block';
+      event.target.classList.add('active');
+    }
+
+    function toggleSpecial(id) {
+      const card = document.getElementById(id);
+      card.classList.toggle('open');
+    }
+
     async function doSignOut() {
       await supabaseClient.auth.signOut();
       window.location.href = '../../index.html';
