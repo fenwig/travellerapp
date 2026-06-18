@@ -47,6 +47,7 @@
         <button class="tab-btn" onclick="showTab('energy')">Energy Weapons</button>
         <button class="tab-btn" onclick="showTab('heavy')">Heavy Weapons</button>
         <button class="tab-btn" onclick="showTab('explosives')">Explosives</button>
+        <button class="tab-btn" onclick="showTab('traits')">Traits</button>
       </div>
 
       <!-- ARMOR TAB -->
@@ -498,6 +499,116 @@
         </div>
 
       </div><!-- /tab-explosives -->
+
+      <!-- TRAITS TAB -->
+      <div id="tab-traits" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Destructive Weapons</h2>
+          <div class="rule-card">
+            <p class="rule-body">Some weapons are so powerful they can blast apart small vehicles with a single shot. These are referred to as <strong>Destructive</strong> and are noted in their Damage score with two Ds — for example, <strong>3DD</strong>. <em style="color:#4a9ab8">Core p.78</em></p>
+            <div class="rule-formula">Destructive damage = dice rolled × 10</div>
+            <p class="rule-body" style="margin-top:12px">A Gyrostabiliser <strong>cannot</strong> be added to any Destructive weapon. PGHP and FGHP weapons are both Destructive.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Weapon Traits</h2>
+          <div class="rule-card">
+            <p class="rule-body">Traits are special rules that significantly affect how a weapon is used. They appear in every weapon's stat line and are defined here. <em style="color:#4a9ab8">Core p.79</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Trait</th><th>Rule</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="td-cyan">AP X</td>
+                  <td>Armour Piercing — ignores an amount of Protection equal to X. Has no effect against spacecraft-scale targets unless the weapon is also spacecraft-scale.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Auto X</td>
+                  <td>Fires multiple rounds per trigger pull. Three modes:<br>
+                    <strong>Single</strong> — normal attack rules.<br>
+                    <strong>Burst</strong> — add Auto score to damage; uses Auto score rounds.<br>
+                    <strong>Full Auto</strong> — make Auto score separate attacks against targets within 6m of each other; uses 3× Auto score rounds.<br>
+                    Cannot combine Auto with Scope or an aiming action.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Blast X</td>
+                  <td>Affects every target within X metres of the impact point. No Dodge Reactions allowed — targets may only Dive for Cover. Cover between target and blast centre applies.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Bulky</td>
+                  <td>Requires STR 9+ to use without penalty. Below STR 9, attack rolls suffer a negative DM equal to the difference between the Traveller's STR DM and +1. A Gyrostabiliser (Cr500, TL9) removes this trait.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Radiation</td>
+                  <td>Target receives 2D×20 rads on a hit (2D×60 for spacecraft-scale weapons). If the weapon is also Destructive, every target within 10 metres receives 2D×20 rads as well.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Scope</td>
+                  <td>Vision-enhancing sights fitted to the weapon. Normally all attacks beyond 100m are automatically Extreme Range — Scope removes this limit, provided the Traveller aims before shooting.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Smart</td>
+                  <td>Guided rounds that home in on a target. Gain a DM to attack equal to the difference between the weapon's TL and the target's TL (usually their armour or vehicle). Minimum DM+1, maximum DM+6.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Stun</td>
+                  <td>Non-lethal. Damage is only applied to END (after armour). If END reaches 0, the target is incapacitated for a number of rounds equal to the excess damage. Stun damage is fully healed after one hour of rest.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Very Bulky</td>
+                  <td>Requires STR 12+ to use without penalty. Below STR 12, attack rolls suffer a negative DM equal to the difference between the Traveller's STR DM and +2. A Gyrostabiliser cannot be added to Destructive weapons.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Zero-G</td>
+                  <td>Little or no recoil. Can be used in low or zero gravity without requiring an Athletics (dexterity) check.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Additional Traits <em style="color:#4a9ab8; font-size:0.8em; font-weight:normal">CSC p.131</em></h2>
+          <div class="rule-card">
+            <p class="rule-body">The Central Supply Catalog introduces additional traits used by weapons in its expanded listings.</p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Trait</th><th>Rule</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="td-cyan">Dangerous</td>
+                  <td>This weapon can be lethal to its user. If an attack roll results in Effect −5 or worse, the weapon explodes — damage is inflicted on the firer and the weapon is destroyed.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Fire</td>
+                  <td>Sets the target on fire, causing damage every round after the initial attack. Only one Fire weapon's damage applies at a time (use the highest). A fire extinguishes itself on 2D 8+ at the start of each round, or a Traveller can spend a Significant Action and pass an Average (8+) DEX check to put it out (DM+2 with firefighting equipment).</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">One Use</td>
+                  <td>The weapon is completely expended after a single use and rendered inoperable. Disposable launchers and single-shot devices use this trait.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Silent</td>
+                  <td>The weapon channels or removes the excess sound produced when firing. Any attempt to detect the source of the shot suffers DM−6.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Smasher</td>
+                  <td>Extremely heavy and carries great momentum when swung. A target attacked by a Smasher weapon <strong>may not attempt to parry it</strong>.</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">Very Dangerous</td>
+                  <td>Only a madman uses this weapon. If an attack roll results in Effect −3 or worse, the weapon explodes — damage is inflicted on the firer and the weapon is destroyed.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tab-traits -->
 
     </main>
   </div>
