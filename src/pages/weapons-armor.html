@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weapons &amp; Armor — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <div class="stars"></div>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-group-label">Character Resources</div>
+      <a href="character-record.html" class="sidebar-nav-item">Character Record</a>
+      <a href="spacecraft-record.html" class="sidebar-nav-item">Spacecraft Record</a>
+      <a href="character-list.html" class="sidebar-nav-item">Character List</a>
+      <a href="character-creation.html" class="sidebar-nav-item">Character Creation</a>
+      <div class="sidebar-group-label">Reference</div>
+      <a href="general-rules.html" class="sidebar-nav-item">General Rules</a>
+      <a href="combat.html" class="sidebar-nav-item">Combat</a>
+      <a href="vehicles.html" class="sidebar-nav-item">Vehicles</a>
+      <a href="spacecraft-operations.html" class="sidebar-nav-item">Spacecraft Operations</a>
+      <a href="spacecraft-combat.html" class="sidebar-nav-item">Spacecraft Combat</a>
+      <a href="equipment.html" class="sidebar-nav-item">Equipment</a>
+      <a href="weapons-armor.html" class="sidebar-nav-item active">Weapons &amp; Armor</a>
+      <a href="trade.html" class="sidebar-nav-item">Trade</a>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">WEAPONS &amp; ARMOR</h1>
+
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="showTab('armor')">Armor</button>
+        <button class="tab-btn" onclick="showTab('melee')">Melee</button>
+        <button class="tab-btn" onclick="showTab('slug')">Slug Throwers</button>
+        <button class="tab-btn" onclick="showTab('energy')">Energy Weapons</button>
+        <button class="tab-btn" onclick="showTab('heavy')">Heavy Weapons</button>
+        <button class="tab-btn" onclick="showTab('explosives')">Explosives</button>
+      </div>
+
+      <!-- ARMOR TAB -->
+      <div id="tab-armor" class="tab-content">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Armor Rules</h2>
+          <div class="rule-card">
+            <p class="rule-body">Armor reduces damage by its Protection value before it affects characteristics. Only one suit of armor can normally be worn at a time. Resolve damage from the outside in — outer armor takes the hit first, then inner.</p>
+            <p class="rule-body">Some armors require a skill. <strong>Missing a required skill level inflicts DM-1 per missing level</strong> on all checks. No skill at all imposes the usual DM-3 unskilled penalty.</p>
+            <p class="rule-body">Worn armor has its mass reduced by 75% for encumbrance — it is distributed around the body. <em style="color:#4a9ab8">Core p.99 · CSC p.12</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Core Armor Types</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Armor</th><th>Protection</th><th>TL</th><th>Rad</th><th>Kg</th><th>Cost</th><th>Skill Required</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Jack</td><td class="td-bonus">+1</td><td>1</td><td>—</td><td>2</td><td>Cr50</td><td>None</td></tr>
+                <tr><td>Mesh</td><td class="td-bonus">+2</td><td>6</td><td>—</td><td>3</td><td>Cr150</td><td>None</td></tr>
+                <tr><td>Cloth</td><td class="td-bonus">+5</td><td>7</td><td>—</td><td>7</td><td>Cr250</td><td>None</td></tr>
+                <tr><td>Cloth (TL10)</td><td class="td-bonus">+8</td><td>10</td><td>—</td><td>3</td><td>Cr500</td><td>None</td></tr>
+                <tr><td>Flak Jacket</td><td class="td-bonus">+3</td><td>7</td><td>—</td><td>8</td><td>Cr100</td><td>None</td></tr>
+                <tr><td>Reflec</td><td class="td-bonus">+10 vs lasers only</td><td>10</td><td>—</td><td>1</td><td>Cr1,500</td><td>None</td></tr>
+                <tr><td>Ablat</td><td class="td-bonus">+1 (+6 vs lasers)</td><td>9</td><td>—</td><td>2</td><td>Cr75</td><td>None</td></tr>
+                <tr><td>Combat Armour</td><td class="td-bonus">+13</td><td>10</td><td>85</td><td>20</td><td>Cr96,000</td><td>Vacc Suit 1</td></tr>
+                <tr><td>Combat Armour (TL12)</td><td class="td-bonus">+17</td><td>12</td><td>145</td><td>16</td><td>Cr88,000</td><td>Vacc Suit 0</td></tr>
+                <tr><td>Vacc Suit</td><td class="td-bonus">+4</td><td>8</td><td>15</td><td>28</td><td>Cr12,000</td><td>Vacc Suit 1</td></tr>
+                <tr><td>Vacc Suit (TL10)</td><td class="td-bonus">+8</td><td>10</td><td>60</td><td>12</td><td>Cr10,000</td><td>Vacc Suit 0</td></tr>
+                <tr><td>HEV Suit</td><td class="td-bonus">+8</td><td>9</td><td>75</td><td>40</td><td>Cr24,000</td><td>Vacc Suit 1</td></tr>
+                <tr><td>Battle Dress</td><td class="td-bonus">+22</td><td>13</td><td>245</td><td>100*</td><td>Cr200,000</td><td>Vacc Suit 2</td></tr>
+                <tr><td>Battle Dress (TL14)</td><td class="td-bonus">+25</td><td>14</td><td>290</td><td>100*</td><td>Cr220,000</td><td>Vacc Suit 1</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">* Battle dress is powered armour — its mass does not count against encumbrance while active.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Armor Notes</h2>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Reflec vs Ablat</div>
+              <p class="rule-body"><strong>Reflec</strong> (+10 vs lasers) is expensive, hard to obtain, and imposes DM-2 on Stealth. <strong>Ablat</strong> is a cheap alternative — each laser hit reduces its laser protection by 1 as the material vaporises. Ablat can be worn over other armour.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Vacc Suit &amp; Combat Armour</div>
+              <p class="rule-body">Both provide life support for <strong>6 hours</strong>. Combat Armour functions as a full vacc suit. HEV Suits are for truly hostile environments — toxic atmospheres, deep underwater, extreme radiation. All weapons gain the Scope trait while wearing Combat Armour or Battle Dress.</p>
+            </div>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Battle Dress</div>
+              <p class="rule-body">Powered full-body armour with servomotors granting <strong>STR +4, DEX +4</strong>. Includes Computer/2, 6-hour air supply, and full NBC protection. The TL14 version upgrades to Computer/3 and STR +6. Very bulky — requires Vacc Suit 2 (TL13) or Vacc Suit 1 (TL14).</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Jack</div>
+              <p class="rule-body">Leather jacket or bodysuit. Useful against blades, near-useless against guns. The baseline for any Traveller who wants to be slightly less dead in a knife fight. Widely available and inconspicuous.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Armor Options <em style="color:#4a9ab8; font-size:0.8em; font-weight:normal">Core p.103 · CSC p.21</em></h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead><tr><th>Option</th><th>TL</th><th>Effect</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr><td>Chameleon, IR</td><td>12</td><td>DM-4 to detect with IR sensors — bleeds heat to match background</td><td>Cr5,000</td></tr>
+                <tr><td>Chameleon, Vislight</td><td>13</td><td>DM-4 to spot with naked eye — light-bending surface</td><td>Cr50,000</td></tr>
+                <tr><td>Computer Weave</td><td>10–13</td><td>Adds Computer/0 to Computer/2 to any armour</td><td>Cr500–Cr5,000</td></tr>
+                <tr><td>Extended Life Support</td><td>10</td><td>Extends vacc suit / combat armour life support from 6 to 18 hours</td><td>Cr10,000</td></tr>
+                <tr><td>Grav Assist</td><td>12</td><td>Adds grav belt functionality to combat armour or battle dress</td><td>Cr110,000</td></tr>
+                <tr><td>Magnetic Grapples</td><td>8</td><td>Walk normally on spacecraft hull without artificial gravity</td><td>Cr100</td></tr>
+                <tr><td>Medikit (armour)</td><td>10</td><td>Auto-applies first aid at END 0 (Medic 3 equivalent). Combat version also injects combat drugs on command.</td><td>Cr5,000–Cr10,000</td></tr>
+                <tr><td>Self-Sealing</td><td>11</td><td>Repairs minor breaches and rips automatically — bullet holes, blade cuts</td><td>Cr2,000</td></tr>
+                <tr><td>Thruster Pack</td><td>9–14</td><td>Zero-G manoeuvring (TL9) or 0.1G acceleration for 48 hours (TL12+)</td><td>Cr2,000–Cr20,000</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tab-armor -->
+
+      <!-- MELEE TAB -->
+      <div id="tab-melee" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Melee Weapons Overview</h2>
+          <div class="rule-card">
+            <p class="rule-body">Melee weapons use the <strong>Melee</strong> skill with three specialities: <strong>Blade</strong> for edged weapons, <strong>Bludgeon</strong> for blunt weapons, and <strong>Unarmed</strong> for fists and knuckles.</p>
+            <p class="rule-body">Melee weapons remain relevant at all tech levels. In boarding actions, a sword is far less likely to breach a hull or rupture a vacc suit than a gun — and a blade is very effective at <em>opening</em> an enemy's suit to vacuum. Nobility on many worlds carry blades as status symbols. <em style="color:#4a9ab8">Core p.124</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Core Blades &amp; Bludgeons</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Weapon</th><th>TL</th><th>Damage</th><th>Kg</th><th>Cost</th><th>Traits</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Dagger</td><td>1</td><td>1D+2</td><td>0.5</td><td>Cr10</td><td>—</td></tr>
+                <tr><td>Blade</td><td>2</td><td>2D</td><td>1</td><td>Cr100</td><td>—</td></tr>
+                <tr><td>Cutlass</td><td>2</td><td>3D</td><td>0.5</td><td>Cr200</td><td>—</td></tr>
+                <tr><td>Rapier</td><td>3</td><td>2D</td><td>0.5</td><td>Cr200</td><td>DM+1 when parrying</td></tr>
+                <tr><td>Broadsword</td><td>2</td><td>4D</td><td>2</td><td>Cr500</td><td>Bulky</td></tr>
+                <tr><td>Club / Staff</td><td>1</td><td>2D</td><td>2</td><td>— / —</td><td>—</td></tr>
+                <tr><td>Stunstick</td><td>8</td><td>2D</td><td>0.5</td><td>Cr300</td><td>Stun</td></tr>
+                <tr><td>Improvised</td><td>—</td><td>2D-2</td><td>varies</td><td>—</td><td>—</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">The Cutlass is the standard shipboard blade — kept near airlocks to repel boarders.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Advanced Melee (CSC)</h2>
+          <div class="rule-card">
+            <p class="rule-body">The Central Supply Catalog adds a wide range of enhanced melee weapons for higher Tech Levels. Key types: <em style="color:#4a9ab8">CSC p.132</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Weapon</th><th>TL</th><th>Damage</th><th>Cost</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Monoblade</td><td>12</td><td>3D</td><td>Cr2,500</td><td>AP 10 — monofilament edge cuts through almost anything</td></tr>
+                <tr><td>Monofilament Axe</td><td>12</td><td>4D</td><td>Cr3,000</td><td>AP 15, Bulky, Smasher — designed to cut through combat armour</td></tr>
+                <tr><td>Static Blade</td><td>12</td><td>4D+2</td><td>Cr1,000</td><td>AP 8 — static field weakens molecular bonds of target</td></tr>
+                <tr><td>Static Axe</td><td>11</td><td>4D</td><td>Cr750</td><td>AP 6, Bulky, Smasher — 30 min battery</td></tr>
+                <tr><td>Arc-Field Weapon</td><td>14</td><td>5D+2</td><td>Cr25,000</td><td>AP 30 — plane of energy, cannot be parried by lower TL weapon</td></tr>
+                <tr><td>Chaindrive Sword</td><td>10</td><td>4D</td><td>Cr500</td><td>AP 2 — motorised chain-tooth blade, 30 min battery</td></tr>
+                <tr><td>Piston Fist</td><td>9</td><td>3D+2</td><td>Cr150</td><td>Pneumatic ram forearm brace; can punch through walls</td></tr>
+                <tr><td>Stunfist</td><td>8</td><td>1D+2</td><td>Cr250</td><td>Stun — high-tech knuckleduster with shock unit</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Shields</h2>
+          <div class="rule-card">
+            <p class="rule-body">A Traveller using a shield increases their effective Melee skill by <strong>+1 when parrying</strong>. A Traveller with no Melee skill counts as Melee 0 when parrying with a standard shield. <em style="color:#4a9ab8">Core p.124 · CSC p.139</em></p>
+            <table class="ref-table">
+              <thead><tr><th>Shield</th><th>TL</th><th>Notes</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr><td>Shield</td><td>0</td><td>Standard medium shield. +1 effective Melee when parrying.</td><td>Cr150</td></tr>
+                <tr><td>Riot Shield</td><td>6</td><td>+1 effective Melee parrying + Protection +1 vs ranged; fire-immune from front</td><td>Cr175</td></tr>
+                <tr><td>Boarding Shield</td><td>9</td><td>Large moveable cover — Protection +8 for up to 2 people behind it. Cannot parry.</td><td>Cr1,500</td></tr>
+                <tr><td>Expandable Shield</td><td>12</td><td>Deploys from forearm bracer — scales from buckler to boarding shield size on command</td><td>Cr2,500</td></tr>
+                <tr><td>Gravitic Shield</td><td>17</td><td>Energy field bracer — functions as shield, no mass penalty</td><td>Cr2,500</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tab-melee -->
+
+      <!-- SLUG THROWERS TAB -->
+      <div id="tab-slug" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Slug Throwers Overview</h2>
+          <div class="rule-card">
+            <p class="rule-body">Despite advances in energy weapons, accelerating a small piece of metal to high velocity remains one of the most efficient ways to kill someone. Slug throwers use the <strong>Gun Combat (slug)</strong> skill.</p>
+            <p class="rule-body">Chemical propellants give way to <strong>gyrojet</strong> (rocket bullets, Zero-G trait) and <strong>gauss</strong> (electromagnetic rails, AP trait) at higher tech levels. <em style="color:#4a9ab8">Core p.126 · CSC p.142</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Pistols</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Weapon</th><th>TL</th><th>Range</th><th>Damage</th><th>Mag</th><th>Cost</th><th>Traits</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Antique Pistol</td><td>2</td><td>5m</td><td>2D-3</td><td>1</td><td>Cr100</td><td>DM-1 unless well-made; slow reload</td></tr>
+                <tr><td>Autopistol</td><td>5</td><td>10m</td><td>3D-3</td><td>15</td><td>Cr200</td><td>—</td></tr>
+                <tr><td>Body Pistol</td><td>8</td><td>5m</td><td>2D</td><td>6</td><td>Cr500</td><td>DM-4 to sensor detection (plastic/bone construction)</td></tr>
+                <tr><td>Revolver</td><td>4</td><td>10m</td><td>3D-3</td><td>6</td><td>Cr150</td><td>—</td></tr>
+                <tr><td>Snub Pistol</td><td>8</td><td>5m</td><td>3D-3</td><td>6</td><td>Cr150</td><td>Zero-G — designed for spacecraft use</td></tr>
+                <tr><td>Gauss Pistol</td><td>13</td><td>20m</td><td>3D</td><td>40</td><td>Cr500</td><td>AP 3, Auto 2 — hypersonic metallic darts</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Rifles</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Weapon</th><th>TL</th><th>Range</th><th>Damage</th><th>Mag</th><th>Cost</th><th>Traits</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Rifle</td><td>5</td><td>250m</td><td>3D</td><td>5</td><td>Cr200</td><td>—</td></tr>
+                <tr><td>Autorifle</td><td>6</td><td>300m</td><td>3D</td><td>20</td><td>Cr750</td><td>Auto 2</td></tr>
+                <tr><td>Assault Rifle</td><td>7</td><td>200m</td><td>3D</td><td>30</td><td>Cr500</td><td>Auto 2</td></tr>
+                <tr><td>Advanced Combat Rifle</td><td>10</td><td>450m</td><td>3D</td><td>40</td><td>Cr1,000</td><td>Auto 3, Scope — with electronic sight, IR, laser rangefinder, integral grenade launcher adaptor</td></tr>
+                <tr><td>Accelerator Rifle</td><td>9</td><td>250m</td><td>3D</td><td>15</td><td>Cr900</td><td>Zero-G — gyrojet rounds, minimal recoil, designed for vacuum</td></tr>
+                <tr><td>Gauss Rifle</td><td>12</td><td>600m</td><td>4D</td><td>80</td><td>Cr1,500</td><td>AP 5, Auto 3, Scope — replaces conventional rifles</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Shotguns &amp; SMGs</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Weapon</th><th>TL</th><th>Range</th><th>Damage</th><th>Mag</th><th>Cost</th><th>Traits</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Shotgun</td><td>4</td><td>50m</td><td>4D</td><td>6</td><td>Cr200</td><td>Bulky — pellets ignore Dodge DMs; armour doubles vs pellets</td></tr>
+                <tr><td>Submachine Gun</td><td>6</td><td>25m</td><td>3D</td><td>20</td><td>Cr400</td><td>Auto 3 — assault rifle power in a compact package; less accurate at range</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">The CSC expands every category significantly — assault pistols, flechette weapons, heavy ACRs, gauss variants, and more specialised ammunition types. <em style="color:#4a9ab8">CSC p.142</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Weapon Options <em style="color:#4a9ab8; font-size:0.8em; font-weight:normal">Core p.135 · CSC p.174</em></h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead><tr><th>Option</th><th>TL</th><th>Effect</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr><td>Auxiliary Grenade Launcher</td><td>7</td><td>Underslung launcher for any rifle — 1 grenade, 3 Minor Actions to reload</td><td>Cr1,000</td></tr>
+                <tr><td>Gyrostabiliser</td><td>9</td><td>Removes Bulky trait from any Bulky weapon</td><td>Cr500</td></tr>
+                <tr><td>Laser Sight</td><td>8</td><td>DM+1 to attacks under 50m</td><td>Cr200</td></tr>
+                <tr><td>Scope</td><td>5</td><td>Adds Scope trait — accurate shots at extreme range. TL7 adds low-light enhancement.</td><td>Cr50</td></tr>
+                <tr><td>Suppressor</td><td>8</td><td>Masks firing sound — non-automatic slug throwers only</td><td>Cr250</td></tr>
+                <tr><td>Secure Weapon</td><td>10</td><td>Biometric/password lock — only authorised user can fire</td><td>Cr250</td></tr>
+                <tr><td>Intelligent Weapon</td><td>11–13</td><td>Adds Computer/0 or Computer/1 to the weapon</td><td>Cr1,000–Cr5,000</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tab-slug -->
+
+      <!-- ENERGY WEAPONS TAB -->
+      <div id="tab-energy" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Energy Weapons Overview</h2>
+          <div class="rule-card">
+            <p class="rule-body">Energy weapons use the <strong>Gun Combat (energy)</strong> skill. All come with a power pack that can be recharged from a ship's power plant or other power source. Recharging takes <strong>8 hours</strong>; switching power packs is a <strong>Minor Action</strong>.</p>
+            <p class="rule-body">All energy weapons have the <strong>Zero-G</strong> trait — no recoil. Laser weapons are countered by Reflec and Ablat armour. At high TL, power packs become integrated into the weapon itself. <em style="color:#4a9ab8">Core p.129 · CSC p.151</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Pistols &amp; Stunners</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Weapon</th><th>TL</th><th>Range</th><th>Damage</th><th>Pack</th><th>Cost</th><th>Traits</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Laser Pistol</td><td>9</td><td>20m</td><td>3D</td><td>100</td><td>Cr2,000</td><td>Zero-G</td></tr>
+                <tr><td>Laser Pistol (TL11)</td><td>11</td><td>30m</td><td>3D+3</td><td>100</td><td>Cr3,000</td><td>Zero-G — no larger than a conventional pistol</td></tr>
+                <tr><td>Stunner</td><td>8</td><td>5m</td><td>2D</td><td>100</td><td>Cr500</td><td>Stun, Zero-G</td></tr>
+                <tr><td>Stunner (TL10)</td><td>10</td><td>5m</td><td>2D+3</td><td>100</td><td>Cr750</td><td>Stun, Zero-G</td></tr>
+                <tr><td>Stunner (TL12)</td><td>12</td><td>10m</td><td>3D</td><td>100</td><td>Cr1,000</td><td>Stun, Zero-G</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Rifles &amp; Heavy Lasers</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Weapon</th><th>TL</th><th>Range</th><th>Damage</th><th>Pack</th><th>Cost</th><th>Traits</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Laser Carbine</td><td>9</td><td>150m</td><td>4D</td><td>50</td><td>Cr2,500</td><td>Zero-G</td></tr>
+                <tr><td>Laser Carbine (TL11)</td><td>11</td><td>200m</td><td>4D+3</td><td>50</td><td>Cr4,000</td><td>Zero-G</td></tr>
+                <tr><td>Laser Rifle</td><td>9</td><td>200m</td><td>5D</td><td>100</td><td>Cr3,500</td><td>Zero-G</td></tr>
+                <tr><td>Laser Rifle (TL11)</td><td>11</td><td>400m</td><td>5D+3</td><td>100</td><td>Cr8,000</td><td>Zero-G</td></tr>
+                <tr><td>Laser Sniper Rifle</td><td>12</td><td>600m</td><td>5D+3</td><td>6</td><td>Cr9,000</td><td>Scope, Zero-G</td></tr>
+                <tr><td>Plasma Rifle</td><td>16</td><td>300m</td><td>6D</td><td>Unlimited</td><td>Cr100,000</td><td>— (built-in micro-fusion power)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Specialist Energy Weapons (CSC)</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Weapon</th><th>TL</th><th>Range</th><th>Damage</th><th>Cost</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Hand Flamer</td><td>9</td><td>5m</td><td>3D</td><td>Cr600</td><td>Fire, Blast 1 — pocket-sized flamethrower for boarding and area clearance</td></tr>
+                <tr><td>Flame Rifle</td><td>8</td><td>10m</td><td>4D</td><td>Cr1,500</td><td>Fire, Blast 2, Bulky — compact flamethrower package</td></tr>
+                <tr><td>Light Gatling Laser</td><td>9</td><td>180m</td><td>3D</td><td>Cr4,500</td><td>Auto 4, Zero-G — multiple barrels, disposable chemical cartridge magazines</td></tr>
+              </tbody>
+            </table>
+            <p class="ref-note">Flamethrowers TL7 and below will explode if the carrier is hit with Effect 4+ — TL8+ models are not prone to this.</p>
+          </div>
+        </div>
+
+      </div><!-- /tab-energy -->
+
+      <!-- HEAVY WEAPONS TAB -->
+      <div id="tab-heavy" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Heavy Weapons Overview</h2>
+          <div class="rule-card">
+            <p class="rule-body">These are among the most powerful weapons to appear on the battlefield. All require the <strong>Heavy Weapons (portable)</strong> skill. Most are Bulky or Very Bulky — a gyrostabiliser (Cr500) removes Bulky but cannot be added to Destructive weapons.</p>
+            <p class="rule-body">PGHP and FGHP weapons are so heavy they can only be used comfortably by a Traveller in <strong>battle dress</strong>. The FGHP emits lethal radiation with each shot — anyone nearby without rad protection will suffer a potentially lethal dose. <em style="color:#4a9ab8">Core p.133 · CSC p.159</em></p>
+            <p class="rule-body">Artillery and vehicle-mounted weapons are out of scope for personal use — see Vehicles.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Support Weapons</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Weapon</th><th>TL</th><th>Range</th><th>Damage</th><th>Mag</th><th>Cost</th><th>Traits</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Grenade Launcher</td><td>7</td><td>100m</td><td>As grenade</td><td>6</td><td>Cr400</td><td>Bulky — fires standard grenades</td></tr>
+                <tr><td>RAM Grenade Launcher</td><td>8</td><td>250m</td><td>As grenade</td><td>6</td><td>Cr800</td><td>Auto 3, Blast 6, Bulky — fires up to 3 grenades per attack; longer range</td></tr>
+                <tr><td>Machinegun</td><td>5–6</td><td>500m</td><td>3D</td><td>60</td><td>Cr1,500</td><td>Auto 4, Bulky — heavier autorifle; can saw through armoured targets</td></tr>
+                <tr><td>Rapid-Fire Machinegun</td><td>7</td><td>500m</td><td>3D</td><td>60</td><td>Cr3,000</td><td>Auto 4 (8), Bulky — can double Auto score for 2 rounds then must cool</td></tr>
+                <tr><td>Anti-Materiel Rifle</td><td>7</td><td>1,000m</td><td>5D</td><td>1</td><td>Cr3,000</td><td>AP 5, Scope, Very Bulky — bipod included; destroys light vehicles</td></tr>
+                <tr><td>Light Assault Gun</td><td>8</td><td>800m</td><td>7D</td><td>5</td><td>Cr4,000</td><td>AP 5, Very Bulky — 20mm heavy rifle; squad-level support</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Rocket Launchers</h2>
+          <div class="rule-card">
+            <div class="rule-card-title">Back Blast Warning</div>
+            <p class="rule-body">Anyone standing directly behind a rocket launcher when it fires takes <strong>3D damage</strong> from burning exhaust gases. Reload takes <strong>3 Minor Actions</strong>.</p>
+            <table class="ref-table" style="margin-top:10px">
+              <thead>
+                <tr><th>Weapon</th><th>TL</th><th>Range</th><th>Damage</th><th>Cost</th><th>Traits</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Rocket Launcher</td><td>6</td><td>120m</td><td>4D</td><td>Cr2,000</td><td>Blast 6, Bulky</td></tr>
+                <tr><td>Rocket Launcher (TL7)</td><td>7</td><td>150m</td><td>4D+3</td><td>Cr2,000</td><td>Blast 6, Bulky, Smart</td></tr>
+                <tr><td>Rocket Launcher (TL8)</td><td>8</td><td>200m</td><td>5D</td><td>Cr2,000</td><td>Blast 6, Bulky, Scope, Smart</td></tr>
+                <tr><td>Assault Rocket Launcher</td><td>10</td><td>80m</td><td>4D</td><td>Cr800–Cr1,300</td><td>Zero-G — magazine-fed 10mm rocket slugs; standard and support variants</td></tr>
+                <tr><td>Disposable Plasma Launcher</td><td>12</td><td>300m</td><td>2DD</td><td>Cr8,000</td><td>One Shot, Smart — single-use anti-armour weapon</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Plasma &amp; Fusion Weapons</h2>
+          <div class="rule-card">
+            <div class="rule-card-title">PGHP — Plasma Gun, Human Portable</div>
+            <p class="rule-body">The standard assault weapon of the marines. Powered by a built-in micro-fusion generator firing a high-energy plasma stream. So heavy and bulky that it can <strong>only be used comfortably in battle dress</strong>. More advanced versions adjust range and plasma temperature.</p>
+            <table class="ref-table" style="margin-top:10px">
+              <thead><tr><th>Weapon</th><th>TL</th><th>Range</th><th>Damage</th><th>Cost</th><th>Traits</th></tr></thead>
+              <tbody>
+                <tr><td>PGHP-12</td><td>12</td><td>250m</td><td>1DD</td><td>Cr20,000</td><td>Very Bulky</td></tr>
+                <tr><td>PGHP-13</td><td>13</td><td>450m</td><td>1DD</td><td>Cr65,000</td><td>Bulky</td></tr>
+                <tr><td>PGHP-14</td><td>14</td><td>450m</td><td>1DD</td><td>Cr100,000</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">FGHP — Fusion Gun, Human Portable</div>
+            <p class="rule-body">The ultimate personal firearm. Includes a gravity suspension system to reduce its inertia and fires a directed nuclear pulse. <strong class="td-penalty">Emits lethal radiation with every shot</strong> — anyone nearby without radiation protection will likely die. Treated as a piece of artillery in personal terms.</p>
+            <table class="ref-table" style="margin-top:10px">
+              <thead><tr><th>Weapon</th><th>TL</th><th>Range</th><th>Damage</th><th>Cost</th><th>Traits</th></tr></thead>
+              <tbody>
+                <tr><td>FGHP-14</td><td>14</td><td>450m</td><td>2DD</td><td>Cr100,000</td><td class="td-penalty">Radiation, Very Bulky</td></tr>
+                <tr><td>FGHP-15</td><td>15</td><td>450m</td><td>2DD</td><td>Cr400,000</td><td class="td-penalty">Bulky, Radiation</td></tr>
+                <tr><td>FGHP-16</td><td>16</td><td>450m</td><td>2DD</td><td>MCr0.5</td><td class="td-penalty">Radiation</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tab-heavy -->
+
+      <!-- EXPLOSIVES TAB -->
+      <div id="tab-explosives" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Explosives Rules</h2>
+          <div class="rule-card">
+            <p class="rule-body">All explosives use the <strong>Explosives</strong> skill. The damage is <strong>multiplied by the Effect</strong> of the Explosives check used to set it. Effect 0 counts as Effect 1. <em style="color:#4a9ab8">Core p.134</em></p>
+            <div class="rule-formula">Damage × Effect of Explosives check</div>
+            <p class="rule-body" style="margin-top:12px">Doubling the quantity of explosive increases damage by 1D and Blast by +1. This stacks — quadruple quantity adds 2D damage and Blast +2. Eight times adds 3D and Blast +3.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Explosive Charges</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Explosive</th><th>TL</th><th>Damage</th><th>Cost</th><th>Traits</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Plastic Explosive</td><td>6</td><td>3D</td><td>Cr200</td><td>Blast 9</td><td>General purpose, favourite of military and demolition teams</td></tr>
+                <tr><td>TDX</td><td>12</td><td>4D</td><td>Cr1,000</td><td>Blast 15</td><td>Gravity-polarised — explodes only along the horizontal axis</td></tr>
+                <tr><td>Chemical Charge</td><td>6</td><td>4D</td><td>Cr300</td><td>Blast 3</td><td>Two-polymer system — D3 round delay between mixing and detonation; concentrated blast</td></tr>
+                <tr><td>Pocket Nuke</td><td>12</td><td>6DD</td><td>Cr250,000</td><td class="td-penalty">Blast 1000, Radiation</td><td>Briefcase-sized — too large for grenade launchers. Illegal almost everywhere. Multiple units don't stack Damage or Blast.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Grenades</h2>
+          <div class="rule-card">
+            <p class="rule-body">Thrown grenades use the <strong>Athletics (dexterity)</strong> skill. Grenades fired from a grenade launcher use the <strong>Heavy Weapons (portable)</strong> skill and count as specialised ammunition. <em style="color:#4a9ab8">Core p.130 / CSC p.157</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Grenade</th><th>TL</th><th>Damage</th><th>Cost</th><th>Effect</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Frag</td><td>6</td><td>5D</td><td>Cr30</td><td>Blast 9 — shrapnel, kills and cripples in area</td></tr>
+                <tr><td>Stun</td><td>7</td><td>3D</td><td>Cr30</td><td>Stun, Blast 9 — incapacitates rather than kills</td></tr>
+                <tr><td>Smoke</td><td>6</td><td>—</td><td>Cr15</td><td>Blast 9 — DM-2 to all attacks through cloud; IR vision bypasses it; lasts 1D×3 rounds</td></tr>
+                <tr><td>Thermal Smoke</td><td>7</td><td>—</td><td>Cr30</td><td>Blast 9 — DM-2 to attacks; hot particles also block IR vision</td></tr>
+                <tr><td>Incendiary</td><td>6</td><td>4D</td><td>Cr30</td><td>Fire trait — fuel mixture ignites and continues burning</td></tr>
+                <tr><td>Plasma</td><td>10</td><td>8D</td><td>Cr50</td><td>Blast 9 — microsecond burst of pure energy; vaporises targets</td></tr>
+                <tr><td>EMP</td><td>9</td><td>—</td><td>Cr100</td><td>Blast 9 — shuts down unshielded electronics for 1D minutes; permanently fries electronics 2+ TL lower</td></tr>
+                <tr><td>Aerosol</td><td>9</td><td>—</td><td>Cr15</td><td>Blast 9 — diffuses laser attacks (–10 damage through cloud); blocks laser comms; lasts 1D×3 rounds</td></tr>
+                <tr><td>Chemical (incapacitating)</td><td>7</td><td>1D Stun</td><td>Cr40</td><td>Blast 9 — gas cloud; END check (10+) each round without sealed suit or respirator</td></tr>
+                <tr><td>Chemical (lethal)</td><td>8</td><td>1D</td><td>Cr60</td><td class="td-penalty">Blast 9 — gas cloud; lethal toxin, END check (12+). Banned at Law Level 1+.</td></tr>
+                <tr><td>Tranq Gas</td><td>8</td><td>—</td><td>Cr40</td><td>Blast 9 — gas cloud; END check (10+) or unconscious each round without sealed suit</td></tr>
+                <tr><td>Neurotoxin</td><td>9</td><td>1D INT</td><td>Cr75</td><td class="td-penalty">Blast 9 — neurological damage; END check (12+). Banned at Law Level 1+.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tab-explosives -->
+
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script>
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).style.display = 'block';
+      event.target.classList.add('active');
+    }
+
+    async function doSignOut() {
+      await supabaseClient.auth.signOut();
+      window.location.href = '../../index.html';
+    }
+  </script>
+</body>
+</html>

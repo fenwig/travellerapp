@@ -30,6 +30,7 @@
       <a href="spacecraft-operations.html" class="sidebar-nav-item">Spacecraft Operations</a>
       <a href="spacecraft-combat.html" class="sidebar-nav-item">Spacecraft Combat</a>
       <a href="equipment.html" class="sidebar-nav-item active">Equipment</a>
+      <a href="weapons-armor.html" class="sidebar-nav-item">Weapons &amp; Armor</a>
       <a href="trade.html" class="sidebar-nav-item">Trade</a>
       <div class="sidebar-signout">
         <button onclick="doSignOut()">Sign Out</button>
@@ -38,13 +39,462 @@
 
     <main class="page-main">
       <h1 class="page-title">EQUIPMENT</h1>
-      <p class="placeholder-msg">Coming soon — weapons, armour, and gear from the Central Supply Catalog.</p>
+
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="showTab('augments')">Augments</button>
+        <button class="tab-btn" onclick="showTab('electronics')">Electronics</button>
+        <button class="tab-btn" onclick="showTab('medical')">Medical</button>
+        <button class="tab-btn" onclick="showTab('survival')">Survival Gear</button>
+        <button class="tab-btn" onclick="showTab('tools')">Tools</button>
+      </div>
+
+      <!-- AUGMENTS TAB -->
+      <div id="tab-augments" class="tab-content">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Augmentation Overview</h2>
+          <div class="rule-card">
+            <p class="rule-body">Augments are cybernetic implants, biological modifications, or surgical alterations that permanently enhance a Traveller beyond their natural limits. While technology permits significant alteration, unnecessary augmentation is frowned upon in many cultures — and outright banned on others. Some worlds make augmentation mandatory for specific occupations.</p>
+            <p class="rule-body">All augments require surgery, typically <strong>1D weeks</strong> of recovery. Augmentations can raise characteristics above normal maximums for a species. <em style="color:#4a9ab8">Core p.106 · CSC p.48</em></p>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Medical Treatment Interference</div>
+            <p class="rule-body">Augments complicate medical care. Any long-term care or surgery Medic check treating an augmented Traveller suffers a negative DM equal to the difference in Tech Level between the medical facility and the highest relevant implant. A TL15 augment treated at a TL10 hospital imposes DM-5 on all surgery checks. <em style="color:#4a9ab8">Core p.107</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Cognitive Augments</h2>
+          <div class="rule-card">
+            <p class="rule-body">Replacing slow nerve cells with faster synthetic substrates and implanting optoelectronic boosters increases the speed at which a Traveller thinks — effectively boosting Intelligence. <em style="color:#4a9ab8">Core p.106 · CSC p.55</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Augment</th><th>Effect</th><th>TL</th><th>Cost</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Cognitive Augmentation</td><td class="td-bonus">INT +1</td><td>12</td><td>Cr500,000</td></tr>
+                <tr><td>Cognitive Augmentation</td><td class="td-bonus">INT +2</td><td>14</td><td>MCr1</td></tr>
+                <tr><td>Cognitive Augmentation</td><td class="td-bonus">INT +3</td><td>16</td><td>MCr5</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Physical Augments</h2>
+          <div class="rule-card">
+            <p class="rule-body">Physical augments replace motor neurons with faster synthetic cells, reinforce bones, and swap organs with tougher vat-grown clones. Each characteristic must be augmented separately. <em style="color:#4a9ab8">Core p.106 · CSC p.50</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Augment</th><th>Effect</th><th>TL</th><th>Cost</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Strength Augmentation</td><td class="td-bonus">STR +1</td><td>11</td><td>Cr500,000</td></tr>
+                <tr><td>Strength Augmentation</td><td class="td-bonus">STR +2</td><td>12</td><td>MCr1</td></tr>
+                <tr><td>Strength Augmentation</td><td class="td-bonus">STR +3</td><td>15</td><td>MCr5</td></tr>
+                <tr><td>Dexterity Augmentation</td><td class="td-bonus">DEX +1</td><td>11</td><td>Cr500,000</td></tr>
+                <tr><td>Dexterity Augmentation</td><td class="td-bonus">DEX +2</td><td>12</td><td>MCr1</td></tr>
+                <tr><td>Dexterity Augmentation</td><td class="td-bonus">DEX +3</td><td>15</td><td>MCr5</td></tr>
+                <tr><td>Endurance Augmentation</td><td class="td-bonus">END +1</td><td>11</td><td>Cr500,000</td></tr>
+                <tr><td>Endurance Augmentation</td><td class="td-bonus">END +2</td><td>12</td><td>MCr1</td></tr>
+                <tr><td>Endurance Augmentation</td><td class="td-bonus">END +3</td><td>15</td><td>MCr5</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Sensory &amp; Neural Augments</h2>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Enhanced Vision (TL13)</div>
+              <p class="rule-body">Cybernetic eye replacements providing binocular-equivalent magnification combined with IR and light-intensification capability — all hands-free and always active. Cost: Cr25,000.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Neural Comm</div>
+              <p class="rule-body">An implanted comm unit operated entirely by thought. Has identical capabilities to a standard comm but requires no hands and is undetectable. TL10 (audio only) Cr1,000 · TL12 (audio/visual, Computer/0) Cr5,000 · TL14 (full data, Computer/1) Cr20,000.</p>
+            </div>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Wafer Jack (TL12)</div>
+              <p class="rule-body">A skull-mounted computer implant (Computer/2) for Expert software only, always running Intelligent Interface. The user accesses Expert programs by thought alone — no external device needed. Cannot run software beyond Expert packages. Cost: Cr10,000 (jack); Expert software purchased separately.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Skill Augmentation (TL12)</div>
+              <p class="rule-body">The Traveller's nervous system is rewired for one specific skill, granting DM+1 when using it. Requires the Traveller to already possess the skill at level 0+. A Traveller may only have one skill augmentation. Cost: Cr50,000.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Subdermal Armour</h2>
+          <div class="rule-card">
+            <p class="rule-body">Adds a mesh of ballistic fibres to the skin and reinforces the bones. Subdermal armour <strong>stacks</strong> with all other protection — it is always active and cannot be removed by an attacker. <em style="color:#4a9ab8">Core p.107 · CSC p.56</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Augment</th><th>Protection</th><th>TL</th><th>Cost</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Subdermal Armour</td><td class="td-bonus">+1</td><td>10</td><td>Cr50,000</td></tr>
+                <tr><td>Subdermal Armour</td><td class="td-bonus">+3</td><td>11</td><td>Cr100,000</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tab-augments -->
+
+      <!-- ELECTRONICS TAB -->
+      <div id="tab-electronics" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Communications</h2>
+          <div class="rule-card">
+            <p class="rule-body">Above TL8, being out of touch except in the most remote areas is essentially unthinkable. Communications technology merges steadily with computers — by TL10 a mobile comm is also a capable hand computer. <em style="color:#4a9ab8">Core p.108 · CSC p.62</em></p>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Mobile Comm</div>
+              <p class="rule-body">The standard personal device — phone, camera, short-range transmitter, and computer combined. Short-range only but connects to planetary networks on most civilised worlds.</p>
+              <table class="ref-table" style="margin-top:10px">
+                <thead><tr><th>TL</th><th>Capability</th><th>Cost</th></tr></thead>
+                <tbody>
+                  <tr><td>6</td><td>Audio only</td><td>Cr50</td></tr>
+                  <tr><td>8</td><td>Audio/visual, Computer/0</td><td>Cr150</td></tr>
+                  <tr><td>10</td><td>Full data, Computer/1</td><td>Cr500</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Transceivers</div>
+              <p class="rule-body">Stand-alone radio or laser comms that work without a planetary network — direct point-to-point. Essential in wilderness, space, or worlds without infrastructure. <strong>500km range</strong> is sufficient for reliable orbital contact.</p>
+              <p class="rule-body" style="margin-top:8px">Radio (TL5): Cr225–Cr15,000 · Laser (TL9): Cr500–Cr2,500. Higher TL reduces mass and integrates computer capability.</p>
+            </div>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Commdot (TL10)</div>
+              <p class="rule-body">A tiny microphone/speaker/transmitter a few millimetres across. Interfaces with any other comm device within a few metres. Used as hands-free earpieces, throat mics, or improvised bugs. Cost: Cr10.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Bugs (TL5–15)</div>
+              <p class="rule-body">Hidden surveillance devices. Can be passive (record until collected) or active (transmit continuously). Range grows shorter the smaller the bug. TL14 bugs can be the size of a dust mote. Cost: Cr50–Cr500. Capabilities expand from audio-only up to bioscan and onboard Computer/1 at high TL.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Computers &amp; Software</h2>
+          <div class="rule-card">
+            <p class="rule-body">Computers are rated by <strong>Processing</strong> score — the total Bandwidth of software they can run simultaneously. Storage is effectively unlimited beyond TL8. A computer must be equal to or greater in TL than any software it runs. <em style="color:#4a9ab8">Core p.110 · CSC p.66</em></p>
+            <table class="ref-table" style="margin-top:10px">
+              <thead><tr><th>TL</th><th>Portable Computer</th><th>Mass</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr><td>7</td><td>Computer/0</td><td>5kg</td><td>Cr500</td></tr>
+                <tr><td>8</td><td>Computer/1</td><td>2kg</td><td>Cr250</td></tr>
+                <tr><td>9</td><td>Computer/1</td><td>1kg</td><td>Cr100</td></tr>
+                <tr><td>10</td><td>Computer/2</td><td>0.5kg</td><td>Cr500</td></tr>
+                <tr><td>11</td><td>Computer/2</td><td>0.5kg</td><td>Cr300</td></tr>
+                <tr><td>12</td><td>Computer/3</td><td>0.5kg</td><td>Cr1,000</td></tr>
+                <tr><td>13</td><td>Computer/4</td><td>0.5kg</td><td>Cr1,500</td></tr>
+                <tr><td>14</td><td>Computer/5</td><td>0.5kg</td><td>Cr5,000</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Key Software Packages</div>
+            <table class="ref-table">
+              <thead><tr><th>Software</th><th>Bandwidth</th><th>TL</th><th>Cost</th><th>What it does</th></tr></thead>
+              <tbody>
+                <tr><td>Interface</td><td>0</td><td>7</td><td>Free</td><td>Basic data display. Included on all computers.</td></tr>
+                <tr><td>Intelligent Interface</td><td>1</td><td>11</td><td>Cr100</td><td>AI voice control. Required to gain DM+1 from Expert software.</td></tr>
+                <tr><td>Expert /1–/3</td><td>1–3</td><td>10+</td><td>Cr1,000–Cr100,000</td><td>Mimics a skill. Requires INT/EDU-based task. With Intelligent Interface: DM+1 if you have the skill; without: acts as skill level (Bandwidth–1).</td></tr>
+                <tr><td>Translator /0–/1</td><td>0–1</td><td>9–10</td><td>Cr50–Cr500</td><td>Near-real-time to real-time language translation.</td></tr>
+                <tr><td>Security /0–/3</td><td>0–3</td><td>8+</td><td>Free–Cr20,000</td><td>Defends against hacking. Difficulty to bypass rises from Average (8+) to Formidable (14+).</td></tr>
+                <tr><td>Intrusion /1–/3</td><td>1–3</td><td>10+</td><td>Cr1,000–Cr100,000</td><td class="td-penalty">Aids hacking — DM equal to Bandwidth. Often illegal (Law Level 4+).</td></tr>
+                <tr><td>Agent /0–/3</td><td>0–3</td><td>11+</td><td>Cr500–Cr250,000</td><td>Autonomous Electronics (computers) skill equal to Bandwidth. Executes assigned tasks independently.</td></tr>
+                <tr><td>Intellect /1–/3</td><td>1–3</td><td>12+</td><td>Cr2,000–Cr200,000</td><td>Advanced Agent; can run Expert packages for unskilled users. Allows multiple simultaneous tasks.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Data Display/Recorder (TL13)</div>
+            <p class="rule-body">A headpiece providing a continuous heads-up display of data from any linked system — vacc suit reserves, grav belt status, sensor feeds, ship systems. Used by starship crews to access data without leaving their primary console. Cost: Cr500.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Sensors</h2>
+          <div class="rule-card">
+            <p class="rule-body">Most sensors can display data directly or feed to a linked computer. Sensor capability scales sharply with Tech Level — the difference between TL8 binoculars and TL12 PRIS binoculars is the difference between magnification and reading full EM spectrum from infrared to gamma rays. <em style="color:#4a9ab8">Core p.116 · CSC p.73</em></p>
+            <table class="ref-table">
+              <thead><tr><th>Sensor</th><th>TL</th><th>What it detects / does</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr><td>Binoculars</td><td>3</td><td>Up to 10× optical magnification</td><td>Cr75</td></tr>
+                <tr><td>Binoculars (electronic)</td><td>8</td><td>+ Image capture, light intensification</td><td>Cr750</td></tr>
+                <tr><td>Binoculars (PRIS)</td><td>12</td><td>+ Full EM spectrum, infrared to gamma</td><td>Cr3,500</td></tr>
+                <tr><td>IR Goggles</td><td>6</td><td>Heat-source vision in darkness</td><td>Cr500</td></tr>
+                <tr><td>Light Intensifier Goggles</td><td>7</td><td>Normal vision in near-darkness; TL9 combines with IR</td><td>Cr500</td></tr>
+                <tr><td>Geiger Counter</td><td>5</td><td>Detects and measures radiation</td><td>Cr250</td></tr>
+                <tr><td>EM Probe</td><td>10</td><td>Detects EM emissions from tech devices; finds hidden bugs</td><td>Cr1,000</td></tr>
+                <tr><td>Bioscanner</td><td>15</td><td>Detects organic molecules, poisons, bacteria, life signs; classifies organisms</td><td>Cr350,000</td></tr>
+                <tr><td>Densitometer</td><td>14</td><td>Measures density via gravity; builds 3D image of object interior</td><td>Cr20,000</td></tr>
+                <tr><td>NAS</td><td>15</td><td>Neural Activity Scanner — detects life at up to 500m, estimates intelligence</td><td>Cr35,000</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tab-electronics -->
+
+      <!-- MEDICAL TAB -->
+      <div id="tab-medical" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Medical Equipment</h2>
+          <div class="rule-card">
+            <p class="rule-body">Most medical supplies require the Medic skill to use properly. In the field, these items are primarily emergency stabilisation tools — proper treatment requires a hospital or sickbay. <em style="color:#4a9ab8">Core p.114 · CSC p.88</em></p>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Medikit</div>
+              <p class="rule-body">Contains diagnostic devices, surgical tools, and drugs. More advanced versions provide substantial DM bonuses to first aid checks. All mass 1kg except TL14.</p>
+              <table class="ref-table" style="margin-top:10px">
+                <thead><tr><th>TL</th><th>First Aid DM</th><th>Cost</th></tr></thead>
+                <tbody>
+                  <tr><td>8</td><td>+0</td><td>Cr1,000</td></tr>
+                  <tr><td>10</td><td class="td-bonus">DM+1</td><td>Cr1,500</td></tr>
+                  <tr><td>12</td><td class="td-bonus">DM+2</td><td>Cr5,000</td></tr>
+                  <tr><td>14</td><td class="td-bonus">DM+3</td><td>Cr10,000</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Cryoberth (TL10)</div>
+              <p class="rule-body">A coffin-like emergency preservation unit. Freezes and stabilises a severely injured Traveller almost instantly, buying time until proper medical treatment is available. Internal power runs for <strong>one week</strong>; normally connected to a vehicle or ship power supply. Mass: 200kg. Cost: Cr50,000.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Drugs</h2>
+          <div class="rule-card">
+            <p class="rule-body">Combat and medical drugs are tightly controlled on most worlds. Using the wrong drug can be worse than doing nothing — Medic skill is required for proper administration of most compounds. <em style="color:#4a9ab8">Core p.115 · CSC p.93</em></p>
+            <table class="ref-table">
+              <thead><tr><th>Drug</th><th>TL</th><th>Effect</th><th>Downside</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>Stims</td><td>8</td>
+                  <td class="td-bonus">Removes Fatigue immediately</td>
+                  <td class="td-penalty">1 damage per use; cumulative +1 per extra use without sleep</td>
+                  <td>Cr50</td>
+                </tr>
+                <tr>
+                  <td>Panaceas</td><td>8+</td>
+                  <td class="td-bonus">Treat any infection/disease as if Medic 0; guaranteed not to worsen condition</td>
+                  <td>—</td>
+                  <td>Cr200</td>
+                </tr>
+                <tr>
+                  <td>Anti-rad</td><td>8</td>
+                  <td class="td-bonus">Absorbs up to 100 rads — must be administered within 10 minutes of exposure</td>
+                  <td class="td-penalty">Permanent END damage (1D) if used more than once per day</td>
+                  <td>Cr1,000</td>
+                </tr>
+                <tr>
+                  <td>Fast Drug</td><td>10</td>
+                  <td class="td-bonus">Suspended animation — 60:1 time ratio. Extends life support / cheap cryoberth alternative</td>
+                  <td>—</td>
+                  <td>Cr200</td>
+                </tr>
+                <tr>
+                  <td>Combat Drugs</td><td>10</td>
+                  <td class="td-bonus">DM+4 Initiative, free Reaction each round, –2 all damage sustained. Lasts ~10 min</td>
+                  <td class="td-penalty">Fatigue when drug wears off</td>
+                  <td>Cr1,000</td>
+                </tr>
+                <tr>
+                  <td>Metabolic Accelerator</td><td>10</td>
+                  <td class="td-bonus">DM+8 Initiative, 2 free Reactions each round, no penalties. Everyone else appears to move in slow motion. Lasts ~10 min</td>
+                  <td class="td-penalty">2D damage + Fatigue when drug wears off</td>
+                  <td>Cr500</td>
+                </tr>
+                <tr>
+                  <td>Slow Drug</td><td>11</td>
+                  <td class="td-bonus">30× metabolism — a month of healing in a single day</td>
+                  <td class="td-penalty">Only safe in a hospital or sickbay. Outside: lethal organ damage</td>
+                  <td>Cr500</td>
+                </tr>
+                <tr>
+                  <td>Anagathics</td><td>15</td>
+                  <td class="td-bonus">Slows ageing process — one dose per month maintains effect</td>
+                  <td class="td-penalty">Illegal or controlled on most worlds</td>
+                  <td>Cr20,000/dose</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Medical Care Costs</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead><tr><th>Treatment</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr><td>Hospital stay (per month)</td><td>Cr250 × Tech Level</td></tr>
+                <tr><td>Surgery</td><td>1D × Cr50 × Tech Level</td></tr>
+                <tr><td>Limb clone / cybernetic replacement</td><td>Cr5,000 per characteristic point lost</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /tab-medical -->
+
+      <!-- SURVIVAL GEAR TAB -->
+      <div id="tab-survival" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Survival Gear Overview</h2>
+          <div class="rule-card">
+            <p class="rule-body">Space is actively hostile to human life. Survival gear covers the spectrum from a simple filter mask to pressurised habitat modules capable of sustaining a six-person crew for a week. See also Vacc Suits and HEV Suits in Weapons &amp; Armor. <em style="color:#4a9ab8">Core p.118 · CSC p.97</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Breathing Gear</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead><tr><th>Item</th><th>TL</th><th>What it does</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr><td>Filter Mask</td><td>7</td><td>Strips harmful gases and dust from breathable air (thin atmosphere, pollutants)</td><td>Cr100</td></tr>
+                <tr><td>Respirator</td><td>6</td><td>Concentrates oxygen — allows breathing in thin atmospheres (face mask / mouthpiece)</td><td>Cr100</td></tr>
+                <tr><td>Respirator (implant)</td><td>10</td><td>Nose-fit or lung implant version — invisible</td><td>Cr2,000</td></tr>
+                <tr><td>Breather Mask</td><td>8</td><td>Combined filter + respirator in one unit</td><td>Cr150</td></tr>
+                <tr><td>Artificial Gill</td><td>8</td><td>Extracts oxygen from water — breathe underwater (requires Atmosphere 4–9)</td><td>Cr4,000</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Environmental Protection</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead><tr><th>Item</th><th>TL</th><th>What it does</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr><td>Environment Suit</td><td>8</td><td>Protects from extreme heat or cold; leaves face exposed. Not for hostile atmosphere — use HEV suit for that.</td><td>Cr500</td></tr>
+                <tr><td>Radiation Suit</td><td>6</td><td>Dedicated radiation protection — reduces exposure by 100 rads. Required near reactor breaches or solar flares.</td><td>Cr5,000</td></tr>
+                <tr><td>Climbing Kit</td><td>4</td><td>Harness, gloves, rock shoes, pitons. DM+1 (TL4) or DM+2 (TL8) to climbing checks.</td><td>Cr100–Cr500</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Field Equipment</h2>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Grav Belt (TL12)</div>
+              <p class="rule-body">A harness fitted with artificial gravity modules — allows free flight at Medium speed. Internal battery lasts <strong>4 hours</strong> before recharging (12 hours at TL15). Cost: Cr100,000.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Rescue Bubble (TL9)</div>
+              <p class="rule-body">A 2-metre emergency life raft inflated by a small oxygen tank, providing 2 person/hours of life support. Piezoelectric walls convert movement to power for a distress beacon. Found on spacecraft and sea vessels. Cost: Cr600.</p>
+            </div>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Habitat Module (TL8–10)</div>
+              <p class="rule-body">Modular quarters for 6 people. TL8 is unpressurised — withstands near-hurricane winds, includes survival rations and a week of battery power, requires 12 man-hours to assemble. <strong>TL10 version is pressurised</strong> with life support for one week. Modules link together. Cost: Cr10,000–Cr20,000.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Portable Fusion Generator (TL10)</div>
+              <p class="rule-body">Light-duty fusion generator capable of recharging weapons, suits, and other equipment for up to one month of use. Essential for extended wilderness operations with energy-hungry gear. Mass: 20kg. Cost: Cr500,000.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Tent (TL3–7)</div>
+            <p class="rule-body">Basic shelter for two against weather. TL7 version can be pressurised (no airlock — depressurises when opened). Cost: Cr200–Cr2,000.</p>
+          </div>
+        </div>
+
+      </div><!-- /tab-survival -->
+
+      <!-- TOOLS TAB -->
+      <div id="tab-tools" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Toolkit Rules</h2>
+          <div class="rule-card">
+            <p class="rule-body">Technical skills require specialist toolkits. Without the appropriate toolkit, most technical tasks cannot be attempted at all. <em style="color:#4a9ab8">Core p.120 · CSC p.125</em></p>
+            <div class="rule-formula">Toolkit 2+ TL above task → DM+2 &nbsp;|&nbsp; Toolkit 2+ TL below task → DM-2</div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Standard Toolkits</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead><tr><th>Toolkit</th><th>TL</th><th>Used for</th><th>Kg</th><th>Cost</th></tr></thead>
+              <tbody>
+                <tr><td>Electronics</td><td>7–12</td><td>Electronics skill — repairs, installations, diagnostics</td><td>2</td><td>Cr2,000–Cr4,000</td></tr>
+                <tr><td>Engineering</td><td>12</td><td>Engineer skill — repairs and installations</td><td>8</td><td>Cr4,000</td></tr>
+                <tr><td>Mechanical</td><td>8</td><td>Mechanic skill — repairs and construction</td><td>12</td><td>Cr1,000</td></tr>
+                <tr><td>Forensics</td><td>12</td><td>Investigate skill — crime scenes, sample testing</td><td>12</td><td>Cr2,000</td></tr>
+                <tr><td>Surveying</td><td>8–9</td><td>Navigation checks — planetary surveys, mapping; DM+2 to Navigation</td><td>8–20</td><td>Cr1,000–Cr3,000</td></tr>
+                <tr><td>Scientific</td><td>12</td><td>Science skill — testing and analysis</td><td>5</td><td>Cr2,000</td></tr>
+                <tr><td>Starship Engineer Set</td><td>12</td><td>Shipboard engineering — PRIS goggles, iris valve opener, gravitic test equipment</td><td>12</td><td>Cr4,000</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Scientific Toolkits</h2>
+          <div class="rule-card">
+            <p class="rule-body">Scientific toolkits pair physical instruments with a dedicated Expert software tablet. The full combination grants <strong>DM+2</strong> to Science checks in the speciality. The instruments alone grant DM+1 for skilled users; the tablet alone allows unskilled Travellers to attempt tasks up to Difficult (10+). TL12. Cost: Cr2,000 each. <em style="color:#4a9ab8">Core p.121 · CSC p.125</em></p>
+            <table class="ref-table" style="margin-top:10px">
+              <thead><tr><th>Speciality</th><th>What it covers</th></tr></thead>
+              <tbody>
+                <tr><td>Archaeology</td><td>Recovering and understanding relics; includes deployable sensors, radar/lidar for buried objects, and history DM+1</td></tr>
+                <tr><td>Cybernetics</td><td>Analyse, troubleshoot, and repair cybernetic components; install/reattach augments; DM+1 to related Medic checks</td></tr>
+                <tr><td>Life Sciences</td><td>Biology, genetics, xenology; microscopes, DNA sequencers; DM+1 to medical diagnosis</td></tr>
+                <tr><td>Planetology</td><td>Planetary environment analysis — atmosphere, seismics, surface composition, climate; DM+1 to related science tasks</td></tr>
+                <tr><td>Robotics</td><td>Diagnose, repair, and construct robotic components; DM+1 to Electronics (computers) or Profession (robotics)</td></tr>
+                <tr><td>Space Sciences</td><td>Astronomy and cosmology — spectroscopic analysis, stellar activity modelling, locating planets around distant stars</td></tr>
+                <tr><td>Physical Sciences</td><td>Chemistry and physics — element/mineral analysis, EM/gravitic detection, measuring physical properties</td></tr>
+                <tr><td>Psionicology</td><td>Psionic testing, training, and diagnosis. Often contraband — possession may be a crime on psi-prohibiting worlds.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Tool Laser</h2>
+          <div class="rule-card">
+            <div class="rule-card-title">Tool Laser (TL12)</div>
+            <p class="rule-body">A handheld laser welder/cutting torch powered by an internal pack (up to 20 minutes continuous use). Variable output from fine electronic welding to cutting through several centimetres of steel — heavier work requires a dedicated welding kit. At TL12 it's flashlight-sized; TL13+ it fits in a pen. Can be used as a weapon (DM-2 to attacks, 5m range, 1D damage, burns 1 minute per shot). Cost: Cr500–Cr750. <em style="color:#4a9ab8">CSC p.130</em></p>
+          </div>
+        </div>
+
+      </div><!-- /tab-tools -->
+
     </main>
   </div>
 
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
   <script>
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).style.display = 'block';
+      event.target.classList.add('active');
+    }
+
     async function doSignOut() {
       await supabaseClient.auth.signOut();
       window.location.href = '../../index.html';
