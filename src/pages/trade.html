@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trade — Traveller</title>
   <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -38,13 +39,698 @@
 
     <main class="page-main">
       <h1 class="page-title">TRADE</h1>
-      <p class="placeholder-msg">Coming soon — speculative trade tables, cargo, passengers, broker checks.</p>
+
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="showTab('passengers')">Passengers</button>
+        <button class="tab-btn" onclick="showTab('freight')">Freight</button>
+        <button class="tab-btn" onclick="showTab('speculative')">Speculative Trade</button>
+        <button class="tab-btn" onclick="showTab('goods')">Trade Goods</button>
+      </div>
+
+      <!-- PASSENGERS TAB -->
+      <div id="tab-passengers" class="tab-content">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Passage Types</h2>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">High Passage</div>
+              <p class="rule-body">Luxury cruise equivalent. Comfortable stateroom, good food, attentive service. Requires one stateroom, one ton of cargo space, and Steward skill 1 per 10 passengers.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Middle Passage</div>
+              <p class="rule-body">Standard class — functional but not enjoyable. One stateroom per passenger, occasional steward service. Requires one stateroom, 100 kg cargo space, Steward 1 per 100 passengers.</p>
+            </div>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Basic Passage</div>
+              <p class="rule-body">Steerage. Staterooms shared (two per room) or basic cargo-bay accommodation with minimal facilities. Requires two tons of spare room. 10 kg baggage allowance. No steward required.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Low Passage</div>
+              <p class="rule-body">Cryogenic freezing for the journey. Risk of death from system shock, improper revival, or berth malfunction. Requires one low berth. 10 kg baggage allowance.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Passage &amp; Freight Costs</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Parsecs</th><th>High Passage</th><th>Middle Passage</th><th>Basic Passage</th><th>Low Passage</th><th>Freight (per ton)</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">1</td><td>Cr9,000</td><td>Cr6,500</td><td>Cr2,000</td><td>Cr700</td><td>Cr1,000</td></tr>
+                <tr><td class="td-cyan">2</td><td>Cr14,000</td><td>Cr10,000</td><td>Cr3,000</td><td>Cr1,300</td><td>Cr1,600</td></tr>
+                <tr><td class="td-cyan">3</td><td>Cr21,000</td><td>Cr14,000</td><td>Cr5,000</td><td>Cr2,200</td><td>Cr2,600</td></tr>
+                <tr><td class="td-cyan">4</td><td>Cr34,000</td><td>Cr23,000</td><td>Cr8,000</td><td>Cr3,900</td><td>Cr4,400</td></tr>
+                <tr><td class="td-cyan">5</td><td>Cr60,000</td><td>Cr40,000</td><td>Cr14,000</td><td>Cr7,200</td><td>Cr8,500</td></tr>
+                <tr><td class="td-cyan">6</td><td>Cr210,000</td><td>Cr130,000</td><td>Cr55,000</td><td>Cr27,000</td><td>Cr32,000</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8">Cost is per jump to destination. Freight rate also shown here for reference — see Freight tab for full freight rules. <em>Core p.238</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Finding Passengers</h2>
+          <div class="rule-card">
+            <p class="rule-body">Roll 2D on the Passenger Traffic table <strong>four times</strong> — once each for Low, Basic, Middle, and High passengers. Apply all modifiers below. The referee may add further DMs for wars, tourist attractions, or booming economies.</p>
+            <p class="rule-body" style="margin-top:6px"><strong>Skill check (Average 8+):</strong> Broker, Carouse, or Streetwise — add the Effect to each roll.</p>
+            <p class="rule-body" style="margin-top:6px"><strong>Chief steward bonus:</strong> Add the ship's highest Steward skill to each roll.</p>
+            <table class="ref-table" style="margin-top:10px">
+              <thead>
+                <tr><th>Condition</th><th>DM</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Rolling for High Passengers</td><td class="td-penalty">−4</td></tr>
+                <tr><td>Rolling for Low Passengers</td><td class="td-bonus">+1</td></tr>
+                <tr><td>World Population 1 or less (source or dest.)</td><td class="td-penalty">−4</td></tr>
+                <tr><td>World Population 6–7 (source or dest.)</td><td class="td-bonus">+1</td></tr>
+                <tr><td>World Population 8+ (source or dest.)</td><td class="td-bonus">+3</td></tr>
+                <tr><td>Starport A (source or dest.)</td><td class="td-bonus">+2</td></tr>
+                <tr><td>Starport B (source or dest.)</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Starport E (source or dest.)</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Starport X (source or dest.)</td><td class="td-penalty">−3</td></tr>
+                <tr><td>Amber Zone (source or dest.)</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Red Zone (source or dest.)</td><td class="td-penalty">−4</td></tr>
+                <tr><td>Each parsec of destination past the first</td><td class="td-penalty">−1</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Passenger Traffic Table</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>2D Result</th><th>Passengers Available</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">1 or less</td><td>0</td></tr>
+                <tr><td class="td-cyan">2–3</td><td>1D</td></tr>
+                <tr><td class="td-cyan">4–6</td><td>2D</td></tr>
+                <tr><td class="td-cyan">7–10</td><td>3D</td></tr>
+                <tr><td class="td-cyan">11–13</td><td>4D</td></tr>
+                <tr><td class="td-cyan">14–15</td><td>5D</td></tr>
+                <tr><td class="td-cyan">16</td><td>6D</td></tr>
+                <tr><td class="td-cyan">17</td><td>7D</td></tr>
+                <tr><td class="td-cyan">18</td><td>8D</td></tr>
+                <tr><td class="td-cyan">19</td><td>9D</td></tr>
+                <tr><td class="td-cyan">20+</td><td>10D</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8">Passengers available cannot normally exceed the resident population of the world. <em>Core p.238–239</em></p>
+          </div>
+        </div>
+
+        <div class="special-divider"><span>Operating with Passengers</span></div>
+
+        <div class="ref-section">
+          <div class="rule-card">
+            <div class="rule-card-title">Working Passage</div>
+            <p class="rule-body">Identical to middle passage but the passenger pays their way by serving in a crew role for the duration of the trip. Baggage allowance 100 kg. <em style="color:#4a9ab8">Core p.158</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Middle Passage — Stand-by Rules</h2>
+          <div class="rule-card">
+            <p class="rule-body">Middle passage is sold on a stand-by basis — middle passengers can be <strong>bumped</strong> by high passengers who book later. Many captains only take middle passengers if they cannot fill staterooms with high passage clients or lack enough stewards.</p>
+            <p class="rule-body" style="margin-top:6px">A Traveller with <strong>Steward 0</strong> (not Steward 1) can provide suitable service for up to 10 middle passengers. <em style="color:#4a9ab8">Core p.158</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Low Berth Revival</h2>
+          <div class="rule-card">
+            <p class="rule-body">When a low berth is opened, the medic must make a revival check. On a failure, the passenger does not survive.</p>
+            <div class="rule-formula">Routine (6+) Medic check · 1D×10 minutes · INT · apply passenger's END DM</div>
+            <table class="ref-table" style="margin-top:10px">
+              <thead>
+                <tr><th>Condition</th><th>DM</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Ship is TL12 or higher</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Passenger is non-human</td><td class="td-penalty">−2</td></tr>
+                <tr><td>Emergency low berth</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Passenger's END DM</td><td>applies</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><em>Core p.158</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Low Passage Lottery</h2>
+          <div class="rule-card">
+            <p class="rule-body">It is customary for the captain to contribute <strong>Cr10 from every low passage ticket</strong> into a lottery pool. Each low passenger guesses how many will survive the trip. The winner collects the pot — but if the winner is among the dead, the captain keeps the prize. Administered by the ship's steward. <em style="color:#4a9ab8">Core p.158</em></p>
+          </div>
+        </div>
+
+        <div class="special-divider"><span>Random Passenger Table</span></div>
+
+        <div class="ref-section">
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">Roll D66 when the referee wants to make a passenger memorable. Not for every trip — use selectively.</p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>D66</th><th>Passenger</th><th>D66</th><th>Passenger</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">11</td><td>Refugee — Political</td><td class="td-cyan">41</td><td>Ex-Scout</td></tr>
+                <tr><td class="td-cyan">12</td><td>Refugee — Economic</td><td class="td-cyan">42</td><td>Wanderer</td></tr>
+                <tr><td class="td-cyan">13</td><td>Starting a New Life Offworld</td><td class="td-cyan">43</td><td>Thief or Other Criminal</td></tr>
+                <tr><td class="td-cyan">14</td><td>Mercenary</td><td class="td-cyan">44</td><td>Scientist</td></tr>
+                <tr><td class="td-cyan">15</td><td>Spy</td><td class="td-cyan">45</td><td>Journalist or Researcher</td></tr>
+                <tr><td class="td-cyan">16</td><td>Corporate Executive</td><td class="td-cyan">46</td><td>Entertainer (Steward &amp; Perform 1D−1)</td></tr>
+                <tr><td class="td-cyan">21</td><td>Out to See the Universe</td><td class="td-cyan">51</td><td>Gambler (Gambler 1D−1)</td></tr>
+                <tr><td class="td-cyan">22</td><td>Tourist (1–3: Irritating, 4–6: Charming)</td><td class="td-cyan">52</td><td>Rich Noble — Complains a Lot</td></tr>
+                <tr><td class="td-cyan">23</td><td>Wide-Eyed Yokel</td><td class="td-cyan">53</td><td>Rich Noble — Eccentric</td></tr>
+                <tr><td class="td-cyan">24</td><td>Adventurer</td><td class="td-cyan">54</td><td>Rich Noble — Raconteur</td></tr>
+                <tr><td class="td-cyan">25</td><td>Explorer</td><td class="td-cyan">55</td><td>Diplomat on a Mission</td></tr>
+                <tr><td class="td-cyan">26</td><td>Claustrophobic</td><td class="td-cyan">56</td><td>Agent on a Mission</td></tr>
+                <tr><td class="td-cyan">31</td><td>Expectant Mother</td><td class="td-cyan">61</td><td>Patron</td></tr>
+                <tr><td class="td-cyan">32</td><td>Wants to Stowaway or Join the Crew</td><td class="td-cyan">62</td><td>Alien</td></tr>
+                <tr><td class="td-cyan">33</td><td>Possesses Something Dangerous or Illegal</td><td class="td-cyan">63</td><td>Bounty Hunter</td></tr>
+                <tr><td class="td-cyan">34</td><td>Causes Trouble (1–3: Drunkard, 4–5: Violent, 6: Insane)</td><td class="td-cyan">64</td><td>On the Run</td></tr>
+                <tr><td class="td-cyan">35</td><td>Unusually Pretty or Handsome</td><td class="td-cyan">65</td><td>Wants to Be on Board for Some Reason</td></tr>
+                <tr><td class="td-cyan">36</td><td>Engineer (Mechanic &amp; Engineer 1D−1 each)</td><td class="td-cyan">66</td><td>Hijacker or Pirate Agent</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><em>Core p.240</em></p>
+          </div>
+        </div>
+
+      </div><!-- end passengers tab -->
+
+      <!-- FREIGHT TAB -->
+      <div id="tab-freight" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Freight Overview</h2>
+          <div class="rule-card">
+            <p class="rule-body">Shipping freight pays a fixed rate per ton (see Passengers tab for the rate table). Freight lots must be transported in their entirety — they cannot be broken up. Payment is made on delivery.</p>
+            <p class="rule-body" style="margin-top:6px"><strong>Late delivery:</strong> reduces payment by <span class="rule-formula" style="display:inline; padding:2px 6px">1D + 4 × 10%</span></p>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Major Cargo Lot</div>
+              <p class="rule-body">1D × 10 tons of freight.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Minor Cargo Lot</div>
+              <p class="rule-body">1D × 5 tons of freight.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Incidental Cargo Lot</div>
+            <p class="rule-body">1D tons of freight.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Finding Freight</h2>
+          <div class="rule-card">
+            <p class="rule-body">Roll 2D on the Freight Traffic table <strong>three times</strong> — once each for Incidental, Minor, and Major lots. Apply all modifiers. The referee may add further DMs for local conditions.</p>
+            <p class="rule-body" style="margin-top:6px"><strong>Skill check (Average 8+):</strong> Broker or Streetwise — add the Effect to each roll.</p>
+            <table class="ref-table" style="margin-top:10px">
+              <thead>
+                <tr><th>Condition</th><th>DM</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Rolling for Major Cargo</td><td class="td-penalty">−4</td></tr>
+                <tr><td>Rolling for Incidental Cargo</td><td class="td-bonus">+2</td></tr>
+                <tr><td>World Population 1 or less (source or dest.)</td><td class="td-penalty">−4</td></tr>
+                <tr><td>World Population 6–7 (source or dest.)</td><td class="td-bonus">+2</td></tr>
+                <tr><td>World Population 8+ (source or dest.)</td><td class="td-bonus">+4</td></tr>
+                <tr><td>Starport A (source or dest.)</td><td class="td-bonus">+2</td></tr>
+                <tr><td>Starport B (source or dest.)</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Starport E (source or dest.)</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Starport X (source or dest.)</td><td class="td-penalty">−3</td></tr>
+                <tr><td>Tech Level 6 or less (source or dest.)</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Tech Level 9+ (source or dest.)</td><td class="td-bonus">+2</td></tr>
+                <tr><td>Amber Zone (source or dest.)</td><td class="td-penalty">−2</td></tr>
+                <tr><td>Red Zone (source or dest.)</td><td class="td-penalty">−6</td></tr>
+                <tr><td>Each parsec of destination past the first</td><td class="td-penalty">−1</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Freight Traffic Table</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>2D Result</th><th>Lots Available</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">1 or less</td><td>0</td></tr>
+                <tr><td class="td-cyan">2–3</td><td>1D</td></tr>
+                <tr><td class="td-cyan">4–5</td><td>2D</td></tr>
+                <tr><td class="td-cyan">6–8</td><td>3D</td></tr>
+                <tr><td class="td-cyan">9–11</td><td>4D</td></tr>
+                <tr><td class="td-cyan">12–14</td><td>5D</td></tr>
+                <tr><td class="td-cyan">15–16</td><td>6D</td></tr>
+                <tr><td class="td-cyan">17</td><td>7D</td></tr>
+                <tr><td class="td-cyan">18</td><td>8D</td></tr>
+                <tr><td class="td-cyan">19</td><td>9D</td></tr>
+                <tr><td class="td-cyan">20+</td><td>10D</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><em>Core p.240–241</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Mail</h2>
+          <div class="rule-card">
+            <p class="rule-body">Mail consists of large data storage drums and physical packages transported between worlds — not urgent enough for the x-boat service. Roll 2D with the following modifiers:</p>
+            <table class="ref-table" style="margin-top:10px">
+              <thead>
+                <tr><th>Condition</th><th>DM</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Freight Traffic DM −10 or less</td><td class="td-penalty">−2</td></tr>
+                <tr><td>Freight Traffic DM −9 to −5</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Freight Traffic DM −4 to +4</td><td>+0</td></tr>
+                <tr><td>Freight Traffic DM +5 to +9</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Freight Traffic DM +10 or more</td><td class="td-bonus">+2</td></tr>
+                <tr><td>Ship is armed</td><td class="td-bonus">+2</td></tr>
+                <tr><td>World TL 5 or less</td><td class="td-penalty">−4</td></tr>
+                <tr><td>Travellers' highest Naval or Scout rank</td><td class="td-bonus">+rank</td></tr>
+                <tr><td>Travellers' highest SOC DM</td><td class="td-bonus">+SOC DM</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:10px">On a result of <strong>12 or more</strong>, the Travellers are chosen to carry mail. Roll 1D for the number of containers available — all must be taken or none.</p>
+            <div class="rule-formula">Each container: 5 tons · Cr25,000 flat rate (distance does not affect payment)</div>
+            <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><em>Core p.241</em></p>
+          </div>
+        </div>
+
+      </div><!-- end freight tab -->
+
+      <!-- SPECULATIVE TRADE TAB -->
+      <div id="tab-speculative" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Trade Checklist</h2>
+          <div class="rule-card">
+            <ol style="margin:0; padding-left:1.4em; color:#b0d8e8; line-height:2">
+              <li>Find a supplier or local broker</li>
+              <li>Determine goods available</li>
+              <li>Determine purchase price</li>
+              <li>Purchase goods</li>
+              <li>Travel to another market</li>
+              <li>Find a buyer or local broker</li>
+              <li>Determine sale price</li>
+            </ol>
+            <p class="rule-body" style="margin-top:10px">Speculative trade is the path to great fortunes — and bankruptcy. The greatest profits and losses are here. Big shipping corporations don't follow these rules — they have government contracts, bulk ships, and bribes. Independent traders live and die by the dice.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Finding a Supplier or Buyer</h2>
+          <div class="rule-card">
+            <p class="rule-body">On worlds regularly visited by trade vessels, suppliers are easy to find. Travellers can search for multiple suppliers but suffer <strong>DM−1 per previous attempt on the same planet in the same month.</strong></p>
+            <table class="ref-table" style="margin-top:10px">
+              <thead>
+                <tr><th>Task</th><th>Check</th><th>Time</th><th>Characteristic</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Find supplier or broker</td><td>Average (8+) Broker</td><td>1D days</td><td>EDU or SOC</td></tr>
+                <tr><td>Find black market supplier (illegal goods)</td><td>Average (8+) Streetwise</td><td>1D days</td><td>EDU or SOC</td></tr>
+                <tr><td>Find online supplier (TL8+ worlds only)</td><td>Average (8+) Admin</td><td>1D hours</td><td>EDU</td></tr>
+              </tbody>
+            </table>
+            <table class="ref-table" style="margin-top:10px">
+              <thead>
+                <tr><th>Starport Class</th><th>DM to Finding Roll</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Class A</td><td class="td-bonus">+6</td></tr>
+                <tr><td>Class B</td><td class="td-bonus">+4</td></tr>
+                <tr><td>Class C</td><td class="td-bonus">+2</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8">The same process applies when finding a buyer at the destination world. <em>Core p.241–242</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Local Brokers</h2>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Legal Broker</div>
+              <p class="rule-body">Broker skill = 2D÷3. Gains DM+2 on negotiations (local knowledge). Charges <strong>10% of gross proceeds.</strong></p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Black Market Broker / Fixer</div>
+              <p class="rule-body">Streetwise skill = 2D÷3. Gains DM+2 on negotiations. Charges <strong>20% of gross proceeds</strong> (higher for very dangerous cargo). If skill roll is a natural 2, the fixer is an informer or government agent.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Determining Goods Available</h2>
+          <div class="rule-card">
+            <p class="rule-body"><strong>Common Goods</strong> can be purchased on any world. <strong>Trade Goods</strong> are available only on worlds with the matching Trade code. A supplier will have:</p>
+            <ul style="margin:8px 0; padding-left:1.4em; color:#b0d8e8; line-height:1.8">
+              <li>All Common Goods</li>
+              <li>All Trade Goods matching the world's Trade codes</li>
+              <li>A number of randomly determined goods equal to the world's Population code</li>
+            </ul>
+            <p class="rule-body">Roll on the Trade Goods table to determine random goods; reroll results 61–65 unless dealing with a black market supplier.</p>
+            <p class="rule-body" style="margin-top:8px"><strong>Population affects quantity:</strong> Population 3 or less applies DM−3 to quantity rolls (can result in zero). Population 9+ applies DM+3.</p>
+            <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8"><em>Core p.242</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Purchase Price</h2>
+          <div class="rule-card">
+            <p class="rule-body">Roll 3D and apply the following modifiers. Consult the Modified Price table for the purchase percentage of base price.</p>
+            <div class="rule-formula">3D + Broker skill + Purchase DM − Sale DM − Supplier's Broker skill (default 2)</div>
+            <p class="rule-body" style="margin-top:8px">If multiple Purchase or Sale DMs apply, use only the <strong>largest from each column.</strong> The trader may reject the price but cannot deal with that supplier again for at least a month.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Sale Price</h2>
+          <div class="rule-card">
+            <p class="rule-body">Find a buyer using the same rules as finding a supplier. Roll 3D with this formula:</p>
+            <div class="rule-formula">3D + Broker skill + Sale DM − Purchase DM − Purchaser's Broker skill (default 2)</div>
+            <p class="rule-body" style="margin-top:8px">If the trader rejects the offered price, they must find another buyer or wait a month. <em style="color:#4a9ab8">Core p.243</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Modified Price Table</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Roll Result</th><th>Purchase Price</th><th>Sale Price</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">−3 or less</td><td class="td-penalty">300%</td><td>10%</td></tr>
+                <tr><td class="td-cyan">−2</td><td class="td-penalty">250%</td><td>20%</td></tr>
+                <tr><td class="td-cyan">−1</td><td class="td-penalty">200%</td><td>30%</td></tr>
+                <tr><td class="td-cyan">0</td><td class="td-penalty">175%</td><td>40%</td></tr>
+                <tr><td class="td-cyan">1</td><td class="td-penalty">150%</td><td>45%</td></tr>
+                <tr><td class="td-cyan">2</td><td class="td-penalty">135%</td><td>50%</td></tr>
+                <tr><td class="td-cyan">3</td><td class="td-penalty">125%</td><td>55%</td></tr>
+                <tr><td class="td-cyan">4</td><td>120%</td><td>60%</td></tr>
+                <tr><td class="td-cyan">5</td><td>115%</td><td>65%</td></tr>
+                <tr><td class="td-cyan">6</td><td>110%</td><td>70%</td></tr>
+                <tr><td class="td-cyan">7</td><td>105%</td><td>75%</td></tr>
+                <tr><td class="td-cyan">8</td><td>100%</td><td>80%</td></tr>
+                <tr><td class="td-cyan">9</td><td>95%</td><td>85%</td></tr>
+                <tr><td class="td-cyan">10</td><td>90%</td><td>90%</td></tr>
+                <tr><td class="td-cyan">11</td><td>85%</td><td>100%</td></tr>
+                <tr><td class="td-cyan">12</td><td>80%</td><td>105%</td></tr>
+                <tr><td class="td-cyan">13</td><td>75%</td><td>110%</td></tr>
+                <tr><td class="td-cyan">14</td><td>70%</td><td>115%</td></tr>
+                <tr><td class="td-cyan">15</td><td>65%</td><td>120%</td></tr>
+                <tr><td class="td-cyan">16</td><td>60%</td><td>125%</td></tr>
+                <tr><td class="td-cyan">17</td><td>55%</td><td>130%</td></tr>
+                <tr><td class="td-cyan">18</td><td>50%</td><td>140%</td></tr>
+                <tr><td class="td-cyan">19</td><td>45%</td><td>150%</td></tr>
+                <tr><td class="td-cyan">20</td><td>40%</td><td>160%</td></tr>
+                <tr><td class="td-cyan">21</td><td>35%</td><td>175%</td></tr>
+                <tr><td class="td-cyan">22</td><td>30%</td><td>200%</td></tr>
+                <tr><td class="td-cyan">23</td><td>25%</td><td>250%</td></tr>
+                <tr><td class="td-cyan">24</td><td>20%</td><td>300%</td></tr>
+                <tr><td class="td-cyan">25+</td><td>15%</td><td>400%</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8">All prices are percentages of the goods' Base Price. <em>Core p.243</em></p>
+          </div>
+        </div>
+
+        <div class="special-divider"><span>Illegal Goods &amp; Smuggling</span></div>
+
+        <div class="ref-section">
+          <div class="rule-card">
+            <p class="rule-body">Some goods are <strong>universally illegal</strong> (marked on the Trade Goods table) and carry high Sale DMs. Other goods are illegal only on specific worlds based on their Law Level.</p>
+            <p class="rule-body" style="margin-top:8px"><strong>Law Level Sale DM for locally banned goods:</strong> Law Level of world − Law Level the goods are banned at. For example, Military Weapons are banned at Law Level 3. On a Law Level 9 world, Sale DM = +6.</p>
+            <p class="rule-body" style="margin-top:8px">If goods are both universally and locally illegal, use whichever Sale DM is higher. Black market suppliers hold whatever illegal goods match the world's Trade codes plus randomly rolled illegal goods.</p>
+            <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8">Caught smuggling? See Law &amp; Sentencing rules in General Rules. Fines are per ton of contraband. <em>Core p.242, 255–256</em></p>
+          </div>
+        </div>
+
+      </div><!-- end speculative tab -->
+
+      <!-- TRADE GOODS TAB -->
+      <div id="tab-goods" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Trade Goods Table</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">Roll D66 to randomly determine what goods a supplier has available. Common goods (11–16) can be found on any world. Illegal goods (61–65) require a black market supplier. Result 66 is Exotics — outside normal trade rules, handled through roleplaying.</p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>D66</th><th>Type</th><th>Availability</th><th>Tons</th><th>Base Price</th><th>Purchase DM</th><th>Sale DM</th><th>Examples</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="td-cyan">11</td><td>Common Electronics</td><td>All</td><td>2D×10</td><td>Cr20,000</td>
+                  <td>Industrial +2, High Tech +3, Rich +1</td>
+                  <td>Non-Industrial +2, Low Tech +1, Poor +1</td>
+                  <td>Basic computers to TL10</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">12</td><td>Common Industrial Goods</td><td>All</td><td>2D×10</td><td>Cr10,000</td>
+                  <td>Non-Agricultural +2, Industrial +5</td>
+                  <td>Non-Industrial +3, Agricultural +2</td>
+                  <td>Machine components, spare parts</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">13</td><td>Common Manufactured Goods</td><td>All</td><td>2D×10</td><td>Cr20,000</td>
+                  <td>Non-Agricultural +2, Industrial +5</td>
+                  <td>Non-Industrial +3, High Population +2</td>
+                  <td>Household appliances, clothing</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">14</td><td>Common Raw Materials</td><td>All</td><td>2D×20</td><td>Cr5,000</td>
+                  <td>Agricultural +3, Garden +2</td>
+                  <td>Industrial +2, Poor +2</td>
+                  <td>Metal, plastics, chemicals</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">15</td><td>Common Consumables</td><td>All</td><td>2D×20</td><td>Cr500</td>
+                  <td>Agricultural +3, Water World +2, Garden +1, Asteroid −4</td>
+                  <td>Asteroid +1, Fluid Oceans +1, Ice-Capped +1, High Population +1</td>
+                  <td>Food, drink, agricultural products</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">16</td><td>Common Ore</td><td>All</td><td>2D×20</td><td>Cr1,000</td>
+                  <td>Asteroid +4</td>
+                  <td>Industrial +3, Non-Industrial +1</td>
+                  <td>Ore bearing common metals</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">21</td><td>Advanced Electronics</td><td>Industrial, High Tech</td><td>1D×5</td><td>Cr100,000</td>
+                  <td>Industrial +2, High Tech +3</td>
+                  <td>Non-Industrial +1, Rich +2, Asteroid +3</td>
+                  <td>Advanced sensors, computers to TL15</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">22</td><td>Advanced Machine Parts</td><td>Industrial, High Tech</td><td>1D×5</td><td>Cr75,000</td>
+                  <td>Industrial +2, High Tech +1</td>
+                  <td>Asteroid +2, Non-Industrial +1</td>
+                  <td>Components including gravitic parts</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">23</td><td>Advanced Manufactured Goods</td><td>Industrial, High Tech</td><td>1D×5</td><td>Cr100,000</td>
+                  <td>Industrial +1</td>
+                  <td>High Population +1, Rich +2</td>
+                  <td>Devices incorporating advanced tech</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">24</td><td>Advanced Weapons</td><td>Industrial, High Tech</td><td>1D×5</td><td>Cr150,000</td>
+                  <td>High Tech +2</td>
+                  <td>Poor +1, Amber Zone +2, Red Zone +4</td>
+                  <td>Firearms, explosives, artillery, military-grade</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">25</td><td>Advanced Vehicles</td><td>Industrial, High Tech</td><td>1D×5</td><td>Cr180,000</td>
+                  <td>High Tech +2</td>
+                  <td>Asteroid +2, Rich +2</td>
+                  <td>Air/rafts, spacecraft, grav tanks to TL15</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">26</td><td>Biochemicals</td><td>Agricultural, Water World</td><td>1D×5</td><td>Cr50,000</td>
+                  <td>Agricultural +1, Water World +2</td>
+                  <td>Industrial +2</td>
+                  <td>Biofuels, organic chemicals, extracts</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">31</td><td>Crystals &amp; Gems</td><td>Asteroid, Desert, Ice-Capped</td><td>1D×5</td><td>Cr20,000</td>
+                  <td>Asteroid +2, Desert +1, Ice-Capped +1</td>
+                  <td>Industrial +3, Rich +2</td>
+                  <td>Diamonds, synthetic or natural gemstones</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">32</td><td>Cybernetics</td><td>High Tech</td><td>1D</td><td>Cr250,000</td>
+                  <td>High Tech +1</td>
+                  <td>Asteroid +1, Ice-Capped +1, Rich +2</td>
+                  <td>Cybernetic components, replacement limbs</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">33</td><td>Live Animals</td><td>Agricultural, Garden</td><td>1D×10</td><td>Cr10,000</td>
+                  <td>Agricultural +2</td>
+                  <td>Low Population +3</td>
+                  <td>Riding animals, beasts of burden, exotic pets</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">34</td><td>Luxury Consumables</td><td>Agricultural, Garden, Water World</td><td>1D×10</td><td>Cr20,000</td>
+                  <td>Agricultural +2, Water World +1</td>
+                  <td>Rich +2, High Population +2</td>
+                  <td>Rare foods, fine liquors</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">35</td><td>Luxury Goods</td><td>High Population</td><td>1D</td><td>Cr200,000</td>
+                  <td>High Population +1</td>
+                  <td>Rich +4</td>
+                  <td>Rare or extremely high-quality manufactured goods</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">36</td><td>Medical Supplies</td><td>High Tech, High Population</td><td>1D×5</td><td>Cr50,000</td>
+                  <td>High Tech +2</td>
+                  <td>Industrial +2, Poor +1, Rich +1</td>
+                  <td>Diagnostic equipment, basic drugs, cloning tech</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">41</td><td>Petrochemicals</td><td>Desert, Fluid Oceans, Ice-Capped, Water World</td><td>1D×10</td><td>Cr10,000</td>
+                  <td>Desert +2</td>
+                  <td>Industrial +2, Agricultural +1, Low Tech +2</td>
+                  <td>Oil, liquid fuels</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">42</td><td>Pharmaceuticals</td><td>Asteroid, Desert, High Population, Water World</td><td>1D</td><td>Cr100,000</td>
+                  <td>Asteroid +2, High Population +1</td>
+                  <td>Rich +2, Low Tech +1</td>
+                  <td>Drugs, medical supplies, anagathics, fast/slow drugs</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">43</td><td>Polymers</td><td>Industrial</td><td>1D×10</td><td>Cr7,000</td>
+                  <td>Industrial +1</td>
+                  <td>Rich +2, Non-Industrial +1</td>
+                  <td>Plastics and other synthetics</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">44</td><td>Precious Metals</td><td>Asteroid, Desert, Ice-Capped, Fluid Oceans</td><td>1D</td><td>Cr50,000</td>
+                  <td>Asteroid +3, Desert +1, Ice-Capped +2</td>
+                  <td>Rich +3, Industrial +2, High Tech +1</td>
+                  <td>Gold, silver, platinum, rare elements</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">45</td><td>Radioactives</td><td>Asteroid, Desert, Low Population</td><td>1D</td><td>MCr1</td>
+                  <td>Asteroid +2, Low Population +2</td>
+                  <td>Industrial +3, High Tech +1, Non-Industrial −2, Agricultural −3</td>
+                  <td>Uranium, plutonium, unobtanium, rare elements</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">46</td><td>Robots</td><td>Industrial</td><td>1D×5</td><td>Cr400,000</td>
+                  <td>Industrial +1</td>
+                  <td>Agricultural +2, High Tech +1</td>
+                  <td>Industrial and personal robots, drones</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">51</td><td>Spices</td><td>Garden, Desert, Water World</td><td>1D×10</td><td>Cr6,000</td>
+                  <td>Desert +2</td>
+                  <td>High Population +2, Rich +3, Poor +3</td>
+                  <td>Preservatives, luxury food additives, natural drugs</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">52</td><td>Textiles</td><td>Agricultural, Non-Industrial</td><td>1D×20</td><td>Cr3,000</td>
+                  <td>Agricultural +7</td>
+                  <td>High Population +3, Non-Agricultural +2</td>
+                  <td>Clothing and fabrics</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">53</td><td>Uncommon Ore</td><td>Asteroid, Ice-Capped</td><td>1D×20</td><td>Cr5,000</td>
+                  <td>Asteroid +4</td>
+                  <td>Industrial +3, Non-Industrial +1</td>
+                  <td>Ore containing precious or valuable metals</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">54</td><td>Uncommon Raw Materials</td><td>Agricultural, Desert, Water World</td><td>1D×10</td><td>Cr20,000</td>
+                  <td>Agricultural +2, Water World +1</td>
+                  <td>Industrial +2, High Tech +1</td>
+                  <td>Valuable metals like titanium, rare elements</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">55</td><td>Wood</td><td>Agricultural, Garden</td><td>1D×20</td><td>Cr1,000</td>
+                  <td>Agricultural +6</td>
+                  <td>Rich +2, Industrial +1</td>
+                  <td>Hard or beautiful woods, plant extracts</td>
+                </tr>
+                <tr>
+                  <td class="td-cyan">56</td><td>Vehicles</td><td>Industrial, High Tech</td><td>1D×10</td><td>Cr15,000</td>
+                  <td>Industrial +2, High Tech +1</td>
+                  <td>Non-Industrial +2, High Population +1</td>
+                  <td>Wheeled, tracked, other vehicles TL10 or lower</td>
+                </tr>
+                <tr style="color:#ff5a4a">
+                  <td class="td-cyan">61</td><td>Illegal Biochemicals</td><td>Agricultural, Water World</td><td>1D×5</td><td>Cr50,000</td>
+                  <td>Water World +2</td>
+                  <td>Industrial +6</td>
+                  <td>Dangerous chemicals, extracts from endangered species</td>
+                </tr>
+                <tr style="color:#ff5a4a">
+                  <td class="td-cyan">62</td><td>Cybernetics, Illegal</td><td>High Tech</td><td>1D</td><td>Cr250,000</td>
+                  <td>High Tech +1</td>
+                  <td>Asteroid +4, Ice-Capped +4, Rich +8, Amber Zone +6, Red Zone +6</td>
+                  <td>Combat cybernetics, illegal enhancements</td>
+                </tr>
+                <tr style="color:#ff5a4a">
+                  <td class="td-cyan">63</td><td>Drugs, Illegal</td><td>Asteroid, Desert, High Population, Water World</td><td>1D</td><td>Cr100,000</td>
+                  <td>Asteroid +1, Desert +1, Garden +1, Water World +1</td>
+                  <td>Rich +6, High Population +6</td>
+                  <td>Addictive drugs, combat drugs</td>
+                </tr>
+                <tr style="color:#ff5a4a">
+                  <td class="td-cyan">64</td><td>Luxuries, Illegal</td><td>Agricultural, Garden, Water World</td><td>1D</td><td>Cr50,000</td>
+                  <td>Agricultural +2, Water World +1</td>
+                  <td>Rich +6, High Population +4</td>
+                  <td>Debauched or addictive luxuries</td>
+                </tr>
+                <tr style="color:#ff5a4a">
+                  <td class="td-cyan">65</td><td>Weapons, Illegal</td><td>Industrial, High Tech</td><td>1D×5</td><td>Cr150,000</td>
+                  <td>High Tech +2</td>
+                  <td>Poor +6, Amber Zone +8, Red Zone +10</td>
+                  <td>Weapons of mass destruction, naval weapons</td>
+                </tr>
+                <tr style="color:#4a9ab8; font-style:italic">
+                  <td class="td-cyan">66</td><td>Exotics</td><td colspan="6">Outside normal trade rules. Alien relics, prototype technology, unique life forms, priceless treasures. Buying and selling is a matter for roleplaying and adventure.</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:10px; font-size:0.84rem; color:#ff5a4a">Red rows = illegal goods (61–65). Available only through black market suppliers.</p>
+            <p class="rule-body" style="font-size:0.84rem; color:#4a9ab8"><em>Core p.244–245</em></p>
+          </div>
+        </div>
+
+      </div><!-- end goods tab -->
+
     </main>
   </div>
 
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
   <script>
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).style.display = 'block';
+      event.target.classList.add('active');
+    }
+
     async function doSignOut() {
       await supabaseClient.auth.signOut();
       window.location.href = '../../index.html';
