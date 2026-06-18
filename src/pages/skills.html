@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skills — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <div class="stars"></div>
+
+  <div class="container">
+    <header class="page-header">
+      <a href="../../index.html" class="back-link">← Dashboard</a>
+      <h1 class="page-title">SKILLS</h1>
+    </header>
+
+    <div class="skill-controls">
+      <input type="text" id="skill-search" placeholder="Search skills..." oninput="filterSkills()" />
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="filterCategory('all', this)">All</button>
+        <button class="filter-btn" onclick="filterCategory('combat', this)">Combat</button>
+        <button class="filter-btn" onclick="filterCategory('social', this)">Social</button>
+        <button class="filter-btn" onclick="filterCategory('technical', this)">Technical</button>
+        <button class="filter-btn" onclick="filterCategory('spacecraft', this)">Spacecraft</button>
+        <button class="filter-btn" onclick="filterCategory('physical', this)">Physical</button>
+      </div>
+    </div>
+
+    <div id="skill-grid" class="skill-grid"></div>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/skills-data.js"></script>
+  <script src="../js/skills-reference.js"></script>
+</body>
+</html>

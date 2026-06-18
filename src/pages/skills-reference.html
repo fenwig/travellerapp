@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Skills Reference — Traveller</title>
+  <title>Rules Reference — Traveller</title>
   <link rel="stylesheet" href="../css/main.css" />
   <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,39 +15,19 @@
   <div class="container">
     <header class="page-header">
       <a href="../../index.html" class="back-link">← Dashboard</a>
-      <h1 class="page-title">SKILLS &amp; TASKS</h1>
+      <h1 class="page-title">RULES REFERENCE</h1>
     </header>
 
     <!-- Tab Navigation -->
     <div class="tab-nav">
-      <button class="tab-btn active" onclick="showTab('skills')">Skills</button>
-      <button class="tab-btn" onclick="showTab('tasks')">Tasks</button>
+      <button class="tab-btn active" onclick="showTab('tasks')">Tasks</button>
       <button class="tab-btn" onclick="showTab('combat')">Combat</button>
       <button class="tab-btn" onclick="showTab('encounters')">Encounters</button>
       <button class="tab-btn" onclick="showTab('healing')">Healing</button>
-      <button class="tab-btn" onclick="showTab('vehicles')">Vehicles</button>
-    </div>
-
-    <!-- SKILLS TAB -->
-    <div id="tab-skills" class="tab-content">
-
-      <div class="skill-controls">
-        <input type="text" id="skill-search" placeholder="Search skills..." oninput="filterSkills()" />
-        <div class="filter-row">
-          <button class="filter-btn active" onclick="filterCategory('all', this)">All</button>
-          <button class="filter-btn" onclick="filterCategory('combat', this)">Combat</button>
-          <button class="filter-btn" onclick="filterCategory('social', this)">Social</button>
-          <button class="filter-btn" onclick="filterCategory('technical', this)">Technical</button>
-          <button class="filter-btn" onclick="filterCategory('spacecraft', this)">Spacecraft</button>
-          <button class="filter-btn" onclick="filterCategory('physical', this)">Physical</button>
-        </div>
-      </div>
-
-      <div id="skill-grid" class="skill-grid"></div>
     </div>
 
     <!-- TASKS TAB -->
-    <div id="tab-tasks" class="tab-content" style="display:none">
+    <div id="tab-tasks" class="tab-content">
 
       <!-- Core Mechanic -->
       <div class="ref-section">
@@ -543,10 +523,6 @@
           <p class="rule-body"><strong>High gravity (1.4G+):</strong> DM−1 to all checks until acclimatised (1D weeks; 1D days with Athletics (strength)). <strong>Low gravity (0.7G or less):</strong> DM−1 to all physical checks until acclimatised. <strong>Zero-G:</strong> as Low Gravity, plus firing weapons with recoil requires an Average (8+) Athletics (dexterity) check or miss and spin out of control. <em style="color:#4a9ab8">p.80</em></p>
         </div>
 
-        <div class="rule-card">
-          <div class="rule-card-title">Healing</div>
-          <p class="rule-body"><strong>Natural:</strong> 1D + END DM characteristic points per day of full rest. <strong>First Aid:</strong> Effect of Medic check in points, applied within 1 minute of injury. <strong>Medical Care:</strong> 3 + END DM + Medic skill per day, requires sickbay or hospital. <strong>Surgery:</strong> required if all three physical characteristics are damaged; failed surgery worsens the patient. Full healing rules: <em style="color:#4a9ab8">p.82</em></p>
-        </div>
       </div>
 
     </div>
@@ -620,15 +596,8 @@
 
     </div>
 
-    <!-- VEHICLES TAB -->
-    <div id="tab-vehicles" class="tab-content" style="display:none">
-      <p style="color:#4a9ab8; margin-bottom: 1.5rem; font-size: 0.9rem;">Coming soon — Vehicles reference (Core Rulebook p.155)</p>
-    </div>
-
   </div>
 
   <script src="../js/supabase-config.js"></script>
-  <script src="../js/skills-data.js"></script>
-  <script src="../js/skills-reference.js"></script>
 </body>
 </html>
