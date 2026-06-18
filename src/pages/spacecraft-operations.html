@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spacecraft Operations — Traveller</title>
   <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -36,13 +37,577 @@
 
     <main class="page-main">
       <h1 class="page-title">SPACECRAFT OPERATIONS</h1>
-      <p class="placeholder-msg">Coming soon — jump procedures, sensors, astrogation, docking.</p>
+
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="showTab('finance')">Finance</button>
+        <button class="tab-btn" onclick="showTab('travel')">Space Travel</button>
+        <button class="tab-btn" onclick="showTab('operations')">Operations</button>
+        <button class="tab-btn" onclick="showTab('tech')">Spacecraft Tech</button>
+      </div>
+
+      <!-- FINANCE TAB -->
+      <div id="tab-finance" class="tab-content">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Spacecraft Types</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Type</th><th>Definition</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Ship</td><td>Any spacecraft of 100 tons or more.</td></tr>
+                <tr><td class="td-cyan">Small Craft</td><td>Any spacecraft under 100 tons. Cannot jump between star systems.</td></tr>
+                <tr><td class="td-cyan">Capital Ship</td><td>A ship exceeding 5,000 tons.</td></tr>
+                <tr><td class="td-cyan">System Ship</td><td>A ship without a jump drive — confined to one star system.</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:10px">Size, components and cargo are measured in <strong>displacement tons</strong>. One displacement ton displaces the same volume as one ton of liquid hydrogen — roughly <strong>14 cubic metres</strong>. <em style="color:#4a9ab8">Core Rulebook p.149</em></p>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Streamlined Hull</div>
+              <p class="rule-body">Designed to fly through atmosphere. Features wings or a lifting body. No penalties for atmospheric entry.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Partially Streamlined</div>
+              <p class="rule-body">Can enter atmospheres and skim gas giants. Extremely ungainly — all Pilot checks made at <strong>DM−2</strong> in atmosphere (except Atmosphere 3 or less).</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Unstreamlined Hull</div>
+            <p class="rule-body">Completely non-aerodynamic. Must make a <strong>Pilot check at DM−4</strong> when entering any atmosphere, and again <strong>every minute</strong> of flight. Each failed check inflicts <strong>1D damage, ignoring Armour</strong>.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Ship Mortgage</h2>
+          <div class="rule-card">
+            <div class="rule-formula">Monthly repayment = Purchase Price ÷ 240</div>
+            <p class="rule-body" style="margin-top:10px">Repaid every Maintenance Period for <strong>40 years</strong>. A ship received as a Career Benefit has 25% of the mortgage already paid — the Traveller may continue normal repayments (10 years fewer) or re-mortgage to reduce monthly payments. Each <strong>Ship Share</strong> earned during careers is worth MCr1 off the purchase price. <em style="color:#4a9ab8">Core Rulebook p.149</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Running Costs</h2>
+          <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">All costs are due every <strong>Maintenance Period</strong> (four weeks). Commercial ships typically complete two jumps per period — one week in jump, one week in-system. <em style="color:#4a9ab8">Core Rulebook p.153</em></p>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Item</th><th>Cost per Maintenance Period</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Mortgage / Debts</td><td>Varies (purchase price ÷ 240)</td></tr>
+                <tr><td class="td-cyan">Life Support — Stateroom</td><td>Cr1,000 per stateroom</td></tr>
+                <tr><td class="td-cyan">Life Support — Crew</td><td>Cr1,000 per person not in low berth</td></tr>
+                <tr><td class="td-cyan">Life Support — Low Berth</td><td>Cr100 per occupied berth</td></tr>
+                <tr><td class="td-cyan">Fuel — Refined</td><td>Cr500 per ton</td></tr>
+                <tr><td class="td-cyan">Fuel — Unrefined</td><td>Cr100 per ton</td></tr>
+                <tr><td class="td-cyan">Repairs &amp; Maintenance</td><td>0.1% of purchase price per year ÷ 12</td></tr>
+                <tr><td class="td-cyan">Salary: Pilot</td><td>Cr6,000</td></tr>
+                <tr><td class="td-cyan">Salary: Astrogator</td><td>Cr5,000</td></tr>
+                <tr><td class="td-cyan">Salary: Engineer</td><td>Cr4,000</td></tr>
+                <tr><td class="td-cyan">Salary: Medic</td><td>Cr3,000</td></tr>
+                <tr><td class="td-cyan">Salary: Steward</td><td>Cr2,000</td></tr>
+                <tr><td class="td-cyan">Salary: Gunner</td><td>Cr1,000</td></tr>
+                <tr><td class="td-cyan">Salary: Marine</td><td>Cr1,000</td></tr>
+                <tr><td class="td-cyan">Berthing Costs</td><td>Varies by starport (see Starports)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Poor Maintenance</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">If maintenance is skipped, roll <strong>2D every subsequent Maintenance Period</strong> with a DM equal to the number of periods skipped. On <strong>8+</strong>, the ship suffers a critical hit — roll 2D below. <em style="color:#4a9ab8">Core Rulebook p.153</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>2D</th><th>Critical Hit</th><th>Effect</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>2–4</td><td class="td-cyan">Fuel Leak</td><td>Lose 1D × 10% of fuel capacity.</td></tr>
+                <tr><td>5–7</td><td class="td-cyan">Drive Damaged</td><td>Roll 1D: 1–3 manoeuvre drive hit (Thrust −1, Pilot DM−1); 4–6 jump drive disabled until repaired.</td></tr>
+                <tr><td>8–9</td><td class="td-cyan">Weapon Faulty</td><td>One random turret (or weapon) damaged — DM−1 on all attack rolls.</td></tr>
+                <tr><td>10–12</td><td class="td-cyan">Power Plant</td><td>Power reduced by 25%, ship takes 1D extra damage (ignores armour). All crew suffer 2D × 10 rads per week.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Skipping on Debts</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">Each time the ship enters a new system, roll <strong>2D + modifiers</strong>. On <strong>8+</strong>, the Travellers are hunted by ship tracers or naval vessels. <em style="color:#4a9ab8">Core Rulebook p.153</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Condition</th><th>DM</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Per parsec distant from creditor (resets on discovery)</td><td class="td-bonus">−1</td></tr>
+                <tr><td>Changes to ship (repaint, transponder, refit, etc.)</td><td class="td-bonus">−1 to −6</td></tr>
+                <tr><td>Per MCr10 of ship value</td><td class="td-penalty">+1</td></tr>
+                <tr><td>Visited this system more than once in past 3 months</td><td class="td-penalty">+2</td></tr>
+                <tr><td>Payment less than 4 weeks overdue</td><td class="td-bonus">−4</td></tr>
+                <tr><td>Payment 4–24 weeks overdue</td><td class="td-penalty">+4</td></tr>
+                <tr><td>Payment 25 weeks–1 year overdue</td><td class="td-penalty">+2</td></tr>
+                <tr><td>Payment more than 1 year overdue</td><td>+0</td></tr>
+                <tr><td>Local Law Level − 5</td><td class="td-penalty">varies</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SPACE TRAVEL TAB -->
+      <div id="tab-travel" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Units of Measurement</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Unit</th><th>Distance</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Astronomical Unit (AU)</td><td>149,597,870 km — Earth–Sun distance</td></tr>
+                <tr><td class="td-cyan">Light Second</td><td>299,792 km</td></tr>
+                <tr><td class="td-cyan">Light Minute</td><td>17,987,547 km</td></tr>
+                <tr><td class="td-cyan">Light Year</td><td>9,460,730,472,580 km</td></tr>
+                <tr><td class="td-cyan">Parsec</td><td>30.857 × 10¹² km — 3.262 light years</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Preparing for Jump</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">Jump requires a <strong>task chain</strong> — Astrogation first, then Engineer. <em style="color:#4a9ab8">Core Rulebook p.157</em></p>
+            <div class="rule-formula">Step 1 — Astrogation: Easy (4+) Astrogation check (1D × 10 min, EDU)<br>DM equal to negative jump distance (e.g. Jump-4 = DM−4)</div>
+            <div class="rule-formula" style="margin-top:8px">Step 2 — Jump!: Easy (4+) Engineer (j-drive) check (1D × 10 min, EDU)<br>Modified by the task chain result from Step 1</div>
+            <table class="ref-table" style="margin-top:14px">
+              <thead>
+                <tr><th>Modifier</th><th>DM</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Jump drive not maintained</td><td class="td-penalty">−1 per month behind</td></tr>
+                <tr><td>Using unrefined fuel</td><td class="td-penalty">−2</td></tr>
+                <tr><td>Still within 100-diameter limit</td><td class="td-penalty">−4</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:10px">The jump drive requires a large power draw — many ships dim non-essential systems during jump initiation (<em>jump dimming</em>). If insufficient Power is available, the jump drive <strong>cannot be activated</strong>.</p>
+            <p class="rule-body" style="margin-top:6px">A ship can only safely jump when it is <strong>more than 100 diameters</strong> from any object larger than the ship. Gravity can collapse a jump bubble prematurely.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Jump Travel</h2>
+          <div class="rule-card">
+            <div class="rule-formula">Fuel per jump = 10% of hull tonnage × parsecs jumped</div>
+            <p class="rule-body" style="margin-top:10px; margin-bottom:6px">Example: a 200-ton ship jumping 2 parsecs uses 40 tons of fuel (10% × 200 × 2).</p>
+            <p class="rule-body">Jumps of less than 1 parsec are possible and count as Jump-1 for fuel and Astrogation purposes. Regardless of distance, a jump always takes roughly <strong>148 + 6D hours</strong> (approximately one week) in jumpspace.</p>
+            <p class="rule-body" style="margin-top:6px">While in jumpspace the ship is <strong>completely isolated</strong> — no communication with normal space, not even by psionic means. A successful jump exits near the target world but outside or on the edge of the 100-diameter limit. An inaccurate jump dumps the ship somewhere in the inner system.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Misjumps</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:12px">If the Engineer (j-drive) check to initiate jump is <strong>failed</strong>, the ship misjumps. Many misjumps are lethal. <em style="color:#4a9ab8">Core Rulebook p.157</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Failed Effect</th><th>Result</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Effect −1</td><td>Arrives in target system but <strong>1D days late</strong>. Crew may perceive additional subjective time aboard (referee's option: roll 1D for extra days experienced).</td></tr>
+                <tr><td class="td-cyan">Effect −2</td><td>Arrives in target system but displaced <strong>1D × 100 diameters</strong> from intended world.</td></tr>
+                <tr><td class="td-cyan">Effect −3 or worse</td><td>Ship ends up <strong>1D × 1D parsecs in a random direction</strong> — possibly deep empty space.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Travel Times</h2>
+          <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">All calculations assume acceleration from rest to midpoint, then deceleration to rest. 1G ≈ 10 m/s². <em style="color:#4a9ab8">Core Rulebook p.163</em></p>
+          <div class="rule-card">
+            <div class="rule-card-title">Formulae</div>
+            <div class="rule-formula">Time = 2 × √(Distance ÷ Acceleration)</div>
+            <div class="rule-formula" style="margin-top:6px">Acceleration = (Distance × 4) ÷ Time²</div>
+            <div class="rule-formula" style="margin-top:6px">Distance = (Acceleration × Time²) ÷ 4</div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Transit Times</div>
+            <table class="ref-table" style="margin-top:8px">
+              <thead>
+                <tr><th>Distance</th><th>1G</th><th>2G</th><th>3G</th><th>4G</th><th>5G</th><th>6G</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">1,000 km</td><td>633 sec</td><td>447 sec</td><td>365 sec</td><td>316 sec</td><td>283 sec</td><td>258 sec</td></tr>
+                <tr><td class="td-cyan">10,000 km</td><td>2,000 sec</td><td>1,414 sec</td><td>1,155 sec</td><td>1,000 sec</td><td>894 sec</td><td>816 sec</td></tr>
+                <tr><td class="td-cyan">100,000 km</td><td>105 min</td><td>74 min</td><td>61 min</td><td>53 min</td><td>47 min</td><td>42 min</td></tr>
+                <tr><td class="td-cyan">300,000 km</td><td>183 min</td><td>129 min</td><td>105 min</td><td>91 min</td><td>82 min</td><td>74 min</td></tr>
+                <tr><td class="td-cyan">400,000 km (1 ls)</td><td>211 min</td><td>149 min</td><td>122 min</td><td>106 min</td><td>94 min</td><td>86 min</td></tr>
+                <tr><td class="td-cyan">1,000,000 km</td><td>333 min</td><td>236 min</td><td>192 min</td><td>167 min</td><td>149 min</td><td>136 min</td></tr>
+                <tr><td class="td-cyan">10,000,000 km</td><td>17.6 hr</td><td>12.4 hr</td><td>10.1 hr</td><td>8.8 hr</td><td>7.9 hr</td><td>7.2 hr</td></tr>
+                <tr><td class="td-cyan">45,000,000 km</td><td>37.3 hr</td><td>26.4 hr</td><td>21.5 hr</td><td>18.6 hr</td><td>16.7 hr</td><td>15.2 hr</td></tr>
+                <tr><td class="td-cyan">100,000,000 km</td><td>55.6 hr</td><td>39.3 hr</td><td>32.1 hr</td><td>27.8 hr</td><td>24.8 hr</td><td>22.7 hr</td></tr>
+                <tr><td class="td-cyan">150,000,000 km (1 AU)</td><td>68.0 hr</td><td>48.1 hr</td><td>39.2 hr</td><td>34.0 hr</td><td>30.3 hr</td><td>27.8 hr</td></tr>
+                <tr><td class="td-cyan">255,000,000 km</td><td>88.7 hr</td><td>62.7 hr</td><td>51.2 hr</td><td>44.4 hr</td><td>39.7 hr</td><td>36.2 hr</td></tr>
+                <tr><td class="td-cyan">600,000,000 km</td><td>136.1 hr</td><td>96.2 hr</td><td>78.6 hr</td><td>68.0 hr</td><td>60.9 hr</td><td>55.6 hr</td></tr>
+                <tr><td class="td-cyan">900,000,000 km</td><td>166.7 hr</td><td>117.9 hr</td><td>96.2 hr</td><td>83.4 hr</td><td>74.5 hr</td><td>68.0 hr</td></tr>
+                <tr><td class="td-cyan">1,000,000,000 km</td><td>7.3 days</td><td>5.2 days</td><td>4.2 days</td><td>3.7 days</td><td>3.3 days</td><td>2.9 days</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Common Distances for Traders</div>
+            <table class="ref-table" style="margin-top:8px">
+              <thead>
+                <tr><th>Journey</th><th>Distance</th><th>Time at 1G</th><th>Time at 2G</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Surface to Orbit</td><td>10,000 km</td><td>2,000 sec</td><td>1,414 sec</td></tr>
+                <tr><td class="td-cyan">Orbiting Satellite</td><td>400,000 km</td><td>211 min</td><td>149 min</td></tr>
+                <tr><td class="td-cyan">Close Neighbour World</td><td>45,000,000 km</td><td>37.3 hr</td><td>26.4 hr</td></tr>
+                <tr><td class="td-cyan">Far Neighbour World</td><td>255,000,000 km</td><td>88.7 hr</td><td>62.7 hr</td></tr>
+                <tr><td class="td-cyan">Close Gas Giant</td><td>600,000,000 km</td><td>136.1 hr</td><td>96.2 hr</td></tr>
+                <tr><td class="td-cyan">Far Gas Giant</td><td>900,000,000 km</td><td>166.7 hr</td><td>117.9 hr</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- OPERATIONS TAB -->
+      <div id="tab-operations" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Power</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">Every system requires Power from the ship's power plant. Under normal circumstances most ships produce enough to run everything. <em style="color:#4a9ab8">Core Rulebook p.152</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>System</th><th>Power Required</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Basic Ship Systems</td><td>20% of total hull tonnage</td></tr>
+                <tr><td class="td-cyan">Manoeuvre Drive</td><td>10% of hull tonnage × maximum Thrust</td></tr>
+                <tr><td class="td-cyan">Jump Drive</td><td>10% of hull tonnage × maximum jump range (only when initiating jump)</td></tr>
+                <tr><td class="td-cyan">Beam Laser</td><td>4</td></tr>
+                <tr><td class="td-cyan">Pulse Laser</td><td>4</td></tr>
+                <tr><td class="td-cyan">Particle Beam</td><td>8</td></tr>
+                <tr><td class="td-cyan">Turret</td><td>1</td></tr>
+                <tr><td class="td-cyan">Missile Rack</td><td>0</td></tr>
+                <tr><td class="td-cyan">Sandcaster</td><td>0</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Running Out of Power</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:12px">If available Power drops below requirements, systems must be shut down. <em style="color:#4a9ab8">Core Rulebook p.152</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>System</th><th>Consequence of Shutdown</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Basic Ship Systems (partial)</td><td>Shut down non-essential systems to <strong>halve</strong> basic Power requirement. Life support and computer continue.</td></tr>
+                <tr><td class="td-cyan">Manoeuvre Drive</td><td>Throttle back or shut off — saves Power equal to 10% hull tonnage × Thrust deducted.</td></tr>
+                <tr><td class="td-cyan">Jump Drive</td><td>Normally draws no Power until used. Shutting down other systems is usually needed to free Power for jump.</td></tr>
+                <tr><td class="td-cyan">Weapons &amp; Systems</td><td>Individual weapons and systems can be switched off — regain Power as listed in the weapons table.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Fuel</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">Most ships use refined hydrogen for their power plants and jump drives. Refuelling typically takes <strong>1D hours</strong>. <em style="color:#4a9ab8">Core Rulebook p.156</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Type</th><th>Cost</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Refined Fuel</td><td>Cr500 per ton</td><td>Available at most starports. Safe for jump.</td></tr>
+                <tr><td class="td-cyan">Unrefined Fuel</td><td>Cr100 per ton</td><td>Available at out-of-the-way locations. Using it for jump gives DM−2 on Engineer (j-drive) check.</td></tr>
+              </tbody>
+            </table>
+            <div class="rule-card-title" style="margin-top:14px">Fuel Scooping</div>
+            <p class="rule-body">A ship with <strong>fuel scoops</strong> may gather unrefined fuel from bodies of water (using hoses) or scoop from a gas giant — requires a <strong>Difficult (10+) Pilot check</strong> (1D hours, DEX). A ship with <strong>fuel processors</strong> can refine raw fuel to remove the jump penalty.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Airlocks</h2>
+          <div class="rule-card">
+            <p class="rule-body">One airlock per 500 tons minimum. Large enough for <strong>three people in vacc suits</strong>. Cycling takes <strong>10 seconds</strong>. Normally locked from the bridge — requires <strong>Very Difficult (12+) Electronics (computers)</strong> to override from inside or outside. Nearby lockers typically contain vacc suits, rescue bubbles, and cutlasses. Ships with cargo space have cargo hatches usable as ad hoc airlocks. <em style="color:#4a9ab8">Core Rulebook p.151</em></p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Atmospheric Operations</h2>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Streamlined</div>
+              <p class="rule-body">Designed for atmospheric entry. Functions like a conventional aircraft. Pilot checks required in high winds or extreme weather.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Partially Streamlined</div>
+              <p class="rule-body">May skim gas giants and enter Atmosphere 3 or less without penalty. In denser atmospheres: all Pilot checks at <strong>DM−2</strong>.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Unstreamlined</div>
+            <p class="rule-body">Must make a <strong>Pilot check at DM−4</strong> on atmospheric entry and every minute of flight. Each failed check causes <strong>1D damage ignoring Armour</strong>.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Docking &amp; Landing</h2>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Landing at Starport</div>
+              <p class="rule-body"><strong>Routine (6+) Pilot check</strong> (1D × 10 seconds). Most pilots take 1D minutes for <strong>DM+2</strong> on the check. Wild landings require Average (8+), Difficult (10+), or Very Difficult (12+) depending on terrain. Failure = improper landing or crash.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Docking</div>
+              <p class="rule-body">Two ships may dock if neither resists. Most airlock designs across Charted Space are compatible; incompatible airlocks use flexible plastic docking tubes. Requires a <strong>Routine (6+) Pilot check</strong> (1D minutes). Hostile docking requires opposed Pilot checks — docking ship at <strong>DM−2</strong>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Repairs</h2>
+          <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">Spare parts cost <strong>Cr100,000 per ton</strong>. Prudent captains carry some in reserve. <em style="color:#4a9ab8">Core Rulebook p.159</em></p>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Hull Damage</div>
+            <div class="rule-formula">Routine (6+) Mechanic check (1 hour per Hull point, INT or EDU)</div>
+            <p class="rule-body" style="margin-top:10px">Spare parts consumed depend on the Effect of the repair check:</p>
+            <table class="ref-table" style="margin-top:8px">
+              <thead>
+                <tr><th>Effect</th><th>Spare Parts Required</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">1</td><td>1 ton</td></tr>
+                <tr><td class="td-cyan">2</td><td>0.8 tons</td></tr>
+                <tr><td class="td-cyan">3</td><td>0.6 tons</td></tr>
+                <tr><td class="td-cyan">4</td><td>0.4 tons</td></tr>
+                <tr><td class="td-cyan">5</td><td>0.2 tons</td></tr>
+                <tr><td class="td-cyan">6</td><td>None</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Critical Hit Repair</div>
+            <div class="rule-formula">Engineer or Mechanic check (1D hours, INT or EDU)<br>DM = Effect − Severity of the critical hit → spare parts required</div>
+            <p class="rule-body" style="margin-top:10px">A critical hit can be <strong>jury-rigged</strong> in combat (see Spacecraft Combat — Repair System action) but will stop functioning again after <strong>1D hours</strong>. Full repair requires the check above plus spare parts.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Destroyed Equipment</div>
+            <p class="rule-body">Weapons or equipment <strong>destroyed by critical hits cannot be repaired</strong> — they must be completely replaced. Replacement cannot be done with spare parts alone.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SPACECRAFT TECH TAB -->
+      <div id="tab-tech" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Sensors</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">An Electronics (sensors) check detects and identifies a target that has moved into sensor range. What can be determined depends on sensor type and range. Civilian vessels and military ships not on manoeuvres broadcast a continuous <strong>IFF beacon</strong> giving <strong>DM+4</strong> to detection checks. <em style="color:#4a9ab8">Core Rulebook p.160</em></p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Sensor Range Bands</div>
+            <table class="ref-table" style="margin-top:8px">
+              <thead>
+                <tr><th>Range Band</th><th>Distance</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Adjacent</td><td>1 km or less</td></tr>
+                <tr><td class="td-cyan">Close</td><td>1–10 km</td></tr>
+                <tr><td class="td-cyan">Short</td><td>11–1,250 km</td></tr>
+                <tr><td class="td-cyan">Medium</td><td>1,251–10,000 km</td></tr>
+                <tr><td class="td-cyan">Long</td><td>10,001–25,000 km</td></tr>
+                <tr><td class="td-cyan">Very Long</td><td>25,001–50,000 km</td></tr>
+                <tr><td class="td-cyan">Distant</td><td>More than 50,000 km</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Sensor Types</div>
+            <table class="ref-table" style="margin-top:8px">
+              <thead>
+                <tr><th>Type</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Visual</td><td>Electronically-enhanced telescopes. Available at all TLs.</td></tr>
+                <tr><td class="td-cyan">Thermal</td><td>Detects heat emissions. Available at all TLs.</td></tr>
+                <tr><td class="td-cyan">EM</td><td>Detects emissions from low-frequency radio to gamma rays. All TLs.</td></tr>
+                <tr><td class="td-cyan">Active Radar/Lidar</td><td>Bounces beams off target. Grants DM+2 to enemy sensors detecting you in return. All TLs.</td></tr>
+                <tr><td class="td-cyan">Passive Radar/Lidar</td><td>Passive detection of physical objects. All TLs.</td></tr>
+                <tr><td class="td-cyan">NAS</td><td>Neural Activity Scanner — detects intelligence and neural activity. Advanced sensors only.</td></tr>
+                <tr><td class="td-cyan">Densitometer</td><td>Determines internal structure via natural gravity. Improved sensors only.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Sensor Target — Coverage by Range</div>
+            <table class="ref-table" style="margin-top:8px; font-size:0.82rem">
+              <thead>
+                <tr><th>Range</th><th>Visual</th><th>Thermal</th><th>EM</th><th>Active Radar</th><th>Passive Radar</th><th>NAS</th><th>Densitometer</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Adjacent</td><td>Full</td><td>Full</td><td>Full</td><td>Full</td><td>Limited</td><td>Full</td><td>Full</td></tr>
+                <tr><td class="td-cyan">Close</td><td>Full</td><td>Full</td><td>Full</td><td>Full</td><td>Limited</td><td>Limited</td><td>Full</td></tr>
+                <tr><td class="td-cyan">Short</td><td>Limited</td><td>Full</td><td>Limited</td><td>Full</td><td>Minimal</td><td>Minimal</td><td>Limited</td></tr>
+                <tr><td class="td-cyan">Medium</td><td>Limited</td><td>Limited</td><td>Limited</td><td>Limited</td><td>Minimal</td><td>None</td><td>Minimal</td></tr>
+                <tr><td class="td-cyan">Long</td><td>Minimal</td><td>Limited</td><td>Minimal</td><td>Limited</td><td>None</td><td>None</td><td>None</td></tr>
+                <tr><td class="td-cyan">Very Long</td><td>Minimal</td><td>Minimal</td><td>Minimal</td><td>Minimal</td><td>None</td><td>None</td><td>None</td></tr>
+                <tr><td class="td-cyan">Distant</td><td>None</td><td>Minimal</td><td>None</td><td>Minimal</td><td>None</td><td>None</td><td>None</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Sensor Detail — What Each Coverage Level Reveals</div>
+            <table class="ref-table" style="margin-top:8px">
+              <thead>
+                <tr><th>Coverage</th><th>Visual</th><th>Thermal</th><th>EM</th><th>Active Radar</th><th>NAS</th><th>Densitometer</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Full</td><td>Fine details</td><td>Fine temp gradations, individual heat sources</td><td>Individual systems</td><td>Fine details</td><td>Individual brain activity</td><td>Fine internal structure</td></tr>
+                <tr><td class="td-cyan">Limited</td><td>Shape and structure</td><td>Hot or cold spots</td><td>Powerful EM sources</td><td>Shape and structure</td><td>Presence/absence of activity</td><td>External structure</td></tr>
+                <tr><td class="td-cyan">Minimal</td><td>Basic outline</td><td>Hot or cold overall</td><td>Presence/absence of activity</td><td>Basic outline</td><td>Level of activity</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Ship Computers &amp; Software</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">Ship computers are far more powerful than planetside equivalents. <strong>/bis computers</strong> (e.g. Computer/5bis) can run Jump Control software as if their rating were <strong>+5 higher</strong>. <em style="color:#4a9ab8">Core Rulebook p.161</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Program</th><th>TL</th><th>Bandwidth</th><th>Cost</th><th>Effect</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Manoeuvre</td><td>—</td><td>0</td><td>Included</td><td>Basic control of ship.</td></tr>
+                <tr><td class="td-cyan">Intellect</td><td>11</td><td>0</td><td>Included</td><td>Ship understands and obeys verbal commands.</td></tr>
+                <tr><td class="td-cyan">Library</td><td>—</td><td>0</td><td>Included</td><td>Contains a wealth of data on numerous subjects.</td></tr>
+                <tr><td class="td-cyan">Jump Control/1–6</td><td>9–15</td><td>5–30</td><td>MCr0.1–0.6</td><td>Allows jumps up to the listed number. Includes astrogation software and jump engine management.</td></tr>
+                <tr><td class="td-cyan">Evade/1</td><td>9</td><td>10</td><td>MCr1</td><td rowspan="3">Computer reacts automatically to incoming fire, applying negative DM equal to the Evade score to all attacks.</td></tr>
+                <tr><td class="td-cyan">Evade/2</td><td>11</td><td>15</td><td>MCr2</td></tr>
+                <tr><td class="td-cyan">Evade/3</td><td>13</td><td>25</td><td>MCr3</td></tr>
+                <tr><td class="td-cyan">Fire Control/1</td><td>9</td><td>5</td><td>MCr2</td><td rowspan="5">Can fire a number of turrets per round equal to the listed number, give DM+ to an attack, or any combination. E.g. Fire Control/2 can make two automated attacks, give DM+2 to a gunner, or one attack with DM+1.</td></tr>
+                <tr><td class="td-cyan">Fire Control/2</td><td>10</td><td>10</td><td>MCr4</td></tr>
+                <tr><td class="td-cyan">Fire Control/3</td><td>11</td><td>15</td><td>MCr6</td></tr>
+                <tr><td class="td-cyan">Fire Control/4</td><td>12</td><td>20</td><td>MCr8</td></tr>
+                <tr><td class="td-cyan">Fire Control/5</td><td>13</td><td>25</td><td>MCr10</td></tr>
+                <tr><td class="td-cyan">Auto-Repair/1</td><td>10</td><td>10</td><td>MCr5</td><td rowspan="2">Can make a number of repair attempts per round equal to the listed number, or give that number as a positive DM to repairs. Requires repair drones.</td></tr>
+                <tr><td class="td-cyan">Auto-Repair/2</td><td>12</td><td>20</td><td>MCr10</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Spacecraft Security</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">Hacking difficulty depends on what is being accessed and from where. <em style="color:#4a9ab8">Core Rulebook p.161</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Access Target</th><th>Difficulty</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">External connections (critical systems)</td><td>Very Difficult (12+) Electronics (computers)</td></tr>
+                <tr><td class="td-cyan">Internal — ship's records</td><td>Average (8+) Electronics (computers)</td></tr>
+                <tr><td class="td-cyan">Internal — convince computer you are crew</td><td>Difficult (10+) Electronics (computers)</td></tr>
+                <tr><td class="td-cyan">Override security systems</td><td>Very Difficult (12+) Electronics (computers)</td></tr>
+                <tr><td class="td-cyan">Gain control of navigation or power</td><td>Formidable (14+) Electronics (computers)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Lock Types</div>
+            <table class="ref-table" style="margin-top:8px">
+              <thead>
+                <tr><th>Lock Type</th><th>How to Bypass</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Mechanical</td><td>Average (8+) Mechanic check, or steal the key/combination.</td></tr>
+                <tr><td class="td-cyan">Electronic</td><td>Difficult (10+) Electronics (computers), or steal the keycard/combination.</td></tr>
+                <tr><td class="td-cyan">Biometric</td><td>Very Difficult (12+) Electronics (computers), or steal a biometric sample from an authorised person.</td></tr>
+                <tr><td class="td-cyan">Intelligent</td><td>Very Difficult (12+) Electronics (computers), or hack the ship's computer.</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:8px; font-size:0.84rem; color:#4a9ab8">External locks are one difficulty higher than internal. Any non-mechanical lock can be opened/closed remotely — but can also be hacked. Bulkhead (iris valve) doors are airtight; stateroom doors are not.</p>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Security Systems</div>
+            <table class="ref-table" style="margin-top:8px">
+              <thead>
+                <tr><th>System</th><th>Effect</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Alarms</td><td>Hull breach, fire, forced door, or alarm button alerts the crew. Location shown on computer displays.</td></tr>
+                <tr><td class="td-cyan">Gravity</td><td>Gravity can be cut to zero (limiting movement to Athletics (dexterity) skill) or increased to 3G (Electronics computers check — counts as high gravity).</td></tr>
+                <tr><td class="td-cyan">Tranq Gas</td><td>Flood a compartment via air vents. Targets make END checks with cumulative DM−1 per round. Failure = unconscious for 2D minutes.</td></tr>
+                <tr><td class="td-cyan">Venting Atmosphere</td><td>Vent air from any compartment connected to an airlock. Targets must make STR check or be blown into space; begin suffocating.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Remote Operations (Drones)</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">Drones are piloted using <strong>Electronics (remote ops)</strong> skill and can operate up to <strong>Medium range</strong>. They have gravitic drives and operate in both space and atmosphere, but cannot travel from a planet surface to orbit under their own power. <em style="color:#4a9ab8">Core Rulebook p.158</em></p>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Mining Drones</div>
+            <p class="rule-body">Allow asteroid mining without manoeuvring the ship close to spinning rock. Each set processes <strong>1D × 10 tons of asteroid per day</strong> (typically common ore). Includes ore-handling machinery to transfer ore to the cargo bay.</p>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Probe Drones</div>
+            <p class="rule-body">For surveying planetary surfaces — commonly found on scout ships. Can be dropped from orbit in disposable entry shells but must be <strong>recovered manually</strong>. Also capable of surveying orbiting satellites, derelicts and space debris. Can serve as <strong>communications relays</strong>.</p>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Repair Drones</div>
+            <p class="rule-body">Allow exterior repairs without risking crew. Enables a Traveller with Electronics (remote ops) to use the <strong>Repair System action</strong> in space combat. Repair drones have Engineer skill equal to <strong>1 or the operator's Electronics (remote ops) level — whichever is lower</strong> — for Repair System actions only.</p>
+          </div>
+        </div>
+
+      </div>
+
     </main>
   </div>
 
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
   <script>
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).style.display = 'block';
+      event.target.classList.add('active');
+    }
+
     async function doSignOut() {
       await supabaseClient.auth.signOut();
       window.location.href = '../../index.html';
