@@ -273,3 +273,136 @@
   padding: 40px;
   font-size: 0.95rem;
 }
+
+/* ─── Rules Reference (Tasks / Combat / Encounters) ─── */
+
+.ref-section {
+  margin-bottom: 36px;
+}
+
+.ref-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #00e5ff;
+  border-bottom: 1px solid #0a4a60;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+}
+
+/* Rule card */
+.rule-card {
+  background: rgba(13, 21, 32, 0.92);
+  border: 1px solid #0a4a60;
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+}
+
+.rule-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #00e5ff;
+  margin-bottom: 10px;
+  letter-spacing: 0.04em;
+}
+
+.rule-body {
+  font-size: 0.88rem;
+  color: #b0d8e8;
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+
+.rule-body:last-child {
+  margin-bottom: 0;
+}
+
+.rule-body strong {
+  color: #00e5ff;
+  font-weight: 600;
+}
+
+.rule-formula {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.07);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+}
+
+/* Side-by-side rule cards */
+.rule-card-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rule-card-half {
+  margin-bottom: 0;
+}
+
+@media (max-width: 580px) {
+  .rule-card-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Reference note (small text below a card) */
+.ref-note {
+  font-size: 0.8rem;
+  color: #4a9ab8;
+  margin: -6px 0 14px 4px;
+  font-style: italic;
+}
+
+/* Reference tables */
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.ref-table thead tr {
+  border-bottom: 1px solid #0a4a60;
+}
+
+.ref-table th {
+  text-align: left;
+  color: #00e5ff;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+}
+
+.ref-table td {
+  padding: 8px 10px;
+  color: #b0d8e8;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.ref-table tbody tr {
+  border-bottom: 1px solid rgba(10, 74, 96, 0.35);
+}
+
+.ref-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.ref-table tbody tr:hover {
+  background: rgba(0, 229, 255, 0.04);
+}
+
+/* Table cell modifiers */
+.td-cyan   { color: #00e5ff; font-weight: 600; }
+.td-bonus  { color: #00ffaa; font-weight: 600; }
+.td-penalty { color: #ff5a4a; font-weight: 600; }

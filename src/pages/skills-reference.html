@@ -46,7 +46,156 @@
 
     <!-- TASKS TAB -->
     <div id="tab-tasks" class="tab-content" style="display:none">
-      <p style="color:#4a9ab8; margin-bottom: 1.5rem; font-size: 0.9rem;">Coming soon</p>
+
+      <!-- Core Mechanic -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Core Mechanic</h2>
+        <div class="rule-card">
+          <div class="rule-card-title">Making a Check</div>
+          <div class="rule-formula">2D + Skill Level + Characteristic DM + other DMs ≥ Target Number</div>
+          <p class="rule-body">Roll 2D and add your skill level and the relevant characteristic DM. If the total meets or exceeds the target number, you succeed. The referee should only call for checks when the Travellers are in danger, the task is especially difficult or hazardous, they are under time pressure, or success and failure are both interesting outcomes.</p>
+          <p class="rule-body">If no difficulty is specified, assume the task is <strong>Average (8+)</strong>.</p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Skill Levels</div>
+          <p class="rule-body">How skilled a Traveller is determines their modifier to checks:</p>
+          <table class="ref-table">
+            <thead>
+              <tr><th>Level</th><th>Status</th><th>Modifier</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>None</td><td>Untrained</td><td class="td-penalty">DM-3</td></tr>
+              <tr><td>0</td><td>Familiar — no bonus but avoids the untrained penalty</td><td>DM+0</td></tr>
+              <tr><td>1</td><td>Trained professional</td><td class="td-bonus">DM+1</td></tr>
+              <tr><td>2</td><td>Skilled professional</td><td class="td-bonus">DM+2</td></tr>
+              <tr><td>3</td><td>Expert — well respected in their field</td><td class="td-bonus">DM+3</td></tr>
+              <tr><td>4–5</td><td>Master — world or system renowned</td><td class="td-bonus">DM+4 or +5</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Task Difficulties -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Task Difficulties</h2>
+        <div class="rule-card">
+          <table class="ref-table">
+            <thead>
+              <tr><th>Difficulty</th><th>Target</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="td-cyan">Simple</td><td>2+</td><td>Trivial for everyone. Rarely rolled.</td></tr>
+              <tr><td class="td-cyan">Easy</td><td>4+</td><td>Trivial for a trained professional, simple for an amateur.</td></tr>
+              <tr><td class="td-cyan">Routine</td><td>6+</td><td>Trivial for a professional, relatively easy for an amateur.</td></tr>
+              <tr><td class="td-cyan">Average</td><td>8+</td><td>A moderate obstacle for a trained professional. The default.</td></tr>
+              <tr><td class="td-cyan">Difficult</td><td>10+</td><td>Tough even for a trained professional.</td></tr>
+              <tr><td class="td-cyan">Very Difficult</td><td>12+</td><td>Hard for a professional, nearly impossible for an amateur.</td></tr>
+              <tr><td class="td-cyan">Formidable</td><td>14+</td><td>Exceptionally hard — surgery on alien biology, military-grade hacking.</td></tr>
+              <tr><td class="td-cyan">Impossible</td><td>16+</td><td>Near-miracles only. Reconstructing alien DNA. Flying through stellar phenomena.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Boon, Bane & Effect -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Boon, Bane &amp; Effect</h2>
+
+        <div class="rule-card-row">
+          <div class="rule-card rule-card-half">
+            <div class="rule-card-title">Boon</div>
+            <p class="rule-body">Roll an extra die and <strong>discard the lowest</strong>. Granted when a Traveller has helpful circumstances — good tools, assistance, favourable conditions.</p>
+          </div>
+          <div class="rule-card rule-card-half">
+            <div class="rule-card-title">Bane</div>
+            <p class="rule-body">Roll an extra die and <strong>discard the highest</strong>. Applied when hindered — poor tools, darkness, distractions, adverse conditions.</p>
+          </div>
+        </div>
+        <p class="ref-note">A Boon and a Bane on the same check cancel out. Multiple Boons or Banes still only count as one.</p>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Effect</div>
+          <p class="rule-body">Effect = <strong>Total rolled − Target Number</strong>. Measures how well (or badly) a Traveller performed. Used to calculate combat damage and task chain bonuses.</p>
+          <table class="ref-table" style="margin-top:12px">
+            <thead>
+              <tr><th>Effect</th><th>Result</th><th>Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="td-penalty">−6 or less</td><td>Exceptional Failure</td><td>Everything that can go wrong does. Devices damaged, situations made worse.</td></tr>
+              <tr><td class="td-penalty">−2 to −5</td><td>Average Failure</td><td>The task simply fails.</td></tr>
+              <tr><td class="td-penalty">−1</td><td>Marginal Failure</td><td>Almost succeeded. Referee may allow scraping a success with a significant cost.</td></tr>
+              <tr><td>0</td><td>Marginal Success</td><td>Barely succeeds — may need to accept a condition or complication.</td></tr>
+              <tr><td class="td-bonus">1 to 5</td><td>Average Success</td><td>The task succeeds normally.</td></tr>
+              <tr><td class="td-bonus">6+</td><td>Exceptional Success</td><td>Succeeds in an impressive and elegant fashion.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Special Check Types -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Special Check Types</h2>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Opposed Checks</div>
+          <p class="rule-body">When two characters directly oppose each other, both make their checks normally. The winner is the one with the <strong>highest Effect</strong>. On a draw, neither gains an advantage — they may try again or events overtake them.</p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Multiple Tasks</div>
+          <p class="rule-body">Doing two or more things at once — firing ship weapons while also flying, or disarming a bomb while hiding — raises the difficulty of <strong>each task by one level</strong> for every extra task being performed simultaneously. An Average task becomes Difficult; a Difficult task becomes Very Difficult, and so on.</p>
+        </div>
+      </div>
+
+      <!-- Timeframes -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Timeframes</h2>
+        <div class="rule-card">
+          <p class="rule-body" style="margin-bottom:12px">Each task has a random timeframe of 1–6 time units. The referee sets the increment based on the nature of the task.</p>
+          <table class="ref-table">
+            <thead>
+              <tr><th>Timeframe</th><th>Increment</th><th>Example Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="td-cyan">1D Seconds</td><td>~1–6 sec</td><td>Shooting, punching, jumping</td></tr>
+              <tr><td class="td-cyan">1D Combat Rounds</td><td>~6–36 sec</td><td>Hurrying a maths problem</td></tr>
+              <tr><td class="td-cyan">1D × 10 Seconds</td><td>~10–60 sec</td><td>Rerouting power, opening a comms channel</td></tr>
+              <tr><td class="td-cyan">1D Minutes</td><td>~1–6 min</td><td>Applying first aid, basic technical tasks</td></tr>
+              <tr><td class="td-cyan">1D × 10 Minutes</td><td>~10–60 min</td><td>Complex technical tasks, searching an area thoroughly</td></tr>
+              <tr><td class="td-cyan">1D Hours</td><td>~1–6 hrs</td><td>Building a shelter, moving through wilderness</td></tr>
+              <tr><td class="td-cyan">1D × 4 Hours</td><td>~4–24 hrs</td><td>Researching a problem</td></tr>
+              <tr><td class="td-cyan">1D × 10 Hours</td><td>~10–60 hrs</td><td>Repairing a damaged ship system</td></tr>
+              <tr><td class="td-cyan">1D Days</td><td>~1–6 days</td><td>Combing a city for a missing person</td></tr>
+            </tbody>
+          </table>
+          <div class="rule-formula" style="margin-top:14px">Going faster: DM−2 &nbsp;|&nbsp; Going slower: DM+2 &nbsp;|&nbsp; One step only</div>
+          <p class="rule-body" style="margin-top:8px">Before rolling you may shift one step up (faster, DM-2) or one step down (slower, DM+2). You cannot shift more than one step.</p>
+        </div>
+      </div>
+
+      <!-- Task Chains -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Task Chains</h2>
+        <div class="rule-card">
+          <p class="rule-body">When tasks are linked — the result of one check influences the next — the Effect of the previous check applies as a DM to the next check in the chain. Chains can involve multiple Travellers working together or one Traveller performing a series of related actions.</p>
+          <table class="ref-table" style="margin-top:12px">
+            <thead>
+              <tr><th>Previous Check</th><th>DM to Next Check</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="td-penalty">Failed — Effect −6 or less</td><td class="td-penalty">DM−3</td></tr>
+              <tr><td class="td-penalty">Failed — Effect −2 to −5</td><td class="td-penalty">DM−2</td></tr>
+              <tr><td class="td-penalty">Failed — Effect −1</td><td class="td-penalty">DM−1</td></tr>
+              <tr><td>Succeeded — Effect 0</td><td class="td-bonus">DM+1</td></tr>
+              <tr><td class="td-bonus">Succeeded — Effect 1 to 5</td><td class="td-bonus">DM+2</td></tr>
+              <tr><td class="td-bonus">Succeeded — Effect 6+</td><td class="td-bonus">DM+3</td></tr>
+            </tbody>
+          </table>
+          <p class="rule-body" style="margin-top:12px"><strong>Working Together:</strong> When multiple Travellers work on the same task simultaneously, one makes the final check while others make supporting checks first. Each supporter's Effect is consulted on the Task Chain table and that DM is applied to the lead Traveller's check.</p>
+        </div>
+      </div>
+
     </div>
 
     <!-- COMBAT TAB -->
