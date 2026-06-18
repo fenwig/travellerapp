@@ -104,4 +104,9 @@ function showTab(tab) {
   event.target.classList.add('active');
 }
 
+function toggleSpecial(id) {
+  const card = document.getElementById(id);
+  card.classList.toggle('open');
+}
+
 renderSkills();

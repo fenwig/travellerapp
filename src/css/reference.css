@@ -406,3 +406,78 @@
 .td-cyan   { color: #00e5ff; font-weight: 600; }
 .td-bonus  { color: #00ffaa; font-weight: 600; }
 .td-penalty { color: #ff5a4a; font-weight: 600; }
+
+/* Special situations divider */
+.special-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 36px 0 20px;
+}
+
+.special-divider-line {
+  flex: 1;
+  height: 1px;
+  background: #0a4a60;
+}
+
+.special-divider-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #4a9ab8;
+  white-space: nowrap;
+}
+
+/* Collapsible special situation cards */
+.special-card {
+  background: rgba(13, 21, 32, 0.92);
+  border: 1px solid #0a4a60;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.special-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.special-card-header:hover {
+  background: rgba(0, 229, 255, 0.04);
+}
+
+.special-card.open .special-card-header {
+  border-bottom: 1px solid #0a4a60;
+}
+
+.special-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #7ab8cc;
+  letter-spacing: 0.04em;
+}
+
+.special-card-chevron {
+  color: #4a9ab8;
+  font-size: 0.85rem;
+  transition: transform 0.2s;
+}
+
+.special-card.open .special-card-chevron {
+  transform: rotate(180deg);
+}
+
+.special-card-body {
+  display: none;
+  padding: 16px 18px;
+}
+
+.special-card.open .special-card-body {
+  display: block;
+}
