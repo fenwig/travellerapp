@@ -42,10 +42,7 @@ async function signOut() {
 }
 
 function showDashboard(user) {
-  document.getElementById('auth-section').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
-  const name = user.user_metadata?.display_name || user.email;
-  document.getElementById('welcome-name').textContent = 'Welcome, ' + name;
+  window.location.href = 'src/pages/character-record.html';
 }
 
 // Check if already logged in on page load

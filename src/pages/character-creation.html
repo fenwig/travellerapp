@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Skills — Traveller</title>
+  <title>Character Creation — Traveller</title>
   <link rel="stylesheet" href="../css/main.css" />
-  <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -21,10 +20,10 @@
       <a href="character-record.html" class="sidebar-nav-item">Character Record</a>
       <a href="spacecraft-record.html" class="sidebar-nav-item">Spacecraft Record</a>
       <a href="character-list.html" class="sidebar-nav-item">Character List</a>
-      <a href="character-creation.html" class="sidebar-nav-item">Character Creation</a>
+      <a href="character-creation.html" class="sidebar-nav-item active">Character Creation</a>
       <div class="sidebar-group-label">Reference</div>
       <a href="general-rules.html" class="sidebar-nav-item">General Rules</a>
-      <a href="skills.html" class="sidebar-nav-item active">Skills</a>
+      <a href="skills.html" class="sidebar-nav-item">Skills</a>
       <a href="vehicles.html" class="sidebar-nav-item">Vehicles</a>
       <a href="spacecraft-operations.html" class="sidebar-nav-item">Spacecraft Operations</a>
       <a href="spacecraft-combat.html" class="sidebar-nav-item">Spacecraft Combat</a>
@@ -35,27 +34,12 @@
     </nav>
 
     <main class="page-main">
-      <h1 class="page-title">SKILLS</h1>
-
-      <div class="skill-controls">
-        <input type="text" id="skill-search" placeholder="Search skills..." oninput="filterSkills()" />
-        <div class="filter-row">
-          <button class="filter-btn active" onclick="filterCategory('all', this)">All</button>
-          <button class="filter-btn" onclick="filterCategory('combat', this)">Combat</button>
-          <button class="filter-btn" onclick="filterCategory('social', this)">Social</button>
-          <button class="filter-btn" onclick="filterCategory('technical', this)">Technical</button>
-          <button class="filter-btn" onclick="filterCategory('spacecraft', this)">Spacecraft</button>
-          <button class="filter-btn" onclick="filterCategory('physical', this)">Physical</button>
-        </div>
-      </div>
-
-      <div id="skill-grid" class="skill-grid"></div>
+      <h1 class="page-title">CHARACTER CREATION</h1>
+      <p class="placeholder-msg">Coming soon — step-by-step career generation wizard.</p>
     </main>
   </div>
 
   <script src="../js/supabase-config.js"></script>
-  <script src="../js/skills-data.js"></script>
-  <script src="../js/skills-reference.js"></script>
   <script>
     async function doSignOut() {
       await supabaseClient.auth.signOut();

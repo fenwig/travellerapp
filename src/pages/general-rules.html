@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>General Rules — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <div class="stars"></div>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+      </div>
+      <div class="sidebar-group-label">Character Resources</div>
+      <a href="character-record.html" class="sidebar-nav-item">Character Record</a>
+      <a href="spacecraft-record.html" class="sidebar-nav-item">Spacecraft Record</a>
+      <a href="character-list.html" class="sidebar-nav-item">Character List</a>
+      <a href="character-creation.html" class="sidebar-nav-item">Character Creation</a>
+      <div class="sidebar-group-label">Reference</div>
+      <a href="general-rules.html" class="sidebar-nav-item active">General Rules</a>
+      <a href="skills.html" class="sidebar-nav-item">Skills</a>
+      <a href="vehicles.html" class="sidebar-nav-item">Vehicles</a>
+      <a href="spacecraft-operations.html" class="sidebar-nav-item">Spacecraft Operations</a>
+      <a href="spacecraft-combat.html" class="sidebar-nav-item">Spacecraft Combat</a>
+      <a href="trade.html" class="sidebar-nav-item">Trade</a>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">GENERAL RULES</h1>
+
+      <!-- Tab Navigation -->
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="showTab('tasks')">Tasks</button>
+        <button class="tab-btn" onclick="showTab('combat')">Combat</button>
+        <button class="tab-btn" onclick="showTab('encounters')">Encounters</button>
+        <button class="tab-btn" onclick="showTab('healing')">Healing</button>
+      </div>
+
+      <!-- TASKS TAB -->
+      <div id="tab-tasks" class="tab-content">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Core Mechanic</h2>
+          <div class="rule-card">
+            <div class="rule-card-title">Making a Check</div>
+            <div class="rule-formula">2D + Skill Level + Characteristic DM + other DMs ≥ Target Number</div>
+            <p class="rule-body">Roll 2D and add your skill level and the relevant characteristic DM. If the total meets or exceeds the target number, you succeed. The referee should only call for checks when the Travellers are in danger, the task is especially difficult or hazardous, they are under time pressure, or success and failure are both interesting outcomes.</p>
+            <p class="rule-body">If no difficulty is specified, assume the task is <strong>Average (8+)</strong>.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Skill Levels</div>
+            <p class="rule-body">How skilled a Traveller is determines their modifier to checks:</p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Level</th><th>Status</th><th>Modifier</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>None</td><td>Untrained</td><td class="td-penalty">DM-3</td></tr>
+                <tr><td>0</td><td>Familiar — no bonus but avoids the untrained penalty</td><td>DM+0</td></tr>
+                <tr><td>1</td><td>Trained professional</td><td class="td-bonus">DM+1</td></tr>
+                <tr><td>2</td><td>Skilled professional</td><td class="td-bonus">DM+2</td></tr>
+                <tr><td>3</td><td>Expert — well respected in their field</td><td class="td-bonus">DM+3</td></tr>
+                <tr><td>4–5</td><td>Master — world or system renowned</td><td class="td-bonus">DM+4 or +5</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Task Difficulties</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead>
+                <tr><th>Difficulty</th><th>Target</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Simple</td><td>2+</td><td>Trivial for everyone. Rarely rolled.</td></tr>
+                <tr><td class="td-cyan">Easy</td><td>4+</td><td>Trivial for a trained professional, simple for an amateur.</td></tr>
+                <tr><td class="td-cyan">Routine</td><td>6+</td><td>Trivial for a professional, relatively easy for an amateur.</td></tr>
+                <tr><td class="td-cyan">Average</td><td>8+</td><td>A moderate obstacle for a trained professional. The default.</td></tr>
+                <tr><td class="td-cyan">Difficult</td><td>10+</td><td>Tough even for a trained professional.</td></tr>
+                <tr><td class="td-cyan">Very Difficult</td><td>12+</td><td>Hard for a professional, nearly impossible for an amateur.</td></tr>
+                <tr><td class="td-cyan">Formidable</td><td>14+</td><td>Exceptionally hard — surgery on alien biology, military-grade hacking.</td></tr>
+                <tr><td class="td-cyan">Impossible</td><td>16+</td><td>Near-miracles only. Reconstructing alien DNA. Flying through stellar phenomena.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Boon, Bane &amp; Effect</h2>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Boon</div>
+              <p class="rule-body">Roll an extra die and <strong>discard the lowest</strong>. Granted when a Traveller has helpful circumstances — good tools, assistance, favourable conditions.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Bane</div>
+              <p class="rule-body">Roll an extra die and <strong>discard the highest</strong>. Applied when hindered — poor tools, darkness, distractions, adverse conditions.</p>
+            </div>
+          </div>
+          <p class="ref-note">A Boon and a Bane on the same check cancel out. Multiple Boons or Banes still only count as one.</p>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Effect</div>
+            <p class="rule-body">Effect = <strong>Total rolled − Target Number</strong>. Measures how well (or badly) a Traveller performed. Used to calculate combat damage and task chain bonuses.</p>
+            <table class="ref-table" style="margin-top:12px">
+              <thead>
+                <tr><th>Effect</th><th>Result</th><th>Meaning</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-penalty">−6 or less</td><td>Exceptional Failure</td><td>Everything that can go wrong does. Devices damaged, situations made worse.</td></tr>
+                <tr><td class="td-penalty">−2 to −5</td><td>Average Failure</td><td>The task simply fails.</td></tr>
+                <tr><td class="td-penalty">−1</td><td>Marginal Failure</td><td>Almost succeeded. Referee may allow scraping a success with a significant cost.</td></tr>
+                <tr><td>0</td><td>Marginal Success</td><td>Barely succeeds — may need to accept a condition or complication.</td></tr>
+                <tr><td class="td-bonus">1 to 5</td><td>Average Success</td><td>The task succeeds normally.</td></tr>
+                <tr><td class="td-bonus">6+</td><td>Exceptional Success</td><td>Succeeds in an impressive and elegant fashion.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Special Check Types</h2>
+          <div class="rule-card">
+            <div class="rule-card-title">Opposed Checks</div>
+            <p class="rule-body">When two characters directly oppose each other, both make their checks normally. The winner is the one with the <strong>highest Effect</strong>. On a draw, neither gains an advantage — they may try again or events overtake them.</p>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Multiple Tasks</div>
+            <p class="rule-body">Doing two or more things at once raises the difficulty of <strong>each task by one level</strong> for every extra task being performed simultaneously.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Timeframes</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:12px">Each task has a random timeframe of 1–6 time units. The referee sets the increment based on the nature of the task.</p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Timeframe</th><th>Increment</th><th>Example Actions</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">1D Seconds</td><td>~1–6 sec</td><td>Shooting, punching, jumping</td></tr>
+                <tr><td class="td-cyan">1D Combat Rounds</td><td>~6–36 sec</td><td>Hurrying a maths problem</td></tr>
+                <tr><td class="td-cyan">1D × 10 Seconds</td><td>~10–60 sec</td><td>Rerouting power, opening a comms channel</td></tr>
+                <tr><td class="td-cyan">1D Minutes</td><td>~1–6 min</td><td>Applying first aid, basic technical tasks</td></tr>
+                <tr><td class="td-cyan">1D × 10 Minutes</td><td>~10–60 min</td><td>Complex technical tasks, searching an area thoroughly</td></tr>
+                <tr><td class="td-cyan">1D Hours</td><td>~1–6 hrs</td><td>Building a shelter, moving through wilderness</td></tr>
+                <tr><td class="td-cyan">1D × 4 Hours</td><td>~4–24 hrs</td><td>Researching a problem</td></tr>
+                <tr><td class="td-cyan">1D × 10 Hours</td><td>~10–60 hrs</td><td>Repairing a damaged ship system</td></tr>
+                <tr><td class="td-cyan">1D Days</td><td>~1–6 days</td><td>Combing a city for a missing person</td></tr>
+              </tbody>
+            </table>
+            <div class="rule-formula" style="margin-top:14px">Going faster: DM−2 &nbsp;|&nbsp; Going slower: DM+2 &nbsp;|&nbsp; One step only</div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Task Chains</h2>
+          <div class="rule-card">
+            <p class="rule-body">When tasks are linked, the Effect of the previous check applies as a DM to the next check in the chain.</p>
+            <table class="ref-table" style="margin-top:12px">
+              <thead>
+                <tr><th>Previous Check</th><th>DM to Next Check</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-penalty">Failed — Effect −6 or less</td><td class="td-penalty">DM−3</td></tr>
+                <tr><td class="td-penalty">Failed — Effect −2 to −5</td><td class="td-penalty">DM−2</td></tr>
+                <tr><td class="td-penalty">Failed — Effect −1</td><td class="td-penalty">DM−1</td></tr>
+                <tr><td>Succeeded — Effect 0</td><td class="td-bonus">DM+1</td></tr>
+                <tr><td class="td-bonus">Succeeded — Effect 1 to 5</td><td class="td-bonus">DM+2</td></tr>
+                <tr><td class="td-bonus">Succeeded — Effect 6+</td><td class="td-bonus">DM+3</td></tr>
+              </tbody>
+            </table>
+            <p class="rule-body" style="margin-top:12px"><strong>Working Together:</strong> Each supporter makes a check first; their Effect is looked up on the Task Chain table and that DM is applied to the lead Traveller's check.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COMBAT TAB -->
+      <div id="tab-combat" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Combat Sequence</h2>
+          <div class="rule-card">
+            <div class="rule-card-title">Round Structure</div>
+            <p class="rule-body">Combat is divided into <strong>rounds</strong> of approximately 6 seconds. At the start of combat, each side makes an <strong>Initiative</strong> check — Dexterity + Tactics (military) if trained, or straight DEX DM if not. The Effect of the winning side's check is added to every combatant on that side. Combatants act in order from highest Initiative to lowest.</p>
+            <div class="rule-formula">Initiative = 2D + Tactics (military) + INT or DEX DM</div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Action Summary</h2>
+          <div class="rule-formula">1 Significant Action + 1 Minor Action &nbsp;—or—&nbsp; up to 3 Minor Actions &nbsp;+&nbsp; Reactions (each costs DM−1 on next actions) &nbsp;+&nbsp; Free Actions</div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Significant Actions</div>
+              <table class="ref-table">
+                <tbody>
+                  <tr><td class="td-cyan">Attack</td><td>Make a melee or ranged attack against a target.</td></tr>
+                  <tr><td class="td-cyan">Leadership</td><td>INT/EDU/SOC check. Effect = number of DM+1 bonuses granted to allies.</td></tr>
+                  <tr><td class="td-cyan">Miscellaneous</td><td>Any action requiring full attention: first aid, bypassing security, psionics, boarding a vehicle.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Minor Actions</div>
+              <table class="ref-table">
+                <tbody>
+                  <tr><td class="td-cyan">Aim</td><td>DM+1 to next ranged attack. Stack up to DM+6.</td></tr>
+                  <tr><td class="td-cyan">Change Stance</td><td>Stand, crouch, or go prone.</td></tr>
+                  <tr><td class="td-cyan">Draw / Reload</td><td>Ready a weapon or reload an empty one.</td></tr>
+                  <tr><td class="td-cyan">Move</td><td>Move up to your Movement score in metres (humans: 6m).</td></tr>
+                  <tr><td class="td-cyan">Miscellaneous</td><td>Low-effort tasks: spotting a position, picking something up.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p class="ref-note">Free Actions — shouting a warning, pressing a button — require no action and are unlimited each round at the referee's discretion.</p>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Attack Rolls</h2>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Melee Attack</div>
+              <div class="rule-formula">2D + Melee (speciality) + STR DM</div>
+              <p class="rule-body">Target number is <strong>Average (8+)</strong>. On a hit, add STR DM and Effect to the weapon's damage roll.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Ranged Attack</div>
+              <div class="rule-formula">2D + Gun Combat (speciality) + DEX DM</div>
+              <p class="rule-body">Target number is <strong>Average (8+)</strong>. Some weapons use Heavy Weapons or Athletics (dexterity).</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Common Attack Modifiers</div>
+            <table class="ref-table">
+              <thead><tr><th>Condition</th><th>DM</th></tr></thead>
+              <tbody>
+                <tr><td>Aiming (Minor Action, stackable)</td><td class="td-bonus">+1 per action (max +6)</td></tr>
+                <tr><td>Laser sight (while aiming)</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Target at Short Range (within ¼ weapon range)</td><td class="td-bonus">+1</td></tr>
+                <tr><td>Target at Long Range (1–2× weapon range)</td><td class="td-penalty">−2</td></tr>
+                <tr><td>Target at Extreme Range (2–4× weapon range)</td><td class="td-penalty">−4</td></tr>
+                <tr><td>Range &gt;100m without Scope trait</td><td class="td-penalty">−4 (auto Extreme)</td></tr>
+                <tr><td>Target in cover</td><td class="td-penalty">−2</td></tr>
+                <tr><td>Target prone</td><td class="td-penalty">−1</td></tr>
+                <tr><td>Target fast-moving</td><td class="td-penalty">−1 per full 10m of movement</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Reactions</h2>
+          <p class="rule-body" style="margin-bottom:12px; font-size:0.88rem; color:#b0d8e8;">Reactions are performed outside your normal turn. Each one applies <strong style="color:#ff5a4a">DM−1</strong> to your next set of actions.</p>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Dodge</div>
+              <p class="rule-body">Inflicts a penalty to the attacker's roll equal to your <strong>DEX DM</strong> or <strong>Athletics (dexterity)</strong>, whichever is higher.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Parry</div>
+              <p class="rule-body">In close combat only. Inflicts your <strong>Melee skill level</strong> as a negative DM to the attacker's roll.</p>
+            </div>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Dive for Cover</div>
+            <p class="rule-body">Ranged attacks only. Inflicts <strong>DM−2</strong> on every attacker targeting you this round. You may dive behind any object within 1.5 metres. <strong>Cost:</strong> you forfeit your next actions entirely.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Damage &amp; Armour</h2>
+          <div class="rule-card">
+            <div class="rule-card-title">Damage</div>
+            <div class="rule-formula">Damage = Weapon dice + Effect of attack roll &nbsp;(+ STR DM for melee)</div>
+            <p class="rule-body">Damage is applied to <strong>END</strong> first. If END reaches 0, excess damage goes to either <strong>STR or DEX</strong> (target's choice). If either reaches 0, the Traveller falls unconscious. If all three reach 0, the Traveller is <strong>killed</strong>.</p>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Armour</div>
+              <p class="rule-body">Armour's <strong>Protection score</strong> is subtracted from damage before it is applied. An attack with <strong>Effect 6+</strong> always inflicts at least 1 point of damage. Weapons with the <strong>AP</strong> trait ignore a portion of armour equal to their AP score.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Cover Protection</div>
+              <table class="ref-table">
+                <thead><tr><th>Cover Type</th><th>Bonus</th></tr></thead>
+                <tbody>
+                  <tr><td>Vegetation</td><td class="td-bonus">+2</td></tr>
+                  <tr><td>Tree Trunk</td><td class="td-bonus">+6</td></tr>
+                  <tr><td>Stone Wall</td><td class="td-bonus">+8</td></tr>
+                  <tr><td>Civilian Vehicle</td><td class="td-bonus">+10</td></tr>
+                  <tr><td>Armoured Vehicle</td><td class="td-bonus">+15</td></tr>
+                  <tr><td>Fortifications</td><td class="td-bonus">+20</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Weapon Traits</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead><tr><th>Trait</th><th>Effect</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">AP X</td><td>Armour Piercing — ignores X points of Protection.</td></tr>
+                <tr><td class="td-cyan">Auto X</td><td><strong>Single:</strong> normal attack. <strong>Burst:</strong> add Auto score to damage. <strong>Full Auto:</strong> make Auto score attacks against separate targets within 6m.</td></tr>
+                <tr><td class="td-cyan">Blast X</td><td>Deals damage to all targets within X metres of the hit point. No Dodge reactions allowed.</td></tr>
+                <tr><td class="td-cyan">Bulky</td><td>Requires STR 9+ to use without penalty.</td></tr>
+                <tr><td class="td-cyan">Radiation</td><td>Target receives 2D × 20 rads on hit.</td></tr>
+                <tr><td class="td-cyan">Scope</td><td>Removes the automatic Extreme Range penalty for attacks beyond 100m when aiming.</td></tr>
+                <tr><td class="td-cyan">Smart</td><td>Gains DM equal to the difference between weapon TL and target TL (minimum DM+1, maximum DM+6).</td></tr>
+                <tr><td class="td-cyan">Stun</td><td>Non-lethal. Damage only depletes END. If END reaches 0, target is incapacitated.</td></tr>
+                <tr><td class="td-cyan">Very Bulky</td><td>Requires STR 12+ to use without penalty.</td></tr>
+                <tr><td class="td-cyan">Zero-G</td><td>Can be fired in zero or low gravity without an Athletics (dexterity) check.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="special-divider">
+          <div class="special-divider-line"></div>
+          <div class="special-divider-label">Special Situations</div>
+          <div class="special-divider-line"></div>
+        </div>
+
+        <div class="special-card" id="sc-melee">
+          <div class="special-card-header" onclick="toggleSpecial('sc-melee')">
+            <span class="special-card-title">Melee &amp; Close Combat Rules</span>
+            <span class="special-card-chevron">▼</span>
+          </div>
+          <div class="special-card-body">
+            <p class="rule-body">When a Traveller is within <strong>2 metres</strong> of an enemy they are in close combat.</p>
+            <table class="ref-table" style="margin-top:10px; margin-bottom:14px">
+              <tbody>
+                <tr><td style="width:40%">Melee attacks</td><td>Freely available to both combatants.</td></tr>
+                <tr><td>Target restriction</td><td>Neither combatant may attack anyone other than those they are locked with.</td></tr>
+                <tr><td>Single-handed ranged weapons</td><td>Pistols may be fired in close combat, but can be parried.</td></tr>
+                <tr><td>Large weapons</td><td>Rifles and two-handed weapons may only be used as clubs.</td></tr>
+                <tr><td>Moving out of close combat</td><td>Grants the enemy an immediate free attack at <strong>DM+2</strong>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="special-card" id="sc-grapple">
+          <div class="special-card-header" onclick="toggleSpecial('sc-grapple')">
+            <span class="special-card-title">Grappling</span>
+            <span class="special-card-chevron">▼</span>
+          </div>
+          <div class="special-card-body">
+            <p class="rule-body">To grapple, make an <strong>opposed Melee (unarmed)</strong> check using either STR or DEX DM. The winner may choose one of the following:</p>
+            <table class="ref-table" style="margin-top:10px">
+              <tbody>
+                <tr><td>Force opponent prone</td><td></td></tr>
+                <tr><td>Disarm opponent</td><td>Effect 6+: you may take the weapon.</td></tr>
+                <tr><td>Throw opponent</td><td>1D metres, 1D damage. Ends the grapple.</td></tr>
+                <tr><td>Inflict damage</td><td>2 + Effect of the check, ignores armour.</td></tr>
+                <tr><td>Attack with pistol or small blade</td><td>Normal weapon damage.</td></tr>
+                <tr><td>Escape</td><td>Move away as a normal movement action.</td></tr>
+                <tr><td>Drag opponent</td><td>Up to 3 metres.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="special-card" id="sc-dual">
+          <div class="special-card-header" onclick="toggleSpecial('sc-dual')">
+            <span class="special-card-title">Dual Weapons</span>
+            <span class="special-card-chevron">▼</span>
+          </div>
+          <div class="special-card-body">
+            <p class="rule-body">A Traveller may wield two single-handed weapons simultaneously. Both attack rolls suffer <strong style="color:#ff5a4a">DM−2</strong>. They may not aim with either weapon.</p>
+          </div>
+        </div>
+
+        <div class="special-card" id="sc-extended">
+          <div class="special-card-header" onclick="toggleSpecial('sc-extended')">
+            <span class="special-card-title">Extended Actions in Combat</span>
+            <span class="special-card-chevron">▼</span>
+          </div>
+          <div class="special-card-body">
+            <p class="rule-body">If a Traveller <strong>takes damage</strong> while performing an Extended Action, they must immediately make a check using the same skill. The damage taken is applied as a <strong style="color:#ff5a4a">negative DM</strong>. Failure with <strong>Effect −6 or worse</strong>: the task is ruined and must be restarted.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ENCOUNTERS TAB -->
+      <div id="tab-encounters" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Range Bands</h2>
+          <div class="rule-card">
+            <table class="ref-table">
+              <thead><tr><th>Range</th><th>Distance</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">Close</td><td>Up to 5 metres</td></tr>
+                <tr><td class="td-cyan">Short</td><td>5–10 metres</td></tr>
+                <tr><td class="td-cyan">Medium</td><td>11–50 metres</td></tr>
+                <tr><td class="td-cyan">Long</td><td>51–250 metres</td></tr>
+                <tr><td class="td-cyan">Very Long</td><td>251–500 metres</td></tr>
+                <tr><td class="td-cyan">Distant</td><td>501–5,000 metres</td></tr>
+                <tr><td class="td-cyan">Very Distant</td><td>Over 5 kilometres</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Encounter Distance</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:12px">Roll 2D to determine the range at which Travellers first become aware of the potential danger. <em style="color:#4a9ab8">Core Rulebook p.83</em></p>
+            <table class="ref-table">
+              <thead><tr><th>2D Roll</th><th>Initial Range</th></tr></thead>
+              <tbody>
+                <tr><td>2 or less</td><td class="td-cyan">Close</td></tr>
+                <tr><td>3</td><td class="td-cyan">Short</td></tr>
+                <tr><td>4–5</td><td class="td-cyan">Medium</td></tr>
+                <tr><td>6–9</td><td class="td-cyan">Long</td></tr>
+                <tr><td>10–11</td><td class="td-cyan">Very Long</td></tr>
+                <tr><td>12+</td><td class="td-cyan">Distant</td></tr>
+              </tbody>
+            </table>
+            <table class="ref-table" style="margin-top:14px">
+              <thead><tr><th>Condition</th><th>DM</th></tr></thead>
+              <tbody>
+                <tr><td>Clear terrain</td><td class="td-bonus">+3</td></tr>
+                <tr><td>In space</td><td class="td-bonus">+4</td></tr>
+                <tr><td>Target is a vehicle</td><td class="td-bonus">+2 per 10 tons</td></tr>
+                <tr><td>Travellers actively looking (Recon)</td><td class="td-bonus">+ highest Recon skill</td></tr>
+                <tr><td>Forest or woods</td><td class="td-penalty">−2</td></tr>
+                <tr><td>Crowded area</td><td class="td-penalty">−2</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Environmental Dangers</h2>
+          <p class="rule-body" style="margin-bottom:16px; font-size:0.88rem">Full tables: <em style="color:#4a9ab8">Core Rulebook p.80–82</em>.</p>
+          <div class="rule-card"><div class="rule-card-title">Disease &amp; Poison</div><p class="rule-body">Make an END check at the listed difficulty. On failure, take the listed damage and repeat after the interval. <em style="color:#4a9ab8">p.80</em></p></div>
+          <div class="rule-card"><div class="rule-card-title">Falling</div><p class="rule-body"><strong>1D damage per 2 metres fallen</strong> on a 1G world. A successful Athletics check reduces the effective distance by the Effect. Armour does not protect against falling damage. <em style="color:#4a9ab8">p.80</em></p></div>
+          <div class="rule-card"><div class="rule-card-title">Fatigue</div><p class="rule-body">Fatigued Travellers suffer <strong>DM−2</strong> to all checks until they rest. <em style="color:#4a9ab8">p.80</em></p></div>
+          <div class="rule-card"><div class="rule-card-title">Radiation</div><p class="rule-body">Measured in rads — cumulative and permanent until treated. Effects range from nausea (51–150 rads) to death (800+ rads). <em style="color:#4a9ab8">p.81</em></p></div>
+          <div class="rule-card"><div class="rule-card-title">Suffocation</div><p class="rule-body">Without life support: <strong>1D damage per minute</strong>. Without any air: <strong>1D damage per round</strong>. <em style="color:#4a9ab8">p.81</em></p></div>
+          <div class="rule-card"><div class="rule-card-title">Vacuum</div><p class="rule-body">Cumulative damage each round — 1D in round 1, 2D in round 2, 3D in round 3, and so on. <em style="color:#4a9ab8">p.81</em></p></div>
+          <div class="rule-card"><div class="rule-card-title">Temperature</div><p class="rule-body">Extreme heat and cold deal damage to END — from 1D/hour in arctic to 3D/round in an inferno. <em style="color:#4a9ab8">p.82</em></p></div>
+          <div class="rule-card"><div class="rule-card-title">Gravity</div><p class="rule-body"><strong>High gravity (1.4G+):</strong> DM−1 to all checks until acclimatised. <strong>Low/Zero-G:</strong> DM−1 to all physical checks; firing recoil weapons requires Athletics (dexterity) Average (8+). <em style="color:#4a9ab8">p.80</em></p></div>
+        </div>
+
+      </div>
+
+      <!-- HEALING TAB -->
+      <div id="tab-healing" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Medical Treatment</h2>
+          <div class="rule-card">
+            <div class="rule-card-title">First Aid</div>
+            <div class="rule-formula">Medic (EDU) check — restores characteristic points equal to Effect (minimum 1)</div>
+            <p class="rule-body">Must be initiated <strong>within one minute</strong> of the injury. Requires at least a basic medikit. Can only be successfully applied <strong>once</strong> per injury.</p>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Medical Care</div>
+            <div class="rule-formula">3 + END DM + Medic skill = characteristic points restored per day</div>
+            <p class="rule-body">Available when only one or two physical characteristics are damaged. Requires a <strong>hospital or sickbay</strong> and full bed rest.</p>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Surgery</div>
+            <p class="rule-body">Required when all three physical characteristics are damaged. Restores points equal to the Effect of a Medic (EDU) check.</p>
+            <p class="rule-body" style="color:#ff7a6a"><strong>Warning:</strong> a failed surgery check causes the patient to lose an additional 3 + Effect characteristic points.</p>
+          </div>
+          <div class="rule-card">
+            <div class="rule-card-title">Augmentation &amp; Medical Care</div>
+            <p class="rule-body">All Medic checks suffer a <strong>negative DM equal to the difference in Tech Level</strong> between the medical facility and the Traveller's highest relevant implant.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Natural Healing</h2>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Normal Rest</div>
+              <div class="rule-formula">1D + END DM per day of full rest</div>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">After Surgery</div>
+              <div class="rule-formula">END DM only per day of rest</div>
+              <p class="rule-body">If END DM is negative, the Traveller continues to deteriorate without medical care.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Unconsciousness</h2>
+          <div class="rule-card">
+            <p class="rule-body">Make an <strong>END check after every minute</strong>. Success means the Traveller regains consciousness. Each failed check grants a cumulative <strong>DM+1</strong> to the next attempt.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Mental Characteristics</h2>
+          <div class="rule-card">
+            <p class="rule-body">INT and EDU damage heals at <strong>1 point per characteristic per day</strong> unless otherwise specified.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script>
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).style.display = 'block';
+      event.target.classList.add('active');
+    }
+
+    function toggleSpecial(id) {
+      const card = document.getElementById(id);
+      card.classList.toggle('open');
+    }
+
+    async function doSignOut() {
+      await supabaseClient.auth.signOut();
+      window.location.href = '../../index.html';
+    }
+  </script>
+</body>
+</html>

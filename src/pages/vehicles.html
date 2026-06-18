@@ -12,15 +12,40 @@
 
   <div class="stars"></div>
 
-  <div class="container">
-    <header class="page-header">
-      <a href="../../index.html" class="back-link">← Dashboard</a>
-      <h1 class="page-title">VEHICLES</h1>
-    </header>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+      </div>
+      <div class="sidebar-group-label">Character Resources</div>
+      <a href="character-record.html" class="sidebar-nav-item">Character Record</a>
+      <a href="spacecraft-record.html" class="sidebar-nav-item">Spacecraft Record</a>
+      <a href="character-list.html" class="sidebar-nav-item">Character List</a>
+      <a href="character-creation.html" class="sidebar-nav-item">Character Creation</a>
+      <div class="sidebar-group-label">Reference</div>
+      <a href="general-rules.html" class="sidebar-nav-item">General Rules</a>
+      <a href="skills.html" class="sidebar-nav-item">Skills</a>
+      <a href="vehicles.html" class="sidebar-nav-item active">Vehicles</a>
+      <a href="spacecraft-operations.html" class="sidebar-nav-item">Spacecraft Operations</a>
+      <a href="spacecraft-combat.html" class="sidebar-nav-item">Spacecraft Combat</a>
+      <a href="trade.html" class="sidebar-nav-item">Trade</a>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
 
-    <p style="color:#4a9ab8; font-size: 0.9rem;">Coming soon — Vehicles reference (Core Rulebook p.155)</p>
+    <main class="page-main">
+      <h1 class="page-title">VEHICLES</h1>
+      <p class="placeholder-msg">Coming soon — vehicle stats, combat rules and actions (Core Rulebook p.155).</p>
+    </main>
   </div>
 
   <script src="../js/supabase-config.js"></script>
+  <script>
+    async function doSignOut() {
+      await supabaseClient.auth.signOut();
+      window.location.href = '../../index.html';
+    }
+  </script>
 </body>
 </html>
