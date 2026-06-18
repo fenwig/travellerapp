@@ -141,7 +141,20 @@
         <div class="ref-section">
           <h2 class="ref-section-title">Vehicles in Combat</h2>
           <div class="rule-card">
-            <p class="rule-body">Vehicles move on the <strong>driver's Initiative</strong>. The driver must spend a <strong>Minor Action</strong> each round for normal control (straight road, simple manoeuvres). Navigating obstacles, conducting evasion or pursuing a target requires a <strong>Significant Action</strong>. Any occupants not visible inside a closed vehicle cannot be directly attacked at all. <em style="color:#4a9ab8">Core Rulebook p.138</em></p>
+            <p class="rule-body">Vehicles move on the <strong>driver's Initiative</strong>. The driver must spend a <strong>Minor Action</strong> each round for normal control (straight road, simple manoeuvres). Navigating obstacles, conducting evasion or pursuing a target requires a <strong>Significant Action</strong>. <em style="color:#4a9ab8">Core Rulebook p.138</em></p>
+          </div>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Closed Vehicle</div>
+              <p class="rule-body">Occupants inside a closed vehicle <strong>cannot be directly attacked</strong> — they are not visible to attackers outside.</p>
+              <p class="rule-body">Passengers may fire out, but only through available windows or firing ports. Up to <strong>2 people per fire arc</strong> in a civilian vehicle; <strong>1 per arc</strong> in a military vehicle.</p>
+              <p class="rule-body">Mounted weapons cannot attack targets within <strong>5% of their range</strong>.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Open Vehicle</div>
+              <p class="rule-body">Passengers in open vehicles <strong>can be directly attacked</strong> and have <strong>no cover</strong> from the vehicle itself.</p>
+              <p class="rule-body">Passengers may fire in <strong>any direction</strong> without restriction.</p>
+            </div>
           </div>
         </div>
 
@@ -195,8 +208,6 @@
                 <tr><td class="td-cyan">Minimum range</td><td>Closed-vehicle weapons cannot attack targets within <strong>5% of the weapon's range</strong> — not designed for close targets.</td></tr>
                 <tr><td class="td-cyan">Extreme range</td><td>Without the Scope trait, all attacks beyond <strong>1 kilometre</strong> are automatically Extreme range (not 100 metres as for foot Travellers).</td></tr>
                 <tr><td class="td-cyan">Fire arcs</td><td>Weapons are restricted to their mounted fire arc unless in a turret.</td></tr>
-                <tr><td class="td-cyan">Closed vehicles — passengers</td><td>Up to <strong>2 people per arc</strong> can fire from a civilian vehicle; <strong>1 per arc</strong> in a military vehicle, depending on windows and firing ports.</td></tr>
-                <tr><td class="td-cyan">Open vehicles — passengers</td><td>Passengers may fire in <strong>any direction</strong>. No cover.</td></tr>
               </tbody>
             </table>
           </div>
@@ -291,7 +302,10 @@
             <table class="ref-table">
               <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
               <tbody>
-                <tr><td class="td-cyan">1</td><td>Fuel leak — vehicle begins losing fuel.</td></tr>
+                <tr><td class="td-cyan">1</td><td>Fuel leak — will run dry in 2D hours.</td></tr>
+                <tr><td class="td-cyan">2</td><td>Fuel leak — will run dry in 1D hours.</td></tr>
+                <tr><td class="td-cyan">3</td><td>Fuel leak — will run dry in 1D minutes.</td></tr>
+                <tr><td class="td-cyan">4</td><td>Fuel leak — will run dry in 1D rounds.</td></tr>
                 <tr><td class="td-cyan">5</td><td>Fuel explodes. Hull Severity +1.</td></tr>
                 <tr><td class="td-cyan">6</td><td>Fuel explodes. Hull Severity +1D.</td></tr>
               </tbody>
@@ -334,8 +348,9 @@
               <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
               <tbody>
                 <tr><td class="td-cyan">1</td><td>Armour on the facing hit reduced by −1D.</td></tr>
-                <tr><td class="td-cyan">3</td><td>Random weapon destroyed. Armour on facing reduced by −1D.</td></tr>
-                <tr><td class="td-cyan">4</td><td>Random weapon explodes. Hull Severity +1. Armour on facing reduced by −2D.</td></tr>
+                <tr><td class="td-cyan">2</td><td>Armour on the facing hit reduced by −1D.</td></tr>
+                <tr><td class="td-cyan">3</td><td>Armour on the facing hit reduced by −1D.</td></tr>
+                <tr><td class="td-cyan">4</td><td>Armour on the facing hit reduced by −2D.</td></tr>
                 <tr><td class="td-cyan">5</td><td>Armour on facing reduced by −2D. Hull Severity +1.</td></tr>
                 <tr><td class="td-cyan">6</td><td>Armour on facing reduced by −2D. Hull Severity +1.</td></tr>
               </tbody>
@@ -348,6 +363,9 @@
               <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
               <tbody>
                 <tr><td class="td-cyan">1</td><td>Vehicle suffers 1D damage.</td></tr>
+                <tr><td class="td-cyan">2</td><td>Vehicle suffers 2D damage.</td></tr>
+                <tr><td class="td-cyan">3</td><td>Vehicle suffers 3D damage. Watercraft will start to take on water.</td></tr>
+                <tr><td class="td-cyan">4</td><td>Vehicle suffers 4D damage. Watercraft will sink in 1D hours.</td></tr>
                 <tr><td class="td-cyan">5</td><td>Vehicle suffers 5D damage. Watercraft sink in 1D minutes.</td></tr>
                 <tr><td class="td-cyan">6</td><td>Vehicle suffers 6D damage. Watercraft sink in D3 rounds.</td></tr>
               </tbody>
@@ -359,8 +377,11 @@
             <table class="ref-table">
               <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
               <tbody>
-                <tr><td class="td-cyan">2</td><td>2D × 10% of cargo destroyed.</td></tr>
-                <tr><td class="td-cyan">5</td><td>All cargo destroyed.</td></tr>
+                <tr><td class="td-cyan">1</td><td>10% of cargo destroyed.</td></tr>
+                <tr><td class="td-cyan">2</td><td>1D × 10% of cargo destroyed.</td></tr>
+                <tr><td class="td-cyan">3</td><td>2D × 10% of cargo destroyed.</td></tr>
+                <tr><td class="td-cyan">4</td><td>All cargo destroyed.</td></tr>
+                <tr><td class="td-cyan">5</td><td>All cargo destroyed. Hull Severity +1.</td></tr>
                 <tr><td class="td-cyan">6</td><td>All cargo destroyed. Hull Severity +1.</td></tr>
               </tbody>
             </table>
@@ -371,11 +392,12 @@
             <table class="ref-table">
               <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
               <tbody>
-                <tr><td class="td-cyan">1</td><td>One random occupant takes 1D damage.</td></tr>
-                <tr><td class="td-cyan">3</td><td>1D occupants take 2D damage.</td></tr>
-                <tr><td class="td-cyan">4</td><td>1D occupants take 3D damage. Speed reduced to zero.</td></tr>
-                <tr><td class="td-cyan">5</td><td>Speed reduced to zero. Hull Severity +1.</td></tr>
-                <tr><td class="td-cyan">6</td><td>All occupants take 4D damage. Speed reduced to zero. Hull Severity +1.</td></tr>
+                <tr><td class="td-cyan">1</td><td>Random occupant takes 1D damage.</td></tr>
+                <tr><td class="td-cyan">2</td><td>Random occupant takes 2D damage.</td></tr>
+                <tr><td class="td-cyan">3</td><td>D3 occupants take 2D damage.</td></tr>
+                <tr><td class="td-cyan">4</td><td>1D occupants take 2D damage.</td></tr>
+                <tr><td class="td-cyan">5</td><td>D3 occupants take 3D damage.</td></tr>
+                <tr><td class="td-cyan">6</td><td>All occupants take 4D damage.</td></tr>
               </tbody>
             </table>
           </div>
@@ -386,9 +408,10 @@
               <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
               <tbody>
                 <tr><td class="td-cyan">1</td><td>All checks to control vehicle suffer DM−1.</td></tr>
-                <tr><td class="td-cyan">3</td><td>All checks to control vehicle suffer DM−4 and speed reduced by 1D bands.</td></tr>
-                <tr><td class="td-cyan">4</td><td>Speed reduced to zero. Hull Severity +1.</td></tr>
-                <tr><td class="td-cyan">5</td><td>Speed reduced to zero. Hull Severity +1.</td></tr>
+                <tr><td class="td-cyan">2</td><td>All checks to control vehicle suffer DM−2 and speed reduced by one band.</td></tr>
+                <tr><td class="td-cyan">3</td><td>All checks to control vehicle suffer DM−3 and speed reduced by D3 bands.</td></tr>
+                <tr><td class="td-cyan">4</td><td>All checks to control vehicle suffer DM−4 and speed reduced by 1D bands.</td></tr>
+                <tr><td class="td-cyan">5</td><td>Speed reduced to zero.</td></tr>
                 <tr><td class="td-cyan">6</td><td>Speed reduced to zero. Hull Severity +1.</td></tr>
               </tbody>
             </table>
@@ -400,20 +423,35 @@
               <thead><tr><th>Sev</th><th>Effect</th></tr></thead>
               <tbody>
                 <tr><td class="td-cyan">1</td><td>All checks to use comms, sensors and computers suffer DM−2.</td></tr>
-                <tr><td class="td-cyan">3</td><td>Roll 1D: 1–2 Comms destroyed, 3–4 Sensors destroyed, 5–6 Computer destroyed.</td></tr>
+                <tr><td class="td-cyan">2</td><td>Roll 1D: 1–2 vehicle loses use of Comms, 3–4 Sensors, 5–6 Computer.</td></tr>
+                <tr><td class="td-cyan">3</td><td>Roll 1D: 1–2 vehicle loses use of Comms, 3–4 Sensors, 5–6 Computer.</td></tr>
+                <tr><td class="td-cyan">4</td><td>Roll 1D: 1–2 vehicle loses use of Comms, 3–4 Sensors, 5–6 Computer.</td></tr>
+                <tr><td class="td-cyan">5</td><td>Hull Severity +1.</td></tr>
                 <tr><td class="td-cyan">6</td><td>Hull Severity +1.</td></tr>
               </tbody>
             </table>
           </div>
-
-          <p class="ref-note">Intermediate severity levels (2, 4 for some locations) not shown above — check Core Rulebook p.141 for exact values.</p>
         </div>
 
         <div class="ref-section">
           <h2 class="ref-section-title">Repairs</h2>
+          <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">Repairing a vehicle requires a facility with suitable maintenance capabilities. <em style="color:#4a9ab8">Core Rulebook p.141</em></p>
+
           <div class="rule-card">
+            <div class="rule-card-title">Hull Damage</div>
             <div class="rule-formula">Average (8+) Mechanic check (1D hours + 1 per point of damage, INT or EDU)</div>
-            <p class="rule-body" style="margin-top:10px">A successful check repairs the Hull damage. Spare parts are consumed at <strong>Cr500 per point of Hull</strong> restored. Requires a facility with suitable maintenance capabilities. <em style="color:#4a9ab8">Core Rulebook p.141</em></p>
+            <p class="rule-body" style="margin-top:10px">Spare parts are consumed at <strong>Cr500 per point of Hull</strong> restored.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Critical Hits</div>
+            <div class="rule-formula">Average (8+) Mechanic check (1D hours, INT or EDU)</div>
+            <p class="rule-body" style="margin-top:10px">The <strong>Severity of the critical hit</strong> is applied as a <strong>negative DM</strong> to the repair check. Each critical hit is repaired separately.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Destroyed Equipment</div>
+            <p class="rule-body">Any weapons or equipment <strong>destroyed by critical hits</strong> cannot be repaired — they must be <strong>completely replaced at full purchase cost</strong>.</p>
           </div>
         </div>
 
