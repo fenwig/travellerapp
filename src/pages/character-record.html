@@ -63,11 +63,27 @@
     .cr-section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: #4a9ab8; border-bottom: 1px solid #0a4a60; padding-bottom: 5px; margin-bottom: 10px; }
 
     /* ── Skills ── */
-    .skill-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: rgba(13,21,32,0.7); border: 1px solid #0a4a60; border-radius: 5px; margin-bottom: 5px; font-size: 0.85rem; color: #b0d8e8; }
+    .skill-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: rgba(13,21,32,0.7); border: 1px solid #0a4a60; border-radius: 5px; margin-bottom: 0; font-size: 0.85rem; color: #b0d8e8; cursor: pointer; }
+    .skill-row:hover .skill-name { color: #80f0ff; }
+    .skill-wrap { margin-bottom: 5px; border-radius: 5px; overflow: hidden; border: 1px solid #0a4a60; }
     .skill-name { flex: 1; color: #00e5ff; }
+    .skill-info-icon { font-size: 0.7rem; color: #4a9ab8; flex-shrink: 0; user-select: none; }
     .skill-level-badge { background: rgba(0,229,255,0.1); border: 1px solid #0a4a60; border-radius: 3px; padding: 1px 8px; color: #00e5ff; font-weight: 700; font-size: 0.85rem; min-width: 28px; text-align: center; }
     .skill-level-input { width: 40px; background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #00e5ff; font-weight: 700; text-align: center; font-size: 0.85rem; outline: none; }
     .skill-remove { color: #ff5a4a; cursor: pointer; font-size: 1rem; line-height: 1; padding: 0 2px; background: none; border: none; }
+    .skill-detail { display: none; padding: 12px 14px; background: rgba(0,229,255,0.04); border-top: 1px solid #0a4a60; font-size: 0.82rem; color: #b0d8e8; line-height: 1.55; }
+    .skill-detail.open { display: block; }
+    .skill-detail-desc { margin-bottom: 8px; }
+    .skill-detail-specialties { margin-bottom: 8px; }
+    .skill-detail-spec-title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: #4a9ab8; margin-bottom: 4px; }
+    .skill-detail-spec-item { margin-bottom: 3px; }
+    .skill-detail-spec-name { color: #00e5ff; font-weight: 600; }
+    .skill-detail-examples { }
+    .skill-detail-ex-title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: #4a9ab8; margin-bottom: 4px; }
+    .skill-detail-ex-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 3px; font-size: 0.79rem; }
+    .skill-detail-ex-text { flex: 1; min-width: 160px; }
+    .skill-detail-ex-diff { color: #00e5ff; flex-shrink: 0; }
+    .skill-detail-ex-char { color: #4a9ab8; flex-shrink: 0; }
 
     /* ── Training ── */
     .training-box { background: rgba(0,229,255,0.04); border: 1px solid #0a4a60; border-radius: 6px; padding: 12px 16px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
@@ -543,19 +559,74 @@ function renderSkills() {
   }
 
   list.innerHTML = keys.map(key => {
-    const s     = skills[key];
-    const label = s.specialty
-      ? `${s.name || key} <span style="color:#4a9ab8">(${s.specialty})</span>`
-      : (s.name || key);
+    const s      = skills[key];
+    const sName  = s.name || key;
+    const label  = s.specialty
+      ? `${sName} <span style="color:#4a9ab8">(${s.specialty})</span>`
+      : sName;
+    const detail = buildSkillDetail(sName, s.specialty);
+    const detailId = 'sd-' + key.replace(/[^a-z0-9]/gi, '_');
     return `
-      <div class="skill-row" data-key="${key}">
-        <div class="skill-name">${label}</div>
-        <div class="skill-level-badge view-only">${s.level}</div>
-        <input class="skill-level-input edit-only" type="number" min="0" max="4" value="${s.level}"
-               onchange="updateSkillLevel('${key}', this.value)" />
-        <button class="skill-remove edit-only" onclick="removeSkill('${key}')">✕</button>
+      <div class="skill-wrap">
+        <div class="skill-row" data-key="${key}" onclick="toggleSkillDetail('${detailId}', event)">
+          <div class="skill-name">${label}</div>
+          <span class="skill-info-icon">▾</span>
+          <div class="skill-level-badge view-only">${s.level}</div>
+          <input class="skill-level-input edit-only" type="number" min="0" max="4" value="${s.level}"
+                 onclick="event.stopPropagation()"
+                 onchange="updateSkillLevel('${key}', this.value)" />
+          <button class="skill-remove edit-only" onclick="event.stopPropagation();removeSkill('${key}')">✕</button>
+        </div>
+        <div class="skill-detail" id="${detailId}">${detail}</div>
       </div>`;
   }).join('');
+}
+
+function buildSkillDetail(name, specialty) {
+  const skill = SKILLS.find(s => s.name === name);
+  if (!skill) return `<div class="skill-detail-desc" style="color:#4a9ab8">No description available.</div>`;
+
+  let html = `<div class="skill-detail-desc">${skill.desc}</div>`;
+
+  if (skill.specialties && skill.specialties.length > 0) {
+    const relevant = specialty
+      ? skill.specialties.filter(sp => sp.name === specialty)
+      : skill.specialties;
+    if (relevant.length > 0) {
+      html += `<div class="skill-detail-specialties">
+        <div class="skill-detail-spec-title">Specialties</div>
+        ${relevant.map(sp => `
+          <div class="skill-detail-spec-item">
+            <span class="skill-detail-spec-name">${sp.name}:</span> ${sp.desc}
+          </div>`).join('')}
+      </div>`;
+    }
+  }
+
+  if (skill.examples && skill.examples.length > 0) {
+    html += `<div class="skill-detail-examples">
+      <div class="skill-detail-ex-title">Example Tasks</div>
+      ${skill.examples.map(ex => `
+        <div class="skill-detail-ex-row">
+          <span class="skill-detail-ex-text">${ex.text}</span>
+          <span class="skill-detail-ex-diff">${ex.difficulty}</span>
+          <span class="skill-detail-ex-char">${ex.char}</span>
+        </div>`).join('')}
+    </div>`;
+  }
+
+  return html;
+}
+
+function toggleSkillDetail(id, event) {
+  // Don't toggle when clicking edit controls
+  if (event.target.closest('.skill-remove') || event.target.closest('input')) return;
+  const el = document.getElementById(id);
+  if (!el) return;
+  const isOpen = el.classList.contains('open');
+  // Close all others
+  document.querySelectorAll('.skill-detail.open').forEach(d => d.classList.remove('open'));
+  if (!isOpen) el.classList.add('open');
 }
 
 function updateSkillLevel(key, val) {
