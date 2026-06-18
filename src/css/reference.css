@@ -406,6 +406,7 @@
 .td-cyan   { color: #00e5ff; font-weight: 600; }
 .td-bonus  { color: #00ffaa; font-weight: 600; }
 .td-penalty { color: #ff5a4a; font-weight: 600; }
+tr.illegal td { color: #ff5a4a !important; font-style: italic; }
 
 /* Special situations divider */
 .special-divider {
