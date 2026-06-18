@@ -440,7 +440,113 @@
 
     <!-- ENCOUNTERS TAB -->
     <div id="tab-encounters" class="tab-content" style="display:none">
-      <p style="color:#4a9ab8; margin-bottom: 1.5rem; font-size: 0.9rem;">Coming soon — Encounters &amp; Dangers reference (Core Rulebook p.80)</p>
+
+      <!-- Range Bands -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Range Bands</h2>
+        <div class="rule-card">
+          <table class="ref-table">
+            <thead>
+              <tr><th>Range</th><th>Distance</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="td-cyan">Close</td><td>Up to 5 metres</td></tr>
+              <tr><td class="td-cyan">Short</td><td>5–10 metres</td></tr>
+              <tr><td class="td-cyan">Medium</td><td>11–50 metres</td></tr>
+              <tr><td class="td-cyan">Long</td><td>51–250 metres</td></tr>
+              <tr><td class="td-cyan">Very Long</td><td>251–500 metres</td></tr>
+              <tr><td class="td-cyan">Distant</td><td>501–5,000 metres</td></tr>
+              <tr><td class="td-cyan">Very Distant</td><td>Over 5 kilometres</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Encounter Distance -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Encounter Distance</h2>
+        <div class="rule-card">
+          <p class="rule-body" style="margin-bottom:12px">When an encounter occurs, roll 2D and apply modifiers to determine the range at which Travellers first become aware of the potential danger. <em style="color:#4a9ab8">Core Rulebook p.83</em></p>
+          <table class="ref-table">
+            <thead>
+              <tr><th>2D Roll</th><th>Initial Range</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>2 or less</td><td class="td-cyan">Close</td></tr>
+              <tr><td>3</td><td class="td-cyan">Short</td></tr>
+              <tr><td>4–5</td><td class="td-cyan">Medium</td></tr>
+              <tr><td>6–9</td><td class="td-cyan">Long</td></tr>
+              <tr><td>10–11</td><td class="td-cyan">Very Long</td></tr>
+              <tr><td>12+</td><td class="td-cyan">Distant</td></tr>
+            </tbody>
+          </table>
+          <table class="ref-table" style="margin-top:14px">
+            <thead>
+              <tr><th>Condition</th><th>DM</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Clear terrain</td><td class="td-bonus">+3</td></tr>
+              <tr><td>In space</td><td class="td-bonus">+4</td></tr>
+              <tr><td>Target is a vehicle</td><td class="td-bonus">+2 per 10 tons</td></tr>
+              <tr><td>Travellers actively looking (Recon)</td><td class="td-bonus">+ highest Recon skill</td></tr>
+              <tr><td>Forest or woods</td><td class="td-penalty">−2</td></tr>
+              <tr><td>Crowded area</td><td class="td-penalty">−2</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Environmental Dangers -->
+      <div class="ref-section">
+        <h2 class="ref-section-title">Environmental Dangers</h2>
+        <p class="rule-body" style="margin-bottom:16px; font-size:0.88rem">Full tables and rules are in <em style="color:#4a9ab8">Core Rulebook p.80–82</em>. Brief summaries below.</p>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Disease &amp; Poison</div>
+          <p class="rule-body">Make an END check at the listed difficulty. On failure, take the listed damage and repeat after the interval. On success, the disease is fought off. Poisons work the same way but act much faster. <em style="color:#4a9ab8">p.80</em></p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Falling</div>
+          <p class="rule-body"><strong>1D damage per 2 metres fallen</strong> on a 1G world. High gravity increases damage; low gravity decreases it by 1D per 4m. A successful Athletics check reduces the effective distance by the Effect. Armour does not protect against falling damage. <em style="color:#4a9ab8">p.80</em></p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Fatigue</div>
+          <p class="rule-body">A Traveller becomes fatigued after staying awake for more hours than END + 18, performing heavy labour for more hours than their END, or making more consecutive melee attacks in one combat than their END. Fatigued Travellers suffer <strong>DM−2</strong> to all checks until they rest. <em style="color:#4a9ab8">p.80</em></p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Radiation</div>
+          <p class="rule-body">Measured in rads — cumulative and permanent until treated with anti-rad drugs. Effects range from nausea (51–150 rads) through characteristic damage to death (800+ rads). Full Radiation Effects and Exposure tables: <em style="color:#4a9ab8">p.81</em></p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Suffocation</div>
+          <p class="rule-body">Without life support: <strong>1D damage per minute</strong>. Without any air at all (smothered, thrown out an airlock): <strong>1D damage per round</strong>. <em style="color:#4a9ab8">p.81</em></p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Vacuum</div>
+          <p class="rule-body">Exposure to vacuum deals <strong>cumulative damage each round</strong> — 1D in round 1, 2D in round 2, 3D in round 3, and so on. Seconds count. <em style="color:#4a9ab8">p.81</em></p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Temperature</div>
+          <p class="rule-body">Extreme heat and cold deal damage to END. Damage ranges from 1D/hour in an arctic environment to 3D/round in an inferno. Full Temperature table: <em style="color:#4a9ab8">p.82</em></p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Gravity</div>
+          <p class="rule-body"><strong>High gravity (1.4G+):</strong> DM−1 to all checks until acclimatised (1D weeks; 1D days with Athletics (strength)). <strong>Low gravity (0.7G or less):</strong> DM−1 to all physical checks until acclimatised. <strong>Zero-G:</strong> as Low Gravity, plus firing weapons with recoil requires an Average (8+) Athletics (dexterity) check or miss and spin out of control. <em style="color:#4a9ab8">p.80</em></p>
+        </div>
+
+        <div class="rule-card">
+          <div class="rule-card-title">Healing</div>
+          <p class="rule-body"><strong>Natural:</strong> 1D + END DM characteristic points per day of full rest. <strong>First Aid:</strong> Effect of Medic check in points, applied within 1 minute of injury. <strong>Medical Care:</strong> 3 + END DM + Medic skill per day, requires sickbay or hospital. <strong>Surgery:</strong> required if all three physical characteristics are damaged; failed surgery worsens the patient. Full healing rules: <em style="color:#4a9ab8">p.82</em></p>
+        </div>
+      </div>
+
     </div>
 
   </div>
