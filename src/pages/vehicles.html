@@ -16,6 +16,7 @@
     <nav class="sidebar">
       <div class="sidebar-logo">
         <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
       </div>
       <div class="sidebar-group-label">Character Resources</div>
       <a href="character-record.html" class="sidebar-nav-item">Character Record</a>
@@ -36,12 +37,305 @@
 
     <main class="page-main">
       <h1 class="page-title">VEHICLES</h1>
-      <p class="placeholder-msg">Coming soon — vehicle stats, combat rules and actions (Core Rulebook p.155).</p>
+
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="showTab('movement')">Movement</button>
+        <button class="tab-btn" onclick="showTab('combat')">Combat</button>
+        <button class="tab-btn" onclick="showTab('damage')">Damage &amp; Repair</button>
+      </div>
+
+      <!-- MOVEMENT TAB -->
+      <div id="tab-movement" class="tab-content">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Speed Bands</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:12px">Vehicle speed is measured in bands rather than exact metres. The <strong>Speed Band Number</strong> is used in collision and other calculations. A vehicle may change speed by one band per combat round at Fast or below, or one band per minute if travelling faster. Travellers on foot use Idle. <em style="color:#4a9ab8">Core Rulebook p.136</em></p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Speed Band</th><th>Band Number</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-cyan">Stopped</td><td>0</td></tr>
+                <tr><td class="td-cyan">Idle</td><td>1</td></tr>
+                <tr><td class="td-cyan">Very Slow</td><td>2</td></tr>
+                <tr><td class="td-cyan">Slow</td><td>3</td></tr>
+                <tr><td class="td-cyan">Medium</td><td>4</td></tr>
+                <tr><td class="td-cyan">Fast</td><td>5</td></tr>
+                <tr><td class="td-cyan">High</td><td>6</td></tr>
+                <tr><td class="td-cyan">Very High</td><td>7</td></tr>
+                <tr><td class="td-cyan">Subsonic</td><td>8</td></tr>
+                <tr><td class="td-cyan">Supersonic</td><td>9</td></tr>
+                <tr><td class="td-cyan">Hypersonic</td><td>10</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Agility</h2>
+          <div class="rule-card">
+            <p class="rule-body">A vehicle's <strong>Agility</strong> score applies as a DM to all checks made to control the vehicle. This includes all Vehicular Actions below.</p>
+            <div class="rule-formula">All vehicle control checks = 2D + appropriate skill + Agility DM</div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Vehicular Actions</h2>
+          <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">All of the following are <strong>Significant Actions</strong> for the driver or pilot. All skill checks use the vehicle's Agility as a DM. <em style="color:#4a9ab8">Core Rulebook p.138</em></p>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Dogfight</div>
+            <p class="rule-body">A vehicle within one kilometre and within one Speed Band of another may initiate a dogfight. Both drivers make <strong>opposed skill checks</strong>. The winner chooses which fire arc their vehicle occupies on the enemy and which fire arc the enemy is in on their own vehicle. The winner gains <strong>DM+2</strong> to all attack rolls for that round; the loser suffers <strong>DM−2</strong>. A draw means neither vehicle may attack the other unless they have a turret weapon.</p>
+            <p class="rule-body">If the dogfight continues into the next round, the previous winner applies the difference between the last round's checks as a positive DM to this round's opposed check.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Evasive Action</div>
+            <p class="rule-body">The driver makes a skill check. The <strong>Effect</strong> of the check acts as a <strong>negative DM</strong> to all attacks against the vehicle or its passengers that round. The Effect also applies as a negative DM to any attacks made from the vehicle — evasive movement disrupts outgoing fire too.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Manoeuvre</div>
+            <p class="rule-body">Basic vehicle control — no skill check required. The driver can avoid large or obvious obstacles, move to a destination, shift out of one enemy fire arc into another, or change which fire arc a single target is in. More extreme manoeuvres require Stunt.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Ram</div>
+            <p class="rule-body">Deliberately driving into another vehicle or obstacle. Requires a skill check. Ram attacks are affected by Dodge and Evasive Action as normal. The referee may grant bonuses or declare the attempt automatic if the target is very large or stationary. On success, apply Collision damage (see below).</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Stunt</div>
+            <p class="rule-body">With a successful skill check, the driver can perform dramatic manoeuvres — standing a car on two wheels, stunning aerobatics, skimming over a sandbar. A stunt can place a target in an additional fire arc, set up a task chain, achieve up to three Manoeuvre actions in one go, or accomplish anything else the referee deems possible. The referee sets the difficulty to reflect the action attempted.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Weave</div>
+            <p class="rule-body">In obstacle-heavy environments (city streets, tunnels), the driver chooses a <strong>weaving score</strong> between 1 and their current Speed Band Number. They make a skill check with the weaving score as a <strong>negative DM</strong>. Failure means they have crashed into an obstacle. Success forces any pursuers to also make the same check at the same penalty or break off pursuit.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Collisions</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:12px">When a vehicle collides with a Traveller, another vehicle, or an obstacle, damage is dealt based on speed. <em style="color:#4a9ab8">Core Rulebook p.141</em></p>
+            <div class="rule-formula">Collision damage = 1D per Speed Band Number of the vehicle at impact</div>
+            <table class="ref-table" style="margin-top:14px">
+              <thead>
+                <tr><th>Situation</th><th>Rule</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Head-on collision between two vehicles</td><td>Add both vehicles' Speed Band Numbers to calculate total damage</td></tr>
+                <tr><td>Unsecured passengers (open vehicle)</td><td>Take same damage; thrown 10 metres per Speed Band Number</td></tr>
+                <tr><td>Secured passengers (seatbelts)</td><td>Not thrown; take one quarter of collision damage</td></tr>
+                <tr><td>Personal armour</td><td>Provides no protection against collision damage</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COMBAT TAB -->
+      <div id="tab-combat" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Damaging Vehicles</h2>
+          <div class="rule-card">
+            <p class="rule-body">Once total damage is calculated, subtract the vehicle's <strong>Armour</strong> from it. The remaining damage is removed from the vehicle's <strong>Hull</strong>. When Hull reaches 0, the vehicle is <strong>wrecked</strong> — totally inoperable and normally beyond repair, though parts may be salvaged. <em style="color:#4a9ab8">Core Rulebook p.139</em></p>
+            <div class="rule-formula">Damage to Hull = Weapon damage + Effect − Vehicle Armour</div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Vehicle Armour</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:12px">Vehicles have armour values for different facings. The armour used is always the facing from which the attack is made.</p>
+            <table class="ref-table">
+              <thead>
+                <tr><th>Facing</th><th>Armour Value</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Front / Side / Rear</td><td>Listed in vehicle stat block</td></tr>
+                <tr><td>Roof</td><td>Half of the side armour value</td></tr>
+                <tr><td>Floor</td><td>Half of the rear armour value</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Light Weapons</h2>
+          <div class="rule-card">
+            <p class="rule-body">Most personal weapons — pistols, rifles, lasers — are poorly suited to destroying vehicles. Against any weapon with <strong>less than Damage 4D</strong> or the <strong>Stun trait</strong>, a vehicle gains <strong>extra Armour equal to its Tech Level</strong> on each facing.</p>
+            <p class="rule-body" style="color:#4a9ab8; font-size:0.84rem; font-style:italic">Example: a TL8 civilian groundcar has Armour 2. Against a rifle (3D), it effectively has Armour 10 (2 + 8). Against a PGMP (12D), it uses its normal Armour 2.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Large Vehicles</h2>
+          <div class="rule-card">
+            <p class="rule-body">Vehicles are much easier to hit than a dodging Traveller. Attack rolls against vehicles gain <strong>DM+1</strong>, plus an additional <strong>DM+1 for every full 10 tons</strong> of the vehicle's Shipping score, to a maximum of <strong>DM+6</strong>.</p>
+            <div class="rule-formula">Attack DM vs vehicle = +1 (base) + 1 per 10 tons Shipping (max +6)</div>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Open vs Closed Vehicles</h2>
+          <div class="rule-card-row">
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Open Vehicles</div>
+              <p class="rule-body">Grant <strong>no cover</strong> to passengers. Passengers may shoot or attack in <strong>any direction</strong>.</p>
+            </div>
+            <div class="rule-card rule-card-half">
+              <div class="rule-card-title">Closed Vehicles</div>
+              <p class="rule-body">Provide cover — use the vehicle's Armour as cover Protection. Passengers are limited by <strong>fire arcs</strong> and weapon mounts.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- DAMAGE & REPAIR TAB -->
+      <div id="tab-damage" class="tab-content" style="display:none">
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Critical Hits</h2>
+          <div class="rule-card">
+            <p class="rule-body" style="margin-bottom:10px">A critical hit occurs when an attack roll has an <strong>Effect of 6 or higher</strong> and the attack causes damage. Roll 2D on the Critical Hits Location table and consult the Critical Hit Effects table. <em style="color:#4a9ab8">Core Rulebook p.140</em></p>
+            <div class="rule-formula">Critical hit triggered when: attack Effect ≥ 6 and damage is caused</div>
+            <div class="rule-formula" style="margin-top:8px">Severity = Effect of attack roll − 5</div>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Sustained Damage</div>
+            <p class="rule-body">Even without a single high-Effect hit, a vehicle degrades under sustained fire. <strong>Every time a vehicle loses damage equal to 10% of its starting Hull</strong>, roll 2D on the Critical Hits Location table and apply a <strong>Severity 1</strong> critical hit to that location.</p>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Repeat Critical Hits</div>
+            <p class="rule-body">If a location that already has a critical hit is struck again, use the Severity of the new hit or the original plus one — whichever is higher. Once a location reaches <strong>Severity 6</strong>, it cannot take further critical hits. Instead, the vehicle takes <strong>6D extra damage</strong> every time that location would be hit again.</p>
+          </div>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Critical Hit Effects</h2>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Fuel</div>
+            <table class="ref-table">
+              <thead><tr><th>Severity</th><th>Effect</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">1</td><td>Fuel leak — begins losing fuel.</td></tr>
+                <tr><td class="td-cyan">5</td><td>Fuel explodes. Hull Severity increased by +1.</td></tr>
+                <tr><td class="td-cyan">6</td><td>Fuel explodes. Hull Severity increased by +1D.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Armour</div>
+            <table class="ref-table">
+              <thead><tr><th>Severity</th><th>Effect</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">1</td><td>Armour on the facing hit reduced by −1D.</td></tr>
+                <tr><td class="td-cyan">3</td><td>Random weapon destroyed. Armour on facing reduced by −1D.</td></tr>
+                <tr><td class="td-cyan">4</td><td>Random weapon explodes. Hull Severity +1. Armour on facing reduced by −2D.</td></tr>
+                <tr><td class="td-cyan">5–6</td><td>Armour on facing reduced by −2D. Hull Severity +1 (Sev 5) or +1D (Sev 6 implied).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Hull</div>
+            <table class="ref-table">
+              <thead><tr><th>Severity</th><th>Effect</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">1</td><td>Vehicle suffers 1D damage.</td></tr>
+                <tr><td class="td-cyan">5</td><td>Vehicle suffers 5D damage. Watercraft sink in 1D minutes.</td></tr>
+                <tr><td class="td-cyan">6</td><td>Vehicle suffers 6D damage. Watercraft sink in D3 rounds.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Cargo</div>
+            <table class="ref-table">
+              <thead><tr><th>Severity</th><th>Effect</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">2</td><td>2D × 10% of cargo destroyed.</td></tr>
+                <tr><td class="td-cyan">5</td><td>All cargo destroyed.</td></tr>
+                <tr><td class="td-cyan">6</td><td>All cargo destroyed. Hull Severity +1.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Occupants</div>
+            <table class="ref-table">
+              <thead><tr><th>Severity</th><th>Effect</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">1</td><td>One random occupant takes 1D damage.</td></tr>
+                <tr><td class="td-cyan">3</td><td>1D occupants take 2D damage.</td></tr>
+                <tr><td class="td-cyan">4</td><td>1D occupants take 3D damage. Speed reduced to zero.</td></tr>
+                <tr><td class="td-cyan">5</td><td>Speed reduced to zero. Hull Severity +1.</td></tr>
+                <tr><td class="td-cyan">6</td><td>All occupants take 4D damage. Speed reduced to zero. Hull Severity +1.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Drive</div>
+            <table class="ref-table">
+              <thead><tr><th>Severity</th><th>Effect</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">1</td><td>All checks to control vehicle suffer DM−1.</td></tr>
+                <tr><td class="td-cyan">3</td><td>All checks to control vehicle suffer DM−4 and speed reduced by 1D bands.</td></tr>
+                <tr><td class="td-cyan">4–6</td><td>Speed reduced to zero. Hull Severity +1.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Systems</div>
+            <table class="ref-table">
+              <thead><tr><th>Severity</th><th>Effect</th></tr></thead>
+              <tbody>
+                <tr><td class="td-cyan">1</td><td>All checks to use comms, sensors and computers suffer DM−2.</td></tr>
+                <tr><td class="td-cyan">3</td><td>Roll 1D: 1–2 Comms destroyed, 3–4 Sensors destroyed, 5–6 Computer destroyed.</td></tr>
+                <tr><td class="td-cyan">6</td><td>Hull Severity +1.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="ref-note">Intermediate severities not listed above (2, 4 for some locations) use the next lower severity's effect. Check the full table for exact intermediate values. <em style="color:#4a9ab8">Core Rulebook p.141</em></p>
+        </div>
+
+        <div class="ref-section">
+          <h2 class="ref-section-title">Repairs</h2>
+          <div class="rule-card">
+            <p class="rule-body">A vehicle that has suffered Hull damage may be repaired at any facility with suitable maintenance capabilities.</p>
+            <div class="rule-formula">Average (8+) Mechanic check (1D hours + 1 per point of damage, INT or EDU)</div>
+            <p class="rule-body" style="margin-top:10px">A successful check repairs the damage. Spare parts are consumed costing <strong>Cr500 per point of Hull</strong> repaired.</p>
+          </div>
+        </div>
+
+      </div>
+
     </main>
   </div>
 
   <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
   <script>
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).style.display = 'block';
+      event.target.classList.add('active');
+    }
+
     async function doSignOut() {
       await supabaseClient.auth.signOut();
       window.location.href = '../../index.html';

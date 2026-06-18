@@ -255,6 +255,13 @@ input:focus {
   color: #00e5ff;
 }
 
+.sidebar-user {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: #4a9ab8;
+  min-height: 14px;
+}
+
 .sidebar-group-label {
   font-size: 0.65rem;
   letter-spacing: 0.12em;

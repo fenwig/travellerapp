@@ -15,6 +15,7 @@
     <nav class="sidebar">
       <div class="sidebar-logo">
         <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
       </div>
       <div class="sidebar-group-label">Character Resources</div>
       <a href="character-record.html" class="sidebar-nav-item active">Character Record</a>
@@ -40,6 +41,7 @@
   </div>
 
   <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
   <script>
     async function doSignOut() {
       await supabaseClient.auth.signOut();
