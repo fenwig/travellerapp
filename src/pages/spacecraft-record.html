@@ -69,6 +69,15 @@
     .power-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
     .power-table th { color:#4a9ab8; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; padding:5px 8px; text-align:left; border-bottom:1px solid #0a4a60; }
     .power-table td { padding:6px 8px; color:#b0d8e8; border-bottom:1px solid rgba(10,74,96,0.3); }
+    .mc-grid-table th:not(:first-child),
+    .mc-grid-table td:not(:first-child) { text-align:center; }
+    .mc-grid-table input { text-align:center; }
+
+    /* ── Stepper (increase/decrease arrows) ── */
+    .stepper { display:inline-flex; align-items:center; gap:3px; }
+    .stepper-btns { display:flex; flex-direction:column; gap:1px; }
+    .stepper-btn { background:transparent; border:1px solid #0a4a60; color:#4a9ab8; font-size:0.55rem; line-height:1; padding:0 3px; cursor:pointer; border-radius:2px; }
+    .stepper-btn:hover { border-color:#00e5ff; color:#00e5ff; }
     .power-table tr:last-child td { border-bottom:none; }
     .power-table input[type=number] { background:transparent; border:none; border-bottom:1px solid #0a4a60; color:#00e5ff; font-size:0.85rem; width:70px; outline:none; text-align:center; }
     .power-table .sys-input { color:#b0d8e8; width:140px; background:transparent; border:none; border-bottom:1px solid #0a4a60; outline:none; font-size:0.85rem; }
@@ -209,7 +218,7 @@
             </div>
           </div>
           <!-- Edit mode -->
-          <div class="edit-only" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div class="edit-only" style="align-items:center;gap:14px;flex-wrap:wrap">
             <input class="ship-name-input" id="ei-name" placeholder="Ship name" style="width:auto;flex:1;min-width:160px" />
             <div class="ship-meta" style="gap:8px 16px;align-items:center">
               <div><span>Class:</span><input class="ship-meta-input" id="ei-class" placeholder="Class" /></div>
@@ -287,7 +296,7 @@
               <input class="spec-input edit-only" type="number" id="ei-lowberths" min="0" />
             </div>
           </div>
-          <table class="power-table">
+          <table class="power-table mc-grid-table">
             <thead><tr><th></th><th>Hull Points</th><th>Armour</th><th>Cargo (tons)</th><th>Fuel (tons)</th></tr></thead>
             <tbody>
               <tr>
@@ -299,10 +308,34 @@
               </tr>
               <tr>
                 <td class="power-fixed-label">Current</td>
-                <td><input type="number" id="ei-hull-cur" value="0" style="width:60px" onchange="autoSaveField('hull_current', this.value)" /></td>
-                <td><input type="number" id="ei-arm-cur" value="0" style="width:60px" onchange="autoSaveField('armour_current', this.value)" /></td>
+                <td>
+                  <span class="stepper">
+                    <input type="number" id="ei-hull-cur" value="0" style="width:50px" onchange="autoSaveField('hull_current', this.value)" />
+                    <span class="stepper-btns">
+                      <button type="button" class="stepper-btn" onclick="stepCurrent('ei-hull-cur',1,'hull_current')">▲</button>
+                      <button type="button" class="stepper-btn" onclick="stepCurrent('ei-hull-cur',-1,'hull_current')">▼</button>
+                    </span>
+                  </span>
+                </td>
+                <td>
+                  <span class="stepper">
+                    <input type="number" id="ei-arm-cur" value="0" style="width:50px" onchange="autoSaveField('armour_current', this.value)" />
+                    <span class="stepper-btns">
+                      <button type="button" class="stepper-btn" onclick="stepCurrent('ei-arm-cur',1,'armour_current')">▲</button>
+                      <button type="button" class="stepper-btn" onclick="stepCurrent('ei-arm-cur',-1,'armour_current')">▼</button>
+                    </span>
+                  </span>
+                </td>
                 <td><span id="sv-cargo-cur" title="Total of all cargo entries on Finance &amp; Cargo tab">0</span></td>
-                <td><input type="number" id="ei-fuel-cur" value="0" style="width:60px" onchange="autoSaveField('fuel_current', this.value)" /></td>
+                <td>
+                  <span class="stepper">
+                    <input type="number" id="ei-fuel-cur" value="0" style="width:50px" onchange="autoSaveField('fuel_current', this.value)" />
+                    <span class="stepper-btns">
+                      <button type="button" class="stepper-btn" onclick="stepCurrent('ei-fuel-cur',1,'fuel_current')">▲</button>
+                      <button type="button" class="stepper-btn" onclick="stepCurrent('ei-fuel-cur',-1,'fuel_current')">▼</button>
+                    </span>
+                  </span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -354,7 +387,7 @@
         <div class="cr-section">
           <div class="cr-section-title">Computer</div>
           <div class="specs-grid">
-            <div class="spec-box">
+            <div class="spec-box" style="grid-column:span 2;min-width:260px">
               <div class="spec-label">Model</div>
               <div class="spec-value view-only" id="sv-comp-model">—</div>
               <input class="spec-input edit-only" id="ei-comp-model" placeholder="e.g. Computer/3" />
@@ -1355,6 +1388,13 @@ async function autoSaveField(column, value) {
   ship[column] = num;
   await supabaseClient.from('spacecraft').update({ [column]: num }).eq('id', ship.id);
 }
+function stepCurrent(inputId, delta, column) {
+  const el = document.getElementById(inputId);
+  const newVal = (parseFloat(el.value) || 0) + delta;
+  el.value = newVal;
+  autoSaveField(column, newVal);
+}
+
 async function autoSaveText(column, value) {
   ship[column] = value;
   await supabaseClient.from('spacecraft').update({ [column]: value || null }).eq('id', ship.id);
