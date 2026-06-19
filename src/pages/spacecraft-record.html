@@ -251,13 +251,12 @@
           <div class="ship-meta view-only" style="margin-top:6px">
             <div><span>Purchase Value:</span><span id="hdr-pvalue">—</span> MCr</div>
             <div><span>Mortgage Amount:</span><span id="hdr-mortgage-value">—</span> MCr</div>
+            <div><span>Mortgage Remaining:</span><span id="hdr-mortgage-remaining" style="color:#00e5ff;font-weight:600">—</span> MCr</div>
           </div>
           <div class="ship-meta edit-only" style="margin-top:6px">
             <div><span>Purchase Value:</span><input class="ship-meta-input" type="number" id="ei-pvalue" step="0.001" min="0" placeholder="0.000" style="width:100px" /> MCr</div>
             <div><span>Mortgage Amount:</span><input class="ship-meta-input" type="number" id="ei-mortgage-value" step="0.001" min="0" placeholder="0.000" style="width:100px" /> MCr</div>
-          </div>
-          <div class="ship-meta" style="margin-top:6px">
-            <div><span>Mortgage Remaining:</span><span id="hdr-mortgage-remaining" style="color:#00e5ff;font-weight:600">—</span> MCr</div>
+            <div><span>Mortgage Remaining:</span><span id="hdr-mortgage-remaining-edit" style="color:#00e5ff;font-weight:600">—</span> MCr</div>
           </div>
         </div>
         <div class="ship-header-actions">
@@ -567,6 +566,14 @@
         <div class="cr-section">
           <div class="cr-section-title">Finances — Per Maintenance Period (Credits)</div>
           <div class="finance-grid" id="finance-grid"></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:0.85rem;margin-top:4px">
+            <span style="color:#4a9ab8">Make Payment:</span>
+            <button class="btn-small" onclick="makeMortgagePayment('full')">Full</button>
+            <span style="color:#4a9ab8">Partial:</span>
+            <input type="number" id="mortgage-partial-amt" placeholder="cr" style="width:80px" />
+            <button class="btn-small" onclick="makeMortgagePayment('partial')">Pay</button>
+            <span class="save-msg" id="mortgage-pay-msg"></span>
+          </div>
         </div>
 
         <div class="cr-section">
@@ -748,6 +755,7 @@ function renderHeader() {
   setVal('ei-mortgage-value', s.mortgage_value);
   const mortgageRemaining = s.mortgage_remaining ?? s.mortgage_value ?? 0;
   document.getElementById('hdr-mortgage-remaining').textContent = mortgageRemaining;
+  document.getElementById('hdr-mortgage-remaining-edit').textContent = mortgageRemaining;
   document.getElementById('hdr-pvalue').textContent      = s.purchase_value || '—';
   setVal('ei-pvalue', s.purchase_value);
   document.getElementById('disp-cargo-max').textContent = s.cargo_max || 0;
@@ -1243,13 +1251,6 @@ function renderFinance() {
     <div class="finance-box">
       <div class="finance-label">Mortgage Payment</div>
       <div class="finance-value" title="${mortgageVal} MCr ÷ 240 months (20 yr)">${mortgagePmt.toLocaleString()}</div>
-      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        <button class="btn-small" onclick="makeMortgagePayment('full')">Make Payment — Full</button>
-        <span style="font-size:0.75rem;color:#4a9ab8">Partial</span>
-        <input type="number" id="mortgage-partial-amt" placeholder="cr" style="width:70px" />
-        <button class="btn-small" onclick="makeMortgagePayment('partial')">Pay</button>
-      </div>
-      <div class="save-msg" id="mortgage-pay-msg" style="margin-top:4px"></div>
     </div>
     <div class="finance-box">
       <div class="finance-label">Life Support (base)</div>
@@ -1295,6 +1296,7 @@ async function makeMortgagePayment(type) {
   ship.mortgage_remaining = newRemaining;
   await supabaseClient.from('spacecraft').update({ mortgage_remaining: newRemaining }).eq('id', ship.id);
   document.getElementById('hdr-mortgage-remaining').textContent = newRemaining.toFixed(3);
+  document.getElementById('hdr-mortgage-remaining-edit').textContent = newRemaining.toFixed(3);
   msg.textContent = `Paid Cr${paymentCr.toLocaleString()} — Cr${(newRemaining*1000000).toLocaleString()} remaining.`;
   msg.className = 'save-msg ok';
 }
