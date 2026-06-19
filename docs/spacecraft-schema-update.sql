@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS spacecraft_mounts (
   power NUMERIC DEFAULT 0
 );
 ALTER TABLE spacecraft_mounts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "spacecraft_mounts_all" ON spacecraft_mounts;
 CREATE POLICY "spacecraft_mounts_all" ON spacecraft_mounts FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- spacecraft_weapons: link each weapon to a specific mount instance/slot
@@ -60,3 +61,6 @@ ALTER TABLE spacecraft_weapons ADD COLUMN IF NOT EXISTS mount_id UUID REFERENCES
 ALTER TABLE spacecraft_weapons ADD COLUMN IF NOT EXISTS instance INTEGER;
 ALTER TABLE spacecraft_weapons ADD COLUMN IF NOT EXISTS slot INTEGER;
 ALTER TABLE spacecraft_weapons ADD COLUMN IF NOT EXISTS power NUMERIC DEFAULT 0;
+
+-- Mortgage Remaining: starts at Mortgage Amount, reduced by each payment made
+ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS mortgage_remaining NUMERIC(12,3);

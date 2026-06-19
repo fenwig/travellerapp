@@ -256,6 +256,9 @@
             <div><span>Purchase Value:</span><input class="ship-meta-input" type="number" id="ei-pvalue" step="0.001" min="0" placeholder="0.000" style="width:100px" /> MCr</div>
             <div><span>Mortgage Amount:</span><input class="ship-meta-input" type="number" id="ei-mortgage-value" step="0.001" min="0" placeholder="0.000" style="width:100px" /> MCr</div>
           </div>
+          <div class="ship-meta" style="margin-top:6px">
+            <div><span>Mortgage Remaining:</span><span id="hdr-mortgage-remaining" style="color:#00e5ff;font-weight:600">—</span> MCr</div>
+          </div>
         </div>
         <div class="ship-header-actions">
           <div>
@@ -317,7 +320,6 @@
                 <span style="color:#4a9ab8"> / </span>
                 <span id="sv-hull-cur2">0</span>
               </div>
-              <div style="font-size:0.68rem;color:#4a9ab8;margin-top:4px">Max / Current — tracked on Damage tab</div>
             </div>
             <div class="mc-box">
               <div class="mc-label">Armour</div>
@@ -326,16 +328,14 @@
                 <span style="color:#4a9ab8"> / </span>
                 <span id="sv-arm-cur2">0</span>
               </div>
-              <div style="font-size:0.68rem;color:#4a9ab8;margin-top:4px">Max / Current — tracked on Damage tab</div>
             </div>
             <div class="mc-box">
               <div class="mc-label">Cargo (tons)</div>
               <div class="mc-row" style="font-size:1.3rem;font-weight:600">
                 <span class="view-only" id="sv-cargo-max-mc">0</span><input class="edit-only" type="number" id="ei-cargo-max" min="0" step="0.5" value="0" oninput="syncCargoMax()" style="width:50px" />
                 <span style="color:#4a9ab8"> / </span>
-                <span id="sv-cargo-cur">0</span>
+                <span id="sv-cargo-cur" title="Total of all cargo entries on Finance &amp; Cargo tab">0</span>
               </div>
-              <div style="font-size:0.68rem;color:#4a9ab8;margin-top:4px" title="Total of all cargo entries on Finance &amp; Cargo tab">Max / Current — calculated from Cargo tab</div>
             </div>
           </div>
         </div>
@@ -382,7 +382,7 @@
               </div>
               <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div>
                 <span class="stepper">
-                  <input type="number" id="ei-fuel-cur" value="0" style="width:50px" onchange="autoSaveField('fuel_current', this.value)" />
+                  <input class="mc-input" type="number" id="ei-fuel-cur" value="0" style="width:50px" onchange="autoSaveField('fuel_current', this.value)" />
                   <span class="stepper-btns">
                     <button type="button" class="stepper-btn" onclick="stepCurrent('ei-fuel-cur',1,'fuel_current')">▲</button>
                     <button type="button" class="stepper-btn" onclick="stepCurrent('ei-fuel-cur',-1,'fuel_current')">▼</button>
@@ -671,6 +671,13 @@ const CREW_SINGLE = ["Captain","Pilot"];
 const CREW_MULTI  = ["Astrogator","Sensor Operator","Engineer","Turret Gunner","Bay Gunner","Medic","Steward","Marine"];
 
 const MOUNT_SLOTS = { "Fixed Mount":3, "Single Turret":1, "Double Turret":2, "Triple Turret":3 };
+const MOUNT_DEFAULTS = {
+  "Fixed Mount":    { tl:null, power:0 },
+  "Single Turret":  { tl:7,    power:1 },
+  "Double Turret":  { tl:8,    power:1 },
+  "Triple Turret":  { tl:9,    power:1 }
+};
+const RANGE_BANDS = ["Close","Short","Medium","Long","Very Long","Distant","Very Distant","Special"];
 
 // ── State ────────────────────────────────────────────────
 let ship          = null;
@@ -739,6 +746,8 @@ function renderHeader() {
     `<span>${s.streamlined_status || 'Streamlined'}</span>`;
   document.getElementById('hdr-mortgage-value').textContent = s.mortgage_value || '—';
   setVal('ei-mortgage-value', s.mortgage_value);
+  const mortgageRemaining = s.mortgage_remaining ?? s.mortgage_value ?? 0;
+  document.getElementById('hdr-mortgage-remaining').textContent = mortgageRemaining;
   document.getElementById('hdr-pvalue').textContent      = s.purchase_value || '—';
   setVal('ei-pvalue', s.purchase_value);
   document.getElementById('disp-cargo-max').textContent = s.cargo_max || 0;
@@ -964,7 +973,7 @@ function renderSoftware(rows) {
         <button class="btn-small" style="${r.active ? 'border-color:#00ffaa;color:#00ffaa' : ''}" onclick="toggleSoftwareActive('${r.id}')">${r.active ? 'ON' : 'OFF'}</button>
       </div>
       <div style="font-size:0.75rem;color:${r.note ? '#ff5a4a' : '#4a9ab8'}">${r.note || ''}</div>
-      <button class="skill-remove" onclick="deleteSoftwareRow('${r.id}')" style="grid-column:6">✕</button>
+      <button class="skill-remove edit-only" onclick="deleteSoftwareRow('${r.id}')" style="grid-column:6">✕</button>
     </div>`).join('')
     : '<div style="color:#4a9ab8;font-size:0.82rem;padding:4px 0">None</div>';
 
@@ -1066,7 +1075,7 @@ function renderMounts(rows) {
   tbody.innerHTML = rows.length ? rows.map(r => `
     <tr data-id="${r.id}">
       <td><span class="view-only">${r.mount_type}</span>
-        <select class="edit-only" data-field="mount_type">
+        <select class="edit-only" data-field="mount_type" onchange="applyMountDefaults(this)">
           ${Object.keys(MOUNT_SLOTS).map(t => `<option value="${t}" ${t===r.mount_type?'selected':''}>${t}</option>`).join('')}
         </select></td>
       <td><span class="view-only">${r.count||1}</span>
@@ -1083,6 +1092,15 @@ function renderMounts(rows) {
   renderWeaponSections();
 }
 
+function applyMountDefaults(select) {
+  const tr = select.closest('tr');
+  const def = MOUNT_DEFAULTS[select.value];
+  if (!def) return;
+  tr.querySelector('[data-field="tl"]').value    = def.tl ?? '';
+  tr.querySelector('[data-field="power"]').value = def.power;
+  recalcMountTotal(tr.querySelector('[data-field="power"]'));
+}
+
 function recalcMountTotal(el) {
   const tr    = el.closest('tr');
   const count = parseFloat(tr.querySelector('[data-field="count"]').value) || 1;
@@ -1096,7 +1114,7 @@ function addMountRow() {
   if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
   const tr = document.createElement('tr'); tr.dataset.id = 'new-'+Date.now();
   tr.innerHTML = `
-    <td><select data-field="mount_type">${Object.keys(MOUNT_SLOTS).map(t => `<option value="${t}">${t}</option>`).join('')}</select></td>
+    <td><select data-field="mount_type" onchange="applyMountDefaults(this)">${Object.keys(MOUNT_SLOTS).map(t => `<option value="${t}">${t}</option>`).join('')}</select></td>
     <td><input type="number" min="1" value="1" data-field="count" oninput="recalcMountTotal(this)" style="width:45px" /></td>
     <td><input type="number" value="0" data-field="tl" style="width:45px" /></td>
     <td><input type="number" value="0" data-field="power" oninput="recalcMountTotal(this)" style="width:45px" /></td>
@@ -1136,7 +1154,11 @@ function renderWeaponSections() {
           <td>${slot}</td>
           <td><span class="view-only">${w.name||''}</span><input class="edit-only" data-f="name" value="${w.name||''}" placeholder="Weapon" /></td>
           <td><span class="view-only">${w.tl??''}</span><input class="edit-only" data-f="tl" type="number" value="${w.tl??''}" style="width:45px" /></td>
-          <td><span class="view-only">${w.range||''}</span><input class="edit-only" data-f="range" value="${w.range||''}" style="width:80px" /></td>
+          <td><span class="view-only">${w.range||''}</span>
+            <select class="edit-only" data-f="range" style="width:90px">
+              <option value=""></option>
+              ${RANGE_BANDS.map(r => `<option value="${r}" ${r===w.range?'selected':''}>${r}</option>`).join('')}
+            </select></td>
           <td><span class="view-only">${w.damage||''}</span><input class="edit-only" data-f="damage" value="${w.damage||''}" style="width:70px" /></td>
           <td><span class="view-only">${w.power??0}</span><input class="edit-only" data-f="power" type="number" value="${w.power??0}" style="width:50px" oninput="recalcPowerAllocated()" /></td>
           <td><span class="view-only">${w.traits||''}</span><input class="edit-only" data-f="traits" value="${w.traits||''}" /></td>
@@ -1221,6 +1243,13 @@ function renderFinance() {
     <div class="finance-box">
       <div class="finance-label">Mortgage Payment</div>
       <div class="finance-value" title="${mortgageVal} MCr ÷ 240 months (20 yr)">${mortgagePmt.toLocaleString()}</div>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <button class="btn-small" onclick="makeMortgagePayment('full')">Make Payment — Full</button>
+        <span style="font-size:0.75rem;color:#4a9ab8">Partial</span>
+        <input type="number" id="mortgage-partial-amt" placeholder="cr" style="width:70px" />
+        <button class="btn-small" onclick="makeMortgagePayment('partial')">Pay</button>
+      </div>
+      <div class="save-msg" id="mortgage-pay-msg" style="margin-top:4px"></div>
     </div>
     <div class="finance-box">
       <div class="finance-label">Life Support (base)</div>
@@ -1248,6 +1277,26 @@ function renderFinance() {
   const hdrTxt = total.toLocaleString() + ' cr';
   sv('hdr-maintenance-period', hdrTxt);
   sv('hdr-maintenance-period-edit', hdrTxt);
+}
+
+async function makeMortgagePayment(type) {
+  const msg = document.getElementById('mortgage-pay-msg');
+  const remaining = parseFloat(ship.mortgage_remaining ?? ship.mortgage_value) || 0;
+
+  let paymentCr;
+  if (type === 'full') {
+    paymentCr = Math.round((parseFloat(ship.mortgage_value) || 0) * 1000000 / 240);
+  } else {
+    paymentCr = parseFloat(document.getElementById('mortgage-partial-amt').value) || 0;
+    if (paymentCr <= 0) { msg.textContent = 'Enter a partial payment amount.'; msg.className = 'save-msg err'; return; }
+  }
+
+  const newRemaining = Math.max(0, remaining - paymentCr / 1000000);
+  ship.mortgage_remaining = newRemaining;
+  await supabaseClient.from('spacecraft').update({ mortgage_remaining: newRemaining }).eq('id', ship.id);
+  document.getElementById('hdr-mortgage-remaining').textContent = newRemaining.toFixed(3);
+  msg.textContent = `Paid Cr${paymentCr.toLocaleString()} — Cr${(newRemaining*1000000).toLocaleString()} remaining.`;
+  msg.className = 'save-msg ok';
 }
 
 // ── Cargo ────────────────────────────────────────────────
