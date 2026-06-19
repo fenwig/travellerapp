@@ -32,3 +32,6 @@ ALTER TABLE spacecraft_software ADD COLUMN IF NOT EXISTS note TEXT;
 ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS computer_processor NUMERIC DEFAULT 0;
 ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS computer_bis BOOLEAN DEFAULT false;
 ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS computer_fib BOOLEAN DEFAULT false;
+
+-- Streamlined dropdown replaces boolean (Streamlined / Partially Streamlined / Unstreamlined)
+ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS streamlined_status TEXT DEFAULT 'Streamlined';
