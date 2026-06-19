@@ -35,3 +35,28 @@ ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS computer_fib BOOLEAN DEFAULT fal
 
 -- Streamlined dropdown replaces boolean (Streamlined / Partially Streamlined / Unstreamlined)
 ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS streamlined_status TEXT DEFAULT 'Streamlined';
+
+-- Sensor added to Primary power systems; Ship Sensors grade selector
+ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS power_sensor NUMERIC DEFAULT 0;
+ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS sensor_grade TEXT DEFAULT 'Basic';
+
+-- Mounts table: replaces the old flat Weapons list. Each row is a group of
+-- identical mounts (Fixed Mount / Single / Double / Triple Turret); `count`
+-- is how many of that mount are installed; weapon slots are generated
+-- per-instance client-side based on mount type.
+CREATE TABLE IF NOT EXISTS spacecraft_mounts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  spacecraft_id UUID REFERENCES spacecraft(id) ON DELETE CASCADE NOT NULL,
+  mount_type TEXT NOT NULL,
+  count INTEGER DEFAULT 1,
+  tl INTEGER,
+  power NUMERIC DEFAULT 0
+);
+ALTER TABLE spacecraft_mounts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "spacecraft_mounts_all" ON spacecraft_mounts FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- spacecraft_weapons: link each weapon to a specific mount instance/slot
+ALTER TABLE spacecraft_weapons ADD COLUMN IF NOT EXISTS mount_id UUID REFERENCES spacecraft_mounts(id) ON DELETE CASCADE;
+ALTER TABLE spacecraft_weapons ADD COLUMN IF NOT EXISTS instance INTEGER;
+ALTER TABLE spacecraft_weapons ADD COLUMN IF NOT EXISTS slot INTEGER;
+ALTER TABLE spacecraft_weapons ADD COLUMN IF NOT EXISTS power NUMERIC DEFAULT 0;

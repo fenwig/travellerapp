@@ -69,7 +69,7 @@
     .power-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
     .power-table th { color:#4a9ab8; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; padding:5px 8px; text-align:left; border-bottom:1px solid #0a4a60; }
     .power-table td { padding:6px 8px; color:#b0d8e8; border-bottom:1px solid rgba(10,74,96,0.3); }
-    .mc-grid-table { width:auto; }
+    .mc-grid-table { width:auto; border-spacing:10px 0; border-collapse:separate; }
     .mc-grid-table th:not(:first-child),
     .mc-grid-table td:not(:first-child) { text-align:left; min-width:90px; }
     .mc-grid-table th:first-child,
@@ -176,6 +176,8 @@
     .edit-only { display:none; }
     body.editing .edit-only { display:inline-flex; }
     body.editing .view-only { display:none !important; }
+    tr.edit-only { display:none; }
+    body.editing tr.edit-only { display:table-row; }
   </style>
 </head>
 <body>
@@ -277,7 +279,8 @@
       <!-- ── Tabs ── -->
       <div class="tab-nav">
         <button class="tab-btn active" onclick="showTab('specs',this)">Specs &amp; Tech</button>
-        <button class="tab-btn" onclick="showTab('weapons',this)">Weapons &amp; Conditions</button>
+        <button class="tab-btn" onclick="showTab('weapons',this)">Weapons</button>
+        <button class="tab-btn" onclick="showTab('damage',this)">Damage</button>
         <button class="tab-btn" onclick="showTab('finance',this)">Finance &amp; Cargo</button>
         <button class="tab-btn" onclick="showTab('crew',this)">Crew</button>
         <button class="tab-btn" onclick="showTab('notes',this)">Notes</button>
@@ -288,7 +291,7 @@
 
         <!-- Hull / Armour / Cargo -->
         <div class="cr-section">
-          <div class="cr-section-title">Hull, Armour, Cargo &amp; Fuel</div>
+          <div class="cr-section-title">Hull, Armour &amp; Cargo</div>
           <div class="specs-grid" style="margin-bottom:12px">
             <div class="spec-box">
               <div class="spec-label">Hull Tonnage</div>
@@ -306,54 +309,40 @@
               <input class="spec-input edit-only" type="number" id="ei-lowberths" min="0" />
             </div>
           </div>
-          <table class="power-table mc-grid-table">
-            <thead><tr><th></th><th>Hull Points</th><th>Armour</th><th>Cargo (tons)</th><th>Fuel (tons)</th></tr></thead>
-            <tbody>
-              <tr>
-                <td class="power-fixed-label">Max</td>
-                <td><span class="view-only" id="sv-hull-max">0</span><span class="edit-only" id="ei-hull-max-calc" title="25% of hull tonnage">0</span></td>
-                <td><span class="view-only" id="sv-arm-max">0</span><input class="edit-only" type="number" id="ei-arm-max" value="0" style="width:50px" /></td>
-                <td><span class="view-only" id="sv-cargo-max-mc">0</span><input class="edit-only" type="number" id="ei-cargo-max" min="0" step="0.5" value="0" oninput="syncCargoMax()" style="width:50px" /></td>
-                <td><span class="view-only" id="sv-fuel-max">0</span><input class="edit-only" type="number" id="ei-fuel-max" value="0" style="width:50px" /></td>
-              </tr>
-              <tr>
-                <td class="power-fixed-label">Current</td>
-                <td>
-                  <span class="stepper">
-                    <input type="number" id="ei-hull-cur" value="0" style="width:50px" onchange="autoSaveField('hull_current', this.value)" />
-                    <span class="stepper-btns">
-                      <button type="button" class="stepper-btn" onclick="stepCurrent('ei-hull-cur',1,'hull_current')">▲</button>
-                      <button type="button" class="stepper-btn" onclick="stepCurrent('ei-hull-cur',-1,'hull_current')">▼</button>
-                    </span>
-                  </span>
-                </td>
-                <td>
-                  <span class="stepper">
-                    <input type="number" id="ei-arm-cur" value="0" style="width:50px" onchange="autoSaveField('armour_current', this.value)" />
-                    <span class="stepper-btns">
-                      <button type="button" class="stepper-btn" onclick="stepCurrent('ei-arm-cur',1,'armour_current')">▲</button>
-                      <button type="button" class="stepper-btn" onclick="stepCurrent('ei-arm-cur',-1,'armour_current')">▼</button>
-                    </span>
-                  </span>
-                </td>
-                <td><span id="sv-cargo-cur" title="Total of all cargo entries on Finance &amp; Cargo tab">0</span></td>
-                <td>
-                  <span class="stepper">
-                    <input type="number" id="ei-fuel-cur" value="0" style="width:50px" onchange="autoSaveField('fuel_current', this.value)" />
-                    <span class="stepper-btns">
-                      <button type="button" class="stepper-btn" onclick="stepCurrent('ei-fuel-cur',1,'fuel_current')">▲</button>
-                      <button type="button" class="stepper-btn" onclick="stepCurrent('ei-fuel-cur',-1,'fuel_current')">▼</button>
-                    </span>
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="mc-grid">
+            <div class="mc-box">
+              <div class="mc-label">Hull Points</div>
+              <div class="mc-row" style="font-size:1.3rem;font-weight:600">
+                <span class="view-only" id="sv-hull-max2">0</span><span class="edit-only" id="ei-hull-max-calc2" title="25% of hull tonnage">0</span>
+                <span style="color:#4a9ab8"> / </span>
+                <span id="sv-hull-cur2">0</span>
+              </div>
+              <div style="font-size:0.68rem;color:#4a9ab8;margin-top:4px">Max / Current — tracked on Damage tab</div>
+            </div>
+            <div class="mc-box">
+              <div class="mc-label">Armour</div>
+              <div class="mc-row" style="font-size:1.3rem;font-weight:600">
+                <span class="view-only" id="sv-arm-max2">0</span><input class="edit-only" type="number" id="ei-arm-max" value="0" style="width:50px" />
+                <span style="color:#4a9ab8"> / </span>
+                <span id="sv-arm-cur2">0</span>
+              </div>
+              <div style="font-size:0.68rem;color:#4a9ab8;margin-top:4px">Max / Current — tracked on Damage tab</div>
+            </div>
+            <div class="mc-box">
+              <div class="mc-label">Cargo (tons)</div>
+              <div class="mc-row" style="font-size:1.3rem;font-weight:600">
+                <span class="view-only" id="sv-cargo-max-mc">0</span><input class="edit-only" type="number" id="ei-cargo-max" min="0" step="0.5" value="0" oninput="syncCargoMax()" style="width:50px" />
+                <span style="color:#4a9ab8"> / </span>
+                <span id="sv-cargo-cur">0</span>
+              </div>
+              <div style="font-size:0.68rem;color:#4a9ab8;margin-top:4px" title="Total of all cargo entries on Finance &amp; Cargo tab">Max / Current — calculated from Cargo tab</div>
+            </div>
+          </div>
         </div>
 
-        <!-- Power -->
+        <!-- Power and Engines -->
         <div class="cr-section">
-          <div class="cr-section-title">Power</div>
+          <div class="cr-section-title">Power and Engines</div>
           <div class="mc-grid" style="margin-bottom:14px">
             <div class="mc-box">
               <div class="mc-label">Power Plant</div>
@@ -383,6 +372,22 @@
               <div class="mc-row" style="margin-top:6px"><div class="mc-sub">M-Drive</div>
                 <div class="spec-value view-only" id="sv-mdrive">—</div>
                 <input class="mc-input edit-only" type="number" id="ei-mdrive" min="0" max="6" />
+              </div>
+            </div>
+            <div class="mc-box">
+              <div class="mc-label">Fuel (tons)</div>
+              <div class="mc-row"><div class="mc-sub">Max</div>
+                <div class="mc-value view-only" id="sv-fuel-max">0</div>
+                <input class="mc-input edit-only" type="number" id="ei-fuel-max" value="0" style="width:50px" />
+              </div>
+              <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div>
+                <span class="stepper">
+                  <input type="number" id="ei-fuel-cur" value="0" style="width:50px" onchange="autoSaveField('fuel_current', this.value)" />
+                  <span class="stepper-btns">
+                    <button type="button" class="stepper-btn" onclick="stepCurrent('ei-fuel-cur',1,'fuel_current')">▲</button>
+                    <button type="button" class="stepper-btn" onclick="stepCurrent('ei-fuel-cur',-1,'fuel_current')">▼</button>
+                  </span>
+                </span>
               </div>
             </div>
           </div>
@@ -437,7 +442,29 @@
 
         <!-- Sensors -->
         <div class="cr-section">
-          <div class="cr-section-title">Sensors</div>
+          <div class="cr-section-title">Ship Sensors</div>
+          <table class="power-table">
+            <thead><tr><th>Sensor</th><th>TL</th><th>DM</th><th>Power</th><th>Suite</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>
+                  <span class="view-only" id="sv-sensor-grade">Basic</span>
+                  <select class="ship-meta-select edit-only" id="ei-sensor-grade" onchange="syncSensorGrade()">
+                    <option>Basic</option>
+                    <option>Civilian Grade</option>
+                    <option>Military Grade</option>
+                    <option>Improved</option>
+                    <option>Advanced</option>
+                  </select>
+                </td>
+                <td id="sv-sensor-tl">8</td>
+                <td id="sv-sensor-dm">-4</td>
+                <td id="sv-sensor-power">0</td>
+                <td id="sv-sensor-suite">Lidar, Radar</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="cr-section-title" style="margin-top:14px">Additional Sensor Equipment</div>
           <div id="sensors-list"></div>
           <button class="add-row-btn edit-only" onclick="addSensorRow()">+ Add Sensor</button>
         </div>
@@ -451,38 +478,88 @@
 
       </div><!-- /tab-specs -->
 
-      <!-- ══════════════════ TAB 2 — WEAPONS & CONDITIONS ══════════════════ -->
+      <!-- ══════════════════ TAB 2 — WEAPONS ══════════════════ -->
       <div id="tab-weapons" class="tab-content" style="display:none">
 
         <div class="cr-section">
-          <div class="cr-section-title">Weapons</div>
+          <div class="cr-section-title">Mounts</div>
           <table class="gear-table">
-            <thead><tr><th>Name</th><th>Mount</th><th>TL</th><th>Range</th><th>Damage</th><th>Ammo</th><th>Traits</th><th class="edit-only"></th></tr></thead>
-            <tbody id="weapons-tbody"></tbody>
+            <thead><tr><th>Mount</th><th>#</th><th>TL</th><th>Power</th><th>Power Total</th><th class="edit-only"></th></tr></thead>
+            <tbody id="mounts-tbody"></tbody>
           </table>
-          <button class="add-row-btn edit-only" onclick="addWeaponRow()">+ Add Weapon</button>
+          <button class="add-row-btn edit-only" onclick="addMountRow()">+ Add Mount</button>
         </div>
 
-        <div class="cr-section">
-          <div class="cr-section-title">Critical Hits</div>
-          <div class="crit-grid" id="crit-grid"></div>
-        </div>
+        <div id="weapon-sections"></div>
 
-        <div class="cr-section">
-          <div class="cr-section-title">Damage</div>
-          <div class="damage-row">
-            <div class="damage-block">
-              <div class="damage-block-title">General Damage</div>
-              <textarea id="ei-damage" onchange="autoSaveText('damage_notes', this.value)" placeholder="Specific damaged components, jury-rigged systems, repair notes..."></textarea>
+      </div><!-- /tab-weapons -->
+
+      <!-- ══════════════════ TAB 2b — DAMAGE ══════════════════ -->
+      <div id="tab-damage" class="tab-content" style="display:none">
+
+        <div class="damage-row">
+          <!-- Left column -->
+          <div>
+            <div class="cr-section">
+              <div class="cr-section-title">Hull &amp; Armour</div>
+              <div class="mc-grid">
+                <div class="mc-box">
+                  <div class="mc-label">Hull Points</div>
+                  <div class="mc-row"><div class="mc-sub">Max</div>
+                    <div class="mc-value view-only" id="sv-hull-max">0</div>
+                    <div class="mc-value-calc edit-only" id="ei-hull-max-calc" title="25% of hull tonnage">0</div>
+                  </div>
+                  <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div>
+                    <span class="stepper">
+                      <input class="mc-input" type="number" id="ei-hull-cur" value="0" style="width:50px" onchange="autoSaveField('hull_current', this.value)" />
+                      <span class="stepper-btns">
+                        <button type="button" class="stepper-btn" onclick="stepCurrent('ei-hull-cur',1,'hull_current')">▲</button>
+                        <button type="button" class="stepper-btn" onclick="stepCurrent('ei-hull-cur',-1,'hull_current')">▼</button>
+                      </span>
+                    </span>
+                  </div>
+                </div>
+                <div class="mc-box">
+                  <div class="mc-label">Armour</div>
+                  <div class="mc-row"><div class="mc-sub">Max</div>
+                    <div class="mc-value" id="sv-arm-max">0</div>
+                  </div>
+                  <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div>
+                    <span class="stepper">
+                      <input class="mc-input" type="number" id="ei-arm-cur" value="0" style="width:50px" onchange="autoSaveField('armour_current', this.value)" />
+                      <span class="stepper-btns">
+                        <button type="button" class="stepper-btn" onclick="stepCurrent('ei-arm-cur',1,'armour_current')">▲</button>
+                        <button type="button" class="stepper-btn" onclick="stepCurrent('ei-arm-cur',-1,'armour_current')">▼</button>
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="damage-block">
-              <div class="damage-block-title">Critical Damage Effects</div>
-              <div id="crit-compiled" class="crit-compiled empty">No critical hits recorded.</div>
+
+            <div class="cr-section">
+              <div class="cr-section-title">General Damage</div>
+              <div class="damage-block">
+                <textarea id="ei-damage" onchange="autoSaveText('damage_notes', this.value)" placeholder="Specific damaged components, jury-rigged systems, repair notes..."></textarea>
+              </div>
             </div>
+
+            <div class="cr-section">
+              <div class="cr-section-title">Critical Damage Effects</div>
+              <div class="damage-block">
+                <div id="crit-compiled" class="crit-compiled empty">No critical hits recorded.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column -->
+          <div class="cr-section">
+            <div class="cr-section-title">Critical Hit Locations</div>
+            <div class="crit-grid" id="crit-grid"></div>
           </div>
         </div>
 
-      </div><!-- /tab-weapons -->
+      </div><!-- /tab-damage -->
 
       <!-- ══════════════════ TAB 3 — FINANCE & CARGO ══════════════════ -->
       <div id="tab-finance" class="tab-content" style="display:none">
@@ -577,24 +654,36 @@ const CRIT_EFFECTS = {
   "Bridge":       ["Random bridge station disabled.","Life support fails in 1D hours.","Life support fails in 1D rounds.","Computer reboots — software unavailable this round and next.","Computer damaged. Bandwidth −50%.","Bridge station destroyed. Occupant 1D×1D damage. Hull Severity +1."]
 };
 
-const POWER_FIXED = ["Basic Ship Systems","M-Drive","J-Drive","Weapons","Turrets"];
-const PWR_FIXED_COLUMNS = ["power_basic","power_m_drive","power_j_drive","power_weapons","power_turrets"];
+const POWER_FIXED = ["Basic Ship Systems","M-Drive","J-Drive","Sensor","Weapons","Turrets"];
+const PWR_FIXED_COLUMNS = ["power_basic","power_m_drive","power_j_drive","power_sensor","power_weapons","power_turrets"];
+
+const SENSOR_GRADES = {
+  "Basic":          { tl:8,  dm:-4, power:0, suite:"Lidar, Radar" },
+  "Civilian Grade": { tl:9,  dm:-2, power:1, suite:"Lidar, Radar" },
+  "Military Grade": { tl:10, dm:0,  power:2, suite:"Jammers, Lidar, Radar" },
+  "Improved":       { tl:12, dm:1,  power:4, suite:"Densitometer, Jammers, Lidar, Radar" },
+  "Advanced":       { tl:15, dm:2,  power:6, suite:"Densitometer, Jammers, Lidar, Neural Activity Sensor, Radar" }
+};
 
 // Single-slot roles (only one person allowed)
 const CREW_SINGLE = ["Captain","Pilot"];
 // Multi-slot roles
 const CREW_MULTI  = ["Astrogator","Sensor Operator","Engineer","Turret Gunner","Bay Gunner","Medic","Steward","Marine"];
 
+const MOUNT_SLOTS = { "Fixed Mount":3, "Single Turret":1, "Double Turret":2, "Triple Turret":3 };
+
 // ── State ────────────────────────────────────────────────
 let ship          = null;
 let allCharacters = [];
 let critHits      = {};
 let softwareRows  = [];
+let mountRows      = [];
+let weaponSlotRows = [];
 
+let pendingMounts     = [];
 let pendingSoftware   = [];
 let pendingSensors    = [];
 let pendingSystems    = [];
-let pendingWeapons    = [];
 let pendingHired      = [];
 
 // ── Init ─────────────────────────────────────────────────
@@ -629,8 +718,8 @@ async function loadShip() {
 
   renderHeader();
   renderSpecs();
-  renderPowerTable();
   await renderMultiLists();
+  renderPowerTable();
   renderCritGrid();
   compileCritDamage();
   renderFinance();
@@ -678,6 +767,11 @@ function renderSpecs() {
   sv('sv-hull-max',     hullMax);
   sv('sv-arm-max',      s.armour_max || 0);
   sv('sv-fuel-max',     s.fuel_max || 0);
+  sv('sv-hull-max2',    hullMax);
+  sv('sv-hull-cur2',    s.hull_current || 0);
+  sv('sv-arm-max2',     s.armour_max || 0);
+  sv('sv-arm-cur2',     s.armour_current || 0);
+  document.getElementById('ei-hull-max-calc2').textContent = hullMax;
   sv('sv-cargo-max-mc', (s.cargo_max || 0));
   sv('sv-jdrive',       s.jump_drive || '—');
   sv('sv-mdrive',       s.m_drive || '—');
@@ -708,6 +802,25 @@ function renderSpecs() {
   document.getElementById('ei-comp-fib').checked = !!s.computer_fib;
 
   document.getElementById('ei-hull-max-calc').textContent = hullMax;
+
+  setVal('ei-sensor-grade', s.sensor_grade || 'Basic');
+  renderSensorGrade(s.sensor_grade || 'Basic');
+}
+
+function renderSensorGrade(grade) {
+  const g = SENSOR_GRADES[grade] || SENSOR_GRADES['Basic'];
+  sv('sv-sensor-grade', grade);
+  sv('sv-sensor-tl',    g.tl);
+  sv('sv-sensor-dm',    g.dm > 0 ? '+' + g.dm : g.dm);
+  sv('sv-sensor-power', g.power);
+  sv('sv-sensor-suite', g.suite);
+}
+
+function syncSensorGrade() {
+  const grade = document.getElementById('ei-sensor-grade').value;
+  renderSensorGrade(grade);
+  autoSaveText('sensor_grade', grade);
+  renderPowerTable();
 }
 
 function syncComputerBandwidth() {
@@ -719,6 +832,7 @@ function autoHullPoints() {
   const tons = parseFloat(document.getElementById('ei-hull-tons').value) || 0;
   const hp   = Math.floor(tons * 0.25);
   document.getElementById('ei-hull-max-calc').textContent = hp;
+  document.getElementById('ei-hull-max-calc2').textContent = hp;
 }
 
 function syncCargoMax() {
@@ -731,15 +845,20 @@ function syncCargoMax() {
 function renderPowerTable() {
   const s    = ship;
   const extra = s.power_extra || [];
-  const fixedVals = [s.power_basic, s.power_m_drive, s.power_j_drive, s.power_weapons, s.power_turrets];
+  const fixedVals = [s.power_basic, s.power_m_drive, s.power_j_drive, s.power_sensor, s.power_weapons, s.power_turrets];
 
   const hullTons = s.hull_tonnage || 0;
+  const sensorGrade = SENSOR_GRADES[s.sensor_grade] || SENSOR_GRADES["Basic"];
+  const weaponsRequired = weaponSlotRows.reduce((sum, w) => sum + (parseFloat(w.power) || 0), 0);
+  const turretsRequired = mountRows.reduce((sum, m) => sum + mountPowerTotal(m), 0);
+
   const required = [
     Math.ceil(hullTons * 0.2),
     Math.ceil(hullTons * 0.1 * (s.m_drive || 0)),
     Math.ceil(hullTons * 0.1 * (s.jump_drive || 0)),
-    null,
-    null
+    sensorGrade.power,
+    weaponsRequired,
+    turretsRequired
   ];
 
   const primaryRows = POWER_FIXED.map((name,i) => {
@@ -797,16 +916,19 @@ function recalcPowerAllocated() {
 
 // ── Multi-line lists ─────────────────────────────────────
 async function renderMultiLists() {
-  const [sw,sen,sys,wpn] = await Promise.all([
+  const [sw,sen,sys,mnt,wpn] = await Promise.all([
     supabaseClient.from('spacecraft_software').select('*').eq('spacecraft_id',ship.id),
     supabaseClient.from('spacecraft_sensors').select('*').eq('spacecraft_id',ship.id),
     supabaseClient.from('spacecraft_systems').select('*').eq('spacecraft_id',ship.id),
+    supabaseClient.from('spacecraft_mounts').select('*').eq('spacecraft_id',ship.id),
     supabaseClient.from('spacecraft_weapons').select('*').eq('spacecraft_id',ship.id)
   ]);
   renderSoftware(sw.data||[]);
   renderSensors(sen.data||[]);
   renderSystems(sys.data||[]);
-  renderWeapons(wpn.data||[]);
+  mountRows      = mnt.data||[];
+  weaponSlotRows = wpn.data||[];
+  renderMounts(mountRows);
 }
 
 function mlList(id, rows, viewFn, addFn, pending) {
@@ -816,8 +938,6 @@ function mlList(id, rows, viewFn, addFn, pending) {
 }
 
 function effectiveBandwidth(row) {
-  const isJumpControl = (row.name || '').toLowerCase().includes('jump control');
-  if (ship.computer_bis && isJumpControl) return Math.max(0, (row.bandwidth || 0) - 5);
   return row.bandwidth || 0;
 }
 
@@ -872,9 +992,7 @@ function toggleSoftwareActive(id) {
     }
     row.active = true;
     const isJumpControl = (row.name || '').toLowerCase().includes('jump control');
-    row.note = (ship.computer_bis && isJumpControl)
-      ? `/bis discount applied — running at Bandwidth ${effBw} (normally ${row.bandwidth}).`
-      : '';
+    row.note = (ship.computer_bis && isJumpControl) ? '/bis adjustment applied' : '';
   } else {
     row.active = false;
     row.note   = '';
@@ -937,30 +1055,98 @@ function addMultiRow(listId, arr, innerHTML) {
   arr.push({ action:'add', div });
 }
 
-// ── Weapons ──────────────────────────────────────────────
-function renderWeapons(rows) {
-  const tbody = document.getElementById('weapons-tbody');
+// ── Mounts & Weapons ───────────────────────────────────────
+function mountPowerTotal(r) {
+  return (parseFloat(r.power) || 0) * (parseInt(r.count) || 1);
+}
+
+function renderMounts(rows) {
+  mountRows = rows;
+  const tbody = document.getElementById('mounts-tbody');
   tbody.innerHTML = rows.length ? rows.map(r => `
     <tr data-id="${r.id}">
-      <td>${r.name}</td><td>${r.mount||''}</td><td>${r.tl??''}</td>
-      <td>${r.range||''}</td><td>${r.damage||''}</td><td>${r.ammo??''}</td>
-      <td>${r.traits||''}</td>
-      <td class="td-act edit-only"><button class="skill-remove" onclick="queueDel('pendingWeapons','${r.id}',this.closest('tr'))">✕</button></td>
+      <td><span class="view-only">${r.mount_type}</span>
+        <select class="edit-only" data-field="mount_type">
+          ${Object.keys(MOUNT_SLOTS).map(t => `<option value="${t}" ${t===r.mount_type?'selected':''}>${t}</option>`).join('')}
+        </select></td>
+      <td><span class="view-only">${r.count||1}</span>
+        <input class="edit-only" type="number" min="1" value="${r.count||1}" data-field="count" oninput="recalcMountTotal(this)" style="width:45px" /></td>
+      <td><span class="view-only">${r.tl??0}</span>
+        <input class="edit-only" type="number" value="${r.tl||0}" data-field="tl" style="width:45px" /></td>
+      <td><span class="view-only">${r.power||0}</span>
+        <input class="edit-only" type="number" value="${r.power||0}" data-field="power" oninput="recalcMountTotal(this)" style="width:45px" /></td>
+      <td class="mount-total">${mountPowerTotal(r)}</td>
+      <td class="td-act edit-only"><button class="skill-remove" onclick="deleteMountRow('${r.id}',this.closest('tr'))">✕</button></td>
     </tr>`).join('')
-  : '<tr><td colspan="8" style="color:#4a9ab8;font-size:0.82rem">None</td></tr>';
+  : '<tr><td colspan="6" style="color:#4a9ab8;font-size:0.82rem">None</td></tr>';
+
+  renderWeaponSections();
 }
-function addWeaponRow() {
-  const tbody = document.getElementById('weapons-tbody');
+
+function recalcMountTotal(el) {
+  const tr    = el.closest('tr');
+  const count = parseFloat(tr.querySelector('[data-field="count"]').value) || 1;
+  const power = parseFloat(tr.querySelector('[data-field="power"]').value) || 0;
+  tr.querySelector('.mount-total').textContent = count * power;
+  recalcPowerAllocated();
+}
+
+function addMountRow() {
+  const tbody = document.getElementById('mounts-tbody');
   if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
   const tr = document.createElement('tr'); tr.dataset.id = 'new-'+Date.now();
   tr.innerHTML = `
-    <td><input placeholder="Name" /></td><td><input placeholder="Mount" style="width:80px" /></td>
-    <td><input type="number" placeholder="TL" style="width:40px" /></td><td><input placeholder="Range" style="width:80px" /></td>
-    <td><input placeholder="Damage" style="width:70px" /></td><td><input type="number" placeholder="Ammo" style="width:50px" /></td>
-    <td><input placeholder="Traits" /></td>
-    <td class="td-act edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
+    <td><select data-field="mount_type">${Object.keys(MOUNT_SLOTS).map(t => `<option value="${t}">${t}</option>`).join('')}</select></td>
+    <td><input type="number" min="1" value="1" data-field="count" oninput="recalcMountTotal(this)" style="width:45px" /></td>
+    <td><input type="number" value="0" data-field="tl" style="width:45px" /></td>
+    <td><input type="number" value="0" data-field="power" oninput="recalcMountTotal(this)" style="width:45px" /></td>
+    <td class="mount-total">0</td>
+    <td class="td-act"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
   tbody.appendChild(tr);
-  pendingWeapons.push({ action:'add', tr });
+  pendingMounts.push({ action:'add', tr });
+}
+
+async function deleteMountRow(id, tr) {
+  await supabaseClient.from('spacecraft_weapons').delete().eq('mount_id', id);
+  await supabaseClient.from('spacecraft_mounts').delete().eq('id', id);
+  mountRows = mountRows.filter(r => String(r.id) !== String(id));
+  weaponSlotRows = weaponSlotRows.filter(r => String(r.mount_id) !== String(id));
+  tr.remove();
+  renderMounts(mountRows);
+  recalcPowerAllocated();
+}
+
+function renderWeaponSections() {
+  const container = document.getElementById('weapon-sections');
+  let html = '';
+
+  mountRows.forEach(m => {
+    const slots = MOUNT_SLOTS[m.mount_type] || 1;
+    const count = parseInt(m.count) || 1;
+    for (let inst = 1; inst <= count; inst++) {
+      const label = count > 1 ? `${m.mount_type.toUpperCase()} #${inst}` : m.mount_type.toUpperCase();
+      html += `<div class="cr-section"><div class="cr-section-title">${label}</div>
+        <table class="gear-table">
+          <thead><tr><th>#</th><th>Name</th><th>TL</th><th>Range</th><th>Damage</th><th>Power</th><th>Trait</th></tr></thead>
+          <tbody>`;
+      for (let slot = 1; slot <= slots; slot++) {
+        const w = weaponSlotRows.find(x => String(x.mount_id) === String(m.id) && x.instance === inst && x.slot === slot) || {};
+        const hasData = !!(w.name);
+        html += `<tr class="${hasData ? '' : 'edit-only'}" data-mount="${m.id}" data-instance="${inst}" data-slot="${slot}" data-weapon-id="${w.id || ''}">
+          <td>${slot}</td>
+          <td><span class="view-only">${w.name||''}</span><input class="edit-only" data-f="name" value="${w.name||''}" placeholder="Weapon" /></td>
+          <td><span class="view-only">${w.tl??''}</span><input class="edit-only" data-f="tl" type="number" value="${w.tl??''}" style="width:45px" /></td>
+          <td><span class="view-only">${w.range||''}</span><input class="edit-only" data-f="range" value="${w.range||''}" style="width:80px" /></td>
+          <td><span class="view-only">${w.damage||''}</span><input class="edit-only" data-f="damage" value="${w.damage||''}" style="width:70px" /></td>
+          <td><span class="view-only">${w.power??0}</span><input class="edit-only" data-f="power" type="number" value="${w.power??0}" style="width:50px" oninput="recalcPowerAllocated()" /></td>
+          <td><span class="view-only">${w.traits||''}</span><input class="edit-only" data-f="traits" value="${w.traits||''}" /></td>
+        </tr>`;
+      }
+      html += `</tbody></table></div>`;
+    }
+  });
+
+  container.innerHTML = html || '<div class="page-msg" style="padding:10px 0;text-align:left">Add a mount above to configure weapons.</div>';
 }
 
 // ── Critical hits ────────────────────────────────────────
@@ -1283,8 +1469,8 @@ function cancelEdit() {
 }
 
 function clearPending() {
-  pendingSoftware=[]; pendingSensors=[]; pendingSystems=[];
-  pendingWeapons=[]; pendingHired=[];
+  pendingMounts=[]; pendingSoftware=[]; pendingSensors=[]; pendingSystems=[];
+  pendingHired=[];
 }
 
 // ── Save ─────────────────────────────────────────────────
@@ -1333,8 +1519,10 @@ async function saveAll() {
       power_basic:    gn('ei-pwr-Basic_Ship_Systems'),
       power_m_drive:  gn('ei-pwr-M_Drive'),
       power_j_drive:  gn('ei-pwr-J_Drive'),
+      power_sensor:   gn('ei-pwr-Sensor'),
       power_weapons:  gn('ei-pwr-Weapons'),
       power_turrets:  gn('ei-pwr-Turrets'),
+      sensor_grade:   gi('ei-sensor-grade'),
       power_extra:    powerExtra,
       computer_processor: gn('ei-comp-processor'),
       computer_tl:    gn('ei-comp-tl'),
@@ -1369,13 +1557,45 @@ async function saveAll() {
       if (p.action==='delete') { await supabaseClient.from('spacecraft_systems').delete().eq('id',p.id); }
       else { const v=p.div.querySelector('input').value; if(v) await supabaseClient.from('spacecraft_systems').insert({spacecraft_id:ship.id,description:v}); }
     }
-    // Weapons
-    for (const p of pendingWeapons) {
-      if (p.action==='delete') { await supabaseClient.from('spacecraft_weapons').delete().eq('id',p.id); }
-      else {
-        const i=p.tr.querySelectorAll('input');
-        if(i[0].value) await supabaseClient.from('spacecraft_weapons').insert({ spacecraft_id:ship.id, name:i[0].value, mount:i[1].value||null, tl:parseInt(i[2].value)||null, range:i[3].value||null, damage:i[4].value||null, ammo:parseInt(i[5].value)||null, traits:i[6].value||null });
+    // Mounts — new rows
+    for (const p of pendingMounts) {
+      const tr = p.tr;
+      const mountType = tr.querySelector('[data-field="mount_type"]').value;
+      const count = parseInt(tr.querySelector('[data-field="count"]').value) || 1;
+      const tl    = parseInt(tr.querySelector('[data-field="tl"]').value) || 0;
+      const power = parseFloat(tr.querySelector('[data-field="power"]').value) || 0;
+      await supabaseClient.from('spacecraft_mounts').insert({ spacecraft_id:ship.id, mount_type:mountType, count, tl, power });
+    }
+    // Mounts — existing rows, field edits
+    document.querySelectorAll('#mounts-tbody tr[data-id]').forEach(tr => {
+      if (String(tr.dataset.id).startsWith('new-')) return;
+      const mountType = tr.querySelector('[data-field="mount_type"]')?.value;
+      if (!mountType) return;
+      const count = parseInt(tr.querySelector('[data-field="count"]').value) || 1;
+      const tl    = parseInt(tr.querySelector('[data-field="tl"]').value) || 0;
+      const power = parseFloat(tr.querySelector('[data-field="power"]').value) || 0;
+      supabaseClient.from('spacecraft_mounts').update({ mount_type:mountType, count, tl, power }).eq('id', tr.dataset.id);
+    });
+    // Weapon slots — update/insert/delete based on each rendered slot row
+    for (const tr of document.querySelectorAll('#weapon-sections tr[data-mount]')) {
+      const mountId  = tr.dataset.mount;
+      if (String(mountId).startsWith('new-')) continue; // mount not saved yet — skip its weapons this round
+      const instance = parseInt(tr.dataset.instance);
+      const slot     = parseInt(tr.dataset.slot);
+      const weaponId = tr.dataset.weaponId;
+      const f = field => tr.querySelector(`[data-f="${field}"]`)?.value;
+      const name = f('name');
+      if (!name) {
+        if (weaponId) await supabaseClient.from('spacecraft_weapons').delete().eq('id', weaponId);
+        continue;
       }
+      const payload = {
+        spacecraft_id: ship.id, mount_id: mountId, instance, slot,
+        name, tl: parseInt(f('tl'))||null, range: f('range')||null,
+        damage: f('damage')||null, power: parseFloat(f('power'))||0, traits: f('traits')||null
+      };
+      if (weaponId) await supabaseClient.from('spacecraft_weapons').update(payload).eq('id', weaponId);
+      else await supabaseClient.from('spacecraft_weapons').insert(payload);
     }
     // Hired crew
     for (const p of pendingHired) {
@@ -1420,9 +1640,11 @@ async function createNewShip() {
   document.getElementById('no-ship-msg').style.display = 'none';
   document.getElementById('ship-body').style.display   = 'block';
   document.getElementById('edit-btn').style.display    = 'inline-flex';
-  renderHeader(); renderSpecs(); renderPowerTable();
-  renderSoftware([]); renderSensors([]); renderSystems([]);
-  renderWeapons([]); renderCritGrid(); compileCritDamage(); renderFinance(); renderNotes();
+  mountRows = []; weaponSlotRows = [];
+  renderHeader(); renderSpecs();
+  renderSoftware([]); renderSensors([]); renderSystems([]); renderMounts([]);
+  renderPowerTable();
+  renderCritGrid(); compileCritDamage(); renderFinance(); renderNotes();
   document.getElementById('cargo-tbody').innerHTML      = '<tr><td colspan="3" style="color:#4a9ab8;font-size:0.82rem">Empty</td></tr>';
   document.getElementById('passengers-tbody').innerHTML = '<tr><td colspan="7" style="color:#4a9ab8;font-size:0.82rem">No passengers</td></tr>';
   await renderCrew();
