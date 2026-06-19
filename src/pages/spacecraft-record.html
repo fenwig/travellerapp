@@ -75,9 +75,12 @@
 
     /* ── Stepper (increase/decrease arrows) ── */
     .stepper { display:inline-flex; align-items:center; gap:3px; }
+    .stepper input[type=number] { -moz-appearance:textfield; }
+    .stepper input[type=number]::-webkit-inner-spin-button,
+    .stepper input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
     .stepper-btns { display:flex; flex-direction:column; gap:1px; }
-    .stepper-btn { background:transparent; border:1px solid #0a4a60; color:#4a9ab8; font-size:0.55rem; line-height:1; padding:0 3px; cursor:pointer; border-radius:2px; }
-    .stepper-btn:hover { border-color:#00e5ff; color:#00e5ff; }
+    .stepper-btn { background:transparent; border:1px solid #00e5ff; color:#00e5ff; font-size:0.55rem; line-height:1; padding:0 3px; cursor:pointer; border-radius:2px; }
+    .stepper-btn:hover { background:rgba(0,229,255,0.12); }
     .power-table tr:last-child td { border-bottom:none; }
     .power-table input[type=number] { background:transparent; border:none; border-bottom:1px solid #0a4a60; color:#00e5ff; font-size:0.85rem; width:70px; outline:none; text-align:center; }
     .power-table .sys-input { color:#b0d8e8; width:140px; background:transparent; border:none; border-bottom:1px solid #0a4a60; outline:none; font-size:0.85rem; }
@@ -266,7 +269,7 @@
 
       <!-- ── Tabs ── -->
       <div class="tab-nav">
-        <button class="tab-btn active" onclick="showTab('specs',this)">Specs</button>
+        <button class="tab-btn active" onclick="showTab('specs',this)">Specs &amp; Tech</button>
         <button class="tab-btn" onclick="showTab('weapons',this)">Weapons &amp; Conditions</button>
         <button class="tab-btn" onclick="showTab('finance',this)">Finance &amp; Cargo</button>
         <button class="tab-btn" onclick="showTab('crew',this)">Crew</button>
@@ -353,10 +356,10 @@
               </div>
               <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div>
                 <span class="stepper">
-                  <input class="mc-input" type="number" id="ei-pwr-cur" value="0" style="width:60px" onchange="autoSaveField('power_current', this.value); recalcPowerAllocated()" />
+                  <input class="mc-input" type="number" id="ei-pwr-cur" value="0" style="width:60px" onchange="setPowerCurrent(0, this.value)" />
                   <span class="stepper-btns">
-                    <button type="button" class="stepper-btn" onclick="stepCurrent('ei-pwr-cur',1,'power_current'); recalcPowerAllocated()">▲</button>
-                    <button type="button" class="stepper-btn" onclick="stepCurrent('ei-pwr-cur',-1,'power_current'); recalcPowerAllocated()">▼</button>
+                    <button type="button" class="stepper-btn" onclick="setPowerCurrent(1)">▲</button>
+                    <button type="button" class="stepper-btn" onclick="setPowerCurrent(-1)">▼</button>
                   </span>
                 </span>
               </div>
@@ -392,26 +395,32 @@
         <div class="cr-section">
           <div class="cr-section-title">Computer</div>
           <div class="specs-grid">
-            <div class="spec-box" style="grid-column:span 2;min-width:260px">
-              <div class="spec-label">Model</div>
-              <div class="spec-value view-only" id="sv-comp-model">—</div>
-              <input class="spec-input edit-only" id="ei-comp-model" placeholder="e.g. Computer/3" />
+            <div class="spec-box" style="max-width:120px">
+              <div class="spec-label">Processor</div>
+              <div class="spec-value view-only" id="sv-comp-processor">—</div>
+              <input class="spec-input edit-only" type="number" id="ei-comp-processor" min="0" max="100" oninput="syncComputerBandwidth()" style="width:55px" />
+            </div>
+            <div class="spec-box" style="max-width:150px">
+              <div class="spec-label">Specialised</div>
+              <div class="check-row edit-only" style="margin-top:0"><input type="checkbox" id="ei-comp-bis" /><label for="ei-comp-bis">/bis</label></div>
+              <div class="check-row edit-only"><input type="checkbox" id="ei-comp-fib" /><label for="ei-comp-fib">/fib</label></div>
+              <div class="view-only" id="sv-comp-special" style="color:#b0d8e8">—</div>
             </div>
             <div class="spec-box" style="max-width:90px">
-              <div class="spec-label">TL</div>
+              <div class="spec-label">Tech Level</div>
               <div class="spec-value view-only" id="sv-comp-tl">—</div>
               <input class="spec-input edit-only" type="number" id="ei-comp-tl" min="0" style="width:50px" />
             </div>
-            <div class="spec-box" style="max-width:110px">
+            <div class="spec-box" style="max-width:130px">
               <div class="spec-label">Bandwidth</div>
-              <div class="spec-value view-only" id="sv-comp-bw">—</div>
-              <input class="spec-input edit-only" type="number" id="ei-comp-bw" min="0" style="width:50px" />
+              <div class="spec-value" id="sv-comp-bw" title="Equals the Processor number">0</div>
             </div>
             <div class="spec-box" style="max-width:150px">
-              <div class="spec-label">Bandwidth Allocated</div>
+              <div class="spec-label">Allocated</div>
               <div class="spec-value" id="sv-comp-bw-allocated" title="Total bandwidth of active software packages">0</div>
             </div>
           </div>
+          <p class="rule-body" style="font-size:0.75rem;color:#4a9ab8;margin-top:-4px">/bis adds +5 effective bandwidth for Jump Control programs only (e.g. a Computer/5/bis can run Jump Control/2, which normally requires 10 Bandwidth).</p>
           <div class="cr-section-title" style="margin-top:14px">Software Packages</div>
           <div style="font-size:0.7rem;color:#4a9ab8;display:grid;grid-template-columns:1fr 60px 50px 70px 1fr;gap:8px;padding:0 10px 6px;text-transform:uppercase;letter-spacing:0.06em">
             <div>Name</div><div>BW</div><div>TL</div><div>Active</div><div>Note</div>
@@ -668,9 +677,11 @@ function renderSpecs() {
   sv('sv-mdrive',       s.m_drive || '—');
   sv('sv-pwr-max',      s.power_plant || 0);
   sv('sv-pwr-cur',      s.power_current || 0);
-  sv('sv-comp-model',   s.computer_model || '—');
-  sv('sv-comp-tl',      s.computer_tl || 0);
-  sv('sv-comp-bw',      s.computer_bandwidth || 0);
+  sv('sv-comp-processor', s.computer_processor || 0);
+  sv('sv-comp-tl',        s.computer_tl || 0);
+  sv('sv-comp-bw',        s.computer_processor || 0);
+  const specialBits = [s.computer_bis ? '/bis' : '', s.computer_fib ? '/fib' : ''].filter(Boolean);
+  sv('sv-comp-special', specialBits.length ? specialBits.join(' ') : '—');
 
   setVal('ei-hull-tons',   s.hull_tonnage);
   setVal('ei-staterooms',  s.staterooms);
@@ -685,11 +696,17 @@ function renderSpecs() {
   setVal('ei-mdrive',      s.m_drive);
   setVal('ei-pwr-max',     s.power_plant);
   setVal('ei-pwr-cur',     s.power_current);
-  setVal('ei-comp-model',  s.computer_model);
+  setVal('ei-comp-processor', s.computer_processor);
   setVal('ei-comp-tl',     s.computer_tl);
-  setVal('ei-comp-bw',     s.computer_bandwidth);
+  document.getElementById('ei-comp-bis').checked = !!s.computer_bis;
+  document.getElementById('ei-comp-fib').checked = !!s.computer_fib;
 
   document.getElementById('ei-hull-max-calc').textContent = hullMax;
+}
+
+function syncComputerBandwidth() {
+  const val = document.getElementById('ei-comp-processor').value || 0;
+  sv('sv-comp-bw', val);
 }
 
 function autoHullPoints() {
@@ -792,11 +809,6 @@ function mlList(id, rows, viewFn, addFn, pending) {
     : '<div style="color:#4a9ab8;font-size:0.82rem;padding:4px 0">None</div>';
 }
 
-function parseRating(str) {
-  const m = (str || '').match(/\/(\d+)/);
-  return m ? parseInt(m[1]) : null;
-}
-
 function activeBandwidthTotal(excludeId) {
   return softwareRows.filter(r => r.active && r.id !== excludeId)
     .reduce((sum, r) => sum + (r.bandwidth || 0), 0);
@@ -832,17 +844,10 @@ function toggleSoftwareActive(id) {
       renderSoftware(softwareRows);
       return;
     }
-    const bwAfter = activeBandwidthTotal(row.id) + (row.bandwidth || 0);
-    if (bwAfter > (ship.computer_bandwidth || 0)) {
-      row.note = `Blocked — exceeds computer bandwidth (${bwAfter}/${ship.computer_bandwidth || 0}).`;
-      renderSoftware(softwareRows);
-      return;
-    }
     row.active = true;
-    const compRating = parseRating(ship.computer_model);
-    const swRating    = parseRating(row.name);
-    row.note = (swRating && compRating && swRating > compRating)
-      ? `Running at effective /${compRating} (capped by Computer/${compRating}).`
+    const processor = ship.computer_processor || 0;
+    row.note = (row.bandwidth || 0) > processor
+      ? `Running at Bandwidth ${processor}`
       : '';
   } else {
     row.active = false;
@@ -1305,9 +1310,10 @@ async function saveAll() {
       power_weapons:  gn('ei-pwr-Weapons'),
       power_turrets:  gn('ei-pwr-Turrets'),
       power_extra:    powerExtra,
-      computer_model: gi('ei-comp-model'),
+      computer_processor: gn('ei-comp-processor'),
       computer_tl:    gn('ei-comp-tl'),
-      computer_bandwidth: gn('ei-comp-bw'),
+      computer_bis:   document.getElementById('ei-comp-bis').checked,
+      computer_fib:   document.getElementById('ei-comp-fib').checked,
       critical_hits:  critHits,
       damage_notes:   gi('ei-damage'),
       notes:          gi('ei-notes'),
@@ -1409,6 +1415,18 @@ async function autoSaveField(column, value) {
   ship[column] = num;
   await supabaseClient.from('spacecraft').update({ [column]: num }).eq('id', ship.id);
 }
+function setPowerCurrent(delta, explicitValue) {
+  const el    = document.getElementById('ei-pwr-cur');
+  const maxEl = document.getElementById('ei-pwr-max');
+  const max   = parseFloat(maxEl?.value) || 0;
+  let val = explicitValue !== undefined ? (parseFloat(explicitValue) || 0) : (parseFloat(el.value) || 0) + delta;
+  if (val > max) val = max;
+  if (val < 0) val = 0;
+  el.value = val;
+  autoSaveField('power_current', val);
+  recalcPowerAllocated();
+}
+
 function stepCurrent(inputId, delta, column) {
   const el = document.getElementById(inputId);
   const newVal = (parseFloat(el.value) || 0) + delta;

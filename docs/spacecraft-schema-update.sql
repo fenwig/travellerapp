@@ -26,3 +26,9 @@ ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS computer_tl NUMERIC DEFAULT 0;
 ALTER TABLE spacecraft_software ADD COLUMN IF NOT EXISTS tl NUMERIC DEFAULT 0;
 ALTER TABLE spacecraft_software ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT false;
 ALTER TABLE spacecraft_software ADD COLUMN IF NOT EXISTS note TEXT;
+
+-- Computer rework: Processor number replaces free-text Model; /bis and /fib
+-- specialisation flags; computer_type no longer used (column left in place)
+ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS computer_processor NUMERIC DEFAULT 0;
+ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS computer_bis BOOLEAN DEFAULT false;
+ALTER TABLE spacecraft ADD COLUMN IF NOT EXISTS computer_fib BOOLEAN DEFAULT false;
