@@ -202,14 +202,18 @@
       <div class="ship-header">
         <div class="ship-identity">
           <!-- View mode -->
-          <div class="ship-name view-only" id="hdr-name">—</div>
-          <div class="ship-meta view-only">
-            <div><span>Class:</span><span id="hdr-class">—</span></div>
+          <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+            <div class="ship-name view-only" id="hdr-name">—</div>
+            <div class="ship-meta view-only">
+              <div><span>Class:</span><span id="hdr-class">—</span></div>
+            </div>
           </div>
           <!-- Edit mode -->
-          <input class="ship-name-input edit-only" id="ei-name" placeholder="Ship name" />
-          <div class="ship-meta edit-only" style="gap:8px 16px;align-items:center">
-            <div><span>Class:</span><input class="ship-meta-input" id="ei-class" placeholder="Class" /></div>
+          <div class="edit-only" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <input class="ship-name-input" id="ei-name" placeholder="Ship name" style="width:auto;flex:1;min-width:160px" />
+            <div class="ship-meta" style="gap:8px 16px;align-items:center">
+              <div><span>Class:</span><input class="ship-meta-input" id="ei-class" placeholder="Class" /></div>
+            </div>
           </div>
 
           <div class="ship-meta view-only" style="margin-top:6px">
@@ -228,7 +232,7 @@
             <div><span>Mortgage Amount:</span><span id="hdr-mortgage-value">—</span> MCr</div>
           </div>
           <div class="ship-meta edit-only" style="margin-top:6px">
-            <div><span>Purchase Value:</span><span id="hdr-pvalue-edit">—</span> MCr <span style="font-size:0.7rem;color:#4a9ab8">(edit in Specs tab)</span></div>
+            <div><span>Purchase Value:</span><input class="ship-meta-input" type="number" id="ei-pvalue" step="0.001" min="0" placeholder="0.000" style="width:100px" /> MCr</div>
             <div><span>Mortgage Amount:</span><input class="ship-meta-input" type="number" id="ei-mortgage-value" step="0.001" min="0" placeholder="0.000" style="width:100px" /> MCr</div>
           </div>
         </div>
@@ -265,17 +269,12 @@
 
         <!-- Hull / Armour / Cargo -->
         <div class="cr-section">
-          <div class="cr-section-title">Hull, Armour &amp; Cargo</div>
+          <div class="cr-section-title">Hull, Armour, Cargo &amp; Fuel</div>
           <div class="specs-grid" style="margin-bottom:12px">
             <div class="spec-box">
               <div class="spec-label">Hull Tonnage</div>
               <div class="spec-value view-only" id="sv-hull-tons">—</div>
               <input class="spec-input edit-only" type="number" id="ei-hull-tons" min="0" placeholder="tons" oninput="autoHullPoints()" />
-            </div>
-            <div class="spec-box">
-              <div class="spec-label">Purchase Value (MCr)</div>
-              <div class="spec-value view-only" id="sv-pvalue">—</div>
-              <input class="spec-input edit-only" type="number" id="ei-pvalue" step="0.001" min="0" placeholder="0.000" />
             </div>
             <div class="spec-box">
               <div class="spec-label">Staterooms</div>
@@ -287,70 +286,26 @@
               <div class="spec-value view-only" id="sv-lowberths">—</div>
               <input class="spec-input edit-only" type="number" id="ei-lowberths" min="0" />
             </div>
-            <div class="spec-box">
-              <div class="spec-label">Cargo Capacity (tons)</div>
-              <div class="spec-value view-only" id="sv-cargo-max">—</div>
-              <input class="spec-input edit-only" type="number" id="ei-cargo-max" min="0" step="0.5" oninput="syncCargoMax()" />
-            </div>
           </div>
-          <div class="mc-grid">
-            <div class="mc-box">
-              <div class="mc-label">Hull Points</div>
-              <div class="mc-row"><div class="mc-sub">Max</div>
-                <div class="mc-value view-only" id="sv-hull-max">0</div>
-                <div class="mc-value-calc edit-only" id="ei-hull-max-calc" title="25% of hull tonnage">0</div>
-              </div>
-              <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div>
-                <input class="mc-input" type="number" id="ei-hull-cur" value="0" onchange="autoSaveField('hull_current', this.value)" />
-              </div>
-            </div>
-            <div class="mc-box">
-              <div class="mc-label">Armour</div>
-              <div class="mc-row"><div class="mc-sub">Max</div>
-                <div class="mc-value view-only" id="sv-arm-max">0</div>
-                <input class="mc-input edit-only" type="number" id="ei-arm-max" value="0" />
-              </div>
-              <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div>
-                <input class="mc-input" type="number" id="ei-arm-cur" value="0" onchange="autoSaveField('armour_current', this.value)" />
-              </div>
-            </div>
-            <div class="mc-box">
-              <div class="mc-label">Cargo (tons)</div>
-              <div class="mc-row"><div class="mc-sub">Max</div>
-                <div class="mc-value view-only" id="sv-cargo-max-mc" style="font-size:1.1rem">0</div>
-              </div>
-              <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div>
-                <div class="mc-readonly" id="sv-cargo-cur" title="Total of all cargo entries on Finance &amp; Cargo tab">0</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Drives & Fuel -->
-        <div class="cr-section">
-          <div class="mc-grid">
-            <div class="mc-box">
-              <div class="mc-label">Drives</div>
-              <div class="mc-row"><div class="mc-sub">Jump</div>
-                <div class="spec-value view-only" id="sv-jdrive">—</div>
-                <input class="mc-input edit-only" type="number" id="ei-jdrive" min="0" max="6" />
-              </div>
-              <div class="mc-row" style="margin-top:6px"><div class="mc-sub">M-Drive</div>
-                <div class="spec-value view-only" id="sv-mdrive">—</div>
-                <input class="mc-input edit-only" type="number" id="ei-mdrive" min="0" max="6" />
-              </div>
-            </div>
-            <div class="mc-box">
-              <div class="mc-label">Fuel (tons)</div>
-              <div class="mc-row"><div class="mc-sub">Max</div>
-                <div class="mc-value view-only" id="sv-fuel-max">0</div>
-                <input class="mc-input edit-only" type="number" id="ei-fuel-max" value="0" />
-              </div>
-              <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div>
-                <input class="mc-input" type="number" id="ei-fuel-cur" value="0" onchange="autoSaveField('fuel_current', this.value)" />
-              </div>
-            </div>
-          </div>
+          <table class="power-table">
+            <thead><tr><th></th><th>Hull Points</th><th>Armour</th><th>Cargo (tons)</th><th>Fuel (tons)</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="power-fixed-label">Max</td>
+                <td><span class="view-only" id="sv-hull-max">0</span><span class="edit-only" id="ei-hull-max-calc" title="25% of hull tonnage">0</span></td>
+                <td><span class="view-only" id="sv-arm-max">0</span><input class="edit-only" type="number" id="ei-arm-max" value="0" style="width:60px" /></td>
+                <td><span class="view-only" id="sv-cargo-max-mc">0</span><input class="edit-only" type="number" id="ei-cargo-max" min="0" step="0.5" value="0" oninput="syncCargoMax()" style="width:60px" /></td>
+                <td><span class="view-only" id="sv-fuel-max">0</span><input class="edit-only" type="number" id="ei-fuel-max" value="0" style="width:60px" /></td>
+              </tr>
+              <tr>
+                <td class="power-fixed-label">Current</td>
+                <td><input type="number" id="ei-hull-cur" value="0" style="width:60px" onchange="autoSaveField('hull_current', this.value)" /></td>
+                <td><input type="number" id="ei-arm-cur" value="0" style="width:60px" onchange="autoSaveField('armour_current', this.value)" /></td>
+                <td><span id="sv-cargo-cur" title="Total of all cargo entries on Finance &amp; Cargo tab">0</span></td>
+                <td><input type="number" id="ei-fuel-cur" value="0" style="width:60px" onchange="autoSaveField('fuel_current', this.value)" /></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <!-- Power -->
@@ -369,6 +324,17 @@
               </div>
               <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Allocated</div>
                 <div class="mc-readonly" id="sv-pwr-allocated" title="Sum of power allotted to all systems below">0</div>
+              </div>
+            </div>
+            <div class="mc-box">
+              <div class="mc-label">Drives</div>
+              <div class="mc-row"><div class="mc-sub">Jump</div>
+                <div class="spec-value view-only" id="sv-jdrive">—</div>
+                <input class="mc-input edit-only" type="number" id="ei-jdrive" min="0" max="6" />
+              </div>
+              <div class="mc-row" style="margin-top:6px"><div class="mc-sub">M-Drive</div>
+                <div class="spec-value view-only" id="sv-mdrive">—</div>
+                <input class="mc-input edit-only" type="number" id="ei-mdrive" min="0" max="6" />
               </div>
             </div>
           </div>
@@ -555,6 +521,7 @@ const CRIT_EFFECTS = {
 };
 
 const POWER_FIXED = ["Basic Ship Systems","M-Drive","J-Drive","Weapons","Turrets"];
+const PWR_FIXED_COLUMNS = ["power_basic","power_m_drive","power_j_drive","power_weapons","power_turrets"];
 
 // Single-slot roles (only one person allowed)
 const CREW_SINGLE = ["Captain","Pilot"];
@@ -627,7 +594,7 @@ function renderHeader() {
   document.getElementById('hdr-mortgage-value').textContent = s.mortgage_value || '—';
   setVal('ei-mortgage-value', s.mortgage_value);
   document.getElementById('hdr-pvalue').textContent      = s.purchase_value || '—';
-  document.getElementById('hdr-pvalue-edit').textContent = s.purchase_value || '—';
+  setVal('ei-pvalue', s.purchase_value);
   document.getElementById('disp-cargo-max').textContent = s.cargo_max || 0;
 
   const badge = document.getElementById('status-badge');
@@ -649,10 +616,8 @@ function renderSpecs() {
   const hullMax = Math.floor((s.hull_tonnage || 0) * 0.25);
 
   sv('sv-hull-tons',    s.hull_tonnage || 0);
-  sv('sv-pvalue',       s.purchase_value ? s.purchase_value + ' MCr' : '—');
   sv('sv-staterooms',   s.staterooms || 0);
   sv('sv-lowberths',    s.low_berths || 0);
-  sv('sv-cargo-max',    (s.cargo_max || 0) + ' tons');
   sv('sv-hull-max',     hullMax);
   sv('sv-arm-max',      s.armour_max || 0);
   sv('sv-fuel-max',     s.fuel_max || 0);
@@ -666,7 +631,6 @@ function renderSpecs() {
   sv('sv-comp-bw',      s.computer_bandwidth || 0);
 
   setVal('ei-hull-tons',   s.hull_tonnage);
-  setVal('ei-pvalue',      s.purchase_value);
   setVal('ei-staterooms',  s.staterooms);
   setVal('ei-lowberths',   s.low_berths);
   setVal('ei-cargo-max',   s.cargo_max);
@@ -718,22 +682,32 @@ function renderPowerTable() {
     const reqTxt = required[i] !== null ? ` <span style="color:#4a9ab8;font-weight:400">(required: ${required[i]})</span>` : '';
     return `<tr>
       <td class="power-fixed-label">${name}${reqTxt}</td>
-      <td><span class="view-only">${fixedVals[i]||0}</span>
-          <input class="edit-only" type="number" id="ei-pwr-${safeId}" value="${fixedVals[i]||0}" oninput="recalcPowerAllocated()" /></td>
+      <td><input type="number" id="ei-pwr-${safeId}" value="${fixedVals[i]||0}" oninput="recalcPowerAllocated()" onchange="autoSavePowerFixed(${i}, this.value)" /></td>
     </tr>`;
   }).join('');
 
   const supplementalRows = extra.map((e,i) => `<tr>
       <td><span class="view-only">${e.label||''}</span>
           <input class="sys-input edit-only" id="ei-pex-label-${i}" value="${e.label||''}" placeholder="System" /></td>
-      <td><span class="view-only">${e.value||0}</span>
-          <input class="edit-only" type="number" id="ei-pex-val-${i}" value="${e.value||0}" oninput="recalcPowerAllocated()" /></td>
+      <td><input type="number" id="ei-pex-val-${i}" value="${e.value||0}" oninput="recalcPowerAllocated()" onchange="autoSavePowerExtra(${i}, this.value)" /></td>
     </tr>`).join('');
 
   document.getElementById('power-tbody-primary').innerHTML = primaryRows;
   document.getElementById('power-tbody-supplemental').innerHTML =
     supplementalRows || '<tr><td colspan="2" style="color:#4a9ab8;font-size:0.82rem">None</td></tr>';
   recalcPowerAllocated();
+}
+
+function autoSavePowerFixed(index, value) {
+  autoSaveField(PWR_FIXED_COLUMNS[index], value);
+}
+
+function autoSavePowerExtra(index, value) {
+  const extra = ship.power_extra || [];
+  extra[index] = extra[index] || { label:'', value:0 };
+  extra[index].value = parseFloat(value) || 0;
+  ship.power_extra = extra;
+  supabaseClient.from('spacecraft').update({ power_extra: extra }).eq('id', ship.id);
 }
 
 function recalcPowerAllocated() {
