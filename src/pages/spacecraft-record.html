@@ -5,50 +5,1292 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spacecraft Record — Traveller</title>
   <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+  <style>
+    /* ── Header ── */
+    .ship-header { display:flex; align-items:flex-start; gap:24px; background:rgba(13,21,32,0.92); border:1px solid #0a4a60; border-radius:8px; padding:20px 24px; margin-bottom:18px; flex-wrap:wrap; }
+    .ship-identity { flex:1; min-width:200px; }
+    .ship-name { font-size:1.5rem; color:#00e5ff; font-weight:700; letter-spacing:0.05em; margin-bottom:4px; }
+    .ship-meta { display:flex; flex-wrap:wrap; gap:10px 24px; color:#b0d8e8; font-size:0.85rem; margin-bottom:6px; }
+    .ship-meta span { color:#4a9ab8; margin-right:4px; }
+    .status-badge { display:inline-block; padding:3px 12px; border-radius:4px; font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
+    .status-active    { background:rgba(0,255,170,0.12);  color:#00ffaa; border:1px solid #00ffaa44; }
+    .status-reserve   { background:rgba(0,229,255,0.12);  color:#00e5ff; border:1px solid #00e5ff44; }
+    .status-sold      { background:rgba(74,154,184,0.12); color:#4a9ab8; border:1px solid #4a9ab844; }
+    .status-destroyed { background:rgba(255,90,74,0.12);  color:#ff5a4a; border:1px solid #ff5a4a44; }
+    .status-other     { background:rgba(74,154,184,0.08); color:#4a9ab8; border:1px solid #4a9ab844; }
+    .ship-header-actions { display:flex; align-items:flex-start; gap:10px; flex-shrink:0; }
+
+    /* ── Buttons ── */
+    .btn { padding:7px 18px; border-radius:5px; font-size:0.85rem; font-weight:600; cursor:pointer; border:none; transition:opacity 0.15s; }
+    .btn:hover { opacity:0.85; }
+    .btn-primary { background:#00e5ff; color:#080d12; }
+    .btn-ghost   { background:transparent; color:#00e5ff; border:1px solid #00e5ff; }
+    .btn-sm { padding:4px 12px; font-size:0.78rem; }
+
+    /* ── Section ── */
+    .cr-section { margin-bottom:22px; }
+    .cr-section-title { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.12em; color:#4a9ab8; border-bottom:1px solid #0a4a60; padding-bottom:5px; margin-bottom:10px; }
+
+    /* ── Max/Current pairs ── */
+    .mc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-bottom:12px; }
+    .mc-box { background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:6px; padding:10px 14px; }
+    .mc-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#4a9ab8; margin-bottom:6px; }
+    .mc-row { display:flex; gap:10px; align-items:center; }
+    .mc-sub { font-size:0.68rem; color:#4a9ab8; width:40px; flex-shrink:0; }
+    .mc-value { font-size:1.1rem; color:#00e5ff; font-weight:600; }
+    .mc-input { background:transparent; border:none; border-bottom:1px solid #0a4a60; color:#00e5ff; font-size:1rem; font-weight:600; width:80px; outline:none; text-align:center; }
+
+    /* ── Specs fields ── */
+    .specs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; margin-bottom:12px; }
+    .spec-box { background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:6px; padding:10px 14px; }
+    .spec-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#4a9ab8; margin-bottom:4px; }
+    .spec-value { font-size:1rem; color:#b0d8e8; }
+    .spec-input { background:transparent; border:none; border-bottom:1px solid #0a4a60; color:#b0d8e8; font-size:0.95rem; width:100%; outline:none; }
+    .spec-select { background:#0d1520; border:1px solid #0a4a60; border-radius:4px; color:#b0d8e8; padding:3px 6px; font-size:0.85rem; outline:none; width:100%; }
+
+    /* ── Power table ── */
+    .power-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+    .power-table th { color:#4a9ab8; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; padding:5px 8px; text-align:left; border-bottom:1px solid #0a4a60; }
+    .power-table td { padding:6px 8px; color:#b0d8e8; border-bottom:1px solid rgba(10,74,96,0.3); }
+    .power-table tr:last-child td { border-bottom:none; }
+    .power-table input { background:transparent; border:none; border-bottom:1px solid #0a4a60; color:#00e5ff; font-size:0.85rem; width:70px; outline:none; text-align:center; }
+    .power-table .sys-input { color:#b0d8e8; width:140px; }
+    .power-fixed { color:#4a9ab8; font-size:0.8rem; }
+
+    /* ── Multi-line lists ── */
+    .multi-row { display:flex; gap:8px; align-items:center; padding:5px 8px; background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:4px; margin-bottom:4px; font-size:0.85rem; color:#b0d8e8; }
+    .multi-row .ml-main { flex:1; }
+    .multi-row .ml-sub  { width:80px; flex-shrink:0; color:#4a9ab8; font-size:0.8rem; }
+    .multi-row input { background:transparent; border:none; border-bottom:1px solid #0a4a60; color:#b0d8e8; font-size:0.85rem; outline:none; width:100%; }
+    .multi-row .sub-input { color:#4a9ab8; width:70px; text-align:center; }
+    .skill-remove { color:#ff5a4a; cursor:pointer; font-size:1rem; background:none; border:none; padding:0 2px; }
+    .add-row-btn { background:transparent; border:1px dashed #0a4a60; color:#4a9ab8; border-radius:4px; padding:5px 14px; font-size:0.78rem; cursor:pointer; margin-top:4px; transition:border-color 0.15s,color 0.15s; }
+    .add-row-btn:hover { border-color:#00e5ff; color:#00e5ff; }
+
+    /* ── Gear tables ── */
+    .gear-table { width:100%; border-collapse:collapse; font-size:0.82rem; margin-bottom:6px; }
+    .gear-table th { color:#4a9ab8; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; padding:5px 8px; text-align:left; border-bottom:1px solid #0a4a60; }
+    .gear-table td { padding:6px 8px; color:#b0d8e8; border-bottom:1px solid rgba(10,74,96,0.3); vertical-align:middle; }
+    .gear-table tr:last-child td { border-bottom:none; }
+    .gear-table input { background:transparent; border:none; border-bottom:1px solid #0a4a60; color:#b0d8e8; font-size:0.82rem; width:100%; outline:none; padding:1px 2px; }
+    .gear-table td.td-act { width:30px; text-align:center; }
+
+    /* ── Critical Hits ── */
+    .crit-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:10px; }
+    .crit-location { background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:6px; padding:10px 12px; }
+    .crit-loc-name { font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:#4a9ab8; margin-bottom:8px; }
+    .crit-pips { display:flex; gap:6px; }
+    .crit-pip {
+      width:26px; height:26px; border-radius:50%;
+      border:2px solid #0a4a60;
+      background:transparent;
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      font-size:0.72rem; font-weight:700; color:#4a9ab8;
+      transition:all 0.15s; position:relative;
+    }
+    .crit-pip:hover { border-color:#00e5ff; }
+    .crit-pip.active-1 { background:rgba(255,180,0,0.15);  border-color:#ffb400; color:#ffb400; }
+    .crit-pip.active-2 { background:rgba(255,140,0,0.2);   border-color:#ff8c00; color:#ff8c00; }
+    .crit-pip.active-3 { background:rgba(255,100,0,0.25);  border-color:#ff6400; color:#ff6400; }
+    .crit-pip.active-4 { background:rgba(255,60,0,0.3);    border-color:#ff3c00; color:#ff3c00; }
+    .crit-pip.active-5 { background:rgba(255,20,0,0.35);   border-color:#ff1400; color:#ff1400; }
+    .crit-pip.active-6 { background:rgba(255,0,0,0.4);     border-color:#ff0000; color:#ff0000; }
+
+    /* ── Crit tooltip ── */
+    .crit-tooltip {
+      position:fixed; z-index:1000;
+      background:rgba(8,13,18,0.98); border:1px solid #00e5ff;
+      border-radius:6px; padding:12px 16px;
+      max-width:320px; font-size:0.82rem; color:#b0d8e8;
+      pointer-events:none; display:none;
+      line-height:1.5;
+    }
+    .crit-tooltip.show { display:block; }
+    .crit-tooltip-loc  { color:#00e5ff; font-weight:700; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px; }
+    .crit-tooltip-sev  { color:#ffb400; font-size:0.72rem; margin-bottom:6px; }
+    .crit-tooltip-text { color:#b0d8e8; }
+
+    /* ── Damage notes ── */
+    .notes-textarea { width:100%; min-height:100px; background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:6px; color:#b0d8e8; font-size:0.88rem; padding:12px; resize:vertical; outline:none; font-family:inherit; line-height:1.55; box-sizing:border-box; }
+    .notes-textarea:focus { border-color:#00e5ff; }
+
+    /* ── Finance ── */
+    .finance-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-bottom:12px; }
+    .finance-box { background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:6px; padding:10px 14px; }
+    .finance-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#4a9ab8; margin-bottom:4px; }
+    .finance-value { font-size:1.05rem; color:#00e5ff; font-weight:600; }
+    .finance-input { background:transparent; border:none; border-bottom:1px solid #0a4a60; color:#00e5ff; font-size:1rem; font-weight:600; width:100%; outline:none; }
+    .finance-calc { font-size:0.78rem; color:#4a9ab8; margin-top:3px; }
+    .finance-total { background:rgba(0,229,255,0.06); border:1px solid #00e5ff44; }
+    .finance-total .finance-value { color:#00ffaa; }
+
+    /* ── Passengers ── */
+    .pass-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+    .pass-table th { color:#4a9ab8; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; padding:5px 8px; text-align:left; border-bottom:1px solid #0a4a60; }
+    .pass-table td { padding:6px 8px; color:#b0d8e8; border-bottom:1px solid rgba(10,74,96,0.3); }
+    .pass-table input { background:transparent; border:none; border-bottom:1px solid #0a4a60; color:#b0d8e8; font-size:0.82rem; width:100%; outline:none; }
+    .pass-table input[type=number] { width:50px; text-align:center; color:#00e5ff; }
+
+    /* ── Crew ── */
+    .crew-role-row { display:grid; grid-template-columns:140px 1fr 24px; gap:10px; align-items:center; padding:7px 10px; background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:5px; margin-bottom:5px; font-size:0.85rem; }
+    .crew-role-label { color:#4a9ab8; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; }
+    .crew-select { background:#0d1520; border:1px solid #0a4a60; border-radius:4px; color:#b0d8e8; padding:4px 8px; font-size:0.85rem; outline:none; width:100%; }
+    .hired-row { display:grid; grid-template-columns:1fr 140px 120px 24px; gap:8px; align-items:center; padding:7px 10px; background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:5px; margin-bottom:5px; font-size:0.85rem; }
+
+    /* ── Save bar ── */
+    .save-bar { position:sticky; bottom:0; background:rgba(8,13,18,0.97); border-top:1px solid #0a4a60; padding:10px 0; display:flex; gap:10px; align-items:center; margin-top:24px; }
+    .save-msg { font-size:0.82rem; color:#4a9ab8; }
+    .save-msg.ok  { color:#00ffaa; }
+    .save-msg.err { color:#ff5a4a; }
+
+    /* ── Empty state ── */
+    .page-msg { color:#4a9ab8; font-size:0.9rem; padding:40px 0; text-align:center; }
+
+    /* ── Edit mode ── */
+    .edit-only { display:none; }
+    body.editing .edit-only { display:inline-flex; }
+    body.editing .view-only { display:none !important; }
+  </style>
 </head>
 <body>
 
-  <div class="stars"></div>
+<div class="stars"></div>
+<div class="app-shell">
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">TRAVELLER</div>
+      <div class="sidebar-user" id="sidebar-user"></div>
+    </div>
+    <div class="sidebar-group-label">Character Resources</div>
+    <a href="character-record.html" class="sidebar-nav-item">Character Record</a>
+    <a href="spacecraft-record.html" class="sidebar-nav-item active">Spacecraft Record</a>
+    <a href="character-list.html" class="sidebar-nav-item">Character List</a>
+    <a href="character-creation.html" class="sidebar-nav-item">Character Creation</a>
+    <div class="sidebar-group-label">Reference</div>
+    <a href="general-rules.html" class="sidebar-nav-item">General Rules</a>
+    <a href="combat.html" class="sidebar-nav-item">Combat</a>
+    <a href="vehicles.html" class="sidebar-nav-item">Vehicles</a>
+    <a href="spacecraft-operations.html" class="sidebar-nav-item">Spacecraft Operations</a>
+    <a href="spacecraft-combat.html" class="sidebar-nav-item">Spacecraft Combat</a>
+    <a href="equipment.html" class="sidebar-nav-item">Equipment</a>
+    <a href="weapons-armor.html" class="sidebar-nav-item">Weapons &amp; Armor</a>
+    <a href="trade.html" class="sidebar-nav-item">Trade</a>
+    <div class="sidebar-signout"><button onclick="doSignOut()">Sign Out</button></div>
+  </nav>
 
-  <div class="app-shell">
-    <nav class="sidebar">
-      <div class="sidebar-logo">
-        <div class="sidebar-logo-text">TRAVELLER</div>
-        <div class="sidebar-user" id="sidebar-user"></div>
+  <main class="page-main">
+    <h1 class="page-title">SPACECRAFT RECORD</h1>
+
+    <div id="no-ship-msg" class="page-msg" style="display:none">
+      No active spacecraft found.
+      <br><button class="btn btn-primary" style="margin-top:14px" onclick="createNewShip()">Create Spacecraft Record</button>
+    </div>
+
+    <div id="ship-body" style="display:none">
+
+      <!-- Header -->
+      <div class="ship-header">
+        <div class="ship-identity">
+          <div class="ship-name" id="disp-name">—</div>
+          <div class="ship-meta">
+            <div><span>Class</span><span id="disp-class">—</span></div>
+            <div><span>TL</span><span id="disp-tl">—</span></div>
+            <div><span>Streamlining</span><span id="disp-stream">—</span></div>
+          </div>
+        </div>
+        <div class="ship-header-actions">
+          <span class="status-badge" id="status-badge">Active</span>
+          <button class="btn btn-ghost view-only" id="edit-btn" onclick="enterEditMode()">Edit</button>
+          <button class="btn btn-primary edit-only" onclick="saveAll()">Save</button>
+          <button class="btn btn-ghost edit-only" onclick="cancelEdit()">Cancel</button>
+        </div>
       </div>
-      <div class="sidebar-group-label">Character Resources</div>
-      <a href="character-record.html" class="sidebar-nav-item">Character Record</a>
-      <a href="spacecraft-record.html" class="sidebar-nav-item active">Spacecraft Record</a>
-      <a href="character-list.html" class="sidebar-nav-item">Character List</a>
-      <a href="character-creation.html" class="sidebar-nav-item">Character Creation</a>
-      <div class="sidebar-group-label">Reference</div>
-      <a href="general-rules.html" class="sidebar-nav-item">General Rules</a>
-      <a href="combat.html" class="sidebar-nav-item">Combat</a>
-      <a href="vehicles.html" class="sidebar-nav-item">Vehicles</a>
-      <a href="spacecraft-operations.html" class="sidebar-nav-item">Spacecraft Operations</a>
-      <a href="spacecraft-combat.html" class="sidebar-nav-item">Spacecraft Combat</a>
-      <a href="equipment.html" class="sidebar-nav-item">Equipment</a>
-      <a href="weapons-armor.html" class="sidebar-nav-item">Weapons &amp; Armor</a>
-      <a href="trade.html" class="sidebar-nav-item">Trade</a>
-      <div class="sidebar-signout">
-        <button onclick="doSignOut()">Sign Out</button>
+
+      <!-- Tabs -->
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="showTab('specs',this)">Specs</button>
+        <button class="tab-btn" onclick="showTab('weapons',this)">Weapons &amp; Conditions</button>
+        <button class="tab-btn" onclick="showTab('finance',this)">Finance &amp; Cargo</button>
+        <button class="tab-btn" onclick="showTab('crew',this)">Crew</button>
+        <button class="tab-btn" onclick="showTab('notes',this)">Notes</button>
       </div>
-    </nav>
 
-    <main class="page-main">
-      <h1 class="page-title">SPACECRAFT RECORD</h1>
-      <p class="placeholder-msg">Coming soon — ship stats, systems, hull, armour, weapons, crew and expenses.</p>
-    </main>
-  </div>
+      <!-- ══════════════════════════════════════
+           TAB 1 — SPECS
+      ══════════════════════════════════════ -->
+      <div id="tab-specs" class="tab-content">
 
-  <script src="../js/supabase-config.js"></script>
-  <script src="../js/sidebar.js"></script>
-  <script>
-    async function doSignOut() {
-      await supabaseClient.auth.signOut();
-      window.location.href = '../../index.html';
+        <!-- Identity fields -->
+        <div class="cr-section">
+          <div class="cr-section-title">Identity</div>
+          <div class="specs-grid">
+            <div class="spec-box">
+              <div class="spec-label">Ship Name</div>
+              <div class="spec-value view-only" id="sv-name">—</div>
+              <input class="spec-input edit-only" id="ei-name" placeholder="Ship name" />
+            </div>
+            <div class="spec-box">
+              <div class="spec-label">Class</div>
+              <div class="spec-value view-only" id="sv-class">—</div>
+              <input class="spec-input edit-only" id="ei-class" placeholder="Class" />
+            </div>
+            <div class="spec-box">
+              <div class="spec-label">Tech Level</div>
+              <div class="spec-value view-only" id="sv-tl">—</div>
+              <input class="spec-input edit-only" type="number" id="ei-tl" min="1" max="15" />
+            </div>
+            <div class="spec-box">
+              <div class="spec-label">Streamlining</div>
+              <div class="spec-value view-only" id="sv-stream">—</div>
+              <select class="spec-select edit-only" id="ei-stream">
+                <option value="Streamlined">Streamlined</option>
+                <option value="Partial">Partial</option>
+                <option value="Unstreamlined">Unstreamlined</option>
+              </select>
+            </div>
+            <div class="spec-box">
+              <div class="spec-label">Status</div>
+              <div class="spec-value view-only" id="sv-status">—</div>
+              <select class="spec-select edit-only" id="ei-status">
+                <option value="active">Active</option>
+                <option value="reserve">Reserve</option>
+                <option value="sold">Sold</option>
+                <option value="destroyed">Destroyed</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="spec-box">
+              <div class="spec-label">Purchase Value (Cr)</div>
+              <div class="spec-value view-only" id="sv-pvalue">—</div>
+              <input class="spec-input edit-only" type="number" id="ei-pvalue" />
+            </div>
+            <div class="spec-box">
+              <div class="spec-label">Staterooms</div>
+              <div class="spec-value view-only" id="sv-staterooms">—</div>
+              <input class="spec-input edit-only" type="number" id="ei-staterooms" min="0" />
+            </div>
+            <div class="spec-box">
+              <div class="spec-label">Low Berths</div>
+              <div class="spec-value view-only" id="sv-lowberths">—</div>
+              <input class="spec-input edit-only" type="number" id="ei-lowberths" min="0" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Hull / Armour / Fuel -->
+        <div class="cr-section">
+          <div class="cr-section-title">Hull, Armour &amp; Fuel</div>
+          <div class="mc-grid">
+            <div class="mc-box">
+              <div class="mc-label">Hull Points</div>
+              <div class="mc-row"><div class="mc-sub">Max</div><div class="mc-value view-only" id="sv-hull-max">0</div><input class="mc-input edit-only" type="number" id="ei-hull-max" value="0" /></div>
+              <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div><div class="mc-value view-only" id="sv-hull-cur">0</div><input class="mc-input edit-only" type="number" id="ei-hull-cur" value="0" /></div>
+            </div>
+            <div class="mc-box">
+              <div class="mc-label">Armour</div>
+              <div class="mc-row"><div class="mc-sub">Max</div><div class="mc-value view-only" id="sv-arm-max">0</div><input class="mc-input edit-only" type="number" id="ei-arm-max" value="0" /></div>
+              <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div><div class="mc-value view-only" id="sv-arm-cur">0</div><input class="mc-input edit-only" type="number" id="ei-arm-cur" value="0" /></div>
+            </div>
+            <div class="mc-box">
+              <div class="mc-label">Fuel (tons)</div>
+              <div class="mc-row"><div class="mc-sub">Max</div><div class="mc-value view-only" id="sv-fuel-max">0</div><input class="mc-input edit-only" type="number" id="ei-fuel-max" value="0" /></div>
+              <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div><div class="mc-value view-only" id="sv-fuel-cur">0</div><input class="mc-input edit-only" type="number" id="ei-fuel-cur" value="0" /></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Drives -->
+        <div class="cr-section">
+          <div class="cr-section-title">Drives</div>
+          <div class="specs-grid">
+            <div class="spec-box">
+              <div class="spec-label">Jump Drive</div>
+              <div class="spec-value view-only" id="sv-jdrive">—</div>
+              <input class="spec-input edit-only" type="number" id="ei-jdrive" min="0" max="6" placeholder="Rating" />
+            </div>
+            <div class="spec-box">
+              <div class="spec-label">M-Drive (Thrust)</div>
+              <div class="spec-value view-only" id="sv-mdrive">—</div>
+              <input class="spec-input edit-only" type="number" id="ei-mdrive" min="0" max="6" placeholder="Thrust" />
+            </div>
+            <div class="spec-box">
+              <div class="spec-label">Power Plant</div>
+              <div class="spec-value view-only" id="sv-pplant">—</div>
+              <input class="spec-input edit-only" type="number" id="ei-pplant" min="0" placeholder="Rating" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Power -->
+        <div class="cr-section">
+          <div class="cr-section-title">Power</div>
+          <div class="mc-grid" style="margin-bottom:14px">
+            <div class="mc-box">
+              <div class="mc-label">Power Points</div>
+              <div class="mc-row"><div class="mc-sub">Max</div><div class="mc-value view-only" id="sv-pwr-max">0</div><input class="mc-input edit-only" type="number" id="ei-pwr-max" value="0" /></div>
+              <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div><div class="mc-value view-only" id="sv-pwr-cur">0</div><input class="mc-input edit-only" type="number" id="ei-pwr-cur" value="0" /></div>
+            </div>
+          </div>
+          <table class="power-table">
+            <thead><tr><th>System</th><th>Power Allotted</th></tr></thead>
+            <tbody id="power-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Computer -->
+        <div class="cr-section">
+          <div class="cr-section-title">Computer</div>
+          <div class="specs-grid">
+            <div class="spec-box">
+              <div class="spec-label">Model</div>
+              <div class="spec-value view-only" id="sv-comp-model">—</div>
+              <input class="spec-input edit-only" id="ei-comp-model" placeholder="e.g. Model/2" />
+            </div>
+            <div class="spec-box">
+              <div class="spec-label">Bandwidth</div>
+              <div class="spec-value view-only" id="sv-comp-bw">—</div>
+              <input class="spec-input edit-only" type="number" id="ei-comp-bw" min="0" />
+            </div>
+          </div>
+          <div class="cr-section-title" style="margin-top:14px">Software Packages</div>
+          <div id="software-list"></div>
+          <button class="add-row-btn edit-only" onclick="addSoftwareRow()">+ Add Software</button>
+        </div>
+
+        <!-- Sensors -->
+        <div class="cr-section">
+          <div class="cr-section-title">Sensors</div>
+          <div id="sensors-list"></div>
+          <button class="add-row-btn edit-only" onclick="addSensorRow()">+ Add Sensor</button>
+        </div>
+
+        <!-- Systems -->
+        <div class="cr-section">
+          <div class="cr-section-title">Systems</div>
+          <div id="systems-list"></div>
+          <button class="add-row-btn edit-only" onclick="addSystemRow()">+ Add System</button>
+        </div>
+
+      </div><!-- /tab-specs -->
+
+      <!-- ══════════════════════════════════════
+           TAB 2 — WEAPONS & CONDITIONS
+      ══════════════════════════════════════ -->
+      <div id="tab-weapons" class="tab-content" style="display:none">
+
+        <div class="cr-section">
+          <div class="cr-section-title">Weapons</div>
+          <table class="gear-table">
+            <thead><tr><th>Name</th><th>Mount</th><th>TL</th><th>Range</th><th>Damage</th><th>Ammo</th><th>Traits</th><th class="edit-only"></th></tr></thead>
+            <tbody id="weapons-tbody"></tbody>
+          </table>
+          <button class="add-row-btn edit-only" onclick="addWeaponRow()">+ Add Weapon</button>
+        </div>
+
+        <div class="cr-section">
+          <div class="cr-section-title">Critical Hits</div>
+          <div class="crit-grid" id="crit-grid"></div>
+        </div>
+
+        <div class="cr-section">
+          <div class="cr-section-title">Damage Notes</div>
+          <div class="view-only" id="sv-damage" style="color:#b0d8e8;font-size:0.88rem;white-space:pre-wrap;min-height:30px"></div>
+          <textarea class="notes-textarea edit-only" id="ei-damage" placeholder="Specific damaged components, jury-rigged systems, repair notes..."></textarea>
+        </div>
+
+      </div><!-- /tab-weapons -->
+
+      <!-- ══════════════════════════════════════
+           TAB 3 — FINANCE & CARGO
+      ══════════════════════════════════════ -->
+      <div id="tab-finance" class="tab-content" style="display:none">
+
+        <div class="cr-section">
+          <div class="cr-section-title">Finances — Per Maintenance Period (Credits)</div>
+          <div class="finance-grid" id="finance-grid"></div>
+        </div>
+
+        <div class="cr-section">
+          <div class="cr-section-title">Cargo — Max: <span id="disp-cargo-max">0</span> tons &nbsp;<span class="edit-only"><input type="number" id="ei-cargo-max" style="width:70px;background:transparent;border:none;border-bottom:1px solid #0a4a60;color:#00e5ff;outline:none;font-size:0.85rem" /></span></div>
+          <table class="gear-table">
+            <thead><tr><th>Description</th><th>Tonnage</th><th class="edit-only"></th></tr></thead>
+            <tbody id="cargo-tbody"></tbody>
+          </table>
+          <div style="font-size:0.78rem;color:#4a9ab8;margin-top:6px">Total loaded: <span id="cargo-total">0</span> tons</div>
+          <button class="add-row-btn edit-only" onclick="addCargoRow()">+ Add Cargo</button>
+        </div>
+
+        <div class="cr-section">
+          <div class="cr-section-title">Passengers</div>
+          <table class="pass-table">
+            <thead>
+              <tr>
+                <th>Destination</th>
+                <th>High</th>
+                <th>Middle</th>
+                <th>Basic</th>
+                <th>Working</th>
+                <th>Low</th>
+                <th class="edit-only"></th>
+              </tr>
+            </thead>
+            <tbody id="passengers-tbody"></tbody>
+          </table>
+          <button class="add-row-btn edit-only" onclick="addPassengerRow()">+ Add Booking</button>
+        </div>
+
+      </div><!-- /tab-finance -->
+
+      <!-- ══════════════════════════════════════
+           TAB 4 — CREW
+      ══════════════════════════════════════ -->
+      <div id="tab-crew" class="tab-content" style="display:none">
+
+        <div class="cr-section">
+          <div class="cr-section-title">Crew Assignments</div>
+          <div id="crew-roles-list"></div>
+        </div>
+
+        <div class="cr-section">
+          <div class="cr-section-title">Hired Crew</div>
+          <div style="font-size:0.7rem;color:#4a9ab8;display:grid;grid-template-columns:1fr 140px 120px 24px;gap:8px;padding:0 10px 6px;text-transform:uppercase;letter-spacing:0.06em">
+            <div>Name</div><div>Role</div><div>Salary / Period</div><div></div>
+          </div>
+          <div id="hired-crew-list"></div>
+          <button class="add-row-btn edit-only" onclick="addHiredCrewRow()">+ Add Hired Crew</button>
+        </div>
+
+      </div><!-- /tab-crew -->
+
+      <!-- ══════════════════════════════════════
+           TAB 5 — NOTES
+      ══════════════════════════════════════ -->
+      <div id="tab-notes" class="tab-content" style="display:none">
+        <div class="cr-section">
+          <div class="cr-section-title">Notes</div>
+          <div class="view-only" id="sv-notes" style="color:#b0d8e8;font-size:0.88rem;white-space:pre-wrap;min-height:60px"></div>
+          <textarea class="notes-textarea edit-only" id="ei-notes" style="min-height:200px" placeholder="Ship history, background, quirks..."></textarea>
+        </div>
+      </div>
+
+      <!-- Save bar -->
+      <div class="save-bar edit-only">
+        <button class="btn btn-primary" onclick="saveAll()">Save Changes</button>
+        <button class="btn btn-ghost" onclick="cancelEdit()">Cancel</button>
+        <span class="save-msg" id="save-msg"></span>
+      </div>
+
+    </div><!-- /ship-body -->
+  </main>
+</div>
+
+<!-- Crit tooltip -->
+<div class="crit-tooltip" id="crit-tooltip">
+  <div class="crit-tooltip-loc" id="tt-loc"></div>
+  <div class="crit-tooltip-sev" id="tt-sev"></div>
+  <div class="crit-tooltip-text" id="tt-text"></div>
+</div>
+
+<script>
+// ── Critical hit effects data ────────────────────────────
+const CRIT_EFFECTS = {
+  "Sensors": [
+    "All checks to use sensors suffer DM−2.",
+    "Sensors inoperative beyond Medium range.",
+    "Sensors inoperative beyond Short range.",
+    "Sensors inoperative beyond Close range.",
+    "Sensors inoperative beyond Adjacent range.",
+    "Sensors disabled."
+  ],
+  "Power Plant": [
+    "Power reduced by 10%.",
+    "Power reduced by 10%.",
+    "Power reduced by 50%.",
+    "Power reduced to 0.",
+    "Hull Severity +1. Power reduced to 0.",
+    "Hull Severity +1D. Power reduced to 0."
+  ],
+  "Fuel": [
+    "Leak — lose 1D tons of fuel per hour.",
+    "Leak — lose 1D tons of fuel per round.",
+    "Lose 1D×10% of fuel.",
+    "Fuel tank destroyed.",
+    "Fuel tank destroyed. Hull Severity +1.",
+    "Fuel tank destroyed. Hull Severity +1D."
+  ],
+  "Weapon": [
+    "Random weapon suffers DM−1 when used.",
+    "Random weapon disabled.",
+    "Random weapon destroyed.",
+    "Random weapon explodes. Hull Severity +1.",
+    "D3 random weapons explode. Hull Severity +1.",
+    "1D random weapons explode. Hull Severity +1."
+  ],
+  "Armour": [
+    "Armour reduced by −1.",
+    "Armour reduced by −D3.",
+    "Armour reduced by −1D.",
+    "Armour reduced by −1D.",
+    "Armour reduced by −2D. Hull Severity +1.",
+    "Armour reduced by −2D. Hull Severity +1."
+  ],
+  "Hull": [
+    "Spacecraft suffers 1D damage.",
+    "Spacecraft suffers 2D damage.",
+    "Spacecraft suffers 3D damage.",
+    "Spacecraft suffers 4D damage.",
+    "Spacecraft suffers 5D damage.",
+    "Spacecraft suffers 6D damage."
+  ],
+  "M-Drive": [
+    "All checks to control spacecraft suffer DM−1.",
+    "All checks to control spacecraft suffer DM−1. Thrust −1.",
+    "All checks to control spacecraft suffer DM−1. Thrust −1.",
+    "All checks to control spacecraft suffer DM−1. Thrust −1.",
+    "Thrust reduced to zero.",
+    "Thrust reduced to zero. Hull Severity +1."
+  ],
+  "Cargo": [
+    "10% of cargo destroyed.",
+    "1D×10% of cargo destroyed.",
+    "2D×10% of cargo destroyed.",
+    "All cargo destroyed.",
+    "All cargo destroyed. Hull Severity +1.",
+    "All cargo destroyed. Hull Severity +1."
+  ],
+  "J-Drive": [
+    "All checks to use jump drive suffer DM−2.",
+    "Jump drive disabled.",
+    "Jump drive destroyed.",
+    "Jump drive destroyed. Hull Severity +1.",
+    "Jump drive destroyed. Hull Severity +1.",
+    "Jump drive destroyed. Hull Severity +1."
+  ],
+  "Crew": [
+    "Random occupant takes 1D damage.",
+    "1D occupants take 2D damage.",
+    "1D occupants take 2D damage.",
+    "1D occupants take 2D damage.",
+    "1D occupants take 3D damage.",
+    "All occupants take 4D damage."
+  ],
+  "Bridge": [
+    "Random bridge station disabled.",
+    "Life support fails within 1D hours.",
+    "Life support fails within 1D rounds.",
+    "Computer reboots — all software unavailable this round and next.",
+    "Computer damaged. Reduce Bandwidth −50%.",
+    "Random bridge station destroyed. Occupant takes 1D×1D damage. Hull Severity +1."
+  ]
+};
+
+const POWER_FIXED = ["Basic Ship Systems","M-Drive","J-Drive","Weapons","Turrets"];
+const CREW_ROLES  = ["Pilot","Astrogator","Engineer","Medic","Gunner","Steward"];
+
+// ── State ────────────────────────────────────────────────
+let ship         = null;
+let allCharacters= [];
+let critHits     = {};
+
+let pendingSoftware   = [];
+let pendingSensors    = [];
+let pendingSystems    = [];
+let pendingWeapons    = [];
+let pendingCargo      = [];
+let pendingPassengers = [];
+let pendingHired      = [];
+let pendingRoles      = [];
+
+// ── Init ─────────────────────────────────────────────────
+async function init() {
+  const { data:{ session } } = await supabaseClient.auth.getSession();
+  if (!session) { window.location.href = '../../index.html'; return; }
+  document.getElementById('sidebar-user').textContent =
+    session.user.user_metadata?.display_name || session.user.email;
+
+  // Load active characters for crew dropdowns
+  const { data:chars } = await supabaseClient
+    .from('characters').select('id,name').eq('status','active');
+  allCharacters = chars || [];
+
+  await loadShip();
+}
+
+async function loadShip() {
+  const { data } = await supabaseClient
+    .from('spacecraft').select('*').eq('status','active').single();
+
+  if (!data) {
+    document.getElementById('no-ship-msg').style.display = 'block';
+    return;
+  }
+
+  ship     = data;
+  critHits = ship.critical_hits || {};
+  document.getElementById('ship-body').style.display = 'block';
+  document.getElementById('edit-btn').style.display  = 'inline-flex';
+
+  renderHeader();
+  renderSpecs();
+  renderPowerTable();
+  await renderMultiLists();
+  renderCritGrid();
+  renderWeapons([]);
+  renderFinance();
+  await renderCargo();
+  await renderPassengers();
+  await renderCrew();
+  renderNotes();
+}
+
+// ── Header ───────────────────────────────────────────────
+function renderHeader() {
+  const s = ship;
+  document.getElementById('disp-name').textContent   = s.name || '—';
+  document.getElementById('disp-class').textContent  = s.ship_class || '—';
+  document.getElementById('disp-tl').textContent     = s.tl || '—';
+  document.getElementById('disp-stream').textContent = s.streamlining || '—';
+  const badge = document.getElementById('status-badge');
+  badge.textContent = (s.status||'active').charAt(0).toUpperCase()+(s.status||'active').slice(1);
+  badge.className   = 'status-badge status-'+(s.status||'active');
+}
+
+// ── Specs ────────────────────────────────────────────────
+function renderSpecs() {
+  const s = ship;
+  const pairs = [
+    ['name',s.name],['class',s.ship_class],['tl',s.tl],
+    ['stream',s.streamlining],['status',s.status],
+    ['pvalue',(s.purchase_value||0).toLocaleString()],
+    ['staterooms',s.staterooms||0],['lowberths',s.low_berths||0],
+    ['hull-max',s.hull_max||0],['hull-cur',s.hull_current||0],
+    ['arm-max',s.armour_max||0],['arm-cur',s.armour_current||0],
+    ['fuel-max',s.fuel_max||0],['fuel-cur',s.fuel_current||0],
+    ['jdrive',s.jump_drive||0],['mdrive',s.m_drive||0],['pplant',s.power_plant||0],
+    ['pwr-max',s.power_max||0],['pwr-cur',s.power_current||0],
+    ['comp-model',s.computer_model||'—'],['comp-bw',s.computer_bandwidth||0]
+  ];
+  pairs.forEach(([k,v]) => {
+    const el = document.getElementById('sv-'+k);
+    if (el) el.textContent = v ?? '—';
+  });
+
+  // Populate edit inputs
+  setInput('ei-name',    s.name);
+  setInput('ei-class',   s.ship_class);
+  setInput('ei-tl',      s.tl);
+  setInput('ei-stream',  s.streamlining, true);
+  setInput('ei-status',  s.status, true);
+  setInput('ei-pvalue',  s.purchase_value);
+  setInput('ei-staterooms', s.staterooms);
+  setInput('ei-lowberths',  s.low_berths);
+  setInput('ei-hull-max', s.hull_max);  setInput('ei-hull-cur', s.hull_current);
+  setInput('ei-arm-max',  s.armour_max); setInput('ei-arm-cur', s.armour_current);
+  setInput('ei-fuel-max', s.fuel_max);  setInput('ei-fuel-cur', s.fuel_current);
+  setInput('ei-jdrive',  s.jump_drive); setInput('ei-mdrive', s.m_drive); setInput('ei-pplant', s.power_plant);
+  setInput('ei-pwr-max', s.power_max);  setInput('ei-pwr-cur', s.power_current);
+  setInput('ei-comp-model', s.computer_model); setInput('ei-comp-bw', s.computer_bandwidth);
+  setInput('ei-cargo-max', s.cargo_max);
+  document.getElementById('disp-cargo-max').textContent = s.cargo_max || 0;
+}
+
+function setInput(id, val, isSelect) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = val ?? '';
+}
+
+// ── Power table ──────────────────────────────────────────
+function renderPowerTable() {
+  const s    = ship;
+  const extra= s.power_extra || [];
+  const tbody= document.getElementById('power-tbody');
+
+  const fixedVals = [s.power_basic, s.power_m_drive, s.power_j_drive, s.power_weapons, s.power_turrets];
+  let rows = POWER_FIXED.map((name,i) => `
+    <tr>
+      <td class="power-fixed">${name}</td>
+      <td><span class="view-only">${fixedVals[i]||0}</span>
+          <input class="edit-only" type="number" id="ei-pwr-${name.replace(/[\s-]/g,'_')}" value="${fixedVals[i]||0}" /></td>
+    </tr>`).join('');
+
+  extra.forEach((e,i) => {
+    rows += `
+    <tr>
+      <td><span class="view-only" id="sv-pex-label-${i}">${e.label||''}</span>
+          <input class="sys-input edit-only" id="ei-pex-label-${i}" value="${e.label||''}" placeholder="System" /></td>
+      <td><span class="view-only" id="sv-pex-val-${i}">${e.value||0}</span>
+          <input class="edit-only" type="number" id="ei-pex-val-${i}" value="${e.value||0}" /></td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = rows;
+}
+
+// ── Multi-line lists ─────────────────────────────────────
+async function renderMultiLists() {
+  const [sw, sen, sys, wpn] = await Promise.all([
+    supabaseClient.from('spacecraft_software').select('*').eq('spacecraft_id', ship.id),
+    supabaseClient.from('spacecraft_sensors').select('*').eq('spacecraft_id', ship.id),
+    supabaseClient.from('spacecraft_systems').select('*').eq('spacecraft_id', ship.id),
+    supabaseClient.from('spacecraft_weapons').select('*').eq('spacecraft_id', ship.id)
+  ]);
+  renderSoftware(sw.data||[]);
+  renderSensors(sen.data||[]);
+  renderSystems(sys.data||[]);
+  renderWeapons(wpn.data||[]);
+}
+
+function renderSoftware(rows) {
+  const list = document.getElementById('software-list');
+  list.innerHTML = rows.length ? rows.map(r => `
+    <div class="multi-row" data-id="${r.id}">
+      <div class="ml-main"><span class="view-only">${r.name}</span><input class="edit-only" value="${r.name}" placeholder="Software name" /></div>
+      <div class="ml-sub">BW: <span class="view-only">${r.bandwidth}</span><input class="sub-input edit-only" type="number" value="${r.bandwidth}" /></div>
+      <button class="skill-remove edit-only" onclick="queueDel('pendingSoftware','${r.id}',this.closest('.multi-row'))">✕</button>
+    </div>`).join('')
+  : '<div style="color:#4a9ab8;font-size:0.82rem;padding:4px 0">None</div>';
+}
+
+function addSoftwareRow() {
+  const list = document.getElementById('software-list');
+  const empty = list.querySelector('div[style]');
+  if (empty) empty.remove();
+  const div = document.createElement('div');
+  div.className = 'multi-row'; div.dataset.id = 'new-'+Date.now();
+  div.innerHTML = `
+    <div class="ml-main"><input value="" placeholder="Software name" /></div>
+    <div class="ml-sub">BW: <input class="sub-input" type="number" value="0" /></div>
+    <button class="skill-remove" onclick="this.closest('.multi-row').remove()">✕</button>`;
+  list.appendChild(div);
+  pendingSoftware.push({ action:'add', div });
+}
+
+function renderSensors(rows) {
+  const list = document.getElementById('sensors-list');
+  list.innerHTML = rows.length ? rows.map(r => `
+    <div class="multi-row" data-id="${r.id}">
+      <div class="ml-main"><span class="view-only">${r.description}</span><input class="edit-only" value="${r.description}" placeholder="Sensor description" /></div>
+      <button class="skill-remove edit-only" onclick="queueDel('pendingSensors','${r.id}',this.closest('.multi-row'))">✕</button>
+    </div>`).join('')
+  : '<div style="color:#4a9ab8;font-size:0.82rem;padding:4px 0">None</div>';
+}
+
+function addSensorRow() {
+  const list = document.getElementById('sensors-list');
+  const empty = list.querySelector('div[style]'); if (empty) empty.remove();
+  const div = document.createElement('div');
+  div.className = 'multi-row'; div.dataset.id = 'new-'+Date.now();
+  div.innerHTML = `<div class="ml-main"><input placeholder="Sensor description" /></div>
+    <button class="skill-remove" onclick="this.closest('.multi-row').remove()">✕</button>`;
+  list.appendChild(div);
+  pendingSensors.push({ action:'add', div });
+}
+
+function renderSystems(rows) {
+  const list = document.getElementById('systems-list');
+  list.innerHTML = rows.length ? rows.map(r => `
+    <div class="multi-row" data-id="${r.id}">
+      <div class="ml-main"><span class="view-only">${r.description}</span><input class="edit-only" value="${r.description}" placeholder="System description" /></div>
+      <button class="skill-remove edit-only" onclick="queueDel('pendingSystems','${r.id}',this.closest('.multi-row'))">✕</button>
+    </div>`).join('')
+  : '<div style="color:#4a9ab8;font-size:0.82rem;padding:4px 0">None</div>';
+}
+
+function addSystemRow() {
+  const list = document.getElementById('systems-list');
+  const empty = list.querySelector('div[style]'); if (empty) empty.remove();
+  const div = document.createElement('div');
+  div.className = 'multi-row'; div.dataset.id = 'new-'+Date.now();
+  div.innerHTML = `<div class="ml-main"><input placeholder="System description" /></div>
+    <button class="skill-remove" onclick="this.closest('.multi-row').remove()">✕</button>`;
+  list.appendChild(div);
+  pendingSystems.push({ action:'add', div });
+}
+
+// ── Weapons ──────────────────────────────────────────────
+function renderWeapons(rows) {
+  const tbody = document.getElementById('weapons-tbody');
+  tbody.innerHTML = rows.length ? rows.map(r => `
+    <tr data-id="${r.id}">
+      <td>${r.name}</td><td>${r.mount||''}</td><td>${r.tl??''}</td>
+      <td>${r.range||''}</td><td>${r.damage||''}</td><td>${r.ammo??''}</td>
+      <td>${r.traits||''}</td>
+      <td class="td-act edit-only"><button class="skill-remove" onclick="queueDel('pendingWeapons','${r.id}',this.closest('tr'))">✕</button></td>
+    </tr>`).join('')
+  : '<tr><td colspan="8" style="color:#4a9ab8;font-size:0.82rem">None</td></tr>';
+}
+
+function addWeaponRow() {
+  const tbody = document.getElementById('weapons-tbody');
+  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  const tr = document.createElement('tr');
+  tr.dataset.id = 'new-'+Date.now();
+  tr.innerHTML = `
+    <td><input placeholder="Name" /></td>
+    <td><input placeholder="Mount" style="width:80px" /></td>
+    <td><input type="number" placeholder="TL" style="width:40px" /></td>
+    <td><input placeholder="Range" style="width:80px" /></td>
+    <td><input placeholder="Damage" style="width:70px" /></td>
+    <td><input type="number" placeholder="Ammo" style="width:50px" /></td>
+    <td><input placeholder="Traits" /></td>
+    <td class="td-act edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+  pendingWeapons.push({ action:'add', tr });
+}
+
+// ── Critical hits ────────────────────────────────────────
+function renderCritGrid() {
+  const grid = document.getElementById('crit-grid');
+  grid.innerHTML = Object.keys(CRIT_EFFECTS).map(loc => {
+    const sev = critHits[loc] || 0;
+    const pips = [1,2,3,4,5,6].map(n => {
+      const cls = n <= sev ? `crit-pip active-${n}` : 'crit-pip';
+      return `<div class="${cls}" data-loc="${loc}" data-sev="${n}"
+                   onclick="setCritSev('${loc}',${n})"
+                   onmouseenter="showCritTip(event,'${loc}',${n})"
+                   onmouseleave="hideCritTip()">${n}</div>`;
+    }).join('');
+    return `
+      <div class="crit-location">
+        <div class="crit-loc-name">${loc}</div>
+        <div class="crit-pips">${pips}</div>
+      </div>`;
+  }).join('');
+}
+
+function setCritSev(loc, n) {
+  // Toggle: clicking active severity resets to 0, else sets to n
+  critHits[loc] = (critHits[loc] === n) ? 0 : n;
+  renderCritGrid();
+}
+
+function showCritTip(e, loc, sev) {
+  const tt   = document.getElementById('crit-tooltip');
+  const text = CRIT_EFFECTS[loc]?.[sev-1] || '';
+  document.getElementById('tt-loc').textContent  = loc;
+  document.getElementById('tt-sev').textContent  = `Severity ${sev}`;
+  document.getElementById('tt-text').textContent = text;
+  tt.classList.add('show');
+  moveTip(e);
+}
+
+function hideCritTip() {
+  document.getElementById('crit-tooltip').classList.remove('show');
+}
+
+document.addEventListener('mousemove', e => {
+  if (document.getElementById('crit-tooltip').classList.contains('show')) moveTip(e);
+});
+
+function moveTip(e) {
+  const tt = document.getElementById('crit-tooltip');
+  const x  = e.clientX + 14;
+  const y  = e.clientY + 14;
+  tt.style.left = Math.min(x, window.innerWidth  - 340) + 'px';
+  tt.style.top  = Math.min(y, window.innerHeight - 160) + 'px';
+}
+
+// ── Finance ──────────────────────────────────────────────
+function renderFinance() {
+  const s = ship;
+  const staterooms = s.staterooms || 0;
+  const lifeSupport = staterooms * 1000; // base; person calc shown as note
+  const maintenance = Math.round((s.purchase_value||0) / 1000 / 12);
+
+  const items = [
+    { id:'mortgage',    label:'Mortgage',             val:s.fin_mortgage,    editable:true },
+    { id:'life-support',label:'Life Support (base)',  val:lifeSupport,       editable:false,
+      note:`${staterooms} staterooms × Cr1,000 + Cr1,000 per person aboard` },
+    { id:'fuel',        label:'Fuel',                 val:s.fin_fuel,        editable:true },
+    { id:'maintenance', label:'Maintenance',          val:maintenance,       editable:false,
+      note:'0.1% purchase value ÷ 12' },
+    { id:'salaries',    label:'Crew Salaries',        val:s.fin_salaries,    editable:true },
+    { id:'other',       label:'Other',                val:s.fin_other,       editable:true }
+  ];
+
+  const total = (s.fin_mortgage||0) + lifeSupport + (s.fin_fuel||0) + maintenance + (s.fin_salaries||0) + (s.fin_other||0);
+
+  let html = items.map(item => `
+    <div class="finance-box">
+      <div class="finance-label">${item.label}</div>
+      ${item.editable
+        ? `<div class="finance-value view-only" id="fv-${item.id}">${(item.val||0).toLocaleString()}</div>
+           <input class="finance-input edit-only" type="number" id="fi-${item.id}" value="${item.val||0}" />`
+        : `<div class="finance-value">${(item.val||0).toLocaleString()}</div>`
+      }
+      ${item.note ? `<div class="finance-calc">${item.note}</div>` : ''}
+    </div>`).join('');
+
+  html += `<div class="finance-box finance-total">
+    <div class="finance-label">Total / Period</div>
+    <div class="finance-value" id="fv-total">${total.toLocaleString()}</div>
+  </div>`;
+
+  document.getElementById('finance-grid').innerHTML = html;
+}
+
+// ── Cargo ────────────────────────────────────────────────
+async function renderCargo() {
+  const { data } = await supabaseClient.from('spacecraft_cargo').select('*').eq('spacecraft_id', ship.id);
+  const rows = data || [];
+  const tbody = document.getElementById('cargo-tbody');
+  tbody.innerHTML = rows.length ? rows.map(r => `
+    <tr data-id="${r.id}">
+      <td>${r.description}</td>
+      <td>${r.tonnage}</td>
+      <td class="td-act edit-only"><button class="skill-remove" onclick="queueDel('pendingCargo','${r.id}',this.closest('tr'))">✕</button></td>
+    </tr>`).join('')
+  : '<tr><td colspan="3" style="color:#4a9ab8;font-size:0.82rem">Empty</td></tr>';
+
+  const total = rows.reduce((sum,r) => sum + parseFloat(r.tonnage||0), 0);
+  document.getElementById('cargo-total').textContent = total.toFixed(2);
+}
+
+function addCargoRow() {
+  const tbody = document.getElementById('cargo-tbody');
+  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  const tr = document.createElement('tr'); tr.dataset.id = 'new-'+Date.now();
+  tr.innerHTML = `<td><input placeholder="Description" /></td>
+    <td><input type="number" placeholder="0" step="0.01" style="width:70px" /></td>
+    <td class="td-act edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+  pendingCargo.push({ action:'add', tr });
+}
+
+// ── Passengers ───────────────────────────────────────────
+async function renderPassengers() {
+  const { data } = await supabaseClient.from('spacecraft_passengers').select('*').eq('spacecraft_id', ship.id);
+  const rows = data || [];
+  const tbody = document.getElementById('passengers-tbody');
+  tbody.innerHTML = rows.length ? rows.map(r => `
+    <tr data-id="${r.id}">
+      <td>${r.destination||''}</td>
+      <td>${r.high_passage||0}</td><td>${r.middle_passage||0}</td>
+      <td>${r.basic_passage||0}</td><td>${r.working_passage||0}</td>
+      <td>${r.low_passage||0}</td>
+      <td class="td-act edit-only"><button class="skill-remove" onclick="queueDel('pendingPassengers','${r.id}',this.closest('tr'))">✕</button></td>
+    </tr>`).join('')
+  : '<tr><td colspan="7" style="color:#4a9ab8;font-size:0.82rem">No passengers</td></tr>';
+}
+
+function addPassengerRow() {
+  const tbody = document.getElementById('passengers-tbody');
+  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  const tr = document.createElement('tr'); tr.dataset.id = 'new-'+Date.now();
+  tr.innerHTML = `
+    <td><input placeholder="Destination" /></td>
+    <td><input type="number" value="0" style="width:40px" /></td>
+    <td><input type="number" value="0" style="width:40px" /></td>
+    <td><input type="number" value="0" style="width:40px" /></td>
+    <td><input type="number" value="0" style="width:40px" /></td>
+    <td><input type="number" value="0" style="width:40px" /></td>
+    <td class="td-act edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+  pendingPassengers.push({ action:'add', tr });
+}
+
+// ── Crew ─────────────────────────────────────────────────
+async function renderCrew() {
+  const [rolesRes, hiredRes] = await Promise.all([
+    supabaseClient.from('spacecraft_crew_roles').select('*').eq('spacecraft_id', ship.id),
+    supabaseClient.from('spacecraft_hired_crew').select('*').eq('spacecraft_id', ship.id)
+  ]);
+  const assigned = rolesRes.data || [];
+  const hired    = hiredRes.data || [];
+
+  // Build options: active characters + hired NPCs
+  const charOpts = allCharacters.map(c => `<option value="char:${c.id}">${c.name}</option>`).join('');
+  const npcOpts  = hired.map(h => `<option value="npc:${h.id}">${h.name} (NPC)</option>`).join('');
+  const allOpts  = `<option value="">— Unassigned —</option>${charOpts}${npcOpts}`;
+
+  const rolesList = document.getElementById('crew-roles-list');
+  rolesList.innerHTML = CREW_ROLES.map(role => {
+    const a = assigned.find(r => r.role === role);
+    let currentVal = '';
+    let currentLabel = '— Unassigned —';
+    if (a) {
+      if (a.character_id) {
+        currentVal   = 'char:' + a.character_id;
+        currentLabel = allCharacters.find(c => c.id === a.character_id)?.name || 'Unknown';
+      } else if (a.hired_crew_id) {
+        currentVal   = 'npc:' + a.hired_crew_id;
+        currentLabel = hired.find(h => h.id === a.hired_crew_id)?.name || 'Unknown NPC';
+      }
     }
-  </script>
+    return `
+      <div class="crew-role-row" data-role="${role}" data-row-id="${a?.id||''}">
+        <div class="crew-role-label">${role}</div>
+        <div class="view-only" style="color:#b0d8e8">${currentLabel}</div>
+        <select class="crew-select edit-only" data-role="${role}">${allOpts}</select>
+        <div></div>
+      </div>`;
+  }).join('');
+
+  // Set select values
+  CREW_ROLES.forEach(role => {
+    const a   = assigned.find(r => r.role === role);
+    const sel = rolesList.querySelector(`select[data-role="${role}"]`);
+    if (!sel || !a) return;
+    if (a.character_id)   sel.value = 'char:' + a.character_id;
+    else if (a.hired_crew_id) sel.value = 'npc:' + a.hired_crew_id;
+  });
+
+  // Hired crew list
+  const hiredList = document.getElementById('hired-crew-list');
+  hiredList.innerHTML = hired.length ? hired.map(h => `
+    <div class="hired-row" data-id="${h.id}">
+      <div><span class="view-only">${h.name}</span><input class="edit-only" value="${h.name}" placeholder="Name" /></div>
+      <div><span class="view-only">${h.role||''}</span><input class="edit-only" value="${h.role||''}" placeholder="Role" /></div>
+      <div><span class="view-only">Cr ${(h.salary||0).toLocaleString()}</span><input class="edit-only" type="number" value="${h.salary||0}" /></div>
+      <button class="skill-remove edit-only" onclick="queueDel('pendingHired','${h.id}',this.closest('.hired-row'))">✕</button>
+    </div>`).join('')
+  : '<div style="color:#4a9ab8;font-size:0.85rem;padding:6px 0">No hired crew.</div>';
+}
+
+function addHiredCrewRow() {
+  const list  = document.getElementById('hired-crew-list');
+  const empty = list.querySelector('div[style]'); if (empty) empty.remove();
+  const div   = document.createElement('div');
+  div.className = 'hired-row'; div.dataset.id = 'new-'+Date.now();
+  div.innerHTML = `
+    <div><input placeholder="Name" /></div>
+    <div><input placeholder="Role" /></div>
+    <div><input type="number" placeholder="Salary" value="0" /></div>
+    <button class="skill-remove" onclick="this.closest('.hired-row').remove()">✕</button>`;
+  list.appendChild(div);
+  pendingHired.push({ action:'add', div });
+}
+
+// ── Notes ────────────────────────────────────────────────
+function renderNotes() {
+  document.getElementById('sv-notes').textContent   = ship.notes || '';
+  document.getElementById('ei-notes').value         = ship.notes || '';
+  document.getElementById('sv-damage').textContent  = ship.damage_notes || '';
+  document.getElementById('ei-damage').value        = ship.damage_notes || '';
+}
+
+// ── Edit mode ─────────────────────────────────────────────
+function enterEditMode() { document.body.classList.add('editing'); }
+
+function cancelEdit() {
+  document.body.classList.remove('editing');
+  clearPending();
+  loadShip();
+}
+
+function clearPending() {
+  pendingSoftware=[]; pendingSensors=[]; pendingSystems=[];
+  pendingWeapons=[]; pendingCargo=[]; pendingPassengers=[];
+  pendingHired=[]; pendingRoles=[];
+}
+
+// ── Save ─────────────────────────────────────────────────
+async function saveAll() {
+  const msg = document.getElementById('save-msg');
+  msg.textContent = 'Saving…'; msg.className = 'save-msg';
+
+  try {
+    // Build power_extra from inputs
+    const powerExtra = Array.from({length:5},(_,i) => ({
+      label: document.getElementById(`ei-pex-label-${i}`)?.value || '',
+      value: parseInt(document.getElementById(`ei-pex-val-${i}`)?.value) || 0
+    }));
+
+    const update = {
+      name:           gi('ei-name'),
+      ship_class:     gi('ei-class'),
+      tl:             gn('ei-tl'),
+      streamlining:   gi('ei-stream'),
+      status:         gi('ei-status'),
+      purchase_value: gn('ei-pvalue'),
+      staterooms:     gn('ei-staterooms'),
+      low_berths:     gn('ei-lowberths'),
+      cargo_max:      gn('ei-cargo-max'),
+      hull_max:       gn('ei-hull-max'),  hull_current:   gn('ei-hull-cur'),
+      armour_max:     gn('ei-arm-max'),   armour_current: gn('ei-arm-cur'),
+      fuel_max:       gn('ei-fuel-max'),  fuel_current:   gn('ei-fuel-cur'),
+      jump_drive:     gn('ei-jdrive'),    m_drive:        gn('ei-mdrive'),
+      power_plant:    gn('ei-pplant'),
+      power_max:      gn('ei-pwr-max'),   power_current:  gn('ei-pwr-cur'),
+      power_basic:    gn('ei-pwr-Basic_Ship_Systems'),
+      power_m_drive:  gn('ei-pwr-M-Drive'),
+      power_j_drive:  gn('ei-pwr-J-Drive'),
+      power_weapons:  gn('ei-pwr-Weapons'),
+      power_turrets:  gn('ei-pwr-Turrets'),
+      power_extra:    powerExtra,
+      computer_model: gi('ei-comp-model'),
+      computer_bandwidth: gn('ei-comp-bw'),
+      critical_hits:  critHits,
+      damage_notes:   gi('ei-damage'),
+      notes:          gi('ei-notes'),
+      fin_mortgage:   gn('fi-mortgage'),
+      fin_fuel:       gn('fi-fuel'),
+      fin_salaries:   gn('fi-salaries'),
+      fin_other:      gn('fi-other')
+    };
+
+    const { error } = await supabaseClient.from('spacecraft').update(update).eq('id', ship.id);
+    if (error) throw error;
+
+    // Software
+    for (const p of pendingSoftware) {
+      if (p.action === 'delete') { await supabaseClient.from('spacecraft_software').delete().eq('id',p.id); }
+      else {
+        const inputs = p.div.querySelectorAll('input');
+        if (inputs[0].value) await supabaseClient.from('spacecraft_software').insert({
+          spacecraft_id: ship.id, name: inputs[0].value, bandwidth: parseInt(inputs[1].value)||0
+        });
+      }
+    }
+
+    // Sensors
+    for (const p of pendingSensors) {
+      if (p.action === 'delete') { await supabaseClient.from('spacecraft_sensors').delete().eq('id',p.id); }
+      else {
+        const v = p.div.querySelector('input').value;
+        if (v) await supabaseClient.from('spacecraft_sensors').insert({ spacecraft_id:ship.id, description:v });
+      }
+    }
+
+    // Systems
+    for (const p of pendingSystems) {
+      if (p.action === 'delete') { await supabaseClient.from('spacecraft_systems').delete().eq('id',p.id); }
+      else {
+        const v = p.div.querySelector('input').value;
+        if (v) await supabaseClient.from('spacecraft_systems').insert({ spacecraft_id:ship.id, description:v });
+      }
+    }
+
+    // Weapons
+    for (const p of pendingWeapons) {
+      if (p.action === 'delete') { await supabaseClient.from('spacecraft_weapons').delete().eq('id',p.id); }
+      else {
+        const i = p.tr.querySelectorAll('input');
+        if (i[0].value) await supabaseClient.from('spacecraft_weapons').insert({
+          spacecraft_id:ship.id, name:i[0].value, mount:i[1].value||null,
+          tl:parseInt(i[2].value)||null, range:i[3].value||null, damage:i[4].value||null,
+          ammo:parseInt(i[5].value)||null, traits:i[6].value||null
+        });
+      }
+    }
+
+    // Cargo
+    for (const p of pendingCargo) {
+      if (p.action === 'delete') { await supabaseClient.from('spacecraft_cargo').delete().eq('id',p.id); }
+      else {
+        const i = p.tr.querySelectorAll('input');
+        if (i[0].value) await supabaseClient.from('spacecraft_cargo').insert({
+          spacecraft_id:ship.id, description:i[0].value, tonnage:parseFloat(i[1].value)||0
+        });
+      }
+    }
+
+    // Passengers
+    for (const p of pendingPassengers) {
+      if (p.action === 'delete') { await supabaseClient.from('spacecraft_passengers').delete().eq('id',p.id); }
+      else {
+        const i = p.tr.querySelectorAll('input');
+        await supabaseClient.from('spacecraft_passengers').insert({
+          spacecraft_id:ship.id, destination:i[0].value||null,
+          high_passage:parseInt(i[1].value)||0, middle_passage:parseInt(i[2].value)||0,
+          basic_passage:parseInt(i[3].value)||0, working_passage:parseInt(i[4].value)||0,
+          low_passage:parseInt(i[5].value)||0
+        });
+      }
+    }
+
+    // Hired crew
+    for (const p of pendingHired) {
+      if (p.action === 'delete') { await supabaseClient.from('spacecraft_hired_crew').delete().eq('id',p.id); }
+      else {
+        const i = p.div.querySelectorAll('input');
+        if (i[0].value) await supabaseClient.from('spacecraft_hired_crew').insert({
+          spacecraft_id:ship.id, name:i[0].value, role:i[1].value||null, salary:parseInt(i[2].value)||0
+        });
+      }
+    }
+
+    // Crew role assignments
+    const selects = document.querySelectorAll('.crew-select');
+    for (const sel of selects) {
+      const role = sel.dataset.role;
+      const val  = sel.value;
+      // Delete existing assignment for this role
+      await supabaseClient.from('spacecraft_crew_roles')
+        .delete().eq('spacecraft_id', ship.id).eq('role', role);
+      if (val) {
+        const [type, id] = val.split(':');
+        await supabaseClient.from('spacecraft_crew_roles').insert({
+          spacecraft_id: ship.id, role,
+          character_id:  type === 'char' ? id : null,
+          hired_crew_id: type === 'npc'  ? id : null
+        });
+      }
+    }
+
+    msg.textContent = 'Saved!'; msg.className = 'save-msg ok';
+    setTimeout(() => {
+      document.body.classList.remove('editing');
+      clearPending();
+      loadShip();
+    }, 800);
+
+  } catch(err) {
+    msg.textContent = 'Error: ' + err.message;
+    msg.className   = 'save-msg err';
+  }
+}
+
+// ── Create new ship ───────────────────────────────────────
+async function createNewShip() {
+  const { data, error } = await supabaseClient.from('spacecraft')
+    .insert({ name:'New Ship', ship_class:'Unknown', status:'active' })
+    .select().single();
+  if (error) { alert('Error: ' + error.message); return; }
+  ship = data;
+  critHits = ship.critical_hits || {};
+  document.getElementById('no-ship-msg').style.display  = 'none';
+  document.getElementById('ship-body').style.display    = 'block';
+  document.getElementById('edit-btn').style.display     = 'inline-flex';
+  renderHeader(); renderSpecs(); renderPowerTable();
+  renderSoftware([]); renderSensors([]); renderSystems([]);
+  renderWeapons([]); renderCritGrid(); renderFinance();
+  renderNotes();
+  document.getElementById('cargo-tbody').innerHTML =
+    '<tr><td colspan="3" style="color:#4a9ab8;font-size:0.82rem">Empty</td></tr>';
+  document.getElementById('passengers-tbody').innerHTML =
+    '<tr><td colspan="7" style="color:#4a9ab8;font-size:0.82rem">No passengers</td></tr>';
+  await renderCrew();
+  enterEditMode();
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function gi(id)  { return document.getElementById(id)?.value?.trim() || null; }
+function gn(id)  { return parseFloat(document.getElementById(id)?.value) || 0; }
+
+function queueDel(arr, id, el) {
+  window[arr].push({ action:'delete', id });
+  el.remove();
+}
+
+function showTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+tab).style.display = 'block';
+  btn.classList.add('active');
+}
+
+async function doSignOut() {
+  await supabaseClient.auth.signOut();
+  window.location.href = '../../index.html';
+}
+
+init();
+</script>
 </body>
 </html>
