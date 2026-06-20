@@ -58,16 +58,16 @@
     .stats-tab-top { display: grid; grid-template-columns: minmax(280px, 420px) 1fr; gap: 24px; align-items: start; margin-bottom: 22px; }
     .char-stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
     .stat-box { background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 6px; padding: 8px 4px; text-align: center; }
-    .stat-label { font-size: 0.65rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
-    .stat-value { font-size: 1.3rem; color: #00e5ff; font-weight: 700; line-height: 1; }
-    .stat-dm    { font-size: 0.72rem; color: #b0d8e8; margin-top: 2px; }
-    .stat-input { width: 40px; font-size: 1.05rem; color: #00e5ff; background: transparent; border: none; border-bottom: 1px solid #0a4a60; text-align: center; outline: none; }
+    .stat-label { font-size: 0.78rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .stat-value { font-size: 1.7rem; color: #00e5ff; font-weight: 700; line-height: 1; }
+    .stat-dm    { font-size: 0.95rem; color: #b0d8e8; margin-top: 3px; font-weight: 600; }
+    .stat-input { width: 44px; font-size: 1.4rem; color: #00e5ff; background: transparent; border: none; border-bottom: 1px solid #0a4a60; text-align: center; outline: none; }
     .stat-injury-row { margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(10,74,96,0.5); }
-    .stat-injury-label { font-size: 0.58rem; color: #ff5a4a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
-    .stat-injury-ctrl { display: flex; align-items: center; justify-content: center; gap: 3px; }
-    .injury-btn { width: 16px; height: 16px; line-height: 1; font-size: 0.7rem; background: transparent; border: 1px solid #0a4a60; color: #4a9ab8; border-radius: 3px; cursor: pointer; padding: 0; }
+    .stat-injury-label { font-size: 0.68rem; color: #ff5a4a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; font-weight: 700; }
+    .stat-injury-ctrl { display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .injury-btn { width: 18px; height: 18px; line-height: 1; font-size: 0.8rem; background: transparent; border: 1px solid #0a4a60; color: #4a9ab8; border-radius: 3px; cursor: pointer; padding: 0; }
     .injury-btn:hover { border-color: #ff5a4a; color: #ff5a4a; }
-    .injury-val { font-size: 0.82rem; color: #ff5a4a; min-width: 14px; text-align: center; }
+    .injury-val { font-size: 1.05rem; color: #ff5a4a; min-width: 18px; text-align: center; font-weight: 700; }
 
     /* ── Section headings ── */
     .cr-section { margin-bottom: 22px; }
@@ -126,12 +126,13 @@
     .computer-field label { font-size: 0.65rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; }
     .computer-field input[type="text"], .computer-field input[type="number"] { background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; font-size: 0.85rem; outline: none; width: 100px; }
     .computer-field.cf-name input { width: 160px; color: #00e5ff; font-weight: 600; }
-    .computer-bis { display: flex; align-items: center; gap: 4px; font-size: 0.78rem; color: #4a9ab8; }
     .computer-options { width: 100%; min-height: 50px; background: rgba(13,21,32,0.5); border: 1px solid #0a4a60; border-radius: 5px; color: #b0d8e8; font-size: 0.82rem; padding: 8px; resize: vertical; outline: none; font-family: inherit; box-sizing: border-box; margin-bottom: 8px; }
     .computer-software-title { font-size: 0.65rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
     .software-row { display: flex; gap: 8px; align-items: center; padding: 4px 0; font-size: 0.82rem; color: #b0d8e8; }
     .software-row input[type="text"] { flex: 1; background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; outline: none; }
     .software-row input[type="number"] { width: 50px; background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; outline: none; }
+    .btn-small { background: transparent; border: 1px solid #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 2px 10px; font-size: 0.72rem; font-weight: 700; cursor: pointer; }
+    .btn-small:hover { border-color: #00e5ff; color: #00e5ff; }
 
     /* ── Finances ── */
     .finances-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
@@ -232,12 +233,10 @@
               <div><span>Species</span><span id="disp-species">—</span></div>
               <div><span>Homeworld</span><span id="disp-homeworld">—</span></div>
               <div><span>Age</span><span id="disp-age">—</span></div>
-            </div>
-            <div class="char-roles">
-              <div class="role-badge view-only" id="disp-primary">—</div>
-              <input class="role-input edit-only" id="edit-primary" placeholder="Primary Role" />
-              <div class="role-badge view-only" id="disp-secondary" style="display:none"></div>
-              <input class="role-input edit-only" id="edit-secondary" placeholder="Secondary Role" />
+              <div class="view-only"><span>Primary Role</span><span id="disp-primary">—</span></div>
+              <div class="view-only" id="disp-secondary-wrap" style="display:none"><span>Secondary Role</span><span id="disp-secondary"></span></div>
+              <div class="edit-only"><span>Primary Role</span><input class="role-input" id="edit-primary" placeholder="Primary Role" /></div>
+              <div class="edit-only"><span>Secondary Role</span><input class="role-input" id="edit-secondary" placeholder="Secondary Role" /></div>
             </div>
             <div class="char-created" id="disp-created"></div>
           </div>
@@ -515,12 +514,12 @@ let pendingAssociates = [];
 let pendingWounds     = [];
 
 const CHARS = [
-  { key: 'str',      label: 'STR' },
-  { key: 'dex',      label: 'DEX' },
-  { key: 'end_stat', label: 'END' },
-  { key: 'int_stat', label: 'INT' },
-  { key: 'edu',      label: 'EDU' },
-  { key: 'soc',      label: 'SOC' }
+  { key: 'str',      label: 'STR', injuryLabel: 'Injury' },
+  { key: 'dex',      label: 'DEX', injuryLabel: 'Injury' },
+  { key: 'end_stat', label: 'END', injuryLabel: 'Injury' },
+  { key: 'int_stat', label: 'INT', injuryLabel: 'Effect' },
+  { key: 'edu',      label: 'EDU', injuryLabel: 'Effect' },
+  { key: 'soc',      label: 'SOC', injuryLabel: 'Effect' }
 ];
 
 function charDM(v) {
@@ -587,11 +586,8 @@ function renderHeader() {
   document.getElementById('disp-primary').textContent   = character.primary_role || '—';
   document.getElementById('edit-primary').value          = character.primary_role || '';
   const sec = character.secondary_role;
-  if (sec) {
-    const el = document.getElementById('disp-secondary');
-    el.textContent    = sec;
-    el.style.display  = 'inline-block';
-  }
+  document.getElementById('disp-secondary-wrap').style.display = sec ? 'block' : 'none';
+  if (sec) document.getElementById('disp-secondary').textContent = sec;
   document.getElementById('edit-secondary').value = sec || '';
   const badge = document.getElementById('status-badge');
   const s = character.status || 'active';
@@ -612,17 +608,29 @@ function augmentBonus(key) {
     .reduce((sum, a) => sum + (a.bonus_value || 0), 0);
 }
 
+function rawStat(key) {
+  return character[key] ?? 7;
+}
+
+// "Injury"/"Effect" row holds the character's CURRENT value for that stat
+// (defaults to the raw/max value until reduced by damage). The modifier
+// is always computed from this current value, not the raw one.
+function currentStat(key) {
+  const raw = rawStat(key);
+  const stored = character.injuries && character.injuries[key];
+  const val = (stored === undefined || stored === null) ? raw : stored;
+  return Math.max(0, Math.min(raw, val));
+}
+
 function effectiveStat(c) {
-  const raw    = character[c.key] ?? 7;
-  const injury = (character.injuries && character.injuries[c.key]) || 0;
-  return raw - injury + augmentBonus(c.key);
+  return currentStat(c.key) + augmentBonus(c.key);
 }
 
 function renderStats() {
   const grid = document.getElementById('stats-grid');
   grid.innerHTML = CHARS.map(c => {
-    const val    = character[c.key] ?? 7;
-    const injury = (character.injuries && character.injuries[c.key]) || 0;
+    const val     = rawStat(c.key);
+    const current = currentStat(c.key);
     return `
       <div class="stat-box">
         <div class="stat-label">${c.label}</div>
@@ -630,30 +638,32 @@ function renderStats() {
         <input class="stat-input edit-only" type="number" id="edit-${c.key}" value="${val}" min="0" max="15" />
         <div class="stat-dm" id="dm-${c.key}">${charDM(effectiveStat(c))}</div>
         <div class="stat-injury-row">
-          <div class="stat-injury-label">Injury</div>
+          <div class="stat-injury-label">${c.injuryLabel}</div>
           <div class="stat-injury-ctrl">
             <button class="injury-btn" onclick="adjustInjury('${c.key}',-1)">▼</button>
-            <span class="injury-val" id="injury-${c.key}">${injury}</span>
+            <span class="injury-val" id="injury-${c.key}">${current}</span>
             <button class="injury-btn" onclick="adjustInjury('${c.key}',1)">▲</button>
           </div>
         </div>
       </div>`;
   }).join('');
 
-  // Live DM update while editing
+  // Live DM update while editing the raw stat (current value re-clamps to the new max)
   CHARS.forEach(c => {
     const input = document.getElementById('edit-' + c.key);
     if (input) input.addEventListener('input', () => {
-      const injury = (character.injuries && character.injuries[c.key]) || 0;
-      const eff = (parseInt(input.value) || 0) - injury + augmentBonus(c.key);
-      document.getElementById('dm-' + c.key).textContent = charDM(eff);
+      const raw     = parseInt(input.value) || 0;
+      const stored  = character.injuries && character.injuries[c.key];
+      const current = Math.max(0, Math.min(raw, (stored === undefined || stored === null) ? raw : stored));
+      document.getElementById('dm-' + c.key).textContent = charDM(current + augmentBonus(c.key));
     });
   });
 }
 
 async function adjustInjury(key, delta) {
   if (!character.injuries) character.injuries = {};
-  const next = Math.max(0, (character.injuries[key] || 0) + delta);
+  const raw  = rawStat(key);
+  const next = Math.max(0, Math.min(raw, currentStat(key) + delta));
   character.injuries[key] = next;
   renderStats();
   await supabaseClient.from('characters').update({ injuries: character.injuries }).eq('id', character.id);
@@ -832,15 +842,15 @@ function renderTraining() {
 
 // ── Finances ───────────────────────────────────────────────
 function renderFinances() {
-  const set = (id, val) => {
-    document.getElementById('disp-' + id).textContent = (val || 0).toLocaleString();
+  const set = (id, val, suffix) => {
+    document.getElementById('disp-' + id).textContent = (val || 0).toLocaleString() + (suffix || '');
     document.getElementById('edit-' + id).value       = val || 0;
   };
   set('cash',     character.cash_on_hand);
   set('pension',  character.pension);
   set('debt',     character.debt);
-  set('living',   character.living_costs);
-  set('ship-pay', character.ship_payment);
+  set('living',   character.living_costs, ' Cr/mo');
+  set('ship-pay', character.ship_payment, ' Cr/mo');
 }
 
 // ── Gear ───────────────────────────────────────────────────
@@ -980,74 +990,124 @@ function queueDelete(pendingArr, id, btn) {
   btn.closest('tr').remove();
 }
 
-// ── Computers (Tech tab) ────────────────────────────────────
+// ── Computers (Tech tab) ─────────────────────────────────────
+// Mirrors the Spacecraft Record computer pattern: Bandwidth = Processor,
+// Allocated = sum of active software bandwidth, TL gate blocks activation
+// outright, bandwidth gate is a hard block too.
+let techComputers = [];
+let techSoftware  = {}; // computerId -> rows
+
 async function renderComputers() {
   const { data } = await supabaseClient
     .from('character_computers').select('*').eq('character_id', character.id).order('created_at');
 
+  techComputers = data || [];
   const list = document.getElementById('computers-list');
-  if (!data || data.length === 0) {
+  if (techComputers.length === 0) {
     list.innerHTML = '<div style="color:#4a9ab8;font-size:0.85rem;padding:6px 0">No computers recorded.</div>';
     return;
   }
 
-  const softwareByComputer = {};
-  await Promise.all(data.map(async c => {
+  await Promise.all(techComputers.map(async c => {
     const { data: sw } = await supabaseClient
       .from('character_computer_software').select('*').eq('computer_id', c.id);
-    softwareByComputer[c.id] = sw || [];
+    techSoftware[c.id] = sw || [];
   }));
 
-  list.innerHTML = data.map(c => renderComputerCard(c, softwareByComputer[c.id])).join('');
+  list.innerHTML = techComputers.map(c => renderComputerCard(c)).join('');
 }
 
-function renderComputerCard(c, software) {
-  const swRows = (software || []).map(s => `
+function compAllocated(computerId, excludeId) {
+  return (techSoftware[computerId] || [])
+    .filter(r => r.active && String(r.id) !== String(excludeId))
+    .reduce((sum, r) => sum + (r.bandwidth || 0), 0);
+}
+
+function softwareRowHtml(computerId, s) {
+  return `
     <div class="software-row" data-id="${s.id}">
-      <input type="text" value="${s.name}" onchange="autoSaveSoftware('${s.id}','name',this.value)" />
-      <input type="number" value="${s.bandwidth || 0}" step="0.5" onchange="autoSaveSoftware('${s.id}','bandwidth',parseFloat(this.value)||0)" />
-      <input type="number" value="${s.tl ?? ''}" placeholder="TL" onchange="autoSaveSoftware('${s.id}','tl',parseInt(this.value)||null)" />
-      <label class="computer-bis"><input type="checkbox" ${s.active ? 'checked' : ''} onchange="autoSaveSoftware('${s.id}','active',this.checked)" /> Active</label>
-      <button class="skill-remove edit-only" onclick="deleteSoftware('${s.id}',this)">✕</button>
-    </div>`).join('');
+      <input type="text" class="edit-only" value="${s.name}" onchange="autoSaveSoftware('${computerId}','${s.id}','name',this.value)" />
+      <span class="view-only">${s.name}</span>
+      <input type="number" class="edit-only" value="${s.bandwidth || 0}" step="0.5" onchange="autoSaveSoftware('${computerId}','${s.id}','bandwidth',parseFloat(this.value)||0)" />
+      <span class="view-only">${s.bandwidth || 0}</span>
+      <input type="number" class="edit-only" value="${s.tl ?? ''}" placeholder="TL" onchange="autoSaveSoftware('${computerId}','${s.id}','tl',parseInt(this.value)||null)" />
+      <span class="view-only">${s.tl ?? '—'}</span>
+      <button class="btn-small" style="${s.active ? 'border-color:#00ffaa;color:#00ffaa' : ''}" onclick="toggleSoftwareActive('${computerId}','${s.id}')">${s.active ? 'ON' : 'OFF'}</button>
+      <span style="font-size:0.75rem;color:${s.note ? '#ff5a4a' : '#4a9ab8'}">${s.note || ''}</span>
+      <button class="skill-remove edit-only" onclick="deleteSoftware('${computerId}','${s.id}',this)">✕</button>
+    </div>`;
+}
+
+function renderSoftwareList(computerId) {
+  const rows = techSoftware[computerId] || [];
+  return rows.length
+    ? rows.map(s => softwareRowHtml(computerId, s)).join('')
+    : '<div style="color:#4a9ab8;font-size:0.78rem">No software installed.</div>';
+}
+
+function renderComputerCard(c) {
+  const allocated = compAllocated(c.id);
 
   return `
     <div class="computer-card" data-id="${c.id}">
       <div class="computer-head">
         <div class="computer-field cf-name">
           <label>Name</label>
-          <input type="text" value="${c.name}" onchange="autoSaveComputer('${c.id}','name',this.value)" />
+          <input type="text" class="edit-only" value="${c.name}" onchange="autoSaveComputer('${c.id}','name',this.value)" />
+          <span class="view-only" style="color:#00e5ff;font-weight:600">${c.name}</span>
         </div>
         <div class="computer-field">
           <label>Processor</label>
-          <input type="number" value="${c.processor || 0}" onchange="autoSaveComputer('${c.id}','processor',parseInt(this.value)||0)" />
+          <input type="number" class="edit-only" value="${c.processor || 0}" onchange="syncComputerProcessor('${c.id}',this.value)" />
+          <span class="view-only">${c.processor || 0}</span>
         </div>
         <div class="computer-field">
-          <label>TL</label>
-          <input type="number" value="${c.tl ?? ''}" onchange="autoSaveComputer('${c.id}','tl',parseInt(this.value)||null)" />
+          <label>Tech Level</label>
+          <input type="number" class="edit-only" value="${c.tl ?? ''}" onchange="autoSaveComputer('${c.id}','tl',parseInt(this.value)||null)" />
+          <span class="view-only">${c.tl ?? '—'}</span>
         </div>
-        <label class="computer-bis"><input type="checkbox" ${c.bis ? 'checked' : ''} onchange="autoSaveComputer('${c.id}','bis',this.checked)" /> /bis</label>
-        <label class="computer-bis"><input type="checkbox" ${c.fib ? 'checked' : ''} onchange="autoSaveComputer('${c.id}','fib',this.checked)" /> /fib</label>
+        <div class="computer-field">
+          <label>Bandwidth</label>
+          <span id="comp-bw-${c.id}" title="Equals the Processor number">${c.processor || 0}</span>
+        </div>
+        <div class="computer-field">
+          <label>Allocated</label>
+          <span id="comp-allocated-${c.id}" title="Total bandwidth of active software packages">${allocated}</span>
+        </div>
         <button class="skill-remove edit-only" style="margin-left:auto" onclick="deleteComputer('${c.id}',this)">✕</button>
       </div>
       <textarea class="computer-options" placeholder="Options (interface, remote access, agent, etc.)"
                 onchange="autoSaveComputer('${c.id}','options',this.value)">${c.options || ''}</textarea>
-      <div class="computer-software-title">Software</div>
-      <div id="sw-${c.id}">${swRows || '<div style="color:#4a9ab8;font-size:0.78rem">No software installed.</div>'}</div>
+      <div class="computer-software-title" style="display:grid;grid-template-columns:1fr 60px 50px 70px 1fr 24px;gap:8px">
+        <div>Name</div><div>BW</div><div>TL</div><div>Active</div><div>Note</div><div></div>
+      </div>
+      <div id="sw-${c.id}" style="display:grid;gap:4px">${renderSoftwareList(c.id)}</div>
       <button class="add-row-btn edit-only" onclick="addSoftwareRow('${c.id}')">+ Add Software</button>
     </div>`;
 }
 
 function autoSaveComputer(id, column, value) {
+  const c = techComputers.find(c => String(c.id) === String(id));
+  if (c) c[column] = value;
   supabaseClient.from('character_computers').update({ [column]: value }).eq('id', id);
 }
 
-function autoSaveSoftware(id, column, value) {
+function syncComputerProcessor(id, value) {
+  const processor = parseInt(value) || 0;
+  autoSaveComputer(id, 'processor', processor);
+  const bwEl = document.getElementById('comp-bw-' + id);
+  if (bwEl) bwEl.textContent = processor;
+}
+
+function autoSaveSoftware(computerId, id, column, value) {
+  const row = (techSoftware[computerId] || []).find(r => String(r.id) === String(id));
+  if (row) row[column] = value;
   supabaseClient.from('character_computer_software').update({ [column]: value }).eq('id', id);
 }
 
-async function deleteSoftware(id, btn) {
+async function deleteSoftware(computerId, id, btn) {
   await supabaseClient.from('character_computer_software').delete().eq('id', id);
+  techSoftware[computerId] = (techSoftware[computerId] || []).filter(r => String(r.id) !== String(id));
   btn.closest('.software-row').remove();
 }
 
@@ -1055,17 +1115,40 @@ async function addSoftwareRow(computerId) {
   const { data } = await supabaseClient.from('character_computer_software')
     .insert({ computer_id: computerId, name: 'New Software' }).select().single();
   if (!data) return;
+  if (!techSoftware[computerId]) techSoftware[computerId] = [];
+  techSoftware[computerId].push(data);
+  document.getElementById('sw-' + computerId).innerHTML = renderSoftwareList(computerId);
+}
+
+function toggleSoftwareActive(computerId, id) {
+  const row = (techSoftware[computerId] || []).find(r => String(r.id) === String(id));
+  const comp = techComputers.find(c => String(c.id) === String(computerId));
+  if (!row || !comp) return;
+
+  if (!row.active) {
+    const compTL = comp.tl || 0;
+    if ((row.tl || 0) > compTL) {
+      row.note = `Blocked — requires TL ${row.tl}, computer is TL ${compTL}.`;
+    } else {
+      const processor = comp.processor || 0;
+      const bwAfter    = compAllocated(computerId, row.id) + (row.bandwidth || 0);
+      if (bwAfter > processor) {
+        row.note = `Blocked — exceeds computer bandwidth (${bwAfter}/${processor}).`;
+      } else {
+        row.active = true;
+        row.note   = '';
+      }
+    }
+  } else {
+    row.active = false;
+    row.note   = '';
+  }
+
+  supabaseClient.from('character_computer_software').update({ active: row.active, note: row.note }).eq('id', row.id);
   const wrap = document.getElementById('sw-' + computerId);
-  const empty = wrap.querySelector('div[style]');
-  if (empty) empty.remove();
-  wrap.insertAdjacentHTML('beforeend', `
-    <div class="software-row" data-id="${data.id}">
-      <input type="text" value="${data.name}" onchange="autoSaveSoftware('${data.id}','name',this.value)" />
-      <input type="number" value="0" step="0.5" onchange="autoSaveSoftware('${data.id}','bandwidth',parseFloat(this.value)||0)" />
-      <input type="number" placeholder="TL" onchange="autoSaveSoftware('${data.id}','tl',parseInt(this.value)||null)" />
-      <label class="computer-bis"><input type="checkbox" checked onchange="autoSaveSoftware('${data.id}','active',this.checked)" /> Active</label>
-      <button class="skill-remove edit-only" onclick="deleteSoftware('${data.id}',this)">✕</button>
-    </div>`);
+  if (wrap) wrap.innerHTML = renderSoftwareList(computerId);
+  const allocEl = document.getElementById('comp-allocated-' + computerId);
+  if (allocEl) allocEl.textContent = compAllocated(computerId);
 }
 
 function addComputer() {
@@ -1080,9 +1163,7 @@ function addComputer() {
     <div class="computer-head">
       <div class="computer-field cf-name"><label>Name</label><input type="text" value="New Computer" /></div>
       <div class="computer-field"><label>Processor</label><input type="number" value="0" /></div>
-      <div class="computer-field"><label>TL</label><input type="number" /></div>
-      <label class="computer-bis"><input type="checkbox" /> /bis</label>
-      <label class="computer-bis"><input type="checkbox" /> /fib</label>
+      <div class="computer-field"><label>Tech Level</label><input type="number" /></div>
       <button class="skill-remove edit-only" style="margin-left:auto" onclick="this.closest('.computer-card').remove()">✕</button>
     </div>
     <textarea class="computer-options" placeholder="Options (interface, remote access, agent, etc.)"></textarea>
@@ -1093,6 +1174,7 @@ function addComputer() {
 
 async function deleteComputer(id, btn) {
   await supabaseClient.from('character_computers').delete().eq('id', id);
+  delete techSoftware[id];
   btn.closest('.computer-card').remove();
 }
 
@@ -1336,13 +1418,11 @@ async function saveAll() {
       if (p.action === 'delete') { await supabaseClient.from('character_computers').delete().eq('id', p.id); }
       else {
         const txt = p.div.querySelectorAll('input[type="text"], input[type="number"]');
-        const checks = p.div.querySelectorAll('input[type="checkbox"]');
         const options = p.div.querySelector('.computer-options').value;
         await supabaseClient.from('character_computers').insert({
           character_id: character.id,
           name: txt[0].value || 'Computer', processor: parseInt(txt[1].value)||0,
-          tl: parseInt(txt[2].value)||null, bis: checks[0].checked, fib: checks[1].checked,
-          options: options || null
+          tl: parseInt(txt[2].value)||null, options: options || null
         });
       }
     }
