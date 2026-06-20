@@ -55,9 +55,9 @@
     .btn-sm { padding: 4px 12px; font-size: 0.78rem; }
 
     /* ── Characteristics ── */
-    .stats-tab-top { display: grid; grid-template-columns: minmax(280px, 420px) 1fr; gap: 24px; align-items: start; margin-bottom: 22px; }
-    .char-stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-    .stat-box { background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 6px; padding: 8px 4px; text-align: center; }
+    .stats-tab-top { display: grid; grid-template-columns: minmax(0, 460px) minmax(0, 1fr); gap: 24px; align-items: start; margin-bottom: 22px; }
+    .char-stats-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .stat-box { background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 6px; padding: 8px 4px; text-align: center; min-width: 0; }
     .stat-label { font-size: 0.78rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
     .stat-value { font-size: 1.7rem; color: #00e5ff; font-weight: 700; line-height: 1; }
     .stat-dm    { font-size: 0.95rem; color: #b0d8e8; margin-top: 3px; font-weight: 600; }
