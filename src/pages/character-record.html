@@ -127,10 +127,10 @@
     .computer-field input[type="text"], .computer-field input[type="number"] { background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; font-size: 0.85rem; outline: none; width: 100px; }
     .computer-field.cf-name input { width: 160px; color: #00e5ff; font-weight: 600; }
     .computer-options { width: 100%; min-height: 50px; background: rgba(13,21,32,0.5); border: 1px solid #0a4a60; border-radius: 5px; color: #b0d8e8; font-size: 0.82rem; padding: 8px; resize: vertical; outline: none; font-family: inherit; box-sizing: border-box; margin-bottom: 8px; }
-    .computer-software-title { font-size: 0.65rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-    .software-row { display: grid; grid-template-columns: 1fr 60px 50px 70px 1fr 24px; gap: 8px; align-items: center; padding: 4px 0; font-size: 0.82rem; color: #b0d8e8; }
-    .software-row input[type="text"], .software-row input[type="number"] { width: 100%; background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; outline: none; box-sizing: border-box; }
-    .btn-small { background: transparent; border: 1px solid #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 2px 10px; font-size: 0.72rem; font-weight: 700; cursor: pointer; }
+    .computer-software-title { font-size: 0.62rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+    .software-row { display: grid; grid-template-columns: 1fr 50px 40px 60px 1fr 20px; gap: 6px; align-items: center; padding: 1px 0; font-size: 0.74rem; line-height: 1.2; color: #b0d8e8; }
+    .software-row input[type="text"], .software-row input[type="number"] { width: 100%; background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; font-size: 0.74rem; outline: none; box-sizing: border-box; padding: 0; }
+    .btn-small { background: transparent; border: 1px solid #0a4a60; color: #4a9ab8; border-radius: 3px; padding: 0 7px; font-size: 0.64rem; font-weight: 700; cursor: pointer; line-height: 1.5; }
     .btn-small:hover { border-color: #00e5ff; color: #00e5ff; }
 
     /* ── Finances ── */
@@ -1016,20 +1016,62 @@ async function renderComputers() {
   list.innerHTML = techComputers.map(c => renderComputerCard(c)).join('');
 }
 
-function compAllocated(computerId, excludeId) {
+// Active software shares the computer's Bandwidth in activation order. If a
+// package's full requirement won't fit in what's left, it still runs but at
+// whatever bandwidth remains (rather than being blocked) — only the TL gate
+// blocks activation outright.
+function recalcEffectiveBandwidth(computerId) {
+  const comp = techComputers.find(c => String(c.id) === String(computerId));
+  const processor = (comp && comp.processor) || 0;
+  let used = 0;
+  (techSoftware[computerId] || []).forEach(r => {
+    if (!r.active) {
+      r._effBw = 0;
+      if ((r.note || '').startsWith('Running at reduced bandwidth')) r.note = '';
+      return;
+    }
+    const remaining = Math.max(0, processor - used);
+    const eff = Math.min(r.bandwidth || 0, remaining);
+    r._effBw = eff;
+    used += eff;
+    r.note = eff < (r.bandwidth || 0)
+      ? `Running at reduced bandwidth (${eff}/${r.bandwidth}).`
+      : '';
+  });
+}
+
+function compAllocated(computerId) {
+  recalcEffectiveBandwidth(computerId);
   return (techSoftware[computerId] || [])
-    .filter(r => r.active && String(r.id) !== String(excludeId))
-    .reduce((sum, r) => sum + (r.bandwidth || 0), 0);
+    .filter(r => r.active)
+    .reduce((sum, r) => sum + (r._effBw || 0), 0);
+}
+
+async function persistSoftwareState(computerId) {
+  const rows = techSoftware[computerId] || [];
+  await Promise.all(rows.map(r =>
+    supabaseClient.from('character_computer_software').update({ active: r.active, note: r.note }).eq('id', r.id)
+      .then(({ error }) => { if (error) console.error('character_computer_software update failed:', error.message); })
+  ));
 }
 
 function softwareRowHtml(computerId, s) {
   return `
     <div class="software-row" data-id="${s.id}">
-      <div><input type="text" value="${s.name}" onchange="autoSaveSoftware('${computerId}','${s.id}','name',this.value)" /></div>
-      <div><input type="number" value="${s.bandwidth || 0}" step="0.5" onchange="autoSaveSoftware('${computerId}','${s.id}','bandwidth',parseFloat(this.value)||0)" /></div>
-      <div><input type="number" value="${s.tl ?? ''}" placeholder="TL" onchange="autoSaveSoftware('${computerId}','${s.id}','tl',parseInt(this.value)||null)" /></div>
+      <div>
+        <span class="view-only">${s.name}</span>
+        <input type="text" class="edit-only" value="${s.name}" onchange="autoSaveSoftware('${computerId}','${s.id}','name',this.value)" />
+      </div>
+      <div>
+        <span class="view-only">${s.bandwidth || 0}</span>
+        <input type="number" class="edit-only" value="${s.bandwidth || 0}" step="0.5" onchange="autoSaveSoftware('${computerId}','${s.id}','bandwidth',parseFloat(this.value)||0)" />
+      </div>
+      <div>
+        <span class="view-only">${s.tl ?? '—'}</span>
+        <input type="number" class="edit-only" value="${s.tl ?? ''}" placeholder="TL" onchange="autoSaveSoftware('${computerId}','${s.id}','tl',parseInt(this.value)||null)" />
+      </div>
       <div><button class="btn-small" style="${s.active ? 'border-color:#00ffaa;color:#00ffaa' : ''}" onclick="toggleSoftwareActive('${computerId}','${s.id}')">${s.active ? 'ON' : 'OFF'}</button></div>
-      <div style="font-size:0.75rem;color:${s.note ? '#ff5a4a' : '#4a9ab8'}">${s.note || ''}</div>
+      <div style="font-size:0.68rem;color:${s.note ? '#ff5a4a' : '#4a9ab8'}">${s.note || ''}</div>
       <button class="skill-remove edit-only" onclick="deleteSoftware('${computerId}','${s.id}',this)">✕</button>
     </div>`;
 }
@@ -1074,10 +1116,10 @@ function renderComputerCard(c) {
       </div>
       <textarea class="computer-options" placeholder="Options (interface, remote access, agent, etc.)"
                 onchange="autoSaveComputer('${c.id}','options',this.value)">${c.options || ''}</textarea>
-      <div class="computer-software-title" style="display:grid;grid-template-columns:1fr 60px 50px 70px 1fr 24px;gap:8px">
+      <div class="computer-software-title" style="display:grid;grid-template-columns:1fr 50px 40px 60px 1fr 20px;gap:6px">
         <div>Name</div><div>BW</div><div>TL</div><div>Active</div><div>Note</div><div></div>
       </div>
-      <div id="sw-${c.id}" style="display:grid;gap:4px">${renderSoftwareList(c.id)}</div>
+      <div id="sw-${c.id}" style="display:grid;gap:1px">${renderSoftwareList(c.id)}</div>
       <button class="add-row-btn edit-only" onclick="addSoftwareRow('${c.id}')">+ Add Software</button>
     </div>`;
 }
@@ -1094,6 +1136,12 @@ function syncComputerProcessor(id, value) {
   autoSaveComputer(id, 'processor', processor);
   const bwEl = document.getElementById('comp-bw-' + id);
   if (bwEl) bwEl.textContent = processor;
+
+  recalcEffectiveBandwidth(id);
+  persistSoftwareState(id);
+  const wrap = document.getElementById('sw-' + id);
+  if (wrap) wrap.innerHTML = renderSoftwareList(id);
+  refreshAllocated(id);
 }
 
 function refreshAllocated(computerId) {
@@ -1106,7 +1154,14 @@ function autoSaveSoftware(computerId, id, column, value) {
   if (row) row[column] = value;
   supabaseClient.from('character_computer_software').update({ [column]: value }).eq('id', id)
     .then(({ error }) => { if (error) console.error('character_computer_software update failed:', error.message); });
-  if (column === 'bandwidth') refreshAllocated(computerId);
+
+  if (column === 'bandwidth' || column === 'tl') {
+    recalcEffectiveBandwidth(computerId);
+    persistSoftwareState(computerId);
+    const wrap = document.getElementById('sw-' + computerId);
+    if (wrap) wrap.innerHTML = renderSoftwareList(computerId);
+    refreshAllocated(computerId);
+  }
 }
 
 async function deleteSoftware(computerId, id, btn) {
@@ -1134,22 +1189,18 @@ function toggleSoftwareActive(computerId, id) {
     const compTL = comp.tl || 0;
     if ((row.tl || 0) > compTL) {
       row.note = `Blocked — requires TL ${row.tl}, computer is TL ${compTL}.`;
-    } else {
-      const processor = comp.processor || 0;
-      const bwAfter    = compAllocated(computerId, row.id) + (row.bandwidth || 0);
-      if (bwAfter > processor) {
-        row.note = `Blocked — exceeds computer bandwidth (${bwAfter}/${processor}).`;
-      } else {
-        row.active = true;
-        row.note   = '';
-      }
+      supabaseClient.from('character_computer_software').update({ note: row.note }).eq('id', row.id);
+      const wrap = document.getElementById('sw-' + computerId);
+      if (wrap) wrap.innerHTML = renderSoftwareList(computerId);
+      return;
     }
+    row.active = true;
   } else {
     row.active = false;
-    row.note   = '';
   }
 
-  supabaseClient.from('character_computer_software').update({ active: row.active, note: row.note }).eq('id', row.id);
+  recalcEffectiveBandwidth(computerId);
+  persistSoftwareState(computerId);
   const wrap = document.getElementById('sw-' + computerId);
   if (wrap) wrap.innerHTML = renderSoftwareList(computerId);
   refreshAllocated(computerId);
