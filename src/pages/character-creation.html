@@ -5,10 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Character Creation — Traveller</title>
   <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .wizard-shell { max-width: 720px; margin: 0 auto; }
+    .wizard-steps {
+      display: flex; gap: 6px; margin-bottom: 28px; flex-wrap: wrap;
+    }
+    .wizard-step-pill {
+      padding: 5px 12px; border-radius: 999px; font-size: 0.75rem;
+      letter-spacing: 0.04em; border: 1px solid #0a4a60; color: #4a9ab8;
+    }
+    .wizard-step-pill.done   { border-color: #00ffaa; color: #00ffaa; }
+    .wizard-step-pill.active { border-color: #00e5ff; color: #00e5ff; background: rgba(0,229,255,0.08); }
+    .wizard-card { max-width: 720px; }
+    .wizard-card-title { font-size: 1.1rem; color: #00e5ff; font-weight: 600; margin-bottom: 4px; }
+    .wizard-card-sub { color: #4a9ab8; font-size: 0.85rem; margin-bottom: 18px; }
+    .wizard-field { margin-bottom: 16px; }
+    .wizard-field label { display: block; font-size: 0.8rem; color: #4a9ab8; margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .wizard-field input, .wizard-field select {
+      width: 100%; padding: 10px 12px; font-size: 1rem;
+    }
+    .wizard-actions { display: flex; justify-content: space-between; margin-top: 24px; }
+    .wizard-error { color: #ff5a4a; font-size: 0.85rem; margin-top: 10px; }
+    .status-draft { background: rgba(0,229,255,0.10); color: #00e5ff; border: 1px solid #00e5ff44; }
+  </style>
 </head>
 <body>
-
 
   <div class="app-shell">
     <nav class="sidebar">
@@ -37,17 +60,178 @@
 
     <main class="page-main">
       <h1 class="page-title">CHARACTER CREATION</h1>
-      <p class="placeholder-msg">Coming soon — step-by-step career generation wizard.</p>
+
+      <div class="wizard-shell" id="wizard-shell">
+        <p class="placeholder-msg">Loading…</p>
+      </div>
     </main>
   </div>
 
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
   <script>
+    let currentUser = null;
+    let draft = null;
+
+    // Step registry — each step builds further on the Traveller 2022 core
+    // rulebook creation flowchart (pp.8-15). Steps beyond STEP_COUNT are
+    // not built yet.
+    const STEP_COUNT = 8;
+    const STEP_LABELS = [
+      'Name & Species', 'Characteristics', 'Background Skills', 'Pre-Career Education',
+      'Career', 'Terms', 'Mustering Out', 'Finalize'
+    ];
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = '../../index.html'; return; }
+      currentUser = session.user;
+      document.getElementById('sidebar-user').textContent =
+        currentUser.user_metadata?.display_name || currentUser.email;
+
+      const params = new URLSearchParams(window.location.search);
+      let id = params.get('id');
+
+      if (!id) {
+        // Starting fresh — create a draft character and move into the wizard.
+        const { data, error } = await supabaseClient.from('characters')
+          .insert({
+            user_id: currentUser.id,
+            name: 'New Traveller',
+            species: 'Human',
+            status: 'draft',
+            creation_step: 1
+          })
+          .select().single();
+        if (error) {
+          document.getElementById('wizard-shell').innerHTML =
+            `<p class="wizard-error">Could not start creation: ${error.message}</p>`;
+          return;
+        }
+        window.location.href = 'character-creation.html?id=' + data.id;
+        return;
+      }
+
+      await loadDraft(id);
+    }
+
+    async function loadDraft(id) {
+      const { data, error } = await supabaseClient
+        .from('characters').select('*').eq('id', id).single();
+      if (error || !data) {
+        document.getElementById('wizard-shell').innerHTML =
+          `<p class="wizard-error">Character not found.</p>`;
+        return;
+      }
+      draft = data;
+      renderStep();
+    }
+
+    function renderSteps() {
+      const current = draft.creation_step || 1;
+      return `
+        <div class="wizard-steps">
+          ${STEP_LABELS.map((label, i) => {
+            const n = i + 1;
+            const cls = n < current ? 'done' : (n === current ? 'active' : '');
+            return `<span class="wizard-step-pill ${cls}">${n}. ${label}</span>`;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderStep() {
+      const shell = document.getElementById('wizard-shell');
+      const step = draft.creation_step || 1;
+      let body = '';
+
+      if (step === 1) {
+        body = renderStepName();
+      } else {
+        body = `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">Step ${step}: ${STEP_LABELS[step - 1]}</div>
+            <div class="wizard-card-sub">Not built yet — coming in a future session.</div>
+            <div class="wizard-actions">
+              <button class="btn-outline" onclick="goStep(${step - 1})">Back</button>
+            </div>
+          </div>
+        `;
+      }
+
+      shell.innerHTML = renderSteps() + body;
+    }
+
+    function renderStepName() {
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">Name &amp; Species</div>
+          <div class="wizard-card-sub">Name your Traveller before anything else — trust us on this. (Core Rulebook p.13)</div>
+
+          <div class="wizard-field">
+            <label for="f-name">Name</label>
+            <input id="f-name" type="text" value="${draft.name === 'New Traveller' ? '' : (draft.name || '')}" placeholder="Traveller name" />
+          </div>
+
+          <div class="wizard-field">
+            <label for="f-species">Species</label>
+            <input id="f-species" type="text" value="${draft.species || 'Human'}" placeholder="Human" />
+          </div>
+
+          <div id="step1-error"></div>
+
+          <div class="wizard-actions">
+            <button class="btn-outline-danger" onclick="abandonDraft()">Abandon</button>
+            <button class="btn-outline" onclick="submitStepName()">Continue</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function submitStepName() {
+      const name = document.getElementById('f-name').value.trim();
+      const species = document.getElementById('f-species').value.trim() || 'Human';
+      const errEl = document.getElementById('step1-error');
+
+      if (!name) {
+        errEl.innerHTML = '<p class="wizard-error">Your Traveller needs a name.</p>';
+        return;
+      }
+
+      const { error } = await supabaseClient.from('characters')
+        .update({ name, species, creation_step: 2 })
+        .eq('id', draft.id);
+      if (error) {
+        errEl.innerHTML = `<p class="wizard-error">${error.message}</p>`;
+        return;
+      }
+      draft.name = name;
+      draft.species = species;
+      draft.creation_step = 2;
+      renderStep();
+    }
+
+    async function goStep(n) {
+      if (n < 1) { window.location.href = 'character-list.html'; return; }
+      const { error } = await supabaseClient.from('characters')
+        .update({ creation_step: n }).eq('id', draft.id);
+      if (error) { alert('Error: ' + error.message); return; }
+      draft.creation_step = n;
+      renderStep();
+    }
+
+    async function abandonDraft() {
+      if (!confirm('Discard this Traveller? This cannot be undone.')) return;
+      await supabaseClient.from('characters').delete().eq('id', draft.id);
+      window.location.href = 'character-list.html';
+    }
+
     async function doSignOut() {
       await supabaseClient.auth.signOut();
       window.location.href = '../../index.html';
     }
+
+    init();
   </script>
 </body>
 </html>

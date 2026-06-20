@@ -26,6 +26,7 @@
     .status-deceased  { background: rgba(255,90,74,0.12);  color: #ff5a4a; border: 1px solid #ff5a4a44; }
     .status-archived  { background: rgba(74,154,184,0.12); color: #4a9ab8; border: 1px solid #4a9ab844; }
     .status-other     { background: rgba(176,216,232,0.10); color: #b0d8e8; border: 1px solid #b0d8e844; }
+    .status-draft      { background: rgba(0,229,255,0.10);  color: #00e5ff; border: 1px solid #00e5ff44; }
     .status-reserve   { background: rgba(74,154,184,0.12); color: #4a9ab8; border: 1px solid #4a9ab844; }
     .status-sold      { background: rgba(176,216,232,0.10); color: #b0d8e8; border: 1px solid #b0d8e844; }
     .status-destroyed { background: rgba(255,90,74,0.12);  color: #ff5a4a; border: 1px solid #ff5a4a44; }
@@ -147,12 +148,12 @@
 
       tbody.innerHTML = data.map(c => `
         <tr data-id="${c.id}">
-          <td onclick="openCharacter('${c.id}')">${c.name || '—'}</td>
-          <td onclick="openCharacter('${c.id}')">${c.player_name || '—'}</td>
-          <td onclick="openCharacter('${c.id}')">${c.species || '—'}</td>
-          <td onclick="openCharacter('${c.id}')">${c.primary_role || '—'}</td>
-          <td onclick="openCharacter('${c.id}')">${c.secondary_role || '—'}</td>
-          <td onclick="openCharacter('${c.id}')"><span class="status-badge status-${c.status||'active'}">${statusLabel(c.status)}</span></td>
+          <td onclick="openCharacter('${c.id}', '${c.status}')">${c.name || '—'}</td>
+          <td onclick="openCharacter('${c.id}', '${c.status}')">${c.player_name || '—'}</td>
+          <td onclick="openCharacter('${c.id}', '${c.status}')">${c.species || '—'}</td>
+          <td onclick="openCharacter('${c.id}', '${c.status}')">${c.primary_role || '—'}</td>
+          <td onclick="openCharacter('${c.id}', '${c.status}')">${c.secondary_role || '—'}</td>
+          <td onclick="openCharacter('${c.id}', '${c.status}')"><span class="status-badge status-${c.status||'active'}">${statusLabel(c.status)}</span></td>
           <td><input type="checkbox" class="onboard-check" ${c.onboard ? 'checked' : ''}
                 onclick="event.stopPropagation()" onchange="toggleOnboard('${c.id}', this.checked)" /></td>
           <td onclick="event.stopPropagation()">
@@ -186,8 +187,12 @@
       await loadSpacecraft();
     }
 
-    function openCharacter(id) {
-      window.location.href = 'character-record.html?id=' + id;
+    function openCharacter(id, status) {
+      if (status === 'draft') {
+        window.location.href = 'character-creation.html?id=' + id;
+      } else {
+        window.location.href = 'character-record.html?id=' + id;
+      }
     }
 
     async function toggleOnboard(id, val) {

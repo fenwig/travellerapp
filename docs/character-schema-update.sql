@@ -71,3 +71,13 @@ DROP POLICY IF EXISTS "computer_software_update" ON character_computer_software;
 CREATE POLICY "computer_software_update" ON character_computer_software FOR UPDATE TO authenticated USING (EXISTS (SELECT 1 FROM character_computers c JOIN characters ch ON ch.id = c.character_id WHERE c.id = computer_id AND ch.user_id = auth.uid()));
 DROP POLICY IF EXISTS "computer_software_delete" ON character_computer_software;
 CREATE POLICY "computer_software_delete" ON character_computer_software FOR DELETE TO authenticated USING (EXISTS (SELECT 1 FROM character_computers c JOIN characters ch ON ch.id = c.character_id WHERE c.id = computer_id AND ch.user_id = auth.uid()));
+
+-- ============================================================
+-- Character Creation wizard (session 13): draft status + step tracker
+-- ============================================================
+
+ALTER TABLE characters ADD COLUMN IF NOT EXISTS creation_step INTEGER DEFAULT 1;
+
+ALTER TABLE characters DROP CONSTRAINT IF EXISTS characters_status_check;
+ALTER TABLE characters ADD CONSTRAINT characters_status_check
+  CHECK (status IN ('active', 'deceased', 'archived', 'other', 'draft'));
