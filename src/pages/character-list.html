@@ -66,7 +66,10 @@
       <div class="roster-section">
         <div class="roster-section-head">
           <div class="roster-section-title">Characters</div>
-          <button class="btn btn-primary" onclick="createCharacter()">+ New Character</button>
+          <div style="display:flex; gap:10px;">
+            <button class="btn-outline" onclick="window.location.href='character-creation.html'">+ Character Creation</button>
+            <button class="btn-outline" onclick="createCharacter()">+ Blank Character</button>
+          </div>
         </div>
         <table class="ref-table roster-table" id="char-table">
           <thead>
@@ -78,10 +81,11 @@
               <th>Secondary Role</th>
               <th>Status</th>
               <th>Onboard</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="char-tbody">
-            <tr class="roster-empty"><td colspan="7">Loading…</td></tr>
+            <tr class="roster-empty"><td colspan="8">Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -89,7 +93,7 @@
       <div class="roster-section">
         <div class="roster-section-head">
           <div class="roster-section-title">Spacecraft</div>
-          <button class="btn btn-primary" onclick="createSpacecraft()">+ New Spacecraft</button>
+          <button class="btn-outline" onclick="createSpacecraft()">+ New Spacecraft</button>
         </div>
         <table class="ref-table roster-table" id="ship-table">
           <thead>
@@ -97,10 +101,11 @@
               <th>Name</th>
               <th>Class</th>
               <th>Status</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="ship-tbody">
-            <tr class="roster-empty"><td colspan="3">Loading…</td></tr>
+            <tr class="roster-empty"><td colspan="4">Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -136,7 +141,7 @@
 
       const tbody = document.getElementById('char-tbody');
       if (error || !data || data.length === 0) {
-        tbody.innerHTML = '<tr class="roster-empty"><td colspan="7">No characters yet.</td></tr>';
+        tbody.innerHTML = '<tr class="roster-empty"><td colspan="8">No characters yet.</td></tr>';
         return;
       }
 
@@ -150,8 +155,35 @@
           <td onclick="openCharacter('${c.id}')"><span class="status-badge status-${c.status||'active'}">${statusLabel(c.status)}</span></td>
           <td><input type="checkbox" class="onboard-check" ${c.onboard ? 'checked' : ''}
                 onclick="event.stopPropagation()" onchange="toggleOnboard('${c.id}', this.checked)" /></td>
+          <td onclick="event.stopPropagation()">
+            <span class="delete-cell" data-id="${c.id}">
+              <button class="btn-outline-danger" onclick="confirmDelete(this, 'char')">Delete</button>
+            </span>
+          </td>
         </tr>
       `).join('');
+    }
+
+    function confirmDelete(btn, kind) {
+      const cell = btn.closest('.delete-cell');
+      const id = cell.dataset.id;
+      cell.innerHTML = `
+        <span style="font-size:0.78rem; color:#ff5a4a;">Delete?</span>
+        <button class="btn-outline-danger" onclick="${kind === 'char' ? 'deleteCharacter' : 'deleteSpacecraft'}('${id}')">Yes</button>
+        <button class="btn-small" onclick="${kind === 'char' ? 'loadCharacters' : 'loadSpacecraft'}()">Cancel</button>
+      `;
+    }
+
+    async function deleteCharacter(id) {
+      const { error } = await supabaseClient.from('characters').delete().eq('id', id);
+      if (error) { alert('Error: ' + error.message); return; }
+      await loadCharacters();
+    }
+
+    async function deleteSpacecraft(id) {
+      const { error } = await supabaseClient.from('spacecraft').delete().eq('id', id);
+      if (error) { alert('Error: ' + error.message); return; }
+      await loadSpacecraft();
     }
 
     function openCharacter(id) {
@@ -184,15 +216,20 @@
 
       const tbody = document.getElementById('ship-tbody');
       if (error || !data || data.length === 0) {
-        tbody.innerHTML = '<tr class="roster-empty"><td colspan="3">No spacecraft yet.</td></tr>';
+        tbody.innerHTML = '<tr class="roster-empty"><td colspan="4">No spacecraft yet.</td></tr>';
         return;
       }
 
       tbody.innerHTML = data.map(s => `
-        <tr data-id="${s.id}" onclick="openSpacecraft('${s.id}')">
-          <td>${s.name || '—'}</td>
-          <td>${s.ship_class || '—'}</td>
-          <td><span class="status-badge status-${s.status||'active'}">${statusLabel(s.status)}</span></td>
+        <tr data-id="${s.id}">
+          <td onclick="openSpacecraft('${s.id}')">${s.name || '—'}</td>
+          <td onclick="openSpacecraft('${s.id}')">${s.ship_class || '—'}</td>
+          <td onclick="openSpacecraft('${s.id}')"><span class="status-badge status-${s.status||'active'}">${statusLabel(s.status)}</span></td>
+          <td onclick="event.stopPropagation()">
+            <span class="delete-cell" data-id="${s.id}">
+              <button class="btn-outline-danger" onclick="confirmDelete(this, 'ship')">Delete</button>
+            </span>
+          </td>
         </tr>
       `).join('');
     }
