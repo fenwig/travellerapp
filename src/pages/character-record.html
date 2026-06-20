@@ -1085,7 +1085,8 @@ function renderComputerCard(c) {
 function autoSaveComputer(id, column, value) {
   const c = techComputers.find(c => String(c.id) === String(id));
   if (c) c[column] = value;
-  supabaseClient.from('character_computers').update({ [column]: value }).eq('id', id);
+  supabaseClient.from('character_computers').update({ [column]: value }).eq('id', id)
+    .then(({ error }) => { if (error) console.error('character_computers update failed:', error.message); });
 }
 
 function syncComputerProcessor(id, value) {
@@ -1095,10 +1096,17 @@ function syncComputerProcessor(id, value) {
   if (bwEl) bwEl.textContent = processor;
 }
 
+function refreshAllocated(computerId) {
+  const allocEl = document.getElementById('comp-allocated-' + computerId);
+  if (allocEl) allocEl.textContent = compAllocated(computerId);
+}
+
 function autoSaveSoftware(computerId, id, column, value) {
   const row = (techSoftware[computerId] || []).find(r => String(r.id) === String(id));
   if (row) row[column] = value;
-  supabaseClient.from('character_computer_software').update({ [column]: value }).eq('id', id);
+  supabaseClient.from('character_computer_software').update({ [column]: value }).eq('id', id)
+    .then(({ error }) => { if (error) console.error('character_computer_software update failed:', error.message); });
+  if (column === 'bandwidth') refreshAllocated(computerId);
 }
 
 async function deleteSoftware(computerId, id, btn) {
@@ -1109,11 +1117,12 @@ async function deleteSoftware(computerId, id, btn) {
 
 async function addSoftwareRow(computerId) {
   const { data } = await supabaseClient.from('character_computer_software')
-    .insert({ computer_id: computerId, name: 'New Software' }).select().single();
+    .insert({ computer_id: computerId, name: 'New Software', active: false }).select().single();
   if (!data) return;
   if (!techSoftware[computerId]) techSoftware[computerId] = [];
   techSoftware[computerId].push(data);
   document.getElementById('sw-' + computerId).innerHTML = renderSoftwareList(computerId);
+  refreshAllocated(computerId);
 }
 
 function toggleSoftwareActive(computerId, id) {
@@ -1143,8 +1152,7 @@ function toggleSoftwareActive(computerId, id) {
   supabaseClient.from('character_computer_software').update({ active: row.active, note: row.note }).eq('id', row.id);
   const wrap = document.getElementById('sw-' + computerId);
   if (wrap) wrap.innerHTML = renderSoftwareList(computerId);
-  const allocEl = document.getElementById('comp-allocated-' + computerId);
-  if (allocEl) allocEl.textContent = compAllocated(computerId);
+  refreshAllocated(computerId);
 }
 
 function addComputer() {
@@ -1415,11 +1423,12 @@ async function saveAll() {
       else {
         const txt = p.div.querySelectorAll('input[type="text"], input[type="number"]');
         const options = p.div.querySelector('.computer-options').value;
-        await supabaseClient.from('character_computers').insert({
+        const { error: compErr } = await supabaseClient.from('character_computers').insert({
           character_id: character.id,
           name: txt[0].value || 'Computer', processor: parseInt(txt[1].value)||0,
           tl: parseInt(txt[2].value)||null, options: options || null
         });
+        if (compErr) throw compErr;
       }
     }
 
