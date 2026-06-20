@@ -3,12 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Character List — Traveller</title>
+  <title>Roster — Traveller</title>
   <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .roster-section { margin-bottom: 40px; }
+    .roster-section-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .roster-section-title {
+      color: #00e5ff; font-size: 1.05rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .roster-table tbody tr { cursor: pointer; }
+    .status-badge {
+      display: inline-block; padding: 3px 12px; border-radius: 4px;
+      font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .status-active    { background: rgba(0,255,170,0.12);  color: #00ffaa; border: 1px solid #00ffaa44; }
+    .status-deceased  { background: rgba(255,90,74,0.12);  color: #ff5a4a; border: 1px solid #ff5a4a44; }
+    .status-archived  { background: rgba(74,154,184,0.12); color: #4a9ab8; border: 1px solid #4a9ab844; }
+    .status-other     { background: rgba(176,216,232,0.10); color: #b0d8e8; border: 1px solid #b0d8e844; }
+    .status-reserve   { background: rgba(74,154,184,0.12); color: #4a9ab8; border: 1px solid #4a9ab844; }
+    .status-sold      { background: rgba(176,216,232,0.10); color: #b0d8e8; border: 1px solid #b0d8e844; }
+    .status-destroyed { background: rgba(255,90,74,0.12);  color: #ff5a4a; border: 1px solid #ff5a4a44; }
+    .onboard-check { width: 18px; height: 18px; accent-color: #00e5ff; cursor: pointer; }
+    .roster-empty td { color: #4a9ab8; font-size: 0.85rem; }
+  </style>
 </head>
 <body>
-
 
   <div class="app-shell">
     <nav class="sidebar">
@@ -19,7 +44,7 @@
       <div class="sidebar-group-label">Character Resources</div>
       <a href="character-record.html" class="sidebar-nav-item">Character Record</a>
       <a href="spacecraft-record.html" class="sidebar-nav-item">Spacecraft Record</a>
-      <a href="character-list.html" class="sidebar-nav-item active">Character List</a>
+      <a href="character-list.html" class="sidebar-nav-item active">Roster</a>
       <a href="character-creation.html" class="sidebar-nav-item">Character Creation</a>
       <div class="sidebar-group-label">Reference</div>
       <a href="general-rules.html" class="sidebar-nav-item">General Rules</a>
@@ -36,18 +61,160 @@
     </nav>
 
     <main class="page-main">
-      <h1 class="page-title">CHARACTER LIST</h1>
-      <p class="placeholder-msg">Coming soon — all player characters in the group.</p>
+      <h1 class="page-title">ROSTER</h1>
+
+      <div class="roster-section">
+        <div class="roster-section-head">
+          <div class="roster-section-title">Characters</div>
+          <button class="btn btn-primary" onclick="createCharacter()">+ New Character</button>
+        </div>
+        <table class="ref-table roster-table" id="char-table">
+          <thead>
+            <tr>
+              <th>Character Name</th>
+              <th>Player Name</th>
+              <th>Race</th>
+              <th>Primary Role</th>
+              <th>Secondary Role</th>
+              <th>Status</th>
+              <th>Onboard</th>
+            </tr>
+          </thead>
+          <tbody id="char-tbody">
+            <tr class="roster-empty"><td colspan="7">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="roster-section">
+        <div class="roster-section-head">
+          <div class="roster-section-title">Spacecraft</div>
+          <button class="btn btn-primary" onclick="createSpacecraft()">+ New Spacecraft</button>
+        </div>
+        <table class="ref-table roster-table" id="ship-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Class</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="ship-tbody">
+            <tr class="roster-empty"><td colspan="3">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
     </main>
   </div>
 
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
   <script>
+    let currentUser = null;
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = '../../index.html'; return; }
+      currentUser = session.user;
+      document.getElementById('sidebar-user').textContent =
+        currentUser.user_metadata?.display_name || currentUser.email;
+
+      await loadCharacters();
+      await loadSpacecraft();
+    }
+
+    function statusLabel(s) {
+      s = s || 'active';
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    async function loadCharacters() {
+      const { data, error } = await supabaseClient
+        .from('characters')
+        .select('id,name,player_name,species,primary_role,secondary_role,status,onboard')
+        .order('name');
+
+      const tbody = document.getElementById('char-tbody');
+      if (error || !data || data.length === 0) {
+        tbody.innerHTML = '<tr class="roster-empty"><td colspan="7">No characters yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(c => `
+        <tr data-id="${c.id}">
+          <td onclick="openCharacter('${c.id}')">${c.name || '—'}</td>
+          <td onclick="openCharacter('${c.id}')">${c.player_name || '—'}</td>
+          <td onclick="openCharacter('${c.id}')">${c.species || '—'}</td>
+          <td onclick="openCharacter('${c.id}')">${c.primary_role || '—'}</td>
+          <td onclick="openCharacter('${c.id}')">${c.secondary_role || '—'}</td>
+          <td onclick="openCharacter('${c.id}')"><span class="status-badge status-${c.status||'active'}">${statusLabel(c.status)}</span></td>
+          <td><input type="checkbox" class="onboard-check" ${c.onboard ? 'checked' : ''}
+                onclick="event.stopPropagation()" onchange="toggleOnboard('${c.id}', this.checked)" /></td>
+        </tr>
+      `).join('');
+    }
+
+    function openCharacter(id) {
+      window.location.href = 'character-record.html?id=' + id;
+    }
+
+    async function toggleOnboard(id, val) {
+      await supabaseClient.from('characters').update({ onboard: val }).eq('id', id);
+    }
+
+    async function createCharacter() {
+      const { data, error } = await supabaseClient.from('characters')
+        .insert({
+          user_id: currentUser.id,
+          name: 'New Character',
+          player_name: currentUser.user_metadata?.display_name || currentUser.email,
+          species: 'Human',
+          status: 'active'
+        })
+        .select().single();
+      if (error) { alert('Error: ' + error.message); return; }
+      openCharacter(data.id);
+    }
+
+    async function loadSpacecraft() {
+      const { data, error } = await supabaseClient
+        .from('spacecraft')
+        .select('id,name,ship_class,status')
+        .order('name');
+
+      const tbody = document.getElementById('ship-tbody');
+      if (error || !data || data.length === 0) {
+        tbody.innerHTML = '<tr class="roster-empty"><td colspan="3">No spacecraft yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(s => `
+        <tr data-id="${s.id}" onclick="openSpacecraft('${s.id}')">
+          <td>${s.name || '—'}</td>
+          <td>${s.ship_class || '—'}</td>
+          <td><span class="status-badge status-${s.status||'active'}">${statusLabel(s.status)}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function openSpacecraft(id) {
+      window.location.href = 'spacecraft-record.html?id=' + id;
+    }
+
+    async function createSpacecraft() {
+      const { data, error } = await supabaseClient.from('spacecraft')
+        .insert({ name: 'New Ship', ship_class: 'Unknown', status: 'reserve', streamlined_status: 'Streamlined' })
+        .select().single();
+      if (error) { alert('Error: ' + error.message); return; }
+      openSpacecraft(data.id);
+    }
+
     async function doSignOut() {
       await supabaseClient.auth.signOut();
       window.location.href = '../../index.html';
     }
+
+    init();
   </script>
 </body>
 </html>

@@ -35,13 +35,17 @@
     .char-name { font-size: 1.5rem; color: #00e5ff; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 4px; }
     .char-meta { display: flex; flex-wrap: wrap; gap: 10px 24px; color: #b0d8e8; font-size: 0.85rem; margin-bottom: 6px; }
     .char-meta span { color: #4a9ab8; margin-right: 4px; }
-    .char-roles { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+    .char-roles { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; align-items: center; }
     .role-badge { background: rgba(0,229,255,0.08); border: 1px solid #0a4a60; border-radius: 4px; padding: 3px 10px; font-size: 0.78rem; color: #00e5ff; }
+    .role-input { background: rgba(0,229,255,0.08); border: 1px solid #0a4a60; border-radius: 4px; padding: 3px 10px; font-size: 0.78rem; color: #00e5ff; outline: none; width: 140px; }
+    .role-input:focus { border-color: #00e5ff; }
+    .char-created { font-size: 0.68rem; color: #4a9ab8; margin-top: 4px; }
     .status-badge { display: inline-block; padding: 3px 12px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
     .status-active   { background: rgba(0,255,170,0.12);  color: #00ffaa; border: 1px solid #00ffaa44; }
     .status-deceased { background: rgba(255,90,74,0.12);   color: #ff5a4a; border: 1px solid #ff5a4a44; }
     .status-archived { background: rgba(74,154,184,0.12);  color: #4a9ab8; border: 1px solid #4a9ab844; }
-    .char-header-actions { display: flex; align-items: flex-start; gap: 10px; flex-shrink: 0; }
+    .char-header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+    .char-header-btns { display: flex; gap: 10px; }
 
     /* ── Buttons ── */
     .btn { padding: 7px 18px; border-radius: 5px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; transition: opacity 0.15s; }
@@ -51,22 +55,33 @@
     .btn-sm { padding: 4px 12px; font-size: 0.78rem; }
 
     /* ── Characteristics ── */
-    .char-stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 18px; }
-    .stat-box { background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 6px; padding: 10px 6px; text-align: center; }
-    .stat-label { font-size: 0.7rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
-    .stat-value { font-size: 1.6rem; color: #00e5ff; font-weight: 700; line-height: 1; }
-    .stat-dm    { font-size: 0.75rem; color: #b0d8e8; margin-top: 3px; }
-    .stat-input { width: 48px; font-size: 1.3rem; color: #00e5ff; background: transparent; border: none; border-bottom: 1px solid #0a4a60; text-align: center; outline: none; }
+    .stats-tab-top { display: grid; grid-template-columns: minmax(280px, 420px) 1fr; gap: 24px; align-items: start; margin-bottom: 22px; }
+    .char-stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    .stat-box { background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 6px; padding: 8px 4px; text-align: center; }
+    .stat-label { font-size: 0.65rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .stat-value { font-size: 1.3rem; color: #00e5ff; font-weight: 700; line-height: 1; }
+    .stat-dm    { font-size: 0.72rem; color: #b0d8e8; margin-top: 2px; }
+    .stat-input { width: 40px; font-size: 1.05rem; color: #00e5ff; background: transparent; border: none; border-bottom: 1px solid #0a4a60; text-align: center; outline: none; }
+    .stat-injury-row { margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(10,74,96,0.5); }
+    .stat-injury-label { font-size: 0.58rem; color: #ff5a4a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+    .stat-injury-ctrl { display: flex; align-items: center; justify-content: center; gap: 3px; }
+    .injury-btn { width: 16px; height: 16px; line-height: 1; font-size: 0.7rem; background: transparent; border: 1px solid #0a4a60; color: #4a9ab8; border-radius: 3px; cursor: pointer; padding: 0; }
+    .injury-btn:hover { border-color: #ff5a4a; color: #ff5a4a; }
+    .injury-val { font-size: 0.82rem; color: #ff5a4a; min-width: 14px; text-align: center; }
 
     /* ── Section headings ── */
     .cr-section { margin-bottom: 22px; }
     .cr-section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: #4a9ab8; border-bottom: 1px solid #0a4a60; padding-bottom: 5px; margin-bottom: 10px; }
 
     /* ── Skills ── */
+    .skills-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+    .skill-totals { display: flex; gap: 16px; font-size: 0.75rem; color: #4a9ab8; }
+    .skill-totals b { color: #00e5ff; }
     .skill-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: rgba(13,21,32,0.7); border: 1px solid #0a4a60; border-radius: 5px; margin-bottom: 0; font-size: 0.85rem; color: #b0d8e8; cursor: pointer; }
     .skill-row:hover .skill-name { color: #80f0ff; }
     .skill-wrap { margin-bottom: 5px; border-radius: 5px; overflow: hidden; border: 1px solid #0a4a60; }
-    .skill-name { flex: 1; color: #00e5ff; }
+    .skill-name { color: #00e5ff; }
+    .skill-spacer { flex: 1; }
     .skill-info-icon { font-size: 0.7rem; color: #4a9ab8; flex-shrink: 0; user-select: none; }
     .skill-level-badge { background: rgba(0,229,255,0.1); border: 1px solid #0a4a60; border-radius: 3px; padding: 1px 8px; color: #00e5ff; font-weight: 700; font-size: 0.85rem; min-width: 28px; text-align: center; }
     .skill-level-input { width: 40px; background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #00e5ff; font-weight: 700; text-align: center; font-size: 0.85rem; outline: none; }
@@ -102,6 +117,21 @@
     .gear-table td.td-actions { width: 30px; text-align: center; }
     .add-row-btn { background: transparent; border: 1px dashed #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 5px 14px; font-size: 0.78rem; cursor: pointer; margin-top: 4px; transition: border-color 0.15s, color 0.15s; }
     .add-row-btn:hover { border-color: #00e5ff; color: #00e5ff; }
+    .col-narrow { width: 56px; }
+
+    /* ── Computers (Tech tab) ── */
+    .computer-card { background: rgba(13,21,32,0.7); border: 1px solid #0a4a60; border-radius: 6px; padding: 12px 14px; margin-bottom: 12px; }
+    .computer-head { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+    .computer-field { display: flex; flex-direction: column; gap: 2px; }
+    .computer-field label { font-size: 0.65rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; }
+    .computer-field input[type="text"], .computer-field input[type="number"] { background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; font-size: 0.85rem; outline: none; width: 100px; }
+    .computer-field.cf-name input { width: 160px; color: #00e5ff; font-weight: 600; }
+    .computer-bis { display: flex; align-items: center; gap: 4px; font-size: 0.78rem; color: #4a9ab8; }
+    .computer-options { width: 100%; min-height: 50px; background: rgba(13,21,32,0.5); border: 1px solid #0a4a60; border-radius: 5px; color: #b0d8e8; font-size: 0.82rem; padding: 8px; resize: vertical; outline: none; font-family: inherit; box-sizing: border-box; margin-bottom: 8px; }
+    .computer-software-title { font-size: 0.65rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .software-row { display: flex; gap: 8px; align-items: center; padding: 4px 0; font-size: 0.82rem; color: #b0d8e8; }
+    .software-row input[type="text"] { flex: 1; background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; outline: none; }
+    .software-row input[type="number"] { width: 50px; background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; outline: none; }
 
     /* ── Finances ── */
     .finances-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
@@ -168,7 +198,7 @@
       <div class="sidebar-group-label">Character Resources</div>
       <a href="character-record.html" class="sidebar-nav-item active">Character Record</a>
       <a href="spacecraft-record.html" class="sidebar-nav-item">Spacecraft Record</a>
-      <a href="character-list.html" class="sidebar-nav-item">Character List</a>
+      <a href="character-list.html" class="sidebar-nav-item">Roster</a>
       <a href="character-creation.html" class="sidebar-nav-item">Character Creation</a>
       <div class="sidebar-group-label">Reference</div>
       <a href="general-rules.html" class="sidebar-nav-item">General Rules</a>
@@ -204,22 +234,28 @@
               <div><span>Age</span><span id="disp-age">—</span></div>
             </div>
             <div class="char-roles">
-              <div class="role-badge" id="disp-primary">—</div>
-              <div class="role-badge" id="disp-secondary" style="display:none"></div>
+              <div class="role-badge view-only" id="disp-primary">—</div>
+              <input class="role-input edit-only" id="edit-primary" placeholder="Primary Role" />
+              <div class="role-badge view-only" id="disp-secondary" style="display:none"></div>
+              <input class="role-input edit-only" id="edit-secondary" placeholder="Secondary Role" />
             </div>
+            <div class="char-created" id="disp-created"></div>
           </div>
           <div class="char-header-actions">
             <span class="status-badge" id="status-badge">Active</span>
-            <button class="btn btn-ghost view-only" id="edit-btn" onclick="enterEditMode()" style="display:none">Edit</button>
-            <button class="btn btn-primary edit-only" onclick="saveAll()">Save</button>
-            <button class="btn btn-ghost edit-only" onclick="cancelEdit()">Cancel</button>
+            <div class="char-header-btns">
+              <button class="btn btn-ghost view-only" id="edit-btn" onclick="enterEditMode()" style="display:none">Edit</button>
+              <button class="btn btn-primary edit-only" onclick="saveAll()">Save</button>
+              <button class="btn btn-ghost edit-only" onclick="cancelEdit()">Cancel</button>
+            </div>
           </div>
         </div>
 
         <!-- ── Tabs ── -->
         <div class="tab-nav">
           <button class="tab-btn active" onclick="showTab('stats', this)">Stats &amp; Skills</button>
-          <button class="tab-btn" onclick="showTab('gear', this)">Gear &amp; Finances</button>
+          <button class="tab-btn" onclick="showTab('gear', this)">Equipment</button>
+          <button class="tab-btn" onclick="showTab('tech', this)">Tech</button>
           <button class="tab-btn" onclick="showTab('career', this)">Career &amp; Associates</button>
           <button class="tab-btn" onclick="showTab('notes', this)">Notes</button>
         </div>
@@ -229,13 +265,52 @@
         ══════════════════════════════════════ -->
         <div id="tab-stats" class="tab-content">
 
-          <div class="cr-section">
-            <div class="cr-section-title">Characteristics</div>
-            <div class="char-stats-grid" id="stats-grid"></div>
+          <div class="stats-tab-top">
+            <div class="cr-section" style="margin-bottom:0">
+              <div class="cr-section-title">Core Characteristics</div>
+              <div class="char-stats-grid" id="stats-grid"></div>
+            </div>
+
+            <div class="cr-section" style="margin-bottom:0">
+              <div class="cr-section-title">Finances (Credits)</div>
+              <div class="finances-grid">
+                <div class="finance-box">
+                  <div class="finance-label">Cash on Hand</div>
+                  <div class="view-only finance-value" id="disp-cash">0</div>
+                  <input class="finance-input edit-only" type="number" id="edit-cash" value="0" />
+                </div>
+                <div class="finance-box">
+                  <div class="finance-label">Pension</div>
+                  <div class="view-only finance-value" id="disp-pension">0</div>
+                  <input class="finance-input edit-only" type="number" id="edit-pension" value="0" />
+                </div>
+                <div class="finance-box">
+                  <div class="finance-label">Debt</div>
+                  <div class="view-only finance-value" id="disp-debt">0</div>
+                  <input class="finance-input edit-only" type="number" id="edit-debt" value="0" />
+                </div>
+                <div class="finance-box">
+                  <div class="finance-label">Living Costs / mo</div>
+                  <div class="view-only finance-value" id="disp-living">0</div>
+                  <input class="finance-input edit-only" type="number" id="edit-living" value="0" />
+                </div>
+                <div class="finance-box">
+                  <div class="finance-label">Ship Payment / mo</div>
+                  <div class="view-only finance-value" id="disp-ship-pay">0</div>
+                  <input class="finance-input edit-only" type="number" id="edit-ship-pay" value="0" />
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="cr-section">
-            <div class="cr-section-title">Skills</div>
+            <div class="skills-section-head cr-section-title" style="border-bottom:1px solid #0a4a60;padding-bottom:5px;margin-bottom:10px">
+              <span>Skills</span>
+              <div class="skill-totals">
+                <span>Max Skill Levels: <b id="skill-max">0</b> <span style="opacity:0.7">[3×(INT+EDU)]</span></span>
+                <span>Current Skill Levels: <b id="skill-current">0</b></span>
+              </div>
+            </div>
             <div id="skills-list"></div>
             <div class="edit-only" style="margin-top:8px">
               <button class="add-row-btn" onclick="openAddSkill()">+ Add Skill</button>
@@ -284,14 +359,18 @@
         </div>
 
         <!-- ══════════════════════════════════════
-             TAB 2 — GEAR & FINANCES
+             TAB 2 — EQUIPMENT
         ══════════════════════════════════════ -->
         <div id="tab-gear" class="tab-content" style="display:none">
 
           <div class="cr-section">
             <div class="cr-section-title">Armour</div>
             <table class="gear-table">
-              <thead><tr><th>Type</th><th>Protection</th><th>Rad</th><th>Kg</th><th>Options</th><th class="edit-only"></th></tr></thead>
+              <thead><tr>
+                <th>Type</th><th class="col-narrow">PRO+</th><th>Conditions</th>
+                <th class="col-narrow">RAD</th><th class="col-narrow">TL</th><th class="col-narrow">KG</th>
+                <th>Options</th><th class="edit-only"></th>
+              </tr></thead>
               <tbody id="armour-tbody"></tbody>
             </table>
             <button class="add-row-btn edit-only" onclick="addArmourRow()">+ Add Armour</button>
@@ -300,19 +379,14 @@
           <div class="cr-section">
             <div class="cr-section-title">Weapons</div>
             <table class="gear-table">
-              <thead><tr><th>Name</th><th>TL</th><th>Range</th><th>Damage</th><th>Kg</th><th>Mag</th><th>Traits</th><th class="edit-only"></th></tr></thead>
+              <thead><tr>
+                <th>Name</th><th class="col-narrow">TL</th><th class="col-narrow">Range</th>
+                <th class="col-narrow">Damage</th><th class="col-narrow">Kg</th><th class="col-narrow">Mag</th>
+                <th>Traits</th><th class="edit-only"></th>
+              </tr></thead>
               <tbody id="weapons-tbody"></tbody>
             </table>
             <button class="add-row-btn edit-only" onclick="addWeaponRow()">+ Add Weapon</button>
-          </div>
-
-          <div class="cr-section">
-            <div class="cr-section-title">Augments</div>
-            <table class="gear-table">
-              <thead><tr><th>Type</th><th>TL</th><th>Improvement</th><th class="edit-only"></th></tr></thead>
-              <tbody id="augments-tbody"></tbody>
-            </table>
-            <button class="add-row-btn edit-only" onclick="addAugmentRow()">+ Add Augment</button>
           </div>
 
           <div class="cr-section">
@@ -324,35 +398,31 @@
             <button class="add-row-btn edit-only" onclick="addEquipmentRow()">+ Add Equipment</button>
           </div>
 
+        </div>
+
+        <!-- ══════════════════════════════════════
+             TAB — TECH
+        ══════════════════════════════════════ -->
+        <div id="tab-tech" class="tab-content" style="display:none">
+
           <div class="cr-section">
-            <div class="cr-section-title">Finances (Credits)</div>
-            <div class="finances-grid">
-              <div class="finance-box">
-                <div class="finance-label">Cash on Hand</div>
-                <div class="view-only finance-value" id="disp-cash">0</div>
-                <input class="finance-input edit-only" type="number" id="edit-cash" value="0" />
-              </div>
-              <div class="finance-box">
-                <div class="finance-label">Pension</div>
-                <div class="view-only finance-value" id="disp-pension">0</div>
-                <input class="finance-input edit-only" type="number" id="edit-pension" value="0" />
-              </div>
-              <div class="finance-box">
-                <div class="finance-label">Debt</div>
-                <div class="view-only finance-value" id="disp-debt">0</div>
-                <input class="finance-input edit-only" type="number" id="edit-debt" value="0" />
-              </div>
-              <div class="finance-box">
-                <div class="finance-label">Living Costs / mo</div>
-                <div class="view-only finance-value" id="disp-living">0</div>
-                <input class="finance-input edit-only" type="number" id="edit-living" value="0" />
-              </div>
-              <div class="finance-box">
-                <div class="finance-label">Ship Payment / mo</div>
-                <div class="view-only finance-value" id="disp-ship-pay">0</div>
-                <input class="finance-input edit-only" type="number" id="edit-ship-pay" value="0" />
-              </div>
+            <div class="cr-section-title" style="display:flex;justify-content:space-between;align-items:baseline">
+              <span>Computers</span>
+              <button class="add-row-btn edit-only" style="margin:0" onclick="addComputer()">+ Add Computer</button>
             </div>
+            <div id="computers-list"></div>
+          </div>
+
+          <div class="cr-section">
+            <div class="cr-section-title">Augments</div>
+            <table class="gear-table">
+              <thead><tr>
+                <th>Type</th><th class="col-narrow">TL</th><th>Improvement</th>
+                <th class="col-narrow">Bonus Target</th><th class="col-narrow">Bonus</th><th class="edit-only"></th>
+              </tr></thead>
+              <tbody id="augments-tbody"></tbody>
+            </table>
+            <button class="add-row-btn edit-only" onclick="addAugmentRow()">+ Add Augment</button>
           </div>
 
         </div>
@@ -439,6 +509,7 @@ let pendingArmour     = [];
 let pendingWeapons    = [];
 let pendingAugments   = [];
 let pendingEquipment  = [];
+let pendingComputers  = [];
 let pendingCareers    = [];
 let pendingAssociates = [];
 let pendingWounds     = [];
@@ -475,12 +546,14 @@ async function init() {
 }
 
 async function loadCharacter() {
-  const { data, error } = await supabaseClient
-    .from('characters')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .eq('status', 'active')
-    .single();
+  const reqId = new URLSearchParams(window.location.search).get('id');
+
+  let query = supabaseClient.from('characters').select('*');
+  query = reqId
+    ? query.eq('id', reqId)
+    : query.eq('user_id', currentUser.id).eq('status', 'active');
+
+  const { data, error } = await query.single();
 
   if (error || !data) {
     document.getElementById('no-char-msg').style.display = 'block';
@@ -499,6 +572,7 @@ async function loadCharacter() {
   renderFinances();
   renderNotes();
   await renderGear();
+  await renderComputers();
   await renderCareers();
   await renderAssociates();
   await renderWounds();
@@ -511,29 +585,58 @@ function renderHeader() {
   document.getElementById('disp-homeworld').textContent = character.homeworld || '—';
   document.getElementById('disp-age').textContent       = character.age || '—';
   document.getElementById('disp-primary').textContent   = character.primary_role || '—';
+  document.getElementById('edit-primary').value          = character.primary_role || '';
   const sec = character.secondary_role;
   if (sec) {
     const el = document.getElementById('disp-secondary');
     el.textContent    = sec;
     el.style.display  = 'inline-block';
   }
+  document.getElementById('edit-secondary').value = sec || '';
   const badge = document.getElementById('status-badge');
   const s = character.status || 'active';
   badge.textContent = s.charAt(0).toUpperCase() + s.slice(1);
   badge.className   = 'status-badge status-' + s;
+  const created = character.created_at ? new Date(character.created_at) : null;
+  document.getElementById('disp-created').textContent = created
+    ? 'Created ' + created.toLocaleDateString()
+    : '';
 }
 
 // ── Stats ──────────────────────────────────────────────────
+let characterAugments = [];
+
+function augmentBonus(key) {
+  return characterAugments
+    .filter(a => a.bonus_target === key)
+    .reduce((sum, a) => sum + (a.bonus_value || 0), 0);
+}
+
+function effectiveStat(c) {
+  const raw    = character[c.key] ?? 7;
+  const injury = (character.injuries && character.injuries[c.key]) || 0;
+  return raw - injury + augmentBonus(c.key);
+}
+
 function renderStats() {
   const grid = document.getElementById('stats-grid');
   grid.innerHTML = CHARS.map(c => {
-    const val = character[c.key] ?? 7;
+    const val    = character[c.key] ?? 7;
+    const injury = (character.injuries && character.injuries[c.key]) || 0;
     return `
       <div class="stat-box">
         <div class="stat-label">${c.label}</div>
         <div class="stat-value view-only" id="disp-${c.key}">${val}</div>
         <input class="stat-input edit-only" type="number" id="edit-${c.key}" value="${val}" min="0" max="15" />
-        <div class="stat-dm" id="dm-${c.key}">${charDM(val)}</div>
+        <div class="stat-dm" id="dm-${c.key}">${charDM(effectiveStat(c))}</div>
+        <div class="stat-injury-row">
+          <div class="stat-injury-label">Injury</div>
+          <div class="stat-injury-ctrl">
+            <button class="injury-btn" onclick="adjustInjury('${c.key}',-1)">▼</button>
+            <span class="injury-val" id="injury-${c.key}">${injury}</span>
+            <button class="injury-btn" onclick="adjustInjury('${c.key}',1)">▲</button>
+          </div>
+        </div>
       </div>`;
   }).join('');
 
@@ -541,16 +644,35 @@ function renderStats() {
   CHARS.forEach(c => {
     const input = document.getElementById('edit-' + c.key);
     if (input) input.addEventListener('input', () => {
-      document.getElementById('dm-' + c.key).textContent = charDM(parseInt(input.value) || 0);
+      const injury = (character.injuries && character.injuries[c.key]) || 0;
+      const eff = (parseInt(input.value) || 0) - injury + augmentBonus(c.key);
+      document.getElementById('dm-' + c.key).textContent = charDM(eff);
     });
   });
 }
 
+async function adjustInjury(key, delta) {
+  if (!character.injuries) character.injuries = {};
+  const next = Math.max(0, (character.injuries[key] || 0) + delta);
+  character.injuries[key] = next;
+  renderStats();
+  await supabaseClient.from('characters').update({ injuries: character.injuries }).eq('id', character.id);
+}
+
 // ── Skills ─────────────────────────────────────────────────
+function renderSkillTotals() {
+  const skills = character.skills || {};
+  const current = Object.values(skills).reduce((sum, s) => sum + (parseInt(s.level) || 0), 0);
+  const max = 3 * ((character.int_stat ?? 7) + (character.edu ?? 7));
+  document.getElementById('skill-max').textContent     = max;
+  document.getElementById('skill-current').textContent = current;
+}
+
 function renderSkills() {
   const list   = document.getElementById('skills-list');
   const skills = character.skills || {};
   const keys   = Object.keys(skills);
+  renderSkillTotals();
 
   if (keys.length === 0) {
     list.innerHTML = '<div style="color:#4a9ab8;font-size:0.85rem;padding:6px 0">No skills recorded.</div>';
@@ -568,12 +690,13 @@ function renderSkills() {
     return `
       <div class="skill-wrap">
         <div class="skill-row" data-key="${key}" onclick="toggleSkillDetail('${detailId}', event)">
-          <div class="skill-name">${label}</div>
-          <span class="skill-info-icon">▾</span>
           <div class="skill-level-badge view-only">${s.level}</div>
           <input class="skill-level-input edit-only" type="number" min="0" max="4" value="${s.level}"
                  onclick="event.stopPropagation()"
                  onchange="updateSkillLevel('${key}', this.value)" />
+          <div class="skill-name">${label}</div>
+          <span class="skill-spacer"></span>
+          <span class="skill-info-icon">▾</span>
           <button class="skill-remove edit-only" onclick="event.stopPropagation();removeSkill('${key}')">✕</button>
         </div>
         <div class="skill-detail" id="${detailId}">${detail}</div>
@@ -630,6 +753,7 @@ function toggleSkillDetail(id, event) {
 
 function updateSkillLevel(key, val) {
   if (character.skills[key]) character.skills[key].level = parseInt(val) || 0;
+  renderSkillTotals();
 }
 
 function removeSkill(key) {
@@ -729,8 +853,10 @@ async function renderGear() {
   ]);
   renderArmour(a.data || []);
   renderWeapons(w.data || []);
-  renderAugments(aug.data || []);
+  characterAugments = aug.data || [];
+  renderAugments(characterAugments);
   renderEquipment(eq.data || []);
+  renderStats();
 }
 
 function none(cols) {
@@ -740,11 +866,11 @@ function none(cols) {
 function renderArmour(rows) {
   document.getElementById('armour-tbody').innerHTML = rows.length
     ? rows.map(r => `<tr data-id="${r.id}">
-        <td>${r.type}</td><td>${r.protection}</td><td>${r.rad}</td>
-        <td>${r.kg}</td><td>${r.options || ''}</td>
+        <td>${r.type}</td><td>${r.protection}</td><td>${r.conditions || ''}</td>
+        <td>${r.rad}</td><td>${r.tl ?? ''}</td><td>${r.kg}</td><td>${r.options || ''}</td>
         <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingArmour','${r.id}',this)">✕</button></td>
       </tr>`).join('')
-    : none(6);
+    : none(8);
 }
 
 function addArmourRow() {
@@ -755,7 +881,9 @@ function addArmourRow() {
   tr.innerHTML = `
     <td><input placeholder="Type" /></td>
     <td><input type="number" placeholder="0" style="width:50px" /></td>
+    <td><input placeholder="Conditions" /></td>
     <td><input type="number" placeholder="0" style="width:50px" /></td>
+    <td><input type="number" placeholder="TL" style="width:45px" /></td>
     <td><input type="number" placeholder="0" step="0.01" style="width:60px" /></td>
     <td><input placeholder="Options" /></td>
     <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
@@ -792,13 +920,21 @@ function addWeaponRow() {
   pendingWeapons.push({ action: 'add', tr });
 }
 
+const BONUS_TARGETS = ['', 'str', 'dex', 'end_stat', 'int_stat', 'edu', 'soc', 'armour'];
+const BONUS_TARGET_LABEL = { '': '—', str:'STR', dex:'DEX', end_stat:'END', int_stat:'INT', edu:'EDU', soc:'SOC', armour:'Armour' };
+
+function bonusTargetOptions(selected) {
+  return BONUS_TARGETS.map(t => `<option value="${t}" ${t === (selected||'') ? 'selected' : ''}>${BONUS_TARGET_LABEL[t]}</option>`).join('');
+}
+
 function renderAugments(rows) {
   document.getElementById('augments-tbody').innerHTML = rows.length
     ? rows.map(r => `<tr data-id="${r.id}">
         <td>${r.type}</td><td>${r.tl ?? ''}</td><td>${r.improvement || ''}</td>
+        <td>${BONUS_TARGET_LABEL[r.bonus_target || ''] || '—'}</td><td>${r.bonus_value || 0}</td>
         <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingAugments','${r.id}',this)">✕</button></td>
       </tr>`).join('')
-    : none(4);
+    : none(6);
 }
 
 function addAugmentRow() {
@@ -810,6 +946,8 @@ function addAugmentRow() {
     <td><input placeholder="Type" /></td>
     <td><input type="number" placeholder="TL" style="width:45px" /></td>
     <td><input placeholder="Improvement" /></td>
+    <td><select>${bonusTargetOptions('')}</select></td>
+    <td><input type="number" placeholder="0" style="width:45px" /></td>
     <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
   tbody.appendChild(tr);
   pendingAugments.push({ action: 'add', tr });
@@ -840,6 +978,122 @@ function addEquipmentRow() {
 function queueDelete(pendingArr, id, btn) {
   window[pendingArr].push({ action: 'delete', id });
   btn.closest('tr').remove();
+}
+
+// ── Computers (Tech tab) ────────────────────────────────────
+async function renderComputers() {
+  const { data } = await supabaseClient
+    .from('character_computers').select('*').eq('character_id', character.id).order('created_at');
+
+  const list = document.getElementById('computers-list');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div style="color:#4a9ab8;font-size:0.85rem;padding:6px 0">No computers recorded.</div>';
+    return;
+  }
+
+  const softwareByComputer = {};
+  await Promise.all(data.map(async c => {
+    const { data: sw } = await supabaseClient
+      .from('character_computer_software').select('*').eq('computer_id', c.id);
+    softwareByComputer[c.id] = sw || [];
+  }));
+
+  list.innerHTML = data.map(c => renderComputerCard(c, softwareByComputer[c.id])).join('');
+}
+
+function renderComputerCard(c, software) {
+  const swRows = (software || []).map(s => `
+    <div class="software-row" data-id="${s.id}">
+      <input type="text" value="${s.name}" onchange="autoSaveSoftware('${s.id}','name',this.value)" />
+      <input type="number" value="${s.bandwidth || 0}" step="0.5" onchange="autoSaveSoftware('${s.id}','bandwidth',parseFloat(this.value)||0)" />
+      <input type="number" value="${s.tl ?? ''}" placeholder="TL" onchange="autoSaveSoftware('${s.id}','tl',parseInt(this.value)||null)" />
+      <label class="computer-bis"><input type="checkbox" ${s.active ? 'checked' : ''} onchange="autoSaveSoftware('${s.id}','active',this.checked)" /> Active</label>
+      <button class="skill-remove edit-only" onclick="deleteSoftware('${s.id}',this)">✕</button>
+    </div>`).join('');
+
+  return `
+    <div class="computer-card" data-id="${c.id}">
+      <div class="computer-head">
+        <div class="computer-field cf-name">
+          <label>Name</label>
+          <input type="text" value="${c.name}" onchange="autoSaveComputer('${c.id}','name',this.value)" />
+        </div>
+        <div class="computer-field">
+          <label>Processor</label>
+          <input type="number" value="${c.processor || 0}" onchange="autoSaveComputer('${c.id}','processor',parseInt(this.value)||0)" />
+        </div>
+        <div class="computer-field">
+          <label>TL</label>
+          <input type="number" value="${c.tl ?? ''}" onchange="autoSaveComputer('${c.id}','tl',parseInt(this.value)||null)" />
+        </div>
+        <label class="computer-bis"><input type="checkbox" ${c.bis ? 'checked' : ''} onchange="autoSaveComputer('${c.id}','bis',this.checked)" /> /bis</label>
+        <label class="computer-bis"><input type="checkbox" ${c.fib ? 'checked' : ''} onchange="autoSaveComputer('${c.id}','fib',this.checked)" /> /fib</label>
+        <button class="skill-remove edit-only" style="margin-left:auto" onclick="deleteComputer('${c.id}',this)">✕</button>
+      </div>
+      <textarea class="computer-options" placeholder="Options (interface, remote access, agent, etc.)"
+                onchange="autoSaveComputer('${c.id}','options',this.value)">${c.options || ''}</textarea>
+      <div class="computer-software-title">Software</div>
+      <div id="sw-${c.id}">${swRows || '<div style="color:#4a9ab8;font-size:0.78rem">No software installed.</div>'}</div>
+      <button class="add-row-btn edit-only" onclick="addSoftwareRow('${c.id}')">+ Add Software</button>
+    </div>`;
+}
+
+function autoSaveComputer(id, column, value) {
+  supabaseClient.from('character_computers').update({ [column]: value }).eq('id', id);
+}
+
+function autoSaveSoftware(id, column, value) {
+  supabaseClient.from('character_computer_software').update({ [column]: value }).eq('id', id);
+}
+
+async function deleteSoftware(id, btn) {
+  await supabaseClient.from('character_computer_software').delete().eq('id', id);
+  btn.closest('.software-row').remove();
+}
+
+async function addSoftwareRow(computerId) {
+  const { data } = await supabaseClient.from('character_computer_software')
+    .insert({ computer_id: computerId, name: 'New Software' }).select().single();
+  if (!data) return;
+  const wrap = document.getElementById('sw-' + computerId);
+  const empty = wrap.querySelector('div[style]');
+  if (empty) empty.remove();
+  wrap.insertAdjacentHTML('beforeend', `
+    <div class="software-row" data-id="${data.id}">
+      <input type="text" value="${data.name}" onchange="autoSaveSoftware('${data.id}','name',this.value)" />
+      <input type="number" value="0" step="0.5" onchange="autoSaveSoftware('${data.id}','bandwidth',parseFloat(this.value)||0)" />
+      <input type="number" placeholder="TL" onchange="autoSaveSoftware('${data.id}','tl',parseInt(this.value)||null)" />
+      <label class="computer-bis"><input type="checkbox" checked onchange="autoSaveSoftware('${data.id}','active',this.checked)" /> Active</label>
+      <button class="skill-remove edit-only" onclick="deleteSoftware('${data.id}',this)">✕</button>
+    </div>`);
+}
+
+function addComputer() {
+  const list = document.getElementById('computers-list');
+  const empty = list.querySelector('div[style]');
+  if (empty) empty.remove();
+  const id = 'new-' + Date.now();
+  const div = document.createElement('div');
+  div.className = 'computer-card';
+  div.dataset.id = id;
+  div.innerHTML = `
+    <div class="computer-head">
+      <div class="computer-field cf-name"><label>Name</label><input type="text" value="New Computer" /></div>
+      <div class="computer-field"><label>Processor</label><input type="number" value="0" /></div>
+      <div class="computer-field"><label>TL</label><input type="number" /></div>
+      <label class="computer-bis"><input type="checkbox" /> /bis</label>
+      <label class="computer-bis"><input type="checkbox" /> /fib</label>
+      <button class="skill-remove edit-only" style="margin-left:auto" onclick="this.closest('.computer-card').remove()">✕</button>
+    </div>
+    <textarea class="computer-options" placeholder="Options (interface, remote access, agent, etc.)"></textarea>
+    <div style="color:#4a9ab8;font-size:0.78rem">Save the character to manage software for this computer.</div>`;
+  list.appendChild(div);
+  pendingComputers.push({ action: 'add', div });
+}
+
+async function deleteComputer(id, btn) {
+  await supabaseClient.from('character_computers').delete().eq('id', id);
+  btn.closest('.computer-card').remove();
 }
 
 // ── Careers ────────────────────────────────────────────────
@@ -1002,7 +1256,7 @@ function cancelEdit() {
 }
 
 function clearPending() {
-  pendingArmour=[]; pendingWeapons=[]; pendingAugments=[];
+  pendingArmour=[]; pendingWeapons=[]; pendingAugments=[]; pendingComputers=[];
   pendingEquipment=[]; pendingCareers=[]; pendingAssociates=[]; pendingWounds=[];
 }
 
@@ -1017,6 +1271,8 @@ async function saveAll() {
     CHARS.forEach(c => {
       update[c.key] = parseInt(document.getElementById('edit-' + c.key)?.value) || 0;
     });
+    update.primary_role              = document.getElementById('edit-primary').value.trim()   || null;
+    update.secondary_role            = document.getElementById('edit-secondary').value.trim() || null;
     update.cash_on_hand              = parseInt(document.getElementById('edit-cash').value)      || 0;
     update.pension                   = parseInt(document.getElementById('edit-pension').value)    || 0;
     update.debt                      = parseInt(document.getElementById('edit-debt').value)       || 0;
@@ -1040,8 +1296,9 @@ async function saveAll() {
         const i = p.tr.querySelectorAll('input');
         if (i[0].value) await supabaseClient.from('character_armour').insert({
           character_id: character.id,
-          type: i[0].value, protection: parseInt(i[1].value)||0,
-          rad: parseInt(i[2].value)||0, kg: parseFloat(i[3].value)||0, options: i[4].value||null
+          type: i[0].value, protection: parseInt(i[1].value)||0, conditions: i[2].value||null,
+          rad: parseInt(i[3].value)||0, tl: parseInt(i[4].value)||null,
+          kg: parseFloat(i[5].value)||0, options: i[6].value||null
         });
       }
     }
@@ -1065,9 +1322,27 @@ async function saveAll() {
       if (p.action === 'delete') { await supabaseClient.from('character_augments').delete().eq('id', p.id); }
       else {
         const i = p.tr.querySelectorAll('input');
+        const sel = p.tr.querySelector('select');
         if (i[0].value) await supabaseClient.from('character_augments').insert({
           character_id: character.id,
-          type: i[0].value, tl: parseInt(i[1].value)||null, improvement: i[2].value||null
+          type: i[0].value, tl: parseInt(i[1].value)||null, improvement: i[2].value||null,
+          bonus_target: sel.value || null, bonus_value: parseInt(i[3].value)||0
+        });
+      }
+    }
+
+    // Computers (structural fields only — software is auto-saved live once the computer exists)
+    for (const p of pendingComputers) {
+      if (p.action === 'delete') { await supabaseClient.from('character_computers').delete().eq('id', p.id); }
+      else {
+        const txt = p.div.querySelectorAll('input[type="text"], input[type="number"]');
+        const checks = p.div.querySelectorAll('input[type="checkbox"]');
+        const options = p.div.querySelector('.computer-options').value;
+        await supabaseClient.from('character_computers').insert({
+          character_id: character.id,
+          name: txt[0].value || 'Computer', processor: parseInt(txt[1].value)||0,
+          tl: parseInt(txt[2].value)||null, bis: checks[0].checked, fib: checks[1].checked,
+          options: options || null
         });
       }
     }
