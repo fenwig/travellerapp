@@ -65,7 +65,8 @@
       "Bash(\"C:\\\\Program Files\\\\Git\\\\mingw64\\\\bin\\\\pdftotext.exe\" \"C:\\\\Users\\\\mikel\\\\OneDrive\\\\Personal Documents\\\\Claude\\\\Travellerapp\\\\docs\\\\sourcebooks\\\\Traveller 2022 Core Rulebook 20-02-2026.pdf\" -)",
       "Bash(node --check \"C:\\\\Users\\\\mikel\\\\OneDrive\\\\Personal Documents\\\\Claude\\\\Travellerapp\\\\src\\\\pages\\\\spacecraft-record.html\")",
       "Bash(\"C:\\\\Program Files\\\\Git\\\\mingw64\\\\bin\\\\pdftotext.exe\" -f 108 -l 112 \"C:\\\\Users\\\\mikel\\\\OneDrive\\\\Personal Documents\\\\Claude\\\\Travellerapp\\\\docs\\\\sourcebooks\\\\Traveller 2022 Core Rulebook 20-02-2026.pdf\" -)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(git commit *)"
     ]
   }
 }
