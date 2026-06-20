@@ -82,6 +82,56 @@
       'Career', 'Terms', 'Mustering Out', 'Finalize'
     ];
 
+    // Species characteristic modifiers + traits — Core Rulebook pp.53-54.
+    // mods are applied to rolled characteristics in Step 2 (Characteristics).
+    const SPECIES_DATA = {
+      Human: { mods: {}, traits: [] },
+      Aslan: {
+        mods: { str: 2, dex: -2 },
+        traits: [
+          'Dewclaw: vicious close combat weapon, uses Melee (natural) skill, 1D+2 damage.',
+          'Heightened Senses: DM+1 to Recon and Survival checks.'
+        ]
+      },
+      Vargr: {
+        mods: { str: -1, dex: 1, end_stat: -1 },
+        traits: [
+          'Bite: close combat weapon, uses Melee (natural) skill, 1D+1 damage.',
+          'Heightened Senses: DM+1 to Recon and Survival checks; DM-1 to sight-based checks in dark conditions.'
+        ]
+      }
+    };
+
+    const SPECIES_NOTE_START = '[SPECIES TRAITS]';
+    const SPECIES_NOTE_END = '[/SPECIES TRAITS]';
+
+    function modsLine(mods) {
+      const labels = { str: 'STR', dex: 'DEX', end_stat: 'END', int_stat: 'INT', edu: 'EDU', soc: 'SOC' };
+      const parts = Object.keys(mods).map(k => `${labels[k]}${mods[k] > 0 ? '+' : ''}${mods[k]}`);
+      return parts.length ? parts.join(', ') : 'None';
+    }
+
+    function buildSpeciesNote(species) {
+      const sp = SPECIES_DATA[species] || SPECIES_DATA.Human;
+      if (species === 'Human' || !sp.traits.length) return '';
+      return `${SPECIES_NOTE_START}\n${species} — Characteristics: ${modsLine(sp.mods)}.\n` +
+        sp.traits.map(t => `- ${t}`).join('\n') + `\n${SPECIES_NOTE_END}`;
+    }
+
+    // Replaces any existing species-traits block in notes, preserving the rest.
+    function applySpeciesNote(existingNotes, species) {
+      const notes = existingNotes || '';
+      const startIdx = notes.indexOf(SPECIES_NOTE_START);
+      const endIdx = notes.indexOf(SPECIES_NOTE_END);
+      let rest = notes;
+      if (startIdx !== -1 && endIdx !== -1) {
+        rest = (notes.slice(0, startIdx) + notes.slice(endIdx + SPECIES_NOTE_END.length)).trim();
+      }
+      const block = buildSpeciesNote(species);
+      if (!block) return rest;
+      return rest ? `${block}\n\n${rest}` : block;
+    }
+
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = '../../index.html'; return; }
@@ -160,6 +210,22 @@
       }
 
       shell.innerHTML = renderSteps() + body;
+      if (step === 1) renderSpeciesPreview();
+    }
+
+    function renderSpeciesPreview() {
+      const species = document.getElementById('f-species').value;
+      const sp = SPECIES_DATA[species];
+      const el = document.getElementById('species-preview');
+      if (!sp.traits.length) { el.innerHTML = ''; return; }
+      el.innerHTML = `
+        <div class="rule-card" style="margin-bottom:16px;">
+          <div style="color:#00e5ff; font-size:0.85rem; font-weight:600; margin-bottom:6px;">
+            Characteristics: ${modsLine(sp.mods)}
+          </div>
+          ${sp.traits.map(t => `<div style="font-size:0.85rem; margin-bottom:4px;">${t}</div>`).join('')}
+        </div>
+      `;
     }
 
     function renderStepName() {
@@ -175,8 +241,14 @@
 
           <div class="wizard-field">
             <label for="f-species">Species</label>
-            <input id="f-species" type="text" value="${draft.species || 'Human'}" placeholder="Human" />
+            <select id="f-species" onchange="renderSpeciesPreview()">
+              ${Object.keys(SPECIES_DATA).map(sp =>
+                `<option value="${sp}" ${(draft.species || 'Human') === sp ? 'selected' : ''}>${sp}</option>`
+              ).join('')}
+            </select>
           </div>
+
+          <div id="species-preview"></div>
 
           <div id="step1-error"></div>
 
@@ -198,8 +270,10 @@
         return;
       }
 
+      const background_notes = applySpeciesNote(draft.background_notes, species);
+
       const { error } = await supabaseClient.from('characters')
-        .update({ name, species, creation_step: 2 })
+        .update({ name, species, background_notes, creation_step: 2 })
         .eq('id', draft.id);
       if (error) {
         errEl.innerHTML = `<p class="wizard-error">${error.message}</p>`;
@@ -207,6 +281,7 @@
       }
       draft.name = name;
       draft.species = species;
+      draft.background_notes = background_notes;
       draft.creation_step = 2;
       renderStep();
     }
