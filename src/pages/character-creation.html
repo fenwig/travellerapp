@@ -305,10 +305,18 @@
           <div id="step2-error"></div>
           <div class="wizard-actions">
             <button class="btn-outline-danger" onclick="changeStep2Method()">Start Over</button>
-            <button class="btn-outline" onclick="submitStepCharacteristics()" ${allAssigned ? '' : 'disabled'}>Continue</button>
+            <div style="display:flex; gap:12px;">
+              <button class="btn-outline" onclick="clearAssignments()" ${Object.keys(assignment).length ? '' : 'disabled'}>Clear All Assignments</button>
+              <button class="btn-outline" onclick="submitStepCharacteristics()" ${allAssigned ? '' : 'disabled'}>Continue</button>
+            </div>
           </div>
         </div>
       `;
+    }
+
+    async function clearAssignments() {
+      await saveStep2State({ assignment: {} });
+      renderStep();
     }
 
     async function assignRoll(key, idxStr) {
