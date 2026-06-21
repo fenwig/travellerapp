@@ -326,12 +326,27 @@
           <div class="wizard-actions">
             <button class="btn-outline-danger" onclick="changeStep2Method()">Start Over</button>
             <div style="display:flex; gap:12px;">
+              <button class="btn-outline" onclick="randomAssign()">Random Assign</button>
               <button class="btn-outline" onclick="clearAssignments()" ${Object.keys(assignment).length ? '' : 'disabled'}>Clear All Assignments</button>
               <button class="btn-outline" onclick="submitStepCharacteristics()" ${allAssigned ? '' : 'disabled'}>Continue</button>
             </div>
           </div>
         </div>
       `;
+    }
+
+    async function randomAssign() {
+      const s = step2State();
+      const idxs = s.values.map((_, i) => i);
+      for (let i = idxs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [idxs[i], idxs[j]] = [idxs[j], idxs[i]];
+      }
+      const assignment = {};
+      CHARS.forEach((c, i) => { assignment[c.key] = idxs[i]; });
+      await saveStep2State({ assignment });
+      await logCreation('Randomly assigned characteristic rolls.');
+      renderStep();
     }
 
     async function clearAssignments() {
