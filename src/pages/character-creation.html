@@ -8,13 +8,15 @@
   <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    .wizard-shell { max-width: 720px; margin: 0 auto; }
+    .wizard-shell { max-width: 720px; margin: 0; }
     .wizard-steps {
-      display: flex; gap: 6px; margin-bottom: 28px; flex-wrap: wrap;
+      display: flex; gap: 6px; margin-bottom: 28px; flex-wrap: nowrap;
+      overflow-x: auto; padding-bottom: 4px;
     }
     .wizard-step-pill {
-      padding: 5px 12px; border-radius: 999px; font-size: 0.75rem;
-      letter-spacing: 0.04em; border: 1px solid #0a4a60; color: #4a9ab8;
+      padding: 5px 10px; border-radius: 999px; font-size: 0.7rem;
+      letter-spacing: 0.03em; border: 1px solid #0a4a60; color: #4a9ab8;
+      white-space: nowrap; flex-shrink: 0;
     }
     .wizard-step-pill.done   { border-color: #00ffaa; color: #00ffaa; }
     .wizard-step-pill.active { border-color: #00e5ff; color: #00e5ff; background: rgba(0,229,255,0.08); }
