@@ -358,6 +358,155 @@
       renderStep();
     }
 
+    // ── Step 3: Background Skills ─────────────────────────────
+    // Core Rulebook p.9 — gain (EDU DM + 3) background skills at level 0.
+    const BACKGROUND_SKILLS = [
+      { name: 'Admin' },
+      { name: 'Animals', specialties: ['Handling', 'Training', 'Veterinary'] },
+      { name: 'Art', specialties: ['Holography', 'Instrument', 'Performer', 'Sculpt', 'Write'] },
+      { name: 'Athletics' },
+      { name: 'Carouse' },
+      { name: 'Drive', specialties: ['Hovercraft', 'Mole', 'Track', 'Walker', 'Wheel'] },
+      { name: 'Electronics', specialties: ['Comms', 'Computers', 'Remote Ops', 'Sensors'] },
+      { name: 'Flyer', specialties: ['Airship', 'Grav', 'Ornithopter', 'Rotor', 'Wing'] },
+      { name: 'Language', specialties: ['Galanglic', 'Gvegh', 'Oynprith', 'Trokh', 'Vilani', 'Zdetl'] },
+      { name: 'Mechanic' },
+      { name: 'Medic' },
+      { name: 'Profession', specialties: ['Belter', 'Biologicals', 'Civil Engineering', 'Construction', 'Hydroponics', 'Polymers'] },
+      { name: 'Science', specialties: ['Archaeology', 'Astronomy', 'Biology', 'Chemistry', 'Cosmology', 'Cybernetics', 'Economics', 'Genetics', 'History', 'Linguistics', 'Philosophy', 'Physics', 'Planetology', 'Psionicology', 'Psychology', 'Robotics', 'Sophontology', 'Xenology'] },
+      { name: 'Seafarer', specialties: ['Ocean Ships', 'Personal', 'Sail', 'Submarine'] },
+      { name: 'Streetwise' },
+      { name: 'Survival' },
+      { name: 'Vacc Suit' }
+    ];
+    const BG_BY_NAME = {};
+    BACKGROUND_SKILLS.forEach(s => { BG_BY_NAME[s.name] = s; });
+
+    function dmNum(v) {
+      if (v <= 0)   return -3;
+      if (v <= 2)   return -2;
+      if (v <= 5)   return -1;
+      if (v <= 8)   return 0;
+      if (v <= 11)  return 1;
+      if (v <= 14)  return 2;
+      return 3;
+    }
+
+    function bgAllowance() {
+      return Math.max(0, Math.min(6, dmNum(draft.edu) + 3));
+    }
+
+    function bgState() {
+      return (draft.creation_data && draft.creation_data.step3) || { selected: {} };
+    }
+
+    async function saveBgState(patch) {
+      const data = draft.creation_data || {};
+      data.step3 = Object.assign({}, bgState(), patch);
+      draft.creation_data = data;
+      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+    }
+
+    function bgValidCount(selected) {
+      return Object.keys(selected).filter(name => {
+        const s = selected[name];
+        const def = BG_BY_NAME[name];
+        return s.on && (!def.specialties || s.specialty);
+      }).length;
+    }
+
+    function renderStepBackgroundSkills() {
+      const allowed = bgAllowance();
+      const s = bgState();
+      const selected = s.selected || {};
+      const validCount = bgValidCount(selected);
+      const atCap = validCount >= allowed;
+
+      const rows = BACKGROUND_SKILLS.map(def => {
+        const sel = selected[def.name] || {};
+        const isValid = sel.on && (!def.specialties || sel.specialty);
+        const disableCheck = !sel.on && atCap;
+        return `
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <input type="checkbox" ${sel.on ? 'checked' : ''} ${disableCheck ? 'disabled' : ''}
+                   onchange="toggleBgSkill('${def.name}', this.checked)" style="width:18px; height:18px; accent-color:#00e5ff;" />
+            <span style="min-width:110px; ${isValid ? 'color:#00ffaa;' : ''}">${def.name}</span>
+            ${def.specialties ? `
+              <select onchange="setBgSpecialty('${def.name}', this.value)" ${sel.on ? '' : 'disabled'} style="max-width:220px;">
+                <option value="">— specialty —</option>
+                ${def.specialties.map(sp => `<option value="${sp}" ${sel.specialty === sp ? 'selected' : ''}>${sp}</option>`).join('')}
+              </select>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">Background Skills</div>
+          <div class="wizard-card-sub">
+            Before your first career, adolescence leaves you with a grounding in everyday skills.
+            You gain a number of level-0 background skills equal to your EDU DM + 3. (Core Rulebook p.9)
+          </div>
+          <div style="color:#00e5ff; font-weight:600; margin-bottom:14px;">
+            Selected ${validCount} of ${allowed}${draft.edu !== undefined ? ` (EDU ${draft.edu}, DM ${charDM(draft.edu)})` : ''}
+          </div>
+          ${rows}
+          <div id="step3-error"></div>
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="goStep(2)">Back</button>
+            <button class="btn-outline" onclick="submitStepBackgroundSkills()" ${validCount === allowed ? '' : 'disabled'}>Continue</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function toggleBgSkill(name, checked) {
+      const s = bgState();
+      const selected = Object.assign({}, s.selected);
+      selected[name] = checked ? { on: true, specialty: (selected[name] && selected[name].specialty) || '' } : { on: false, specialty: '' };
+      await saveBgState({ selected });
+      renderStep();
+    }
+
+    async function setBgSpecialty(name, specialty) {
+      const s = bgState();
+      const selected = Object.assign({}, s.selected);
+      selected[name] = { on: true, specialty };
+      await saveBgState({ selected });
+      renderStep();
+    }
+
+    async function submitStepBackgroundSkills() {
+      const allowed = bgAllowance();
+      const s = bgState();
+      const selected = s.selected || {};
+      const errEl = document.getElementById('step3-error');
+
+      if (bgValidCount(selected) !== allowed) {
+        errEl.innerHTML = '<p class="wizard-error">Select exactly your allowed number of background skills.</p>';
+        return;
+      }
+
+      const skills = Object.assign({}, draft.skills || {});
+      Object.keys(selected).forEach(name => {
+        const sel = selected[name];
+        if (!sel.on) return;
+        const key = sel.specialty ? `${name}|${sel.specialty}` : name;
+        skills[key] = { name, specialty: sel.specialty || null, level: 0 };
+      });
+
+      const { error } = await supabaseClient.from('characters')
+        .update({ skills, creation_step: 4 }).eq('id', draft.id);
+      if (error) {
+        errEl.innerHTML = `<p class="wizard-error">${error.message}</p>`;
+        return;
+      }
+      draft.skills = skills;
+      draft.creation_step = 4;
+      renderStep();
+    }
+
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = '../../index.html'; return; }
@@ -425,6 +574,8 @@
         body = renderStepName();
       } else if (step === 2) {
         body = renderStepCharacteristics();
+      } else if (step === 3) {
+        body = renderStepBackgroundSkills();
       } else {
         body = `
           <div class="rule-card wizard-card">

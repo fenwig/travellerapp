@@ -73,7 +73,10 @@
       "Read(//c//**)",
       "Bash(jobs)",
       "Bash(wait)",
-      "Bash(\"/c/Program Files/Git/mingw64/bin/pdftotext.exe\" -layout \"docs/sourcebooks/Traveller 2022 Core Rulebook 20-02-2026.pdf\" -)"
+      "Bash(\"/c/Program Files/Git/mingw64/bin/pdftotext.exe\" -layout \"docs/sourcebooks/Traveller 2022 Core Rulebook 20-02-2026.pdf\" -)",
+      "Bash(\"/c/Program Files/Git/mingw64/bin/pdftotext.exe\" -layout \"docs/sourcebooks/Traveller 2022 Core Rulebook 20-02-2026.pdf\" - > /tmp/core.txt *)",
+      "Bash(\"/c/Program Files/Git/mingw64/bin/pdftotext.exe\" -layout \"docs/sourcebooks/Traveller Companion Update 2024 Apr 2024.pdf\" -)",
+      "Bash(grep -n \"^3[0-9]$\" /tmp/companion.txt)"
     ]
   }
 }
