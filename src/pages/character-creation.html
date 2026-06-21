@@ -1664,25 +1664,25 @@
         musteringCash: [1000, 5000, 5000, 10000, 20000, 50000, 50000],
         musteringBenefits: ['Personal Vehicle or Ship Share', 'INT +1', 'EDU +1 or two Ship Shares', 'Weapon', 'TAS Membership', "Ship's Boat or two Ship Shares", 'SOC +2'],
         mishaps: [
-          { roll: 1, text: 'Severely injured in action (same as Injury table result 2, or roll twice and take the lower).' },
-          { roll: 2, text: 'Placed in frozen watch and revived improperly. Reduce STR, DEX or END by 1 (muscle wastage). You are not ejected from this career.', noEject: true },
-          { roll: 3, text: "Battle's outcome depends on your actions — make an 8+ skill roll (Electronics/Gunner if Line, Mechanic/Vacc Suit if Engineer/Gunner, Pilot/Tactics if Flight). Fail: ship suffers severe damage, you're court-martialled and discharged. Succeed: honourably discharged, you may keep this term's Benefit roll." },
-          { roll: 4, text: 'Blamed for an accident causing crew deaths. If responsible: gain one free Skills & Training roll before ejection. If not: gain the blaming officer as an Enemy but keep this term\'s Benefit roll.' },
-          { roll: 5, text: 'Tormented by or quarrel with an officer or crewman — gain them as a Rival, forced out of the Navy.' },
-          { roll: 6, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).' }
+          { roll: 1, text: 'Severely injured in action (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
+          { roll: 2, text: 'Placed in frozen watch and revived improperly. Reduce STR, DEX or END by 1 (muscle wastage). You are not ejected from this career.', noEject: true, tools: ['stat'] },
+          { roll: 3, text: "Battle's outcome depends on your actions — make an 8+ skill roll (Electronics/Gunner if Line, Mechanic/Vacc Suit if Engineer/Gunner, Pilot/Tactics if Flight). Fail: ship suffers severe damage, you're court-martialled and discharged. Succeed: honourably discharged, you may keep this term's Benefit roll.", tools: [] },
+          { roll: 4, text: 'Blamed for an accident causing crew deaths. If responsible: gain one free Skills & Training roll before ejection. If not: gain the blaming officer as an Enemy but keep this term\'s Benefit roll.', tools: ['associate'] },
+          { roll: 5, text: 'Tormented by or quarrel with an officer or crewman — gain them as a Rival, forced out of the Navy.', tools: ['associate'] },
+          { roll: 6, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).', tools: [] }
         ],
         events: [
-          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.' },
-          { roll: 3, text: 'You join a gambling circle on board. Gain Gambler 1 or Deception 1. May throw Gambler 8+ for an extra Benefit roll (lose one if failed).' },
-          { roll: 4, text: 'Given a special assignment or duty. Gain DM+1 to any one Benefit roll.' },
-          { roll: 5, text: 'Given advanced training. Roll EDU 8+ to gain one level in any skill you already have.' },
-          { roll: 6, text: 'Your vessel takes part in a notable military engagement. Gain one of Electronics 1, Engineer 1, Gunner 1 or Pilot 1.' },
-          { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).' },
-          { roll: 8, text: 'Your vessel takes part in a diplomatic mission. Gain one of Recon 1, Diplomat 1, Steward 1, or a Contact.' },
-          { roll: 9, text: 'You foil an attempted crime aboard. Gain an Enemy, but DM+2 to your next advancement roll in the Navy.' },
-          { roll: 10, text: 'Opportunity to abuse your position for profit. Accept: extra Benefit roll this term. Refuse: DM+2 to next advancement roll.' },
-          { roll: 11, text: 'Your commanding officer takes an interest in your career. Gain Tactics (naval) 1, or DM+4 to your next advancement roll.' },
-          { roll: 12, text: 'You display heroism in battle, saving the ship. Automatically pass your next promotion or commission roll.' }
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 3, text: 'You join a gambling circle on board. Gain Gambler 1 or Deception 1. May throw Gambler 8+ for an extra Benefit roll (lose one if failed).', tools: ['skill'] },
+          { roll: 4, text: 'Given a special assignment or duty. Gain DM+1 to any one Benefit roll.', tools: [] },
+          { roll: 5, text: 'Given advanced training. Roll EDU 8+ to gain one level in any skill you already have.', tools: ['skill'] },
+          { roll: 6, text: 'Your vessel takes part in a notable military engagement. Gain one of Electronics 1, Engineer 1, Gunner 1 or Pilot 1.', tools: ['skill'] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).', tools: [] },
+          { roll: 8, text: 'Your vessel takes part in a diplomatic mission. Gain one of Recon 1, Diplomat 1, Steward 1, or a Contact.', tools: ['skill', 'associate'] },
+          { roll: 9, text: 'You foil an attempted crime aboard. Gain an Enemy, but DM+2 to your next advancement roll in the Navy.', tools: ['associate'] },
+          { roll: 10, text: 'Opportunity to abuse your position for profit. Accept: extra Benefit roll this term. Refuse: DM+2 to next advancement roll.', tools: [] },
+          { roll: 11, text: 'Your commanding officer takes an interest in your career. Gain Tactics (naval) 1, or DM+4 to your next advancement roll.', tools: ['skill'] },
+          { roll: 12, text: 'You display heroism in battle, saving the ship. Automatically pass your next promotion or commission roll.', tools: [] }
         ]
       },
       drifter: {
@@ -1714,25 +1714,25 @@
         musteringCash: [0, 0, 1000, 2000, 3000, 4000, 8000],
         musteringBenefits: ['Contact', 'Weapon', 'Ally', 'Weapon', 'EDU +1', 'Ship Share', 'Two Ship Shares'],
         mishaps: [
-          { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).' },
-          { roll: 2, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).' },
-          { roll: 3, text: 'You run afoul of a criminal gang, corrupt bureaucrat or other foe. Gain an Enemy.' },
-          { roll: 4, text: 'You suffer from a life-threatening illness. Reduce your END by 1.' },
-          { roll: 5, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have none, gain a Rival or Enemy anyway.' },
-          { roll: 6, text: 'You do not know what happened to you. There is a gap in your memory.' }
+          { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
+          { roll: 2, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).', tools: [] },
+          { roll: 3, text: 'You run afoul of a criminal gang, corrupt bureaucrat or other foe. Gain an Enemy.', tools: ['associate'] },
+          { roll: 4, text: 'You suffer from a life-threatening illness. Reduce your END by 1.', tools: ['stat'] },
+          { roll: 5, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have none, gain a Rival or Enemy anyway.', tools: ['associate'] },
+          { roll: 6, text: 'You do not know what happened to you. There is a gap in your memory.', tools: [] }
         ],
         events: [
-          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.' },
-          { roll: 3, text: 'A patron offers you a chance at a job. If you accept, gain DM+4 to your next qualification roll but you owe that patron a favour.' },
-          { roll: 4, text: 'You pick up a few useful skills here and there. Gain one level of Jack-of-all-Trades, Survival, Streetwise or Melee (any).' },
-          { roll: 5, text: 'You manage to scavenge something of use. Gain DM+1 to any one Benefit roll.' },
-          { roll: 6, text: 'You encounter something unusual (Life Events table, Core p.46 — not yet built).' },
-          { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).' },
-          { roll: 8, text: 'You are attacked by enemies. Gain an Enemy if you do not have one already, and roll Melee 8+, Gun Combat 8+ or Stealth 8+ to avoid a roll on the Injury table.' },
-          { roll: 9, text: 'Offered a risky but rewarding adventure. 1D: 1-2 injured/arrested, 3-4 survive with nothing, 5-6 succeed for DM+4 to one Benefit roll.' },
-          { roll: 10, text: 'Life on the edge hones your abilities. Increase any skill you already have by one level.' },
-          { roll: 11, text: 'You are forcibly drafted. Roll for the Draft next term.' },
-          { roll: 12, text: 'You thrive on adversity. You are automatically promoted.' }
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 3, text: 'A patron offers you a chance at a job. If you accept, gain DM+4 to your next qualification roll but you owe that patron a favour.', tools: [] },
+          { roll: 4, text: 'You pick up a few useful skills here and there. Gain one level of Jack-of-all-Trades, Survival, Streetwise or Melee (any).', tools: ['skill'] },
+          { roll: 5, text: 'You manage to scavenge something of use. Gain DM+1 to any one Benefit roll.', tools: [] },
+          { roll: 6, text: 'You encounter something unusual (Life Events table, Core p.46 — not yet built).', tools: [] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).', tools: [] },
+          { roll: 8, text: 'You are attacked by enemies. Gain an Enemy if you do not have one already, and roll Melee 8+, Gun Combat 8+ or Stealth 8+ to avoid a roll on the Injury table.', tools: ['associate'] },
+          { roll: 9, text: 'Offered a risky but rewarding adventure. 1D: 1-2 injured/arrested, 3-4 survive with nothing, 5-6 succeed for DM+4 to one Benefit roll.', tools: [] },
+          { roll: 10, text: 'Life on the edge hones your abilities. Increase any skill you already have by one level.', tools: ['skill'] },
+          { roll: 11, text: 'You are forcibly drafted. Roll for the Draft next term.', tools: [] },
+          { roll: 12, text: 'You thrive on adversity. You are automatically promoted.', tools: [] }
         ]
       }
     };
@@ -2253,7 +2253,7 @@
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Mishap ${s.mishapRoll}</div>
           <p style="margin-bottom:14px;">${m.text}</p>
-          ${renderGenericResolver('mishap')}
+          ${renderGenericResolver('mishap', m.tools)}
           <div class="wizard-actions">
             ${m.noEject
               ? `<button class="btn-outline" onclick="continueCareerAfterMishap()" ${s.mishapResolved ? '' : 'disabled'}>Continue Career — Not Ejected</button>`
@@ -2292,12 +2292,16 @@
     }
 
     // ── Generic resolver — Grant Skill / Adjust Characteristic / Add Associate ──
-    function renderGenericResolver(tag) {
+    function renderGenericResolver(tag, tools) {
+      tools = tools || [];
+      const toolButtons = {
+        skill: `<button class="btn-outline" onclick="openResolver('${tag}','skill')">Grant Skill</button>`,
+        stat: `<button class="btn-outline" onclick="openResolver('${tag}','stat')">Adjust Characteristic</button>`,
+        associate: `<button class="btn-outline" onclick="openResolver('${tag}','associate')">Add Associate</button>`
+      };
       return `
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
-          <button class="btn-outline" onclick="openResolver('${tag}','skill')">Grant Skill</button>
-          <button class="btn-outline" onclick="openResolver('${tag}','stat')">Adjust Characteristic</button>
-          <button class="btn-outline" onclick="openResolver('${tag}','associate')">Add Associate</button>
+          ${tools.map(t => toolButtons[t]).join('')}
           <button class="btn-outline" onclick="markResolverDone('${tag}')">Mark Resolved / No Further Effect</button>
         </div>
         <div id="resolver-${tag}"></div>
@@ -2399,7 +2403,7 @@
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Event ${s.eventRoll}</div>
           <p style="margin-bottom:14px;">${e.text}</p>
-          ${renderGenericResolver('event')}
+          ${renderGenericResolver('event', e.tools)}
           ${s.eventResolved ? renderConnectionWidget('careerEvent_' + (draft.id || '') + '_' + s.terms) : ''}
           <div class="wizard-actions">
             <button class="btn-outline" onclick="goCareerAfterEvents()" ${s.eventResolved ? '' : 'disabled'}>Continue</button>
