@@ -78,6 +78,7 @@ CREATE POLICY "computer_software_delete" ON character_computer_software FOR DELE
 
 ALTER TABLE characters ADD COLUMN IF NOT EXISTS creation_step INTEGER DEFAULT 1;
 ALTER TABLE characters ADD COLUMN IF NOT EXISTS creation_data JSONB DEFAULT '{}';
+ALTER TABLE characters ADD COLUMN IF NOT EXISTS creation_log TEXT;
 
 ALTER TABLE characters DROP CONSTRAINT IF EXISTS characters_status_check;
 ALTER TABLE characters ADD CONSTRAINT characters_status_check

@@ -229,6 +229,7 @@
       const values = [];
       for (let i = 0; i < 6; i++) values.push(roll2d6());
       await saveStep2State({ values, assignment: {} });
+      await logCreation(`Auto-rolled characteristics: ${values.join(', ')}.`);
       renderStep();
     }
 
@@ -268,6 +269,7 @@
         values.push(v);
       }
       await saveStep2State({ values, assignment: {} });
+      await logCreation(`Entered own characteristic rolls: ${values.join(', ')}.`);
       renderStep();
     }
 
@@ -372,6 +374,7 @@
       }
       Object.assign(draft, update);
       draft.creation_step = 3;
+      await logCreation(`Assigned characteristics — ${CHARS.map(c => `${c.label} ${update[c.key]} (${charDM(update[c.key])})`).join(', ')}.`);
       renderStep();
     }
 
@@ -501,6 +504,8 @@
       }
       draft.skills = skills;
       draft.creation_step = 4;
+      const chosenNames = Object.keys(selected).filter(name => selected[name].on);
+      await logCreation(`Chose background skills: ${chosenNames.join(', ') || 'none'}.`);
       renderStep();
     }
 
@@ -671,6 +676,16 @@
       draft.background_notes = notes;
     }
 
+    // ── Creation Log — running record of decisions/rolls, shown on the
+    // Character Record's "Creation Log" tab.
+    async function logCreation(text) {
+      const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const line = `[${stamp}] ${text}`;
+      const log = draft.creation_log ? draft.creation_log + '\n' + line : line;
+      await supabaseClient.from('characters').update({ creation_log: log }).eq('id', draft.id);
+      draft.creation_log = log;
+    }
+
     function skillKey(name, specialty) { return specialty ? `${name}|${specialty}` : name; }
 
     function grantSkillMin(skills, name, specialty, level) {
@@ -748,6 +763,7 @@
       } else {
         await saveStep4State({ phase: 'entry', optionId: id });
       }
+      await logCreation(`Selected pre-career education option: ${opt.name}.`);
       renderStep();
     }
 
@@ -755,6 +771,7 @@
       await appendNote('[PRE-CAREER EDUCATION]\nSkipped pre-career education — went straight to choosing a career.\n[/PRE-CAREER EDUCATION]');
       await supabaseClient.from('characters').update({ creation_step: 5 }).eq('id', draft.id);
       draft.creation_step = 5;
+      await logCreation('Skipped pre-career education — went straight to choosing a career.');
       renderStep();
     }
 
@@ -781,6 +798,7 @@
       const s = step4State();
       const patch = s.isCurriculum ? { curriculum: key, phase: 'entry' } : { branch: key, phase: 'entry' };
       await saveStep4State(patch);
+      await logCreation(`Chose ${s.isCurriculum ? 'curriculum' : 'branch'}: ${key}.`);
       renderStep();
     }
 
@@ -859,6 +877,8 @@
       await saveStep4State({ phase: 'entryResult', entryResult: result });
       renderStep();
 
+      await logCreation(`${opt.name}${branchOrCurriculum ? ' (' + branchOrCurriculum + ')' : ''} — Entry ${result.success ? 'succeeded' : 'failed'}${result.total !== undefined ? ` (rolled ${result.total} vs ${result.target}+)` : ' (automatic)'}.`);
+
       if (!result.success) {
         await appendNote(`[PRE-CAREER EDUCATION]\nAttempted ${opt.name}${branchOrCurriculum ? ' (' + branchOrCurriculum + ')' : ''} — failed Entry${result.total !== undefined ? ` (rolled ${result.total} vs ${result.target}+)` : ''}.\n[/PRE-CAREER EDUCATION]`);
       }
@@ -902,6 +922,7 @@
     async function finishPreEdFail() {
       await supabaseClient.from('characters').update({ creation_step: 5 }).eq('id', draft.id);
       draft.creation_step = 5;
+      await logCreation('Pre-career education entry failed — moving on to choosing a career.');
       renderStep();
     }
 
@@ -1044,11 +1065,16 @@
       }
 
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      const before = draft.skills || {};
+      const gainedNames = Object.keys(skills).filter(k => !before[k] || before[k].level !== skills[k].level)
+        .map(k => `${skills[k].name}${skills[k].specialty ? ' (' + skills[k].specialty + ')' : ''} ${skills[k].level}`);
       draft.skills = skills;
 
       if (grant.deferred) {
         await appendNote(`[PRE-CAREER EDUCATION]\n${opt.name}: ${grant.note}\n[/PRE-CAREER EDUCATION]`);
       }
+
+      await logCreation(`${opt.name} — entry skills: ${gainedNames.join(', ') || (grant.deferred ? 'deferred (see Background Notes)' : 'none')}.`);
 
       await saveStep4State({ phase: 'events' });
       renderStep();
@@ -1110,6 +1136,7 @@
       }
 
       await saveStep4State({ eventRoll: { dice: [d1, d2], total }, eventMechanic: mechanic });
+      await logCreation(`Pre-Career Event roll: ${total} — ${PRE_ED_EVENTS[total]}`);
       renderStep();
     }
 
@@ -1184,6 +1211,7 @@
       const name = document.getElementById('event4-name').value.trim() || 'Unnamed';
       await addAssociate(m.outcome, name, 'From a pre-career education event.');
       await saveEventMechanic({ resolved: true });
+      await logCreation(`Event 4 outcome: gained ${name} as a ${m.outcome}.`);
       renderStep();
     }
 
@@ -1221,11 +1249,13 @@
     async function confirmEvent6() {
       const s = step4State();
       const m = s.eventMechanic;
+      const names = [];
       for (let i = 0; i < m.count; i++) {
         const name = document.getElementById('event6-name-' + i).value.trim();
-        if (name) await addAssociate('ally', name, 'A lifelong friend from a tightly knit clique.');
+        if (name) { await addAssociate('ally', name, 'A lifelong friend from a tightly knit clique.'); names.push(name); }
       }
       await saveEventMechanic({ resolved: true });
+      await logCreation(`Event 6 outcome: gained ${names.length} Allies — ${names.join(', ') || 'none named'}.`);
       renderStep();
     }
 
@@ -1258,6 +1288,7 @@
       const total = d1 + d2 + dmNum(draft.soc);
       const success = total >= 8;
       await saveEventMechanic({ rolled: true, total, success, resolved: !success });
+      if (!success) await logCreation(`Event 8 outcome: rolled ${total} (need 8+) — no special outcome.`);
       renderStep();
     }
 
@@ -1267,6 +1298,7 @@
       if (allyName) await addAssociate('ally', allyName, 'A fellow member of the political movement.');
       if (enemyName) await addAssociate('enemy', enemyName, 'Opposed your rise within the political movement.');
       await saveEventMechanic({ resolved: true });
+      await logCreation(`Event 8 outcome: became a leading figure — Ally ${allyName || 'none'}, Enemy ${enemyName || 'none'}.`);
       renderStep();
     }
 
@@ -1308,6 +1340,7 @@
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
       draft.skills = skills;
       await saveEventMechanic({ resolved: true });
+      await logCreation(`Event 9 outcome: gained ${m.skillName}${m.specialty ? ' (' + m.specialty + ')' : ''} 0.`);
       renderStep();
     }
 
@@ -1362,6 +1395,7 @@
       }
       await addAssociate('rival', 'A demanding tutor', 'Met during pre-career education.');
       await saveEventMechanic({ resolved: true, total, success, skillName: skillData.name });
+      await logCreation(`Event 10 outcome: rolled ${total} (need 9+) on ${skillData.name} — ${success ? 'gained a level, ' : 'no success, '}tutor gained as a Rival.`);
       renderStep();
     }
 
@@ -1394,14 +1428,17 @@
       const total = d1 + d2 + dmNum(draft.soc);
       if (total >= 9) {
         await saveEventMechanic({ checkedAvoid: true, avoidTotal: total, avoided: true, resolved: true });
+        await logCreation(`Event 11 outcome: rolled ${total} (need 9+) — avoided the draft.`);
       } else {
         await saveEventMechanic({ checkedAvoid: true, avoidTotal: total });
+        await logCreation(`Event 11: rolled ${total} (need 9+) — did not avoid the draft.`);
       }
       renderStep();
     }
 
     async function event11Flee() {
       await saveEventMechanic({ resolved: true, gradForcedFail: true, outcome: 'You flee and will join the Drifter career next term. You do not graduate this term.' });
+      await logCreation('Event 11 outcome: fled — will join the Drifter career next term.');
       renderStep();
     }
 
@@ -1409,6 +1446,7 @@
       const branchRoll = rollDie();
       const branch = branchRoll <= 3 ? 'Army' : branchRoll <= 5 ? 'Marine' : 'Navy';
       await saveEventMechanic({ resolved: true, gradForcedFail: true, outcome: `Drafted into the ${branch} — that career begins next term (once Careers is built). You do not graduate this term.` });
+      await logCreation(`Event 11 outcome: drafted into the ${branch}.`);
       renderStep();
     }
 
@@ -1460,6 +1498,7 @@
       await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
 
       await appendNote(`[CONNECTION]\nFormed a connection with ${targetName} — gained one free skill choice (max 2 from connections, can't exceed level 3, no Jack-of-all-Trades).\n[/CONNECTION]`);
+      await logCreation(`Formed a connection with ${targetName} — gained one free skill choice.`);
 
       document.getElementById('connection-picker-' + tag).innerHTML =
         `<p style="color:#00ffaa; font-size:0.85rem;">Connection recorded with ${targetName}. Add the skill bump on ${targetName}'s sheet directly, and remember to add one on yours too.</p>`;
@@ -1522,6 +1561,7 @@
       const success = total >= g.target;
       const honours = success && total >= g.honours;
       await saveStep4State({ gradRoll: { dice: [d1, d2], total, success, honours, target: g.target } });
+      await logCreation(`${opt.name} — Graduation roll: ${total} (need ${g.target}+) — ${success ? (honours ? 'graduated with honours.' : 'graduated.') : 'did not graduate.'}`);
       renderStep();
     }
 
@@ -1532,6 +1572,7 @@
 
     async function forceFailGraduation() {
       await saveStep4State({ gradRoll: { success: false, forced: true }, phase: 'benefits' });
+      await logCreation('Graduation skipped — forced fail from a Pre-Career Event.');
       renderStep();
     }
 
@@ -1610,6 +1651,7 @@
 
       const applied = Object.assign({}, s.benefitsApplied, { [benefitId]: true });
       await saveStep4State({ benefitsApplied: applied });
+      await logCreation(`Applied Graduation Benefit: ${b.text}`);
       renderStep();
     }
 
@@ -1633,6 +1675,7 @@
       await appendNote(note);
       await supabaseClient.from('characters').update({ creation_step: 5 }).eq('id', draft.id);
       draft.creation_step = 5;
+      await logCreation(`Finished pre-career education (${opt.name}) — moving on to choosing a career.`);
       renderStep();
     }
 
@@ -1828,6 +1871,7 @@
       draft.species = species;
       draft.background_notes = background_notes;
       draft.creation_step = 2;
+      await logCreation(`Named the Traveller "${name}" — species ${species}.`);
       renderStep();
     }
 

@@ -256,6 +256,7 @@
           <button class="tab-btn" onclick="showTab('tech', this)">Tech</button>
           <button class="tab-btn" onclick="showTab('career', this)">Career &amp; Associates</button>
           <button class="tab-btn" onclick="showTab('notes', this)">Notes</button>
+          <button class="tab-btn" onclick="showTab('creationlog', this)">Creation Log</button>
         </div>
 
         <!-- ══════════════════════════════════════
@@ -482,6 +483,21 @@
             <div class="cr-section-title">Wounds &amp; Injuries</div>
             <div id="wounds-list"></div>
             <button class="add-row-btn edit-only" onclick="addWoundRow()">+ Add Wound</button>
+          </div>
+
+        </div>
+
+        <!-- ══════════════════════════════════════
+             TAB 5 — CREATION LOG
+        ══════════════════════════════════════ -->
+        <div id="tab-creationlog" class="tab-content" style="display:none">
+
+          <div class="cr-section">
+            <div class="cr-section-title">Creation Log</div>
+            <div style="color:#4a9ab8; font-size:0.82rem; margin-bottom:10px;">
+              A running record of decisions and rolls made during Character Creation.
+            </div>
+            <div class="view-only" id="disp-creationlog" style="color:#b0d8e8;font-size:0.85rem;white-space:pre-wrap;min-height:40px"></div>
           </div>
 
         </div>
@@ -1378,6 +1394,7 @@ function renderNotes() {
   document.getElementById('disp-history').textContent    = character.previous_history  || '';
   document.getElementById('edit-background').value       = character.background_notes || '';
   document.getElementById('edit-history').value          = character.previous_history  || '';
+  document.getElementById('disp-creationlog').textContent = character.creation_log || 'No creation log yet.';
 }
 
 // ── Edit mode ──────────────────────────────────────────────
