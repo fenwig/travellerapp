@@ -571,14 +571,14 @@
           const b = PRE_ED_OPTIONS.find(o => o.id === 'military').branchChoice.find(x => x.key === branch);
           return { stat: b.entryStat, target: b.entryTarget, extraDM: 0, dmLabel: '' };
         },
-        // Navy's Service Skills tables are built (CAREERS_DATA.navy); Army/Marines aren't, so
-        // those branches stay deferred-note until those careers exist.
-        entryGrant: (s) => s.branch === 'Navy'
-          ? { auto: militaryServiceSkillPool() }
-          : { deferred: true, note: 'Gain all Service Skills of the chosen military career at level 0 — Army/Marines tables aren\'t built yet, apply manually once those Careers exist.' },
+        // Navy and Army Service Skills tables are built; Marines isn't yet,
+        // so that branch stays deferred-note until that career exists.
+        entryGrant: (s) => (s.branch === 'Navy' || s.branch === 'Army')
+          ? { auto: militaryServiceSkillPool(s.branch) }
+          : { deferred: true, note: 'Gain all Service Skills of the chosen military career at level 0 — Marines tables aren\'t built yet, apply manually once that Career exists.' },
         graduation: () => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: 0, dmLabel: '' }),
         benefits: [
-          { id: 'three_service', text: 'If entering the same military career, select any three Service Skills and increase them to level 1.', type: 'chooseN', n: 3, level: 1, pool: (s) => s.branch === 'Navy' ? militaryServiceSkillPool() : [] },
+          { id: 'three_service', text: 'If entering the same military career, select any three Service Skills and increase them to level 1.', type: 'chooseN', n: 3, level: 1, pool: (s) => (s.branch === 'Navy' || s.branch === 'Army') ? militaryServiceSkillPool(s.branch) : [] },
           { id: 'edu1', text: 'Increase EDU by +1.', type: 'stat', key: 'edu', amount: 1 },
           { id: 'soc1_honours', text: 'Honours graduates also increase SOC by +1.', type: 'stat', key: 'soc', amount: 1, honoursOnly: true },
           { id: 'auto_entry', text: 'Automatic entry into the tied military career at rank 1 (officer), if it is the first career after the academy.', type: 'flag' }
@@ -1797,6 +1797,74 @@
           { roll: 12, text: 'You uncover a major conspiracy. You are automatically promoted.', tools: [] }
         ]
       },
+      army: {
+        id: 'army', name: 'Army', source: 'Core Rulebook pp.24-25', military: true,
+        qualification: { stat: 'end_stat', target: 5, agePenalty: { minAge: 30, dm: -2 } },
+        commission: { stat: 'soc', target: 8 },
+        serviceSkills: [{ name: 'Drive' }, { name: 'Athletics' }, { name: 'Gun Combat' }, { name: 'Recon' }, { name: 'Melee' }, { name: 'Heavy Weapons' }],
+        assignments: [
+          { key: 'support', label: 'Support', survival: { stat: 'end_stat', target: 5 }, advancement: { stat: 'edu', target: 7 },
+            ranks: [
+              { rank: 0, title: 'Private', skill: { name: 'Gun Combat', level: 1 } },
+              { rank: 1, title: 'Lance Corporal', skill: { name: 'Recon', level: 1 } },
+              { rank: 2, title: 'Corporal' },
+              { rank: 3, title: 'Lance Sergeant', skill: { name: 'Leadership', level: 1 } },
+              { rank: 4, title: 'Sergeant' }, { rank: 5, title: 'Gunnery Sergeant' }, { rank: 6, title: 'Sergeant Major' }
+            ],
+            specialistSkills: [{ name: 'Mechanic' }, { name: 'Drive' }, { name: 'Profession' }, { name: 'Explosives' }, { name: 'Electronics', specialty: 'Comms' }, { name: 'Medic' }] },
+          { key: 'infantry', label: 'Infantry', survival: { stat: 'str', target: 6 }, advancement: { stat: 'edu', target: 6 },
+            ranks: [
+              { rank: 0, title: 'Private', skill: { name: 'Gun Combat', level: 1 } },
+              { rank: 1, title: 'Lance Corporal', skill: { name: 'Recon', level: 1 } },
+              { rank: 2, title: 'Corporal' },
+              { rank: 3, title: 'Lance Sergeant', skill: { name: 'Leadership', level: 1 } },
+              { rank: 4, title: 'Sergeant' }, { rank: 5, title: 'Gunnery Sergeant' }, { rank: 6, title: 'Sergeant Major' }
+            ],
+            specialistSkills: [{ name: 'Gun Combat' }, { name: 'Melee' }, { name: 'Heavy Weapons' }, { name: 'Stealth' }, { name: 'Athletics' }, { name: 'Recon' }] },
+          { key: 'cavalry', label: 'Cavalry', survival: { stat: 'dex', target: 7 }, advancement: { stat: 'int_stat', target: 5 },
+            ranks: [
+              { rank: 0, title: 'Private', skill: { name: 'Gun Combat', level: 1 } },
+              { rank: 1, title: 'Lance Corporal', skill: { name: 'Recon', level: 1 } },
+              { rank: 2, title: 'Corporal' },
+              { rank: 3, title: 'Lance Sergeant', skill: { name: 'Leadership', level: 1 } },
+              { rank: 4, title: 'Sergeant' }, { rank: 5, title: 'Gunnery Sergeant' }, { rank: 6, title: 'Sergeant Major' }
+            ],
+            specialistSkills: [{ name: 'Mechanic' }, { name: 'Drive' }, { name: 'Flyer' }, { name: 'Recon' }, { name: 'Heavy Weapons', specialty: 'Vehicle' }, { name: 'Electronics', specialty: 'Sensors' }] }
+        ],
+        personalDevelopment: [{ stat: 'str' }, { stat: 'dex' }, { stat: 'end_stat' }, { name: 'Gambler' }, { name: 'Medic' }, { name: 'Melee' }],
+        advancedEducation: [{ name: 'Tactics', specialty: 'Military' }, { name: 'Electronics' }, { name: 'Navigation' }, { name: 'Explosives' }, { name: 'Engineer' }, { name: 'Survival' }],
+        officerTable: [{ name: 'Tactics', specialty: 'Military' }, { name: 'Leadership' }, { name: 'Advocate' }, { name: 'Diplomat' }, { name: 'Electronics' }, { name: 'Admin' }],
+        ranksOfficer: [
+          { rank: 1, title: 'Lieutenant', skill: { name: 'Leadership', level: 1 } },
+          { rank: 2, title: 'Captain' },
+          { rank: 3, title: 'Major', skill: { name: 'Tactics', specialty: 'Military', level: 1 } },
+          { rank: 4, title: 'Lieutenant Colonel' }, { rank: 5, title: 'Colonel' },
+          { rank: 6, title: 'General', stat: { key: 'soc', min: 10 } }
+        ],
+        musteringCash: [2000, 5000, 10000, 10000, 10000, 20000, 30000],
+        musteringBenefits: ['Cybernetic Implant', 'INT +1', 'EDU +1', 'Weapon', 'Armour', 'END +1 or Cybernetic Implant', 'SOC +1'],
+        mishaps: [
+          { roll: 1, text: 'Severely injured in action (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
+          { roll: 2, text: 'Your unit is slaughtered in a disastrous battle, which you blame on your commander. Gain them as an Enemy — they have you removed from the service.', tools: ['associate'] },
+          { roll: 3, text: 'Sent to a hostile region to fight guerrillas; discharged due to stress, injury, or a government cover-up. Increase Recon or Survival by one level, but gain the rebels as an Enemy.', tools: [] },
+          { roll: 4, text: "You discover your commanding officer is running an illegal operation. Join their ring (gain them as an Ally) before the investigation discharges you, or cooperate with the military police (discharged anyway, but you keep this term's Benefit roll).", tools: [] },
+          { roll: 5, text: 'Tormented by or quarrel with an officer or fellow soldier — gain them as a Rival, driven out of the service.', tools: ['associate'] },
+          { roll: 6, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).', tools: [] }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 3, text: 'Assigned to a hostile or wild-environment planet. Gain one of Vacc Suit 1, Engineer 1, Animals 1, or Recon 1.', tools: ['skill'] },
+          { roll: 4, text: 'Assigned to a war-torn urbanised planet. Gain one of Stealth 1, Streetwise 1, Persuade 1, or Recon 1.', tools: ['skill'] },
+          { roll: 5, text: 'Given a special assignment or duty. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
+          { roll: 6, text: 'Thrown into a brutal ground war. Roll EDU 8+ to avoid injury; success also gains a level in Gun Combat or Leadership.', tools: [] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).', tools: [] },
+          { roll: 8, text: 'Given advanced training. Roll EDU 8+ to increase one skill you already have by a level.', tools: [] },
+          { roll: 9, text: 'Surrounded and outnumbered, you hold out until relief arrives. Gain DM+2 to your next advancement roll.', tools: [], autoDM: { key: 'advancementDM', amount: 2 } },
+          { roll: 10, text: 'Assigned to a peacekeeping role. Gain one of Admin 1, Investigate 1, Deception 1, or Recon 1.', tools: ['skill'] },
+          { roll: 11, text: 'A commanding officer takes an interest in your career. Gain Tactics (military) 1, or DM+4 to your next advancement roll instead.', tools: [] },
+          { roll: 12, text: 'You display heroism in battle. You may gain a promotion or commission automatically.', tools: [] }
+        ]
+      },
       navy: {
         id: 'navy', name: 'Navy', source: 'Core Rulebook pp.35-37', military: true,
         qualification: { stat: 'int_stat', target: 6, agePenalty: { minAge: 34, dm: -2 } },
@@ -1915,10 +1983,14 @@
     // Specialist table. Career-level serviceSkills wins if present.
     function serviceSkillsFor(c, a) { return c.serviceSkills || a.serviceSkills; }
 
-    // Union of Navy's three assignment Service Skills tables, de-duplicated by name+specialty.
-    function militaryServiceSkillPool() {
+    // Union of a military career's Service Skills (career-level if shared,
+    // else the union of each assignment's own table), de-duplicated.
+    function militaryServiceSkillPool(branch) {
+      const c = branch === 'Army' ? CAREERS_DATA.army : CAREERS_DATA.navy;
+      if (!c) return [];
+      if (c.serviceSkills) return c.serviceSkills;
       const seen = new Map();
-      CAREERS_DATA.navy.assignments.forEach(a => a.serviceSkills.forEach(sk => {
+      c.assignments.forEach(a => (a.serviceSkills || []).forEach(sk => {
         seen.set(skillKey(sk.name, sk.specialty), sk);
       }));
       return Array.from(seen.values());
@@ -2708,6 +2780,13 @@
         case 'agent:12':    return renderBankAutoPromote(tag, m);
         case 'agent:mishap2': return renderAgentMishap2(tag, m);
         case 'agent:mishap3': return renderAgentMishap3(tag, m);
+        case 'army:2':       return renderInlineMishapNotEjected(tag, careerId, m);
+        case 'army:6':       return renderArmyEvent6(tag, m);
+        case 'army:8':       return renderRollSkillToGainLevel(tag, m, 'edu', 8);
+        case 'army:11':      return renderChooseSkillOrDM(tag, m, { name: 'Tactics', specialty: 'Military', level: 1 }, 'advancementDM', 4);
+        case 'army:12':      return renderBankAutoPromote(tag, m);
+        case 'army:mishap3': return renderArmyMishap3(tag, m);
+        case 'army:mishap4': return renderArmyMishap4(tag, m);
         default: return null;
       }
     }
@@ -3199,6 +3278,100 @@
       await saveMechanic('event', { rolled: true, resultText });
       await resolveMechanic('event');
       await logCreation(`Agent Event 8: ${resultText}`);
+      renderStep();
+    }
+
+    // Army mishap 3 — choose which skill absorbs the level-up, plus an
+    // automatic Enemy (the rebels — no name needed, it's a faction).
+    function renderArmyMishap3(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return resolverHeader('Increase Recon or Survival by one level:') + `
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          <button class="btn-outline" onclick="confirmArmyMishap3('Recon')">Recon</button>
+          <button class="btn-outline" onclick="confirmArmyMishap3('Survival')">Survival</button>
+        </div>
+      `;
+    }
+
+    async function confirmArmyMishap3(skillName) {
+      const skills = Object.assign({}, draft.skills || {});
+      bumpSkill(skills, skillName, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await addAssociate('enemy', 'The rebels', 'Fought against during a brutal counter-insurgency campaign.');
+      const resultText = `Increased ${skillName} by one level and gained the rebels as an Enemy.`;
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Army Mishap 3: ${resultText}`);
+      renderStep();
+    }
+
+    // Army mishap 4 — join the ring (Ally) vs. cooperate (keep Benefit roll).
+    function renderArmyMishap4(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return resolverHeader('Join the ring, or cooperate with the military police?') + `
+        <input id="army-m4-name" type="text" placeholder="Commanding officer's name" style="margin-bottom:8px;" />
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          <button class="btn-outline" onclick="armyMishap4Join()">Join the Ring — Gain Them as an Ally</button>
+          <button class="btn-outline" onclick="armyMishap4Cooperate()">Cooperate — Keep This Term's Benefit Roll</button>
+        </div>
+      `;
+    }
+
+    async function armyMishap4Join() {
+      const name = (document.getElementById('army-m4-name') || {}).value.trim() || 'Unnamed commander';
+      await addAssociate('ally', name, 'Ran an illegal operation together before you were discharged.');
+      const resultText = `Joined the ring — gained ${name} as an Ally.`;
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Army Mishap 4: ${resultText}`);
+      renderStep();
+    }
+
+    async function armyMishap4Cooperate() {
+      const s = step5State();
+      await saveStep5State({ benefitRolls: (s.benefitRolls || 0) + 1 });
+      const resultText = "Cooperated with the military police — kept this term's Benefit roll.";
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Army Mishap 4: ${resultText}`);
+      renderStep();
+    }
+
+    // Army event 6 — EDU 8+ to avoid injury; success also bumps a skill choice.
+    function renderArmyEvent6(tag, m) {
+      if (!m.rolled) {
+        return resolverHeader('Roll EDU 8+ to avoid injury.') + `<button class="btn-outline" onclick="rollArmyEvent6()">Roll</button>`;
+      }
+      if (m.success && !m.resolved) {
+        return resolverHeader(`Rolled ${m.total} (need 8+) — avoided injury! Choose a skill to increase:`) + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="confirmArmyEvent6('Gun Combat')">Gun Combat</button>
+            <button class="btn-outline" onclick="confirmArmyEvent6('Leadership')">Leadership</button>
+          </div>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollArmyEvent6() {
+      const total = roll2d6() + dmNum(draft.edu);
+      const success = total >= 8;
+      await saveMechanic('event', { rolled: true, total, success, resultText: success ? undefined : `Rolled ${total} (need 8+) — failed to avoid injury (Injury table not tracked in this app).` });
+      if (!success) await resolveMechanic('event');
+      await logCreation(`Army Event 6: rolled ${total} (need 8+) — ${success ? 'avoided injury.' : 'failed.'}`);
+      renderStep();
+    }
+
+    async function confirmArmyEvent6(skillName) {
+      const skills = Object.assign({}, draft.skills || {});
+      bumpSkill(skills, skillName, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const resultText = `Avoided injury and increased ${skillName} by one level.`;
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Army Event 6: ${resultText}`);
       renderStep();
     }
 
