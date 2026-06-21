@@ -30,6 +30,22 @@
     .wizard-actions { display: flex; justify-content: space-between; margin-top: 24px; }
     .wizard-error { color: #ff5a4a; font-size: 0.85rem; margin-top: 10px; }
     .status-draft { background: rgba(0,229,255,0.10); color: #00e5ff; border: 1px solid #00e5ff44; }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center; z-index: 1000;
+    }
+    .modal-box {
+      background: rgba(13,21,32,0.97); border: 1px solid #0a4a60; border-radius: 8px;
+      padding: 24px; max-width: 480px; box-shadow: 0 0 30px rgba(0,229,255,0.15);
+    }
+    .preed-option { margin-bottom: 10px; }
+    .preed-option-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border: 1px solid #0a4a60; border-radius: 6px; cursor: pointer;
+    }
+    .preed-option-head:hover { border-color: #00e5ff; }
+    .preed-option-head.unavailable { opacity: 0.5; cursor: default; }
+    .preed-option-body { padding: 10px 14px; font-size: 0.85rem; color: #b0d8e8; }
   </style>
 </head>
 <body>
@@ -507,6 +523,807 @@
       renderStep();
     }
 
+    // ── Step 4: Pre-Career Education ──────────────────────────
+    // Core Rulebook pp.16-17 (University, Military Academy) +
+    // Traveller Companion pp.31-34 (Colonial Upbringing, Merchant
+    // Academy, Psionic Community, School of Hard Knocks, Spacer
+    // Community). Service Skills / Broker / Merchant Marine tables
+    // live in the not-yet-built Career step, so those skill grants
+    // are recorded as a note rather than applied automatically.
+    const ANIM_SP = BG_BY_NAME.Animals.specialties;
+    const ART_SP  = BG_BY_NAME.Art.specialties;
+    const ELEC_SP = BG_BY_NAME.Electronics.specialties;
+    const LANG_SP = BG_BY_NAME.Language.specialties;
+    const PROF_SP = BG_BY_NAME.Profession.specialties;
+    const SCI_SP  = BG_BY_NAME.Science.specialties;
+    const ENGR_SP = ['J-drive', 'Life Support', 'M-drive', 'Power'];
+
+    const UNIVERSITY_SKILLS = [
+      { name: 'Admin' }, { name: 'Advocate' }, { name: 'Animals', specialties: ANIM_SP },
+      { name: 'Art', specialties: ART_SP }, { name: 'Astrogation' },
+      { name: 'Electronics', specialties: ELEC_SP }, { name: 'Engineer', specialties: ENGR_SP },
+      { name: 'Language', specialties: LANG_SP }, { name: 'Medic' }, { name: 'Navigation' },
+      { name: 'Profession', specialties: PROF_SP }, { name: 'Science', specialties: SCI_SP }
+    ];
+
+    const PRE_ED_OPTIONS = [
+      {
+        id: 'university', name: 'University', source: 'Core Rulebook p.16',
+        summary: 'A narrow but deep education in academic subjects — few other paths sharpen specific skills this quickly.',
+        entry: (d) => ({ stat: 'edu', target: 6, extraDM: d.soc >= 9 ? 1 : 0, dmLabel: d.soc >= 9 ? 'DM+1 (SOC 9+)' : '' }),
+        entryGrant: { pickLevels: [0, 1], from: UNIVERSITY_SKILLS },
+        graduation: (d) => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: (d.end_stat >= 8 ? 1 : 0) + (d.soc >= 8 ? 1 : 0), dmLabel: 'DM+1 if END 8+, DM+1 if SOC 8+' }),
+        benefits: [
+          { id: 'bump_chosen', text: 'Increase both skills chosen at entry by one level.', type: 'bumpEntrySkills', amount: 1 },
+          { id: 'edu1', text: 'Increase EDU by an additional +1.', type: 'stat', key: 'edu', amount: 1 },
+          { id: 'qual_dm', text: 'DM+1 (DM+2 with honours) to qualify for Agent, Army, Citizen (corporate), Entertainer (journalist), Marines, Navy, Scholar, Scouts.', type: 'flag' },
+          { id: 'commission_preroll', text: 'May attempt a commission roll before the first term of a military career, if it is the first career chosen after university (officer rank 1 on success; automatic with honours).', type: 'flag' }
+        ]
+      },
+      {
+        id: 'military', name: 'Military Academy', source: 'Core Rulebook p.16-17',
+        summary: 'Round out an education for a dedicated military career — choose an Army, Marines or Navy academy.',
+        branchChoice: [
+          { key: 'Army', label: 'Army', entryStat: 'end_stat', entryTarget: 7 },
+          { key: 'Marines', label: 'Marines', entryStat: 'end_stat', entryTarget: 8 },
+          { key: 'Navy', label: 'Navy', entryStat: 'int_stat', entryTarget: 8 }
+        ],
+        entry: (d, branch) => {
+          const b = PRE_ED_OPTIONS.find(o => o.id === 'military').branchChoice.find(x => x.key === branch);
+          return { stat: b.entryStat, target: b.entryTarget, extraDM: 0, dmLabel: '' };
+        },
+        entryGrant: { deferred: true, note: 'Gain all Service Skills of the chosen military career at level 0 — career tables aren\'t built yet, apply manually once Careers exists.' },
+        graduation: () => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: 0, dmLabel: '' }),
+        benefits: [
+          { id: 'three_service', text: 'If entering the same military career, select any three Service Skills and increase them to level 1.', type: 'flag' },
+          { id: 'edu1', text: 'Increase EDU by +1.', type: 'stat', key: 'edu', amount: 1 },
+          { id: 'soc1_honours', text: 'Honours graduates also increase SOC by +1.', type: 'stat', key: 'soc', amount: 1, honoursOnly: true },
+          { id: 'auto_entry', text: 'Automatic entry into the tied military career at rank 1 (officer), if it is the first career after the academy.', type: 'flag' }
+        ]
+      },
+      {
+        id: 'colonial', name: 'Colonial Upbringing', source: 'Traveller Companion p.32',
+        summary: 'Grown up in the outback of a developed world or a new colony — more skills early, but DM-2 to qualify for other careers and DM-1 on commission/promotion checks. Homeworld TL isn\'t tracked in this app, so entry is treated as automatic.',
+        entry: () => ({ auto: true, dmLabel: 'Automatic if homeworld is TL8 or lower (assumed — homeworld TL isn\'t tracked)' }),
+        entryGrant: { auto: [{ name: 'Animals' }, { name: 'Athletics' }, { name: 'Drive' }, { name: 'Gun Combat' }, { name: 'Mechanic' }, { name: 'Medic' }, { name: 'Navigation' }, { name: 'Recon' }, { name: 'Profession' }, { name: 'Seafarer' }, { name: 'Survival', level: 1 }] },
+        graduation: (d) => ({ stat: 'int_stat', target: 8, honours: 12, extraDM: d.end_stat >= 8 ? 1 : 0, dmLabel: 'DM+1 if END 8+' }),
+        benefits: [
+          { id: 'bump_one_entry', text: 'Increase one skill already gained at level 0 to level 1.', type: 'flag' },
+          { id: 'two_more', text: 'Gain any two other skills from the list above at level 1, or increase one already-possessed skill by one level.', type: 'flag' },
+          { id: 'jot1', text: 'Gain Jack-of-all-Trades at level 1.', type: 'fixedSkill', name: 'Jack-of-all-Trades', level: 1 },
+          { id: 'honours_extra', text: 'Honours graduates gain Leadership 1 and may increase any other level-0 skill to level 1.', type: 'fixedSkill', name: 'Leadership', level: 1, honoursOnly: true },
+          { id: 'end1_edu_down', text: 'Increase END by +1, decrease EDU by D3.', type: 'flag' }
+        ],
+        ageNote: 'Enters first career aged 22+2D3 (older than the usual 18).'
+      },
+      {
+        id: 'merchant', name: 'Merchant Academy', source: 'Traveller Companion p.32',
+        summary: 'Training for a career aboard merchant starships or as a portside broker — choose a Business or Shipboard curriculum.',
+        curriculumChoice: [
+          { key: 'Business', label: 'Business (Broker track)' },
+          { key: 'Shipboard', label: 'Shipboard (Merchant Marine track)' }
+        ],
+        entry: (d) => ({ stat: 'int_stat', target: 9, extraDM: d.soc >= 8 ? 1 : 0, dmLabel: d.soc >= 8 ? 'DM+1 (SOC 8+)' : '' }),
+        entryGrant: { deferred: true, note: 'Gain all skills on the Broker table (Business) or Merchant Marine table (Shipboard) at level 0, plus one random Service Skills roll at level 1 — career tables aren\'t built yet, apply manually once Careers exists.' },
+        graduation: (d) => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: (d.edu >= 8 ? 1 : 0) + (d.soc >= 8 ? 1 : 0), dmLabel: 'DM+1 if EDU 8+, DM+1 if SOC 8+' }),
+        benefits: [
+          { id: 'bump_one', text: 'Increase one skill already gained from the Broker/Merchant Marine table to level 1.', type: 'flag' },
+          { id: 'edu1', text: 'Increase EDU by +1.', type: 'stat', key: 'edu', amount: 1 },
+          { id: 'auto_entry', text: 'Automatic entry into Merchant or Citizen career at rank 1 (rank 2 with honours), if first career after the academy.', type: 'flag' },
+          { id: 'adv_dm', text: 'DM+1 (DM+2 honours) on advancement checks in the Merchant or Citizen careers.', type: 'flag' }
+        ]
+      },
+      {
+        id: 'psionic', name: 'Psionic Community', source: 'Traveller Companion p.32', unavailable: true,
+        summary: 'Grown up among psions, tested for potential and given training. Requires Psionic Strength (PSI), which this app does not track yet — unavailable until that exists.',
+        entry: (d) => ({ stat: 'psi', target: 8, extraDM: d.int_stat >= 8 ? 1 : 0, dmLabel: 'DM+1 if INT 8+' }),
+        entryGrant: { auto: [{ name: 'Profession' }, { name: 'Science' }, { name: 'Streetwise' }], note: 'Plus level 0 in each psionic talent gained (talents aren\'t tracked).' },
+        graduation: (d) => ({ stat: 'psi', target: 6, honours: 12, extraDM: d.int_stat >= 8 ? 1 : 0, dmLabel: 'DM+1 if INT 8+' }),
+        benefits: [
+          { id: 'psi1', text: 'Increase PSI by +1 (not tracked).', type: 'flag' },
+          { id: 'talent1', text: 'Skill level 1 in any one talent possessed (not tracked).', type: 'flag' },
+          { id: 'sci_psi', text: 'Science (Psionicology) 1.', type: 'fixedSkill', name: 'Science', specialty: 'Psionicology', level: 1 },
+          { id: 'rival', text: 'Gain a Rival (Enemy if honours) unhappy you left the community.', type: 'flag' }
+        ]
+      },
+      {
+        id: 'hardknocks', name: 'School of Hard Knocks', source: 'Traveller Companion p.33',
+        summary: 'Grew up on the fringes of society — Streetwise comes easy, but expect DM-2 on first-career promotion/commission checks and reduced SOC.',
+        entry: (d) => ({ auto: d.soc <= 6, requiresSoc6: true, dmLabel: 'Automatic if SOC 6 or lower' }),
+        entryGrant: { auto: [{ name: 'Streetwise', level: 1 }], chooseN: { n: 2, level: 0, from: [{ name: 'Athletics' }, { name: 'Deception' }, { name: 'Drive', specialties: BG_BY_NAME.Drive.specialties }, { name: 'Gambler' }, { name: 'Melee' }, { name: 'Persuade' }, { name: 'Stealth' }] } },
+        graduation: (d) => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: d.end_stat >= 9 ? 1 : 0, dmLabel: 'DM+1 if END 9+' }),
+        benefits: [
+          { id: 'three_more', text: 'Gain any three other skills listed above at level 0.', type: 'flag' },
+          { id: 'gun0', text: 'Gain Gun Combat 0.', type: 'fixedSkill', name: 'Gun Combat', level: 0 },
+          { id: 'carouse_honours', text: 'Honours graduates gain Carouse 1 and may increase any other level-0 skill to level 1.', type: 'fixedSkill', name: 'Carouse', level: 1, honoursOnly: true },
+          { id: 'soc_down', text: 'Decrease SOC by 1.', type: 'stat', key: 'soc', amount: -1 },
+          { id: 'promo_dm', text: 'DM-2 on promotion/commission checks in first career (unless you left it by choice).', type: 'flag' }
+        ]
+      },
+      {
+        id: 'spacer', name: 'Spacer Community', source: 'Traveller Companion p.34',
+        summary: 'Grown up on an orbital habitat or asteroid belt community. Homeworld size isn\'t tracked in this app, so entry always uses the INT 4+ roll.',
+        entry: (d) => ({ stat: 'int_stat', target: 4, extraDM: d.dex >= 8 ? 1 : 0, dmLabel: d.dex >= 8 ? 'DM+1 (DEX 8+)' : '' }),
+        entryGrant: { auto: [{ name: 'Vacc Suit', level: 1 }], chooseN: { n: 2, level: 0, from: [{ name: 'Astrogation' }, { name: 'Electronics', specialties: ELEC_SP }, { name: 'Engineer', specialties: ENGR_SP }, { name: 'Profession', specialties: PROF_SP }] } },
+        graduation: (d) => ({ stat: 'int_stat', target: 8, honours: 12, extraDM: d.dex >= 6 ? 1 : 0, dmLabel: 'DM+1 if DEX 6+' }),
+        benefits: [
+          { id: 'two_more', text: 'Gain any two other skills listed above at level 0.', type: 'flag' },
+          { id: 'one_more_1', text: 'Gain any skill listed above at level 1.', type: 'flag' },
+          { id: 'pilot0', text: 'Gain Pilot 0.', type: 'fixedSkill', name: 'Pilot', level: 0 },
+          { id: 'jot_honours', text: 'Honours graduates gain Jack-of-all-Trades 1.', type: 'fixedSkill', name: 'Jack-of-all-Trades', level: 1, honoursOnly: true },
+          { id: 'dex1_soc2', text: 'Increase DEX by +1, decrease SOC by 2.', type: 'multiStat', changes: { dex: 1, soc: -2 } },
+          { id: 'merch_dm', text: 'DM+1 to enlist, gain commission, or gain promotion in the Merchant (free trader) career.', type: 'flag' }
+        ]
+      }
+    ];
+
+    // Pre-Career Events — Core Rulebook p.17. Rolled once for any term
+    // spent in pre-career education, regardless of which option chosen.
+    const PRE_ED_EVENTS = {
+      2: 'You are approached by an underground (and highly illegal) psionic group who sense potential in you. You may test your PSI and attempt to enter the Psion career in any subsequent term.',
+      3: 'Your time in education is not a happy one and you suffer a deep tragedy. You crash and fail to graduate.',
+      4: 'A supposedly harmless prank goes wrong and someone gets hurt. Roll SOC 8+: success gains a Rival, failure gains an Enemy. A roll of 2 means you fail to graduate and must take the Prisoner career next term.',
+      5: 'Taking advantage of youth, you party as much as you study. Gain Carouse 1.',
+      6: 'You become involved in a tightly knit clique and make a pact to remain friends forever. Gain D3 Allies.',
+      7: 'Life Event. Roll on the Life Events table (p.46 — not yet built in this app).',
+      8: 'You join a political movement. Roll SOC 8+: success makes you a leading figure (gain an Ally in the movement, an Enemy in wider society).',
+      9: 'You develop a healthy interest in a hobby or other area of study. Gain any skill of your choice (except Jack-of-all-Trades) at level 0.',
+      10: 'A newly arrived tutor rubs you up the wrong way. Roll 9+ on any skill learned this term: success gains a level in that skill and the tutor as a Rival.',
+      11: 'War comes and a wide-ranging draft is instigated. Flee and join the Drifter career next term, or be drafted (1D: 1-3 Army, 4-5 Marine, 6 Navy) — either way you do not graduate this term. Rolling SOC 9+ avoids the draft and lets you attempt graduation normally.',
+      12: 'You gain wide-ranging recognition for your initiative. Increase SOC by +1.'
+    };
+
+    function step4State() {
+      return (draft.creation_data && draft.creation_data.step4) || { phase: 'choose' };
+    }
+
+    async function saveStep4State(patch) {
+      const data = draft.creation_data || {};
+      data.step4 = Object.assign({}, step4State(), patch);
+      draft.creation_data = data;
+      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+    }
+
+    async function appendNote(text) {
+      const notes = draft.background_notes ? draft.background_notes + '\n\n' + text : text;
+      await supabaseClient.from('characters').update({ background_notes: notes }).eq('id', draft.id);
+      draft.background_notes = notes;
+    }
+
+    function skillKey(name, specialty) { return specialty ? `${name}|${specialty}` : name; }
+
+    function grantSkillMin(skills, name, specialty, level) {
+      const key = skillKey(name, specialty);
+      const existing = skills[key];
+      const newLevel = Math.min(4, Math.max(existing ? existing.level : -1, level));
+      skills[key] = { name, specialty: specialty || null, level: newLevel };
+    }
+
+    function bumpSkill(skills, name, specialty, delta) {
+      const key = skillKey(name, specialty);
+      const existing = skills[key];
+      const newLevel = Math.min(4, Math.max(0, (existing ? existing.level : -1) + delta));
+      skills[key] = { name, specialty: specialty || null, level: newLevel };
+    }
+
+    function findOption(id) { return PRE_ED_OPTIONS.find(o => o.id === id); }
+
+    function renderStepPreEd() {
+      const s = step4State();
+      switch (s.phase) {
+        case 'branch':       return renderPreEdBranch();
+        case 'entry':        return renderPreEdEntry();
+        case 'entryResult':  return renderPreEdEntryResult();
+        case 'entrySkills':  return renderPreEdEntrySkills();
+        case 'events':       return renderPreEdEvents();
+        case 'graduation':   return renderPreEdGraduation();
+        case 'benefits':     return renderPreEdBenefits();
+        default:             return renderPreEdChoose();
+      }
+    }
+
+    function renderPreEdChoose() {
+      const cards = PRE_ED_OPTIONS.map(opt => `
+        <div class="preed-option">
+          <div class="preed-option-head ${opt.unavailable ? 'unavailable' : ''}" onclick="togglePreEdInfo('${opt.id}')">
+            <span style="font-weight:600; color:#00e5ff;">${opt.name}</span>
+            <span style="font-size:0.75rem; color:#4a9ab8;">${opt.source}${opt.unavailable ? ' — unavailable' : ''}</span>
+          </div>
+          <div class="preed-option-body" id="preed-info-${opt.id}" style="display:none;">
+            <p style="margin-bottom:10px;">${opt.summary}</p>
+            ${opt.unavailable ? '' : `<button class="btn-outline" onclick="selectPreEdOption('${opt.id}')">Select ${opt.name}</button>`}
+          </div>
+        </div>
+      `).join('');
+
+      return `
+        <div class="rule-card wizard-card" style="max-width:none;">
+          <div class="wizard-card-title">Pre-Career Education</div>
+          <div class="wizard-card-sub">
+            Before your first career, you may attend University or a service academy to round out your education.
+            It's optional and only available before your third term — gain a few targeted skills now, then attempt
+            graduation for further benefits. Click an option for details. (Core Rulebook p.16-17, Traveller Companion p.31-34)
+          </div>
+          ${cards}
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="goStep(3)">Back</button>
+            <button class="btn-outline" onclick="skipPreEd()">Skip — Go Straight to Career</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function togglePreEdInfo(id) {
+      const el = document.getElementById('preed-info-' + id);
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function selectPreEdOption(id) {
+      const opt = findOption(id);
+      if (opt.branchChoice) {
+        await saveStep4State({ phase: 'branch', optionId: id });
+      } else if (opt.curriculumChoice) {
+        await saveStep4State({ phase: 'branch', optionId: id, isCurriculum: true });
+      } else {
+        await saveStep4State({ phase: 'entry', optionId: id });
+      }
+      renderStep();
+    }
+
+    async function skipPreEd() {
+      await appendNote('[PRE-CAREER EDUCATION]\nSkipped pre-career education — went straight to choosing a career.\n[/PRE-CAREER EDUCATION]');
+      await supabaseClient.from('characters').update({ creation_step: 5 }).eq('id', draft.id);
+      draft.creation_step = 5;
+      renderStep();
+    }
+
+    function renderPreEdBranch() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const choices = opt.branchChoice || opt.curriculumChoice;
+      const label = opt.branchChoice ? 'Choose a branch' : 'Choose a curriculum';
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${opt.name}</div>
+          <div class="wizard-card-sub">${label}.</div>
+          <div class="wizard-actions" style="justify-content:flex-start; gap:12px; flex-wrap:wrap;">
+            ${choices.map(c => `<button class="btn-outline" onclick="choosePreEdBranch('${c.key}')">${c.label || c.key}</button>`).join('')}
+          </div>
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="backToPreEdChoose()">Back</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function choosePreEdBranch(key) {
+      const s = step4State();
+      const patch = s.isCurriculum ? { curriculum: key, phase: 'entry' } : { branch: key, phase: 'entry' };
+      await saveStep4State(patch);
+      renderStep();
+    }
+
+    async function backToPreEdChoose() {
+      await saveStep4State({ phase: 'choose', optionId: null, branch: null, curriculum: null });
+      renderStep();
+    }
+
+    function renderPreEdEntry() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const branchOrCurriculum = s.branch || s.curriculum;
+      const e = opt.entry(draft, branchOrCurriculum);
+      const branchLabel = s.branch ? ` (${s.branch})` : s.curriculum ? ` (${s.curriculum})` : '';
+
+      if (e.requiresSoc6 && !e.auto) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${opt.name}${branchLabel}</div>
+            <div class="wizard-card-sub">Entry: ${e.dmLabel}. Your SOC (${draft.soc}) doesn't qualify for automatic entry.</div>
+            <div class="wizard-actions">
+              <button class="btn-outline" onclick="backToPreEdChoose()">Back</button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (e.auto) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${opt.name}${branchLabel}</div>
+            <div class="wizard-card-sub">Entry: ${e.dmLabel}.</div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="doPreEdEntry(true)">Confirm Entry</button>
+            </div>
+            <div class="wizard-actions">
+              <button class="btn-outline" onclick="backToPreEdChoose()">Back</button>
+            </div>
+          </div>
+        `;
+      }
+
+      const statLabel = (CHARS.find(c => c.key === e.stat) || { label: e.stat.toUpperCase() }).label;
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${opt.name}${branchLabel} — Entry</div>
+          <div class="wizard-card-sub">
+            Roll 2D + ${statLabel} DM${e.extraDM ? ' + ' + e.extraDM : ''} (need ${e.target}+).${e.dmLabel ? ' ' + e.dmLabel : ''}
+          </div>
+          <div class="wizard-actions" style="justify-content:flex-start;">
+            <button class="btn-outline" onclick="doPreEdEntry(false)">Roll Entry</button>
+          </div>
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="backToPreEdChoose()">Back</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function doPreEdEntry(auto) {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const branchOrCurriculum = s.branch || s.curriculum;
+      const e = opt.entry(draft, branchOrCurriculum);
+      let result;
+
+      if (auto) {
+        result = { auto: true, success: true };
+      } else {
+        const d1 = rollDie(), d2 = rollDie();
+        const statDM = dmNum(draft[e.stat] === undefined ? 0 : draft[e.stat]);
+        const total = d1 + d2 + statDM + (e.extraDM || 0);
+        result = { dice: [d1, d2], statDM, extraDM: e.extraDM || 0, target: e.target, total, success: total >= e.target };
+      }
+
+      await saveStep4State({ phase: 'entryResult', entryResult: result });
+      renderStep();
+
+      if (!result.success) {
+        await appendNote(`[PRE-CAREER EDUCATION]\nAttempted ${opt.name}${branchOrCurriculum ? ' (' + branchOrCurriculum + ')' : ''} — failed Entry${result.total !== undefined ? ` (rolled ${result.total} vs ${result.target}+)` : ''}.\n[/PRE-CAREER EDUCATION]`);
+      }
+    }
+
+    function renderPreEdEntryResult() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const r = s.entryResult;
+
+      if (r.auto || r.success) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${opt.name} — Entry Succeeded</div>
+            <div class="wizard-card-sub">
+              ${r.dice ? `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM} stat DM${r.extraDM ? ' + ' + r.extraDM : ''}), needed ${r.target}+.` : 'Entry was automatic.'}
+            </div>
+            <div class="wizard-actions">
+              <button class="btn-outline" onclick="goToEntrySkills()">Continue to Skills</button>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${opt.name} — Entry Failed</div>
+          <div class="wizard-card-sub">Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}${r.extraDM ? ' + ' + r.extraDM : ''}), needed ${r.target}+. No pre-career education this time.</div>
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="finishPreEdFail()">Continue to Career</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function goToEntrySkills() {
+      await saveStep4State({ phase: 'entrySkills' });
+      renderStep();
+    }
+
+    async function finishPreEdFail() {
+      await supabaseClient.from('characters').update({ creation_step: 5 }).eq('id', draft.id);
+      draft.creation_step = 5;
+      renderStep();
+    }
+
+    function renderPreEdEntrySkills() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const grant = opt.entryGrant;
+      const chooser = s.entrySkillChooser || {};
+
+      let pickerHtml = '';
+      if (grant.pickLevels) {
+        // University: pick one distinct skill per level
+        const chosen = chooser.chosen || {};
+        pickerHtml = grant.pickLevels.map(level => {
+          const used = Object.values(chosen).map(c => c.name);
+          const current = chosen[level];
+          return `
+            <div class="wizard-field">
+              <label>Level ${level} skill</label>
+              <select onchange="setEntrySkillPick(${level}, this.value)">
+                <option value="">— choose —</option>
+                ${grant.from.map(sk => `<option value="${sk.name}" ${current && current.name === sk.name ? 'selected' : ''} ${used.includes(sk.name) && (!current || current.name !== sk.name) ? 'disabled' : ''}>${sk.name}</option>`).join('')}
+              </select>
+              ${current && BG_BY_NAME[current.name] && BG_BY_NAME[current.name].specialties ? `
+                <select onchange="setEntrySkillSpecialty(${level}, this.value)" style="margin-top:8px;">
+                  <option value="">— specialty —</option>
+                  ${BG_BY_NAME[current.name].specialties.map(sp => `<option value="${sp}" ${current.specialty === sp ? 'selected' : ''}>${sp}</option>`).join('')}
+                </select>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      } else if (grant.chooseN) {
+        const chosen = chooser.chosen || [];
+        pickerHtml = `
+          <div class="wizard-card-sub">Choose ${grant.chooseN.n} of the following (selected ${chosen.length} of ${grant.chooseN.n}):</div>
+          ${grant.chooseN.from.map(sk => {
+            const idx = chosen.findIndex(c => c.name === sk.name);
+            const isChosen = idx !== -1;
+            const disable = !isChosen && chosen.length >= grant.chooseN.n;
+            return `
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                <input type="checkbox" ${isChosen ? 'checked' : ''} ${disable ? 'disabled' : ''}
+                       onchange="toggleEntryChooseN('${sk.name}', this.checked)" style="width:18px; height:18px; accent-color:#00e5ff;" />
+                <span style="min-width:110px;">${sk.name}</span>
+                ${sk.specialties ? `
+                  <select onchange="setEntryChooseNSpecialty('${sk.name}', this.value)" ${isChosen ? '' : 'disabled'}>
+                    <option value="">— specialty —</option>
+                    ${sk.specialties.map(sp => `<option value="${sp}" ${isChosen && chosen[idx].specialty === sp ? 'selected' : ''}>${sp}</option>`).join('')}
+                  </select>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+        `;
+      } else if (grant.auto && !grant.chooseN) {
+        pickerHtml = `<p style="color:#4a9ab8;">Skills below are granted automatically.</p>`;
+      }
+
+      const autoText = grant.auto ? grant.auto.map(sk => `${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''} ${sk.level || 0}`).join(', ') : '';
+      const ready = grant.pickLevels
+        ? grant.pickLevels.every(l => chooser.chosen && chooser.chosen[l] && chooser.chosen[l].name && (!BG_BY_NAME[chooser.chosen[l].name] || !BG_BY_NAME[chooser.chosen[l].name].specialties || chooser.chosen[l].specialty))
+        : grant.chooseN
+          ? (chooser.chosen || []).length === grant.chooseN.n && (chooser.chosen || []).every(c => {
+              const def = grant.chooseN.from.find(sk => sk.name === c.name);
+              return !def || !def.specialties || c.specialty;
+            })
+          : true;
+
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${opt.name} — Entry Skills</div>
+          ${autoText ? `<div class="wizard-card-sub">Automatic: ${autoText}</div>` : ''}
+          ${grant.note ? `<div class="wizard-card-sub" style="color:#4a9ab8;">${grant.note}</div>` : ''}
+          ${pickerHtml}
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="goEntryEvents()" ${ready ? '' : 'disabled'}>Continue</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function setEntrySkillPick(level, name) {
+      const s = step4State();
+      const chooser = s.entrySkillChooser || {};
+      const chosen = Object.assign({}, chooser.chosen);
+      if (!name) { delete chosen[level]; } else { chosen[level] = { name, specialty: '' }; }
+      await saveStep4State({ entrySkillChooser: { chosen } });
+      renderStep();
+    }
+
+    async function setEntrySkillSpecialty(level, specialty) {
+      const s = step4State();
+      const chooser = s.entrySkillChooser || {};
+      const chosen = Object.assign({}, chooser.chosen);
+      chosen[level] = Object.assign({}, chosen[level], { specialty });
+      await saveStep4State({ entrySkillChooser: { chosen } });
+      renderStep();
+    }
+
+    async function toggleEntryChooseN(name, checked) {
+      const s = step4State();
+      const chooser = s.entrySkillChooser || {};
+      let chosen = (chooser.chosen || []).slice();
+      if (checked) {
+        chosen.push({ name, specialty: '' });
+      } else {
+        chosen = chosen.filter(c => c.name !== name);
+      }
+      await saveStep4State({ entrySkillChooser: { chosen } });
+      renderStep();
+    }
+
+    async function setEntryChooseNSpecialty(name, specialty) {
+      const s = step4State();
+      const chooser = s.entrySkillChooser || {};
+      const chosen = (chooser.chosen || []).map(c => c.name === name ? Object.assign({}, c, { specialty }) : c);
+      await saveStep4State({ entrySkillChooser: { chosen } });
+      renderStep();
+    }
+
+    async function goEntryEvents() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const grant = opt.entryGrant;
+      const skills = Object.assign({}, draft.skills || {});
+
+      if (grant.auto) {
+        grant.auto.forEach(sk => grantSkillMin(skills, sk.name, sk.specialty, sk.level || 0));
+      }
+      const chooser = s.entrySkillChooser || {};
+      if (grant.pickLevels) {
+        grant.pickLevels.forEach(level => {
+          const c = chooser.chosen && chooser.chosen[level];
+          if (c) grantSkillMin(skills, c.name, c.specialty, level);
+        });
+      }
+      if (grant.chooseN) {
+        (chooser.chosen || []).forEach(c => grantSkillMin(skills, c.name, c.specialty, grant.chooseN.level));
+      }
+
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+
+      if (grant.deferred) {
+        await appendNote(`[PRE-CAREER EDUCATION]\n${opt.name}: ${grant.note}\n[/PRE-CAREER EDUCATION]`);
+      }
+
+      await saveStep4State({ phase: 'events' });
+      renderStep();
+    }
+
+    function renderPreEdEvents() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const eventRoll = s.eventRoll;
+
+      if (!eventRoll) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${opt.name} — Pre-Career Events</div>
+            <div class="wizard-card-sub">Roll 2D on the Pre-Career Events table. (Core Rulebook p.17)</div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="rollPreEdEvent()">Roll Event</button>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${opt.name} — Pre-Career Events</div>
+          <div class="wizard-card-sub">Rolled ${eventRoll.total} (${eventRoll.dice.join(' + ')}).</div>
+          <p style="margin-bottom:14px;">${PRE_ED_EVENTS[eventRoll.total]}</p>
+          ${renderConnectionWidget('event4_' + (draft.id || ''))}
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="goToPreEdGraduation()">Continue to Graduation</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function rollPreEdEvent() {
+      const d1 = rollDie(), d2 = rollDie();
+      await saveStep4State({ eventRoll: { dice: [d1, d2], total: d1 + d2 } });
+      renderStep();
+    }
+
+    async function goToPreEdGraduation() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      await appendNote(`[PRE-CAREER EVENT]\n${opt.name} — rolled ${s.eventRoll.total}: ${PRE_ED_EVENTS[s.eventRoll.total]}\n[/PRE-CAREER EVENT]`);
+      await saveStep4State({ phase: 'graduation' });
+      renderStep();
+    }
+
+    // ── Connections Rule widget (shared by event/graduation screens) ──
+    function connectionsUsed() { return (draft.creation_data && draft.creation_data.connectionsUsed) || 0; }
+
+    function renderConnectionWidget(tag) {
+      if (connectionsUsed() >= 2) {
+        return `<div style="font-size:0.8rem; color:#4a9ab8; margin-bottom:14px;">Connections used: 2 of 2 (maximum reached).</div>`;
+      }
+      return `
+        <div style="margin-bottom:14px;">
+          <button class="btn-outline" onclick="openConnectionPicker('${tag}')">Add Connection</button>
+          <span style="font-size:0.78rem; color:#4a9ab8; margin-left:10px;">Connections used: ${connectionsUsed()} of 2</span>
+        </div>
+        <div id="connection-picker-${tag}"></div>
+      `;
+    }
+
+    async function openConnectionPicker(tag) {
+      const { data } = await supabaseClient.from('characters')
+        .select('id,name').neq('id', draft.id).order('name');
+      const el = document.getElementById('connection-picker-' + tag);
+      if (!data || !data.length) {
+        el.innerHTML = `<p class="wizard-error">No other characters in the Roster to connect with yet.</p>`;
+        return;
+      }
+      el.innerHTML = `
+        <div class="wizard-field">
+          <label>Connect with</label>
+          <select id="connection-target-${tag}">
+            <option value="">— choose a Traveller —</option>
+            ${data.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+          </select>
+        </div>
+        <button class="btn-outline" onclick="confirmConnection('${tag}')">Confirm Connection</button>
+      `;
+    }
+
+    async function confirmConnection(tag) {
+      const sel = document.getElementById('connection-target-' + tag);
+      const targetId = sel.value;
+      if (!targetId) return;
+      const targetName = sel.options[sel.selectedIndex].text;
+
+      const data = draft.creation_data || {};
+      data.connectionsUsed = (data.connectionsUsed || 0) + 1;
+      draft.creation_data = data;
+      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+
+      await appendNote(`[CONNECTION]\nFormed a connection with ${targetName} — gained one free skill choice (max 2 from connections, can't exceed level 3, no Jack-of-all-Trades).\n[/CONNECTION]`);
+
+      document.getElementById('connection-picker-' + tag).innerHTML =
+        `<p style="color:#00ffaa; font-size:0.85rem;">Connection recorded with ${targetName}. Add the skill bump on ${targetName}'s sheet directly, and remember to add one on yours too.</p>`;
+      renderStep();
+    }
+
+    function renderPreEdGraduation() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const g = opt.graduation(draft);
+      const gradRoll = s.gradRoll;
+
+      if (!gradRoll) {
+        const statLabel = (CHARS.find(c => c.key === g.stat) || { label: (g.stat || '').toUpperCase() }).label;
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${opt.name} — Graduation</div>
+            <div class="wizard-card-sub">
+              Roll 2D + ${statLabel} DM${g.extraDM ? ' + ' + g.extraDM : ''} (need ${g.target}+, honours on ${g.honours}+).${g.dmLabel ? ' ' + g.dmLabel : ''}
+            </div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="rollPreEdGraduation()">Roll Graduation</button>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${opt.name} — Graduation</div>
+          <div class="wizard-card-sub">
+            Rolled ${gradRoll.total} (need ${g.target}+). ${gradRoll.success ? (gradRoll.honours ? 'Graduated with honours!' : 'Graduated.') : 'Did not graduate.'}
+          </div>
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="goToPreEdBenefits()">Continue</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function rollPreEdGraduation() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const g = opt.graduation(draft);
+      const d1 = rollDie(), d2 = rollDie();
+      const statDM = dmNum(draft[g.stat] === undefined ? 0 : draft[g.stat]);
+      const total = d1 + d2 + statDM + (g.extraDM || 0);
+      const success = total >= g.target;
+      const honours = success && total >= g.honours;
+      await saveStep4State({ gradRoll: { dice: [d1, d2], total, success, honours, target: g.target } });
+      renderStep();
+    }
+
+    async function goToPreEdBenefits() {
+      await saveStep4State({ phase: 'benefits' });
+      renderStep();
+    }
+
+    function renderPreEdBenefits() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+
+      if (!s.gradRoll.success) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${opt.name} — No Graduation</div>
+            <div class="wizard-card-sub">You did not graduate, so no Graduation Benefits apply. Moving on to choosing a career.</div>
+            <div class="wizard-actions">
+              <button class="btn-outline" onclick="finishPreEd()">Continue to Career</button>
+            </div>
+          </div>
+        `;
+      }
+
+      const applicable = opt.benefits.filter(b => !b.honoursOnly || s.gradRoll.honours);
+      const applied = s.benefitsApplied || {};
+
+      const rows = applicable.map(b => {
+        const isAuto = b.type === 'stat' || b.type === 'multiStat' || b.type === 'fixedSkill' || b.type === 'bumpEntrySkills';
+        const done = applied[b.id];
+        return `
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
+            <div style="font-size:0.85rem;">${b.text}</div>
+            ${isAuto
+              ? `<button class="btn-outline" onclick="applyPreEdBenefit('${b.id}')" ${done ? 'disabled' : ''} style="flex-shrink:0;">${done ? 'Applied' : 'Apply'}</button>`
+              : `<span style="font-size:0.75rem; color:#4a9ab8; flex-shrink:0;">Recorded as a note</span>`
+            }
+          </div>
+        `;
+      }).join('');
+
+      const allDone = applicable.every(b => b.type !== 'stat' && b.type !== 'multiStat' && b.type !== 'fixedSkill' && b.type !== 'bumpEntrySkills' ? true : applied[b.id]);
+
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${opt.name} — Graduation Benefits${s.gradRoll.honours ? ' (Honours)' : ''}</div>
+          ${rows}
+          ${renderConnectionWidget('grad4_' + (draft.id || ''))}
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="finishPreEd()" ${allDone ? '' : 'disabled'}>Continue to Career</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function applyPreEdBenefit(benefitId) {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const b = opt.benefits.find(x => x.id === benefitId);
+      const update = {};
+
+      if (b.type === 'stat') {
+        update[b.key] = (draft[b.key] || 0) + b.amount;
+      } else if (b.type === 'multiStat') {
+        Object.keys(b.changes).forEach(k => { update[k] = (draft[k] || 0) + b.changes[k]; });
+      } else if (b.type === 'fixedSkill') {
+        const skills = Object.assign({}, draft.skills || {});
+        grantSkillMin(skills, b.name, b.specialty, b.level);
+        update.skills = skills;
+      } else if (b.type === 'bumpEntrySkills') {
+        const chosen = s.entrySkillChooser && s.entrySkillChooser.chosen;
+        const skills = Object.assign({}, draft.skills || {});
+        if (chosen) {
+          Object.values(chosen).forEach(c => bumpSkill(skills, c.name, c.specialty, b.amount));
+        }
+        update.skills = skills;
+      }
+
+      await supabaseClient.from('characters').update(update).eq('id', draft.id);
+      Object.assign(draft, update);
+
+      const applied = Object.assign({}, s.benefitsApplied, { [benefitId]: true });
+      await saveStep4State({ benefitsApplied: applied });
+      renderStep();
+    }
+
+    async function finishPreEd() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const flagNotes = opt.benefits
+        .filter(b => b.type === 'flag' && (!b.honoursOnly || (s.gradRoll && s.gradRoll.honours)))
+        .map(b => `- ${b.text}`).join('\n');
+
+      let note = `[PRE-CAREER EDUCATION]\n${opt.name}`;
+      if (s.branch) note += ` (${s.branch})`;
+      if (s.curriculum) note += ` (${s.curriculum})`;
+      note += s.gradRoll
+        ? (s.gradRoll.success ? (s.gradRoll.honours ? ' — graduated with honours.' : ' — graduated.') : ' — entered but did not graduate.')
+        : ' — entered automatically.';
+      if (flagNotes) note += `\nOutstanding benefits to apply by hand once Careers is built:\n${flagNotes}`;
+      if (opt.ageNote) note += `\n${opt.ageNote}`;
+      note += '\n[/PRE-CAREER EDUCATION]';
+
+      await appendNote(note);
+      await supabaseClient.from('characters').update({ creation_step: 5 }).eq('id', draft.id);
+      draft.creation_step = 5;
+      renderStep();
+    }
+
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = '../../index.html'; return; }
@@ -576,6 +1393,8 @@
         body = renderStepCharacteristics();
       } else if (step === 3) {
         body = renderStepBackgroundSkills();
+      } else if (step === 4) {
+        body = renderStepPreEd();
       } else {
         body = `
           <div class="rule-card wizard-card">
@@ -590,6 +1409,41 @@
 
       shell.innerHTML = renderSteps() + body;
       if (step === 1) renderSpeciesPreview();
+      if (step === 4 && !(draft.creation_data && draft.creation_data.seenConnectionsModal)) {
+        showConnectionsModal();
+      }
+    }
+
+    // ── Connections Rule modal ────────────────────────────────
+    async function showConnectionsModal() {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.id = 'connections-modal';
+      overlay.innerHTML = `
+        <div class="modal-box">
+          <div class="wizard-card-title">The Connections Rule</div>
+          <p style="margin-bottom:10px;">From here on, keep an eye out for <strong>Events</strong> rolled during pre-career education and career terms (not Mishaps). (Core Rulebook p.19)</p>
+          <p style="margin-bottom:10px;">If an Event you roll could plausibly involve another player's Traveller, you can both agree to link it — discuss what happened and form shared history.</p>
+          <ul style="margin:0 0 14px 18px; padding:0; font-size:0.88rem; color:#b0d8e8;">
+            <li>Each connection must be with a <strong>different</strong> Traveller.</li>
+            <li>Making a connection grants <strong>both</strong> Travellers one free skill choice.</li>
+            <li>You may gain a maximum of <strong>two</strong> free skills this way during creation.</li>
+            <li>A skill gained this way can't exceed level 3, and can't be Jack-of-all-Trades.</li>
+          </ul>
+          <div class="wizard-actions" style="justify-content:flex-end;">
+            <button class="btn-outline" onclick="closeConnectionsModal()">Got It</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    async function closeConnectionsModal() {
+      document.getElementById('connections-modal').remove();
+      const data = draft.creation_data || {};
+      data.seenConnectionsModal = true;
+      draft.creation_data = data;
+      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
     }
 
     function renderSpeciesPreview() {
