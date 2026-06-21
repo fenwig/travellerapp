@@ -1734,6 +1734,69 @@
     ];
 
     const CAREERS_DATA = {
+      agent: {
+        id: 'agent', name: 'Agent', source: 'Core Rulebook pp.22-24', military: false,
+        qualification: { stat: 'int_stat', target: 6 },
+        // Agent has ONE shared Service Skills table (career-level, used by
+        // all three assignments) plus a distinct Specialist table per
+        // assignment — unlike Navy/Drifter where Service Skills is itself
+        // per-assignment. See militaryServiceSkillPool-style note: the
+        // engine checks career.serviceSkills first, falling back to
+        // assignment.serviceSkills for careers shaped like Navy.
+        serviceSkills: [{ name: 'Streetwise' }, { name: 'Drive' }, { name: 'Investigate' }, { name: 'Flyer' }, { name: 'Recon' }, { name: 'Gun Combat' }],
+        assignments: [
+          { key: 'law', label: 'Law Enforcement', survival: { stat: 'end_stat', target: 6 }, advancement: { stat: 'int_stat', target: 6 },
+            ranks: [
+              { rank: 0, title: 'Rookie' }, { rank: 1, title: 'Corporal', skill: { name: 'Streetwise', level: 1 } },
+              { rank: 2, title: 'Sergeant' }, { rank: 3, title: 'Detective' },
+              { rank: 4, title: 'Lieutenant', skill: { name: 'Investigate', level: 1 } },
+              { rank: 5, title: 'Chief', skill: { name: 'Admin', level: 1 } },
+              { rank: 6, title: 'Commissioner', stat: { key: 'soc', amount: 1 } }
+            ],
+            specialistSkills: [{ name: 'Investigate' }, { name: 'Recon' }, { name: 'Streetwise' }, { name: 'Stealth' }, { name: 'Melee' }, { name: 'Advocate' }] },
+          { key: 'intel', label: 'Intelligence', survival: { stat: 'int_stat', target: 7 }, advancement: { stat: 'int_stat', target: 5 },
+            ranks: [
+              { rank: 0, title: '—' }, { rank: 1, title: 'Agent', skill: { name: 'Deception', level: 1 } },
+              { rank: 2, title: 'Field Agent', skill: { name: 'Investigate', level: 1 } }, { rank: 3, title: '—' },
+              { rank: 4, title: 'Special Agent', skill: { name: 'Gun Combat', level: 1 } },
+              { rank: 5, title: 'Assistant Director' }, { rank: 6, title: 'Director' }
+            ],
+            specialistSkills: [{ name: 'Investigate' }, { name: 'Recon' }, { name: 'Electronics', specialty: 'Comms' }, { name: 'Stealth' }, { name: 'Persuade' }, { name: 'Deception' }] },
+          { key: 'corporate', label: 'Corporate', survival: { stat: 'int_stat', target: 5 }, advancement: { stat: 'int_stat', target: 7 },
+            ranks: [
+              { rank: 0, title: '—' }, { rank: 1, title: 'Agent', skill: { name: 'Deception', level: 1 } },
+              { rank: 2, title: 'Field Agent', skill: { name: 'Investigate', level: 1 } }, { rank: 3, title: '—' },
+              { rank: 4, title: 'Special Agent', skill: { name: 'Gun Combat', level: 1 } },
+              { rank: 5, title: 'Assistant Director' }, { rank: 6, title: 'Director' }
+            ],
+            specialistSkills: [{ name: 'Investigate' }, { name: 'Electronics', specialty: 'Computers' }, { name: 'Stealth' }, { name: 'Carouse' }, { name: 'Deception' }, { name: 'Streetwise' }] }
+        ],
+        personalDevelopment: [{ name: 'Gun Combat' }, { stat: 'dex' }, { stat: 'end_stat' }, { name: 'Melee' }, { stat: 'int_stat' }, { name: 'Athletics' }],
+        advancedEducation: [{ name: 'Advocate' }, { name: 'Language' }, { name: 'Explosives' }, { name: 'Medic' }, { name: 'Vacc Suit' }, { name: 'Electronics' }],
+        musteringCash: [1000, 2000, 5000, 7500, 10000, 25000, 50000],
+        musteringBenefits: ['Scientific Equipment', 'INT +1', 'Ship Share', 'Weapon', 'Cybernetic Implant', 'SOC +1 or Cybernetic Implant', 'TAS Membership'],
+        mishaps: [
+          { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
+          { roll: 2, text: 'A target of your investigation offers you a deal. Accept and leave the career cleanly (losing this term\'s Benefit roll as normal). Refuse and suffer a worse injury, but gain an Enemy and a level in a skill of your choice.', tools: [] },
+          { roll: 3, text: 'An investigation goes critically wrong. Roll Advocate 8+ to keep this term\'s Benefit roll; a natural 2 also forces the Prisoner career next term (not tracked).', tools: [] },
+          { roll: 4, text: 'You learn something dangerous. Gain an Enemy and Deception 1.', tools: ['associate'], autoSkill: { name: 'Deception', level: 1 } },
+          { roll: 5, text: 'Your work follows you home and a Contact, Ally, or family member is hurt (Injury table — not tracked in this app).', tools: [] },
+          { roll: 6, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).', tools: [] }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 3, text: 'An investigation turns dangerous. Roll Investigate 8+ or Streetwise 8+: fail rolls on the Mishap table, success increases Deception, Jack-of-all-Trades, Persuade, or Tactics by one level.', tools: [] },
+          { roll: 4, text: 'You complete a mission and are rewarded. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
+          { roll: 5, text: 'You establish a network of contacts. Gain D3 Contacts.', tools: [] },
+          { roll: 6, text: 'Given advanced training. Roll EDU 8+ to increase one skill you already have by a level.', tools: [] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).', tools: [] },
+          { roll: 8, text: 'You go undercover. Roll Deception 8+: success defers to the Rogue/Citizen Events tables (not built — noted), failure rolls on your own Mishap table.', tools: [] },
+          { roll: 9, text: 'You go above and beyond. Gain DM+2 to your next advancement roll.', tools: [] },
+          { roll: 10, text: 'Specialist vehicle training. Gain one of Drive 1, Flyer 1, Pilot 1, or Gunner 1.', tools: ['skill'] },
+          { roll: 11, text: 'A senior agent befriends you. Increase Investigate by one level, or DM+4 to an advancement roll instead.', tools: [] },
+          { roll: 12, text: 'You uncover a major conspiracy. You are automatically promoted.', tools: [] }
+        ]
+      },
       navy: {
         id: 'navy', name: 'Navy', source: 'Core Rulebook pp.35-37', military: true,
         qualification: { stat: 'int_stat', target: 6, agePenalty: { minAge: 34, dm: -2 } },
@@ -1779,7 +1842,7 @@
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
           { roll: 3, text: 'You join a gambling circle on board. Gain Gambler 1 or Deception 1. May throw Gambler 8+ for an extra Benefit roll (lose one if failed).', tools: ['skill'] },
-          { roll: 4, text: 'Given a special assignment or duty. Gain DM+1 to any one Benefit roll.', tools: [] },
+          { roll: 4, text: 'Given a special assignment or duty. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
           { roll: 5, text: 'Given advanced training. Roll EDU 8+ to gain one level in any skill you already have.', tools: ['skill'] },
           { roll: 6, text: 'Your vessel takes part in a notable military engagement. Gain one of Electronics 1, Engineer 1, Gunner 1 or Pilot 1.', tools: ['skill'] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).', tools: [] },
@@ -1822,7 +1885,7 @@
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
           { roll: 2, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).', tools: [] },
           { roll: 3, text: 'You run afoul of a criminal gang, corrupt bureaucrat or other foe. Gain an Enemy.', tools: ['associate'] },
-          { roll: 4, text: 'You suffer from a life-threatening illness. Reduce your END by 1.', tools: ['stat'] },
+          { roll: 4, text: 'You suffer from a life-threatening illness. Reduce your END by 1.', tools: [], autoStat: { key: 'end_stat', amount: -1 } },
           { roll: 5, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have none, gain a Rival or Enemy anyway.', tools: ['associate'] },
           { roll: 6, text: 'You do not know what happened to you. There is a gap in your memory.', tools: [] }
         ],
@@ -1830,7 +1893,7 @@
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
           { roll: 3, text: 'A patron offers you a chance at a job. If you accept, gain DM+4 to your next qualification roll but you owe that patron a favour.', tools: [] },
           { roll: 4, text: 'You pick up a few useful skills here and there. Gain one level of Jack-of-all-Trades, Survival, Streetwise or Melee (any).', tools: ['skill'] },
-          { roll: 5, text: 'You manage to scavenge something of use. Gain DM+1 to any one Benefit roll.', tools: [] },
+          { roll: 5, text: 'You manage to scavenge something of use. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
           { roll: 6, text: 'You encounter something unusual (Life Events table, Core p.46 — not yet built).', tools: [] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).', tools: [] },
           { roll: 8, text: 'You are attacked by enemies. Gain an Enemy if you do not have one already, and roll Melee 8+, Gun Combat 8+ or Stealth 8+ to avoid a roll on the Injury table.', tools: ['associate'] },
@@ -1845,6 +1908,12 @@
     const DRAFT_TABLE = { 1: 'navy', 2: 'army', 3: 'marine', 4: 'merchant', 5: 'scout', 6: 'agent' };
 
     function careerData(id) { return CAREERS_DATA[id]; }
+
+    // Some careers (Navy, Drifter) have a distinct Service Skills table
+    // per assignment; others (Agent) share ONE Service Skills table across
+    // all assignments and instead vary by a separate per-assignment
+    // Specialist table. Career-level serviceSkills wins if present.
+    function serviceSkillsFor(c, a) { return c.serviceSkills || a.serviceSkills; }
 
     // Union of Navy's three assignment Service Skills tables, de-duplicated by name+specialty.
     function militaryServiceSkillPool() {
@@ -2340,7 +2409,7 @@
       const skills = Object.assign({}, draft.skills || {});
 
       if (isFirstCareer) {
-        assignment.serviceSkills.forEach(sk => grantSkillMin(skills, sk.name, sk.specialty, 0));
+        serviceSkillsFor(c, assignment).forEach(sk => grantSkillMin(skills, sk.name, sk.specialty, 0));
       }
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
       draft.skills = skills;
@@ -2446,12 +2515,37 @@
       `;
     }
 
+    // Applies an entry's unconditional autoSkill/autoDM grants (no player
+    // choice involved) the moment it's rolled, and returns a description
+    // of what was applied for the log line.
+    async function applyAutoGrants(entry) {
+      const parts = [];
+      if (entry.autoSkill) {
+        const skills = Object.assign({}, draft.skills || {});
+        grantSkillMin(skills, entry.autoSkill.name, entry.autoSkill.specialty, entry.autoSkill.level);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        parts.push(`${entry.autoSkill.name}${entry.autoSkill.specialty ? ' (' + entry.autoSkill.specialty + ')' : ''} ${entry.autoSkill.level}`);
+      }
+      if (entry.autoDM) {
+        await addPendingMod(entry.autoDM.key, entry.autoDM.amount);
+        parts.push(`banked DM${entry.autoDM.amount > 0 ? '+' : ''}${entry.autoDM.amount} (${entry.autoDM.key})`);
+      }
+      if (entry.autoStat) {
+        await applyStatChange(entry.autoStat.key, entry.autoStat.amount);
+        parts.push(`${entry.autoStat.key} ${entry.autoStat.amount > 0 ? '+' : ''}${entry.autoStat.amount}`);
+      }
+      return parts.join(', ');
+    }
+
     async function rollCareerMishap() {
       const roll = rollDie();
       await saveStep5State({ mishapRoll: roll });
       const s = step5State();
       const c = careerData(s.careerId);
-      await logCreation(`${c.name} — Mishap roll: ${roll} — ${c.mishaps.find(x => x.roll === roll).text}`);
+      const entry = c.mishaps.find(x => x.roll === roll);
+      const granted = await applyAutoGrants(entry);
+      await logCreation(`${c.name} — Mishap roll: ${roll} — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''}`);
       renderStep();
     }
 
@@ -2604,6 +2698,16 @@
         case 'drifter:12':  return renderBankAutoPromote(tag, m);
         case 'navy:mishap3': return renderNavyMishap3(tag, m);
         case 'navy:mishap4': return renderNavyMishap4(tag, m);
+        case 'agent:2':     return renderInlineMishapNotEjected(tag, careerId, m);
+        case 'agent:3':     return renderAgentEvent3(tag, m);
+        case 'agent:5':     return renderGainDiceAssociates(tag, m, 'contact', 3);
+        case 'agent:6':     return renderRollSkillToGainLevel(tag, m, 'edu', 8);
+        case 'agent:8':     return renderAgentEvent8(tag, m);
+        case 'agent:9':     return renderBankPendingMod(tag, m, 'DM+2 to your next advancement roll', 'advancementDM', 2);
+        case 'agent:11':    return renderChooseSkillOrDM(tag, m, { name: 'Investigate', level: 1 }, 'advancementDM', 4);
+        case 'agent:12':    return renderBankAutoPromote(tag, m);
+        case 'agent:mishap2': return renderAgentMishap2(tag, m);
+        case 'agent:mishap3': return renderAgentMishap3(tag, m);
         default: return null;
       }
     }
@@ -2795,6 +2899,53 @@
       renderStep();
     }
 
+    // Generic "bank a DM to a future roll" button for events whose grant
+    // isn't unconditional enough for autoDM (e.g. needs explaining first).
+    function renderBankPendingMod(tag, m, label, key, amount) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return `<button class="btn-outline" onclick="bankPendingModMechanic('${tag}','${label}','${key}',${amount})">Bank ${label}</button>`;
+    }
+
+    async function bankPendingModMechanic(tag, label, key, amount) {
+      await addPendingMod(key, amount);
+      await saveMechanic(tag, { resolved: true, resultText: `Banked ${label}.` });
+      await resolveMechanic(tag);
+      await logCreation(`Banked ${label} for a future roll.`);
+      renderStep();
+    }
+
+    // "Gain D3/D6 Allies/Contacts" — roll the die, name each one gained.
+    function renderGainDiceAssociates(tag, m, type, dieMax) {
+      if (!m.count) {
+        return `<button class="btn-outline" onclick="rollDiceAssociates('${tag}','${type}',${dieMax})">Roll D${dieMax}</button>`;
+      }
+      if (!m.resolved) {
+        return resolverHeader(`Rolled ${m.count}. Name your new ${type === 'ally' ? 'Allies' : 'Contacts'}:`) +
+          Array.from({ length: m.count }).map((_, i) => `<input id="dice-assoc-${tag}-${i}" type="text" placeholder="Name" style="margin:4px;" />`).join('') +
+          `<div><button class="btn-outline" onclick="confirmDiceAssociates('${tag}',${m.count},'${type}')">Confirm</button></div>`;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollDiceAssociates(tag, type, dieMax) {
+      const count = Math.ceil(rollDie() / (6 / dieMax));
+      await saveMechanic(tag, { count });
+      renderStep();
+    }
+
+    async function confirmDiceAssociates(tag, count, type) {
+      const names = [];
+      for (let i = 0; i < count; i++) {
+        const el = document.getElementById(`dice-assoc-${tag}-${i}`);
+        const name = el && el.value.trim();
+        if (name) { await addAssociate(type, name, 'Gained during a career term.'); names.push(name); }
+      }
+      await saveMechanic(tag, { resolved: true, resultText: `Gained ${names.length} ${type === 'ally' ? 'Allies' : 'Contacts'}: ${names.join(', ') || 'none named'}.` });
+      await resolveMechanic(tag);
+      await logCreation(`Gained ${names.length} ${type}(s): ${names.join(', ') || 'none named'}.`);
+      renderStep();
+    }
+
     // Drifter event 9 — 1D sub-table.
     function renderDrifterAdventureRoll(tag, m) {
       if (!m.rolled) {
@@ -2896,6 +3047,161 @@
       renderStep();
     }
 
+    // Agent mishap 2 — accept the deal (leave cleanly, lose Benefit roll as
+    // normal) or refuse (worse outcome, but gain an Enemy + a skill level).
+    function renderAgentMishap2(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.refused) {
+        return resolverHeader('Accept the deal, or refuse it?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="agentMishap2Accept()">Accept — Leave Cleanly</button>
+            <button class="btn-outline" onclick="agentMishap2Refuse()">Refuse</button>
+          </div>
+        `;
+      }
+      return resolverHeader('Name the Enemy you gained, and choose a skill to increase by one level:') + `
+        <input id="agent-m2-name" type="text" placeholder="Enemy name" style="margin-bottom:8px;" />
+        <select id="agent-m2-skill">${SKILLS.map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
+        <button class="btn-outline" onclick="confirmAgentMishap2Refuse()">Confirm</button>
+      `;
+    }
+
+    async function agentMishap2Accept() {
+      await saveMechanic('mishap', { resolved: true, resultText: 'Accepted the deal — left cleanly (still lose this term\'s Benefit roll as normal).' });
+      await resolveMechanic('mishap');
+      await logCreation('Agent Mishap 2: accepted the deal.');
+      renderStep();
+    }
+
+    async function agentMishap2Refuse() {
+      await saveMechanic('mishap', { refused: true });
+      renderStep();
+    }
+
+    async function confirmAgentMishap2Refuse() {
+      const name = document.getElementById('agent-m2-name').value.trim() || 'Unnamed';
+      const skillName = document.getElementById('agent-m2-skill').value;
+      await addAssociate('enemy', name, 'From a botched investigation.');
+      const skills = Object.assign({}, draft.skills || {});
+      bumpSkill(skills, skillName, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const resultText = `Refused — gained ${name} as an Enemy and increased ${skillName} by one level (Injury table not tracked in this app).`;
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Agent Mishap 2: ${resultText}`);
+      renderStep();
+    }
+
+    // Agent mishap 3 — Advocate 8+ to keep the term's Benefit roll.
+    function renderAgentMishap3(tag, m) {
+      if (!m.rolled) {
+        return resolverHeader('Roll Advocate 8+.') + `<button class="btn-outline" onclick="rollAgentMishap3()">Roll</button>`;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollAgentMishap3() {
+      const key = skillKey('Advocate', null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      if (success) {
+        const s = step5State();
+        await saveStep5State({ benefitRolls: (s.benefitRolls || 0) + 1 });
+      }
+      const resultText = `Rolled ${total} on Advocate (need 8+) — ${success ? 'kept this term\'s Benefit roll.' : 'lost it as normal (a natural 2 would also force the Prisoner career next term — not tracked, note it if it applies).'}`;
+      await saveMechanic('mishap', { rolled: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Agent Mishap 3: ${resultText}`);
+      renderStep();
+    }
+
+    // Agent event 3 — Investigate/Streetwise 8+: fail rolls on the Mishap
+    // table, success grants a choice of skill.
+    function renderAgentEvent3(tag, m) {
+      if (!m.rolled) {
+        return resolverHeader('Roll Investigate 8+ or Streetwise 8+ (best of the two).') + `<button class="btn-outline" onclick="rollAgentEvent3()">Roll</button>`;
+      }
+      if (m.success && !m.resolved) {
+        return resolverHeader(`Rolled ${m.total} (need 8+) — success! Choose a skill to increase by one level:`) + `
+          <select id="agent-e3-skill"><option>Deception</option><option>Jack-of-all-Trades</option><option>Persuade</option><option>Tactics</option></select>
+          <button class="btn-outline" onclick="confirmAgentEvent3()">Confirm</button>
+        `;
+      }
+      if (!m.success && !m.rolledMishap) {
+        return resolverHeader(`Rolled ${m.total} (need 8+) — failed. Roll on the Mishap table.`) + `<button class="btn-outline" onclick="agentEvent3RollMishap()">Roll Mishap</button>`;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollAgentEvent3() {
+      const invKey = skillKey('Investigate', null), strKey = skillKey('Streetwise', null);
+      const invLevel = draft.skills && draft.skills[invKey] ? draft.skills[invKey].level : -3;
+      const strLevel = draft.skills && draft.skills[strKey] ? draft.skills[strKey].level : -3;
+      const best = Math.max(invLevel, strLevel);
+      const total = roll2d6() + best;
+      const success = total >= 8;
+      await saveMechanic('event', { rolled: true, total, success });
+      await logCreation(`Agent Event 3: rolled ${total} (need 8+) on best of Investigate/Streetwise — ${success ? 'success.' : 'failed.'}`);
+      renderStep();
+    }
+
+    async function confirmAgentEvent3() {
+      const skillName = document.getElementById('agent-e3-skill').value;
+      const skills = Object.assign({}, draft.skills || {});
+      bumpSkill(skills, skillName, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const resultText = `Increased ${skillName} by one level.`;
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Agent Event 3: ${resultText}`);
+      renderStep();
+    }
+
+    async function agentEvent3RollMishap() {
+      const roll = rollDie();
+      const c = careerData('agent');
+      const entry = c.mishaps.find(x => x.roll === roll);
+      const granted = await applyAutoGrants(entry);
+      const resultText = `Rolled ${roll} on the Mishap table — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''} (Resolve any further choices yourself — this doesn't force you out of the Agent career.)`;
+      await saveMechanic('event', { resolved: true, rolledMishap: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Agent Event 3 — Mishap roll: ${roll} — ${entry.text}`);
+      renderStep();
+    }
+
+    // Agent event 8 — Deception 8+: success defers to Rogue/Citizen tables
+    // (not built yet, noted), failure rolls on the Agent's own Mishap table.
+    function renderAgentEvent8(tag, m) {
+      if (!m.rolled) {
+        return resolverHeader('Roll Deception 8+.') + `<button class="btn-outline" onclick="rollAgentEvent8()">Roll</button>`;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollAgentEvent8() {
+      const key = skillKey('Deception', null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      let resultText;
+      if (success) {
+        resultText = `Rolled ${total} on Deception (need 8+) — success! Per the rulebook this rolls on the Rogue or Citizen Events table and a Specialist skill table for that career — neither is built yet, so note this manually if you'd like the full effect.`;
+      } else {
+        const roll = rollDie();
+        const c = careerData('agent');
+        const entry = c.mishaps.find(x => x.roll === roll);
+        const granted = await applyAutoGrants(entry);
+        resultText = `Rolled ${total} on Deception (need 8+) — failed. Rolled ${roll} on the Mishap table — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''}`;
+      }
+      await saveMechanic('event', { rolled: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Agent Event 8: ${resultText}`);
+      renderStep();
+    }
+
     // "Disaster! Roll on the Mishap table but you are not ejected from this career." (Navy/Drifter event 2)
     function renderInlineMishapNotEjected(tag, careerId, m) {
       const c = careerData(careerId);
@@ -2976,8 +3282,10 @@
       const total = d1 + d2;
       const s = step5State();
       const c = careerData(s.careerId);
+      const entry = c.events.find(x => x.roll === total);
       await saveStep5State({ eventRoll: total });
-      await logCreation(`${c.name} — Event roll: ${total} — ${c.events.find(x => x.roll === total).text}`);
+      const granted = await applyAutoGrants(entry);
+      await logCreation(`${c.name} — Event roll: ${total} — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''}`);
       renderStep();
     }
 
@@ -3177,7 +3485,7 @@
             <div class="wizard-card-title">${c.name} — Basic Training</div>
             <div class="wizard-card-sub">Not your first career — choose one Service Skill table entry to gain at level 0.</div>
             <div class="wizard-actions" style="justify-content:flex-start; gap:10px; flex-wrap:wrap;">
-              ${a.serviceSkills.map((sk, i) => `<button class="btn-outline" onclick="applyBasicTraining(${i})">${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''}</button>`).join('')}
+              ${serviceSkillsFor(c, a).map((sk, i) => `<button class="btn-outline" onclick="applyBasicTraining(${i})">${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''}</button>`).join('')}
             </div>
           </div>
         `;
@@ -3193,7 +3501,8 @@
       }
 
       const tables = [{ key: 'personal', label: 'Personal Development', list: c.personalDevelopment }];
-      tables.push({ key: 'service', label: `Service Skills (${a.label})`, list: a.serviceSkills });
+      tables.push({ key: 'service', label: 'Service Skills', list: serviceSkillsFor(c, a) });
+      if (a.specialistSkills) tables.push({ key: 'specialist', label: `Specialist (${a.label})`, list: a.specialistSkills });
       if (c.advancedEducation && draft.edu >= 8) tables.push({ key: 'advEd', label: 'Advanced Education (EDU 8+)', list: c.advancedEducation });
       if (c.officerTable && s.isOfficer) tables.push({ key: 'officer', label: 'Officer (commissioned only)', list: c.officerTable });
 
@@ -3212,7 +3521,7 @@
       const s = step5State();
       const c = careerData(s.careerId);
       const a = currentAssignment(s, c);
-      const sk = a.serviceSkills[idx];
+      const sk = serviceSkillsFor(c, a)[idx];
       const skills = Object.assign({}, draft.skills || {});
       grantSkillMin(skills, sk.name, sk.specialty, 0);
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
@@ -3226,7 +3535,7 @@
       const s = step5State();
       const c = careerData(s.careerId);
       const a = currentAssignment(s, c);
-      const tableMap = { personal: c.personalDevelopment, service: a.serviceSkills, advEd: c.advancedEducation, officer: c.officerTable };
+      const tableMap = { personal: c.personalDevelopment, service: serviceSkillsFor(c, a), specialist: a.specialistSkills, advEd: c.advancedEducation, officer: c.officerTable };
       const list = tableMap[tableKey];
       const idx = rollDie() - 1;
       const entry = list[idx];
