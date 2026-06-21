@@ -86,6 +86,7 @@
 
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
+  <script src="../js/skills-data.js"></script>
   <script>
     let currentUser = null;
     let draft = null;
@@ -424,11 +425,7 @@
     }
 
     function bgValidCount(selected) {
-      return Object.keys(selected).filter(name => {
-        const s = selected[name];
-        const def = BG_BY_NAME[name];
-        return s.on && (!def.specialties || s.specialty);
-      }).length;
+      return Object.keys(selected).filter(name => selected[name].on).length;
     }
 
     function renderStepBackgroundSkills() {
@@ -440,19 +437,12 @@
 
       const rows = BACKGROUND_SKILLS.map(def => {
         const sel = selected[def.name] || {};
-        const isValid = sel.on && (!def.specialties || sel.specialty);
         const disableCheck = !sel.on && atCap;
         return `
           <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
             <input type="checkbox" ${sel.on ? 'checked' : ''} ${disableCheck ? 'disabled' : ''}
                    onchange="toggleBgSkill('${def.name}', this.checked)" style="width:18px; height:18px; accent-color:#00e5ff;" />
-            <span style="min-width:110px; ${isValid ? 'color:#00ffaa;' : ''}">${def.name}</span>
-            ${def.specialties ? `
-              <select onchange="setBgSpecialty('${def.name}', this.value)" ${sel.on ? '' : 'disabled'} style="max-width:220px;">
-                <option value="">— specialty —</option>
-                ${def.specialties.map(sp => `<option value="${sp}" ${sel.specialty === sp ? 'selected' : ''}>${sp}</option>`).join('')}
-              </select>
-            ` : ''}
+            <span style="min-width:110px; ${sel.on ? 'color:#00ffaa;' : ''}">${def.name}</span>
           </div>
         `;
       }).join('');
@@ -462,7 +452,8 @@
           <div class="wizard-card-title">Background Skills</div>
           <div class="wizard-card-sub">
             Before your first career, adolescence leaves you with a grounding in everyday skills.
-            You gain a number of level-0 background skills equal to your EDU DM + 3. (Core Rulebook p.9)
+            You gain a number of level-0 background skills equal to your EDU DM + 3 — background skills are
+            gained without a specialty. (Core Rulebook p.9)
           </div>
           <div style="color:#00e5ff; font-weight:600; margin-bottom:14px;">
             Selected ${validCount} of ${allowed}${draft.edu !== undefined ? ` (EDU ${draft.edu}, DM ${charDM(draft.edu)})` : ''}
@@ -480,15 +471,7 @@
     async function toggleBgSkill(name, checked) {
       const s = bgState();
       const selected = Object.assign({}, s.selected);
-      selected[name] = checked ? { on: true, specialty: (selected[name] && selected[name].specialty) || '' } : { on: false, specialty: '' };
-      await saveBgState({ selected });
-      renderStep();
-    }
-
-    async function setBgSpecialty(name, specialty) {
-      const s = bgState();
-      const selected = Object.assign({}, s.selected);
-      selected[name] = { on: true, specialty };
+      selected[name] = { on: checked };
       await saveBgState({ selected });
       renderStep();
     }
@@ -506,10 +489,8 @@
 
       const skills = Object.assign({}, draft.skills || {});
       Object.keys(selected).forEach(name => {
-        const sel = selected[name];
-        if (!sel.on) return;
-        const key = sel.specialty ? `${name}|${sel.specialty}` : name;
-        skills[key] = { name, specialty: sel.specialty || null, level: 0 };
+        if (!selected[name].on) return;
+        skills[name] = { name, specialty: null, level: 0 };
       });
 
       const { error } = await supabaseClient.from('characters')
@@ -1090,14 +1071,17 @@
         `;
       }
 
+      const resolved = !!(s.eventMechanic && s.eventMechanic.resolved);
+
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${opt.name} — Pre-Career Events</div>
           <div class="wizard-card-sub">Rolled ${eventRoll.total} (${eventRoll.dice.join(' + ')}).</div>
           <p style="margin-bottom:14px;">${PRE_ED_EVENTS[eventRoll.total]}</p>
-          ${renderConnectionWidget('event4_' + (draft.id || ''))}
+          ${renderEventMechanic(eventRoll.total)}
+          ${resolved ? renderConnectionWidget('event4_' + (draft.id || '')) : ''}
           <div class="wizard-actions">
-            <button class="btn-outline" onclick="goToPreEdGraduation()">Continue to Graduation</button>
+            <button class="btn-outline" onclick="goToPreEdGraduation()" ${resolved ? '' : 'disabled'}>Continue to Graduation</button>
           </div>
         </div>
       `;
@@ -1105,7 +1089,27 @@
 
     async function rollPreEdEvent() {
       const d1 = rollDie(), d2 = rollDie();
-      await saveStep4State({ eventRoll: { dice: [d1, d2], total: d1 + d2 } });
+      const total = d1 + d2;
+      let mechanic = {};
+
+      if (total === 5) {
+        const skills = Object.assign({}, draft.skills || {});
+        grantSkillMin(skills, 'Carouse', null, 1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        mechanic.resolved = true;
+      } else if (total === 12) {
+        const update = { soc: (draft.soc || 0) + 1 };
+        await supabaseClient.from('characters').update(update).eq('id', draft.id);
+        Object.assign(draft, update);
+        mechanic.resolved = true;
+      } else if (total === 3) {
+        mechanic = { resolved: true, gradForcedFail: true };
+      } else if (total === 2 || total === 7) {
+        mechanic.resolved = true;
+      }
+
+      await saveStep4State({ eventRoll: { dice: [d1, d2], total }, eventMechanic: mechanic });
       renderStep();
     }
 
@@ -1114,6 +1118,297 @@
       const opt = findOption(s.optionId);
       await appendNote(`[PRE-CAREER EVENT]\n${opt.name} — rolled ${s.eventRoll.total}: ${PRE_ED_EVENTS[s.eventRoll.total]}\n[/PRE-CAREER EVENT]`);
       await saveStep4State({ phase: 'graduation' });
+      renderStep();
+    }
+
+    // ── Pre-Career Event mechanics (rolls 4, 6, 8, 9, 10, 11) ─────
+    async function saveEventMechanic(patch) {
+      const s = step4State();
+      const mechanic = Object.assign({}, s.eventMechanic, patch);
+      await saveStep4State({ eventMechanic: mechanic });
+    }
+
+    async function addAssociate(type, name, description) {
+      if (!name) return;
+      await supabaseClient.from('character_associates').insert({ character_id: draft.id, type, name, description: description || null });
+    }
+
+    function renderEventMechanic(total) {
+      const s = step4State();
+      const m = s.eventMechanic || {};
+
+      if (total === 4) return renderEvent4(m);
+      if (total === 6) return renderEvent6(m);
+      if (total === 8) return renderEvent8(m);
+      if (total === 9) return renderEvent9(m);
+      if (total === 10) return renderEvent10(m);
+      if (total === 11) return renderEvent11(m);
+      return '';
+    }
+
+    function renderEvent4(m) {
+      if (!m.rolled) {
+        return `
+          <div class="wizard-actions" style="justify-content:flex-start; margin-top:0;">
+            <button class="btn-outline" onclick="rollEvent4()">Roll SOC 8+</button>
+          </div>
+        `;
+      }
+      if (!m.resolved) {
+        return `
+          <div class="wizard-card-sub">Rolled ${m.total} (need 8+) — ${m.outcome === 'rival' ? 'gain a Rival.' : 'gain an Enemy.'}${m.natural2 ? ' Rolled a natural 2 — you also fail to graduate and must take the Prisoner career next term.' : ''}</div>
+          <div class="wizard-field">
+            <label>${m.outcome === 'rival' ? 'Rival' : 'Enemy'} name</label>
+            <input id="event4-name" type="text" placeholder="Name" />
+          </div>
+          <div class="wizard-actions" style="justify-content:flex-start; margin-top:0;">
+            <button class="btn-outline" onclick="confirmEvent4()">Confirm</button>
+          </div>
+        `;
+      }
+      return `<div class="wizard-card-sub" style="color:#00ffaa;">Resolved.</div>`;
+    }
+
+    async function rollEvent4() {
+      const d1 = rollDie(), d2 = rollDie();
+      const total = d1 + d2 + dmNum(draft.soc);
+      const outcome = total >= 8 ? 'rival' : 'enemy';
+      const natural2 = (d1 + d2) === 2;
+      await saveEventMechanic({ rolled: true, total, outcome, natural2, gradForcedFail: natural2 || undefined });
+      renderStep();
+    }
+
+    async function confirmEvent4() {
+      const s = step4State();
+      const m = s.eventMechanic;
+      const name = document.getElementById('event4-name').value.trim() || 'Unnamed';
+      await addAssociate(m.outcome, name, 'From a pre-career education event.');
+      await saveEventMechanic({ resolved: true });
+      renderStep();
+    }
+
+    function renderEvent6(m) {
+      if (!m.count) {
+        return `
+          <div class="wizard-actions" style="justify-content:flex-start; margin-top:0;">
+            <button class="btn-outline" onclick="rollEvent6()">Roll D3</button>
+          </div>
+        `;
+      }
+      if (!m.resolved) {
+        return `
+          <div class="wizard-card-sub">Rolled D3 = ${m.count}. Name your new Allies:</div>
+          ${Array.from({ length: m.count }).map((_, i) => `
+            <div class="wizard-field">
+              <label>Ally ${i + 1}</label>
+              <input id="event6-name-${i}" type="text" placeholder="Name" />
+            </div>
+          `).join('')}
+          <div class="wizard-actions" style="justify-content:flex-start; margin-top:0;">
+            <button class="btn-outline" onclick="confirmEvent6()">Confirm</button>
+          </div>
+        `;
+      }
+      return `<div class="wizard-card-sub" style="color:#00ffaa;">Resolved.</div>`;
+    }
+
+    async function rollEvent6() {
+      const count = Math.ceil(rollDie() / 2);
+      await saveEventMechanic({ count });
+      renderStep();
+    }
+
+    async function confirmEvent6() {
+      const s = step4State();
+      const m = s.eventMechanic;
+      for (let i = 0; i < m.count; i++) {
+        const name = document.getElementById('event6-name-' + i).value.trim();
+        if (name) await addAssociate('ally', name, 'A lifelong friend from a tightly knit clique.');
+      }
+      await saveEventMechanic({ resolved: true });
+      renderStep();
+    }
+
+    function renderEvent8(m) {
+      if (!m.rolled) {
+        return `
+          <div class="wizard-actions" style="justify-content:flex-start; margin-top:0;">
+            <button class="btn-outline" onclick="rollEvent8()">Roll SOC 8+</button>
+          </div>
+        `;
+      }
+      if (m.success && !m.resolved) {
+        return `
+          <div class="wizard-card-sub">Rolled ${m.total} (need 8+) — success! You become a leading figure.</div>
+          <div class="wizard-field"><label>Ally (within the movement)</label><input id="event8-ally" type="text" placeholder="Name" /></div>
+          <div class="wizard-field"><label>Enemy (in wider society)</label><input id="event8-enemy" type="text" placeholder="Name" /></div>
+          <div class="wizard-actions" style="justify-content:flex-start; margin-top:0;">
+            <button class="btn-outline" onclick="confirmEvent8()">Confirm</button>
+          </div>
+        `;
+      }
+      if (!m.success && !m.resolved) {
+        return `<div class="wizard-card-sub">Rolled ${m.total} (need 8+) — no special outcome this time.</div>`;
+      }
+      return `<div class="wizard-card-sub" style="color:#00ffaa;">Resolved.</div>`;
+    }
+
+    async function rollEvent8() {
+      const d1 = rollDie(), d2 = rollDie();
+      const total = d1 + d2 + dmNum(draft.soc);
+      const success = total >= 8;
+      await saveEventMechanic({ rolled: true, total, success, resolved: !success });
+      renderStep();
+    }
+
+    async function confirmEvent8() {
+      const allyName = document.getElementById('event8-ally').value.trim();
+      const enemyName = document.getElementById('event8-enemy').value.trim();
+      if (allyName) await addAssociate('ally', allyName, 'A fellow member of the political movement.');
+      if (enemyName) await addAssociate('enemy', enemyName, 'Opposed your rise within the political movement.');
+      await saveEventMechanic({ resolved: true });
+      renderStep();
+    }
+
+    function renderEvent9(m) {
+      if (m.resolved) return `<div class="wizard-card-sub" style="color:#00ffaa;">Gained ${m.skillName}${m.specialty ? ' (' + m.specialty + ')' : ''} 0.</div>`;
+      const chosen = m.skillName;
+      const def = chosen ? SKILLS.find(sk => sk.name === chosen) : null;
+      return `
+        <div class="wizard-field">
+          <label>Skill</label>
+          <select onchange="setEvent9Skill(this.value)">
+            <option value="">— choose a skill —</option>
+            ${SKILLS.filter(sk => sk.name !== 'Jack-of-All-Trades').map(sk => `<option value="${sk.name}" ${chosen === sk.name ? 'selected' : ''}>${sk.name}</option>`).join('')}
+          </select>
+        </div>
+        ${def && def.specialties.length ? `
+          <div class="wizard-field">
+            <label>Specialty</label>
+            <select onchange="setEvent9Specialty(this.value)">
+              <option value="">— specialty —</option>
+              ${def.specialties.map(sp => `<option value="${sp.name}" ${m.specialty === sp.name ? 'selected' : ''}>${sp.name}</option>`).join('')}
+            </select>
+          </div>
+        ` : ''}
+        <div class="wizard-actions" style="justify-content:flex-start; margin-top:0;">
+          <button class="btn-outline" onclick="confirmEvent9()" ${chosen && (!def || !def.specialties.length || m.specialty) ? '' : 'disabled'}>Confirm</button>
+        </div>
+      `;
+    }
+
+    async function setEvent9Skill(name) { await saveEventMechanic({ skillName: name, specialty: '' }); renderStep(); }
+    async function setEvent9Specialty(sp) { await saveEventMechanic({ specialty: sp }); renderStep(); }
+
+    async function confirmEvent9() {
+      const s = step4State();
+      const m = s.eventMechanic;
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, m.skillName, m.specialty || null, 0);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await saveEventMechanic({ resolved: true });
+      renderStep();
+    }
+
+    function termSkillOptions() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const keys = new Set();
+      if (opt.entryGrant.auto) opt.entryGrant.auto.forEach(sk => keys.add(skillKey(sk.name, sk.specialty)));
+      const chooser = s.entrySkillChooser || {};
+      if (chooser.chosen) {
+        const vals = Array.isArray(chooser.chosen) ? chooser.chosen : Object.values(chooser.chosen);
+        vals.forEach(c => keys.add(skillKey(c.name, c.specialty)));
+      }
+      return Array.from(keys).filter(k => draft.skills && draft.skills[k]).map(k => ({ key: k, ...draft.skills[k] }));
+    }
+
+    function renderEvent10(m) {
+      if (m.resolved) {
+        return `<div class="wizard-card-sub" style="color:#00ffaa;">Rolled ${m.total} (need 9+) — ${m.success ? `gained a level in ${m.skillName}, tutor becomes a Rival.` : 'no success this time, but the tutor still becomes a Rival.'}</div>`;
+      }
+      const opts = termSkillOptions();
+      if (!opts.length) {
+        return `<div class="wizard-card-sub">You have no skills learned this term to roll against.</div>
+          <div class="wizard-actions" style="justify-content:flex-start; margin-top:0;"><button class="btn-outline" onclick="skipEvent10()">Continue</button></div>`;
+      }
+      return `
+        <div class="wizard-field">
+          <label>Skill learned this term</label>
+          <select id="event10-skill">
+            <option value="">— choose —</option>
+            ${opts.map(o => `<option value="${o.key}">${o.name}${o.specialty ? ' (' + o.specialty + ')' : ''} ${o.level}</option>`).join('')}
+          </select>
+        </div>
+        <div class="wizard-actions" style="justify-content:flex-start; margin-top:0;">
+          <button class="btn-outline" onclick="rollEvent10()">Roll 9+</button>
+        </div>
+      `;
+    }
+
+    async function rollEvent10() {
+      const sel = document.getElementById('event10-skill').value;
+      if (!sel) return;
+      const skillData = draft.skills[sel];
+      const d1 = rollDie(), d2 = rollDie();
+      const total = d1 + d2 + skillData.level;
+      const success = total >= 9;
+      if (success) {
+        const skills = Object.assign({}, draft.skills);
+        bumpSkill(skills, skillData.name, skillData.specialty, 1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+      }
+      await addAssociate('rival', 'A demanding tutor', 'Met during pre-career education.');
+      await saveEventMechanic({ resolved: true, total, success, skillName: skillData.name });
+      renderStep();
+    }
+
+    async function skipEvent10() {
+      await saveEventMechanic({ resolved: true });
+      renderStep();
+    }
+
+    function renderEvent11(m) {
+      if (m.avoided) return `<div class="wizard-card-sub" style="color:#00ffaa;">Avoided the draft — proceed to graduation as normal.</div>`;
+      if (m.resolved) return `<div class="wizard-card-sub">${m.outcome}</div>`;
+      if (!m.checkedAvoid) {
+        return `
+          <div class="wizard-actions" style="justify-content:flex-start; margin-top:0;">
+            <button class="btn-outline" onclick="rollEvent11Avoid()">Roll SOC 9+ to Avoid the Draft</button>
+          </div>
+        `;
+      }
+      return `
+        <div class="wizard-card-sub">Rolled ${m.avoidTotal} (need 9+) — did not avoid the draft. Choose:</div>
+        <div class="wizard-actions" style="justify-content:flex-start; gap:12px; margin-top:0;">
+          <button class="btn-outline" onclick="event11Flee()">Flee (join Drifter next term)</button>
+          <button class="btn-outline" onclick="event11AcceptDraft()">Accept the Draft</button>
+        </div>
+      `;
+    }
+
+    async function rollEvent11Avoid() {
+      const d1 = rollDie(), d2 = rollDie();
+      const total = d1 + d2 + dmNum(draft.soc);
+      if (total >= 9) {
+        await saveEventMechanic({ checkedAvoid: true, avoidTotal: total, avoided: true, resolved: true });
+      } else {
+        await saveEventMechanic({ checkedAvoid: true, avoidTotal: total });
+      }
+      renderStep();
+    }
+
+    async function event11Flee() {
+      await saveEventMechanic({ resolved: true, gradForcedFail: true, outcome: 'You flee and will join the Drifter career next term. You do not graduate this term.' });
+      renderStep();
+    }
+
+    async function event11AcceptDraft() {
+      const branchRoll = rollDie();
+      const branch = branchRoll <= 3 ? 'Army' : branchRoll <= 5 ? 'Marine' : 'Navy';
+      await saveEventMechanic({ resolved: true, gradForcedFail: true, outcome: `Drafted into the ${branch} — that career begins next term (once Careers is built). You do not graduate this term.` });
       renderStep();
     }
 
@@ -1177,6 +1472,18 @@
       const g = opt.graduation(draft);
       const gradRoll = s.gradRoll;
 
+      if (!gradRoll && s.eventMechanic && s.eventMechanic.gradForcedFail) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${opt.name} — Graduation</div>
+            <div class="wizard-card-sub">This term's event means you do not graduate — no roll needed.</div>
+            <div class="wizard-actions">
+              <button class="btn-outline" onclick="forceFailGraduation()">Continue</button>
+            </div>
+          </div>
+        `;
+      }
+
       if (!gradRoll) {
         const statLabel = (CHARS.find(c => c.key === g.stat) || { label: (g.stat || '').toUpperCase() }).label;
         return `
@@ -1220,6 +1527,11 @@
 
     async function goToPreEdBenefits() {
       await saveStep4State({ phase: 'benefits' });
+      renderStep();
+    }
+
+    async function forceFailGraduation() {
+      await saveStep4State({ gradRoll: { success: false, forced: true }, phase: 'benefits' });
       renderStep();
     }
 
