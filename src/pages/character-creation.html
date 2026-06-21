@@ -1665,7 +1665,7 @@
         musteringBenefits: ['Personal Vehicle or Ship Share', 'INT +1', 'EDU +1 or two Ship Shares', 'Weapon', 'TAS Membership', "Ship's Boat or two Ship Shares", 'SOC +2'],
         mishaps: [
           { roll: 1, text: 'Severely injured in action (same as Injury table result 2, or roll twice and take the lower).' },
-          { roll: 2, text: 'Placed in frozen watch and revived improperly. Reduce STR, DEX or END by 1 (muscle wastage). You are not ejected from this career.' },
+          { roll: 2, text: 'Placed in frozen watch and revived improperly. Reduce STR, DEX or END by 1 (muscle wastage). You are not ejected from this career.', noEject: true },
           { roll: 3, text: "Battle's outcome depends on your actions — make an 8+ skill roll (Electronics/Gunner if Line, Mechanic/Vacc Suit if Engineer/Gunner, Pilot/Tactics if Flight). Fail: ship suffers severe damage, you're court-martialled and discharged. Succeed: honourably discharged, you may keep this term's Benefit roll." },
           { roll: 4, text: 'Blamed for an accident causing crew deaths. If responsible: gain one free Skills & Training roll before ejection. If not: gain the blaming officer as an Enemy but keep this term\'s Benefit roll.' },
           { roll: 5, text: 'Tormented by or quarrel with an officer or crewman — gain them as a Rival, forced out of the Navy.' },
@@ -2255,7 +2255,10 @@
           <p style="margin-bottom:14px;">${m.text}</p>
           ${renderGenericResolver('mishap')}
           <div class="wizard-actions">
-            <button class="btn-outline" onclick="leaveCareerAfterMishap()" ${s.mishapResolved ? '' : 'disabled'}>Leave Career</button>
+            ${m.noEject
+              ? `<button class="btn-outline" onclick="continueCareerAfterMishap()" ${s.mishapResolved ? '' : 'disabled'}>Continue Career — Not Ejected</button>`
+              : `<button class="btn-outline" onclick="leaveCareerAfterMishap()" ${s.mishapResolved ? '' : 'disabled'}>Leave Career</button>`
+            }
           </div>
         </div>
       `;
@@ -2278,6 +2281,14 @@
       draft.age = 18 + 4 * newTerms;
       await saveStep5State({ terms: newTerms });
       await goToAgeingOrPhase('mustering');
+    }
+
+    async function continueCareerAfterMishap() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      await logCreation(`${c.name} — survived the mishap without ejection; continuing this term.`);
+      await saveStep5State({ phase: 'events', eventRoll: null, eventResolved: false, mishapRoll: null, mishapResolved: false });
+      renderStep();
     }
 
     // ── Generic resolver — Grant Skill / Adjust Characteristic / Add Associate ──
