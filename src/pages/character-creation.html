@@ -132,6 +132,223 @@
       return rest ? `${block}\n\n${rest}` : block;
     }
 
+    // ── Step 2: Characteristics ───────────────────────────────
+    const CHARS = [
+      { key: 'str',      label: 'STR' },
+      { key: 'dex',      label: 'DEX' },
+      { key: 'end_stat', label: 'END' },
+      { key: 'int_stat', label: 'INT' },
+      { key: 'edu',      label: 'EDU' },
+      { key: 'soc',      label: 'SOC' }
+    ];
+
+    function charDM(v) {
+      if (v <= 0)   return '−3';
+      if (v <= 2)   return '−2';
+      if (v <= 5)   return '−1';
+      if (v <= 8)   return '+0';
+      if (v <= 11)  return '+1';
+      if (v <= 14)  return '+2';
+      return '+3';
+    }
+
+    function rollDie() { return 1 + Math.floor(Math.random() * 6); }
+    function roll2d6() { return rollDie() + rollDie(); }
+
+    function step2State() {
+      return (draft.creation_data && draft.creation_data.step2) || {};
+    }
+
+    async function saveStep2State(patch) {
+      const data = draft.creation_data || {};
+      data.step2 = Object.assign({}, step2State(), patch);
+      draft.creation_data = data;
+      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+    }
+
+    function renderStepCharacteristics() {
+      const s = step2State();
+
+      if (!s.method) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">Characteristics</div>
+            <div class="wizard-card-sub">Roll 2D for each of STR / DEX / END / INT / EDU / SOC, then assign the six results as you wish. (Core Rulebook p.9)</div>
+            <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
+              <button class="btn-outline" onclick="chooseStep2Method('auto')">Auto Roll for Me</button>
+              <button class="btn-outline" onclick="chooseStep2Method('manual')">I'll Roll My Own Dice</button>
+            </div>
+            <div class="wizard-actions">
+              <button class="btn-outline" onclick="goStep(1)">Back</button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (!s.values) {
+        return s.method === 'auto' ? renderAutoRollPrompt() : renderManualEntry();
+      }
+
+      return renderAssignment();
+    }
+
+    function renderAutoRollPrompt() {
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">Auto Roll</div>
+          <div class="wizard-card-sub">Each roll simulates 2D6 — two separate 1-6 dice added together, not a flat 2-12 random number.</div>
+          <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
+            <button class="btn-outline" onclick="doAutoRoll()">Roll 2D × 6</button>
+          </div>
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="changeStep2Method()">Back</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function doAutoRoll() {
+      const values = [];
+      for (let i = 0; i < 6; i++) values.push(roll2d6());
+      await saveStep2State({ values, assignment: {} });
+      renderStep();
+    }
+
+    function renderManualEntry() {
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">Enter Your Rolls</div>
+          <div class="wizard-card-sub">Roll 2D6 six times yourself, then enter each total below (2-12).</div>
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:6px;">
+            ${[0,1,2,3,4,5].map(i => `
+              <div class="wizard-field" style="margin-bottom:0;">
+                <label for="roll-${i}">Roll ${i + 1}</label>
+                <input id="roll-${i}" type="number" min="2" max="12" step="1" />
+              </div>
+            `).join('')}
+          </div>
+          <div id="step2-error"></div>
+          <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
+            <button class="btn-outline" onclick="submitManualRolls()">Save Rolls</button>
+          </div>
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="changeStep2Method()">Back</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function submitManualRolls() {
+      const values = [];
+      for (let i = 0; i < 6; i++) {
+        const v = parseInt(document.getElementById('roll-' + i).value, 10);
+        if (isNaN(v) || v < 2 || v > 12) {
+          document.getElementById('step2-error').innerHTML =
+            '<p class="wizard-error">Enter all six rolls as whole numbers from 2 to 12.</p>';
+          return;
+        }
+        values.push(v);
+      }
+      await saveStep2State({ values, assignment: {} });
+      renderStep();
+    }
+
+    async function changeStep2Method() {
+      await saveStep2State({ method: null, values: null, assignment: {} });
+      renderStep();
+    }
+
+    async function chooseStep2Method(method) {
+      await saveStep2State({ method });
+      renderStep();
+    }
+
+    function speciesMod(key) {
+      const sp = SPECIES_DATA[draft.species] || SPECIES_DATA.Human;
+      return sp.mods[key] || 0;
+    }
+
+    function renderAssignment() {
+      const s = step2State();
+      const values = s.values;
+      const assignment = s.assignment || {};
+      const usedIdx = new Set(Object.values(assignment));
+
+      const rows = CHARS.map(c => {
+        const assignedIdx = assignment[c.key];
+        const mod = speciesMod(c.key);
+        const effective = assignedIdx !== undefined ? values[assignedIdx] + mod : null;
+        return `
+          <div style="display:grid; grid-template-columns: 70px 1fr 90px 60px; align-items:center; gap:10px; margin-bottom:10px;">
+            <div style="color:#00e5ff; font-weight:600;">${c.label}</div>
+            <select onchange="assignRoll('${c.key}', this.value)">
+              <option value="">— choose a roll —</option>
+              ${values.map((v, i) => `
+                <option value="${i}" ${assignedIdx === i ? 'selected' : ''} ${usedIdx.has(i) && assignedIdx !== i ? 'disabled' : ''}>
+                  Roll ${i + 1}: ${v}${mod ? ` (${mod > 0 ? '+' : ''}${mod} species = ${v + mod})` : ''}
+                </option>
+              `).join('')}
+            </select>
+            <div style="color:#4a9ab8; font-size:0.85rem;">${effective !== null ? 'Score ' + effective : '—'}</div>
+            <div style="color:#00ffaa; font-size:0.85rem;">${effective !== null ? charDM(effective) : ''}</div>
+          </div>
+        `;
+      }).join('');
+
+      const allAssigned = CHARS.every(c => assignment[c.key] !== undefined);
+
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">Assign Your Rolls</div>
+          <div class="wizard-card-sub">Rolled: ${values.join(', ')}${draft.species !== 'Human' ? ` — species modifiers for ${draft.species} are applied automatically.` : ''}</div>
+          ${rows}
+          <div id="step2-error"></div>
+          <div class="wizard-actions">
+            <button class="btn-outline-danger" onclick="changeStep2Method()">Start Over</button>
+            <button class="btn-outline" onclick="submitStepCharacteristics()" ${allAssigned ? '' : 'disabled'}>Continue</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function assignRoll(key, idxStr) {
+      const s = step2State();
+      const assignment = Object.assign({}, s.assignment);
+      if (idxStr === '') {
+        delete assignment[key];
+      } else {
+        assignment[key] = parseInt(idxStr, 10);
+      }
+      await saveStep2State({ assignment });
+      renderStep();
+    }
+
+    async function submitStepCharacteristics() {
+      const s = step2State();
+      const values = s.values;
+      const assignment = s.assignment || {};
+      const errEl = document.getElementById('step2-error');
+
+      if (!CHARS.every(c => assignment[c.key] !== undefined)) {
+        errEl.innerHTML = '<p class="wizard-error">Assign all six rolls before continuing.</p>';
+        return;
+      }
+
+      const update = { creation_step: 3 };
+      CHARS.forEach(c => {
+        update[c.key] = values[assignment[c.key]] + speciesMod(c.key);
+      });
+
+      const { error } = await supabaseClient.from('characters').update(update).eq('id', draft.id);
+      if (error) {
+        errEl.innerHTML = `<p class="wizard-error">${error.message}</p>`;
+        return;
+      }
+      Object.assign(draft, update);
+      draft.creation_step = 3;
+      renderStep();
+    }
+
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = '../../index.html'; return; }
@@ -197,6 +414,8 @@
 
       if (step === 1) {
         body = renderStepName();
+      } else if (step === 2) {
+        body = renderStepCharacteristics();
       } else {
         body = `
           <div class="rule-card wizard-card">
