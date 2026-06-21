@@ -516,20 +516,13 @@
     // Community). Service Skills / Broker / Merchant Marine tables
     // live in the not-yet-built Career step, so those skill grants
     // are recorded as a note rather than applied automatically.
-    const ANIM_SP = BG_BY_NAME.Animals.specialties;
-    const ART_SP  = BG_BY_NAME.Art.specialties;
-    const ELEC_SP = BG_BY_NAME.Electronics.specialties;
-    const LANG_SP = BG_BY_NAME.Language.specialties;
-    const PROF_SP = BG_BY_NAME.Profession.specialties;
-    const SCI_SP  = BG_BY_NAME.Science.specialties;
-    const ENGR_SP = ['J-drive', 'Life Support', 'M-drive', 'Power'];
-
+    // All pre-career education skill grants are level 0, no specialty.
     const UNIVERSITY_SKILLS = [
-      { name: 'Admin' }, { name: 'Advocate' }, { name: 'Animals', specialties: ANIM_SP },
-      { name: 'Art', specialties: ART_SP }, { name: 'Astrogation' },
-      { name: 'Electronics', specialties: ELEC_SP }, { name: 'Engineer', specialties: ENGR_SP },
-      { name: 'Language', specialties: LANG_SP }, { name: 'Medic' }, { name: 'Navigation' },
-      { name: 'Profession', specialties: PROF_SP }, { name: 'Science', specialties: SCI_SP }
+      { name: 'Admin' }, { name: 'Advocate' }, { name: 'Animals' },
+      { name: 'Art' }, { name: 'Astrogation' },
+      { name: 'Electronics' }, { name: 'Engineer' },
+      { name: 'Language' }, { name: 'Medic' }, { name: 'Navigation' },
+      { name: 'Profession' }, { name: 'Science' }
     ];
 
     const PRE_ED_OPTIONS = [
@@ -537,7 +530,7 @@
         id: 'university', name: 'University', source: 'Core Rulebook p.16',
         summary: 'A narrow but deep education in academic subjects — few other paths sharpen specific skills this quickly.',
         entry: (d) => ({ stat: 'edu', target: 6, extraDM: d.soc >= 9 ? 1 : 0, dmLabel: d.soc >= 9 ? 'DM+1 (SOC 9+)' : '' }),
-        entryGrant: { pickLevels: [0, 1], from: UNIVERSITY_SKILLS },
+        entryGrant: { chooseN: { n: 2, level: 0, from: UNIVERSITY_SKILLS } },
         graduation: (d) => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: (d.end_stat >= 8 ? 1 : 0) + (d.soc >= 8 ? 1 : 0), dmLabel: 'DM+1 if END 8+, DM+1 if SOC 8+' }),
         benefits: [
           { id: 'bump_chosen', text: 'Increase both skills chosen at entry by one level.', type: 'bumpEntrySkills', amount: 1 },
@@ -616,7 +609,7 @@
         id: 'hardknocks', name: 'School of Hard Knocks', source: 'Traveller Companion p.33',
         summary: 'Grew up on the fringes of society — Streetwise comes easy, but expect DM-2 on first-career promotion/commission checks and reduced SOC.',
         entry: (d) => ({ auto: d.soc <= 6, requiresSoc6: true, dmLabel: 'Automatic if SOC 6 or lower' }),
-        entryGrant: { auto: [{ name: 'Streetwise', level: 1 }], chooseN: { n: 2, level: 0, from: [{ name: 'Athletics' }, { name: 'Deception' }, { name: 'Drive', specialties: BG_BY_NAME.Drive.specialties }, { name: 'Gambler' }, { name: 'Melee' }, { name: 'Persuade' }, { name: 'Stealth' }] } },
+        entryGrant: { auto: [{ name: 'Streetwise', level: 1 }], chooseN: { n: 2, level: 0, from: [{ name: 'Athletics' }, { name: 'Deception' }, { name: 'Drive' }, { name: 'Gambler' }, { name: 'Melee' }, { name: 'Persuade' }, { name: 'Stealth' }] } },
         graduation: (d) => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: d.end_stat >= 9 ? 1 : 0, dmLabel: 'DM+1 if END 9+' }),
         benefits: [
           { id: 'three_more', text: 'Gain any three other skills listed above at level 0.', type: 'flag' },
@@ -630,7 +623,7 @@
         id: 'spacer', name: 'Spacer Community', source: 'Traveller Companion p.34',
         summary: 'Grown up on an orbital habitat or asteroid belt community. Homeworld size isn\'t tracked in this app, so entry always uses the INT 4+ roll.',
         entry: (d) => ({ stat: 'int_stat', target: 4, extraDM: d.dex >= 8 ? 1 : 0, dmLabel: d.dex >= 8 ? 'DM+1 (DEX 8+)' : '' }),
-        entryGrant: { auto: [{ name: 'Vacc Suit', level: 1 }], chooseN: { n: 2, level: 0, from: [{ name: 'Astrogation' }, { name: 'Electronics', specialties: ELEC_SP }, { name: 'Engineer', specialties: ENGR_SP }, { name: 'Profession', specialties: PROF_SP }] } },
+        entryGrant: { auto: [{ name: 'Vacc Suit', level: 1 }], chooseN: { n: 2, level: 0, from: [{ name: 'Astrogation' }, { name: 'Electronics' }, { name: 'Engineer' }, { name: 'Profession' }] } },
         graduation: (d) => ({ stat: 'int_stat', target: 8, honours: 12, extraDM: d.dex >= 6 ? 1 : 0, dmLabel: 'DM+1 if DEX 6+' }),
         benefits: [
           { id: 'two_more', text: 'Gain any two other skills listed above at level 0.', type: 'flag' },
@@ -933,47 +926,18 @@
       const chooser = s.entrySkillChooser || {};
 
       let pickerHtml = '';
-      if (grant.pickLevels) {
-        // University: pick one distinct skill per level
-        const chosen = chooser.chosen || {};
-        pickerHtml = grant.pickLevels.map(level => {
-          const used = Object.values(chosen).map(c => c.name);
-          const current = chosen[level];
-          return `
-            <div class="wizard-field">
-              <label>Level ${level} skill</label>
-              <select onchange="setEntrySkillPick(${level}, this.value)">
-                <option value="">— choose —</option>
-                ${grant.from.map(sk => `<option value="${sk.name}" ${current && current.name === sk.name ? 'selected' : ''} ${used.includes(sk.name) && (!current || current.name !== sk.name) ? 'disabled' : ''}>${sk.name}</option>`).join('')}
-              </select>
-              ${current && BG_BY_NAME[current.name] && BG_BY_NAME[current.name].specialties ? `
-                <select onchange="setEntrySkillSpecialty(${level}, this.value)" style="margin-top:8px;">
-                  <option value="">— specialty —</option>
-                  ${BG_BY_NAME[current.name].specialties.map(sp => `<option value="${sp}" ${current.specialty === sp ? 'selected' : ''}>${sp}</option>`).join('')}
-                </select>
-              ` : ''}
-            </div>
-          `;
-        }).join('');
-      } else if (grant.chooseN) {
+      if (grant.chooseN) {
         const chosen = chooser.chosen || [];
         pickerHtml = `
-          <div class="wizard-card-sub">Choose ${grant.chooseN.n} of the following (selected ${chosen.length} of ${grant.chooseN.n}):</div>
+          <div class="wizard-card-sub">Choose ${grant.chooseN.n} of the following, gained at level ${grant.chooseN.level} (selected ${chosen.length} of ${grant.chooseN.n}):</div>
           ${grant.chooseN.from.map(sk => {
-            const idx = chosen.findIndex(c => c.name === sk.name);
-            const isChosen = idx !== -1;
+            const isChosen = chosen.some(c => c.name === sk.name);
             const disable = !isChosen && chosen.length >= grant.chooseN.n;
             return `
               <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
                 <input type="checkbox" ${isChosen ? 'checked' : ''} ${disable ? 'disabled' : ''}
                        onchange="toggleEntryChooseN('${sk.name}', this.checked)" style="width:18px; height:18px; accent-color:#00e5ff;" />
                 <span style="min-width:110px;">${sk.name}</span>
-                ${sk.specialties ? `
-                  <select onchange="setEntryChooseNSpecialty('${sk.name}', this.value)" ${isChosen ? '' : 'disabled'}>
-                    <option value="">— specialty —</option>
-                    ${sk.specialties.map(sp => `<option value="${sp}" ${isChosen && chosen[idx].specialty === sp ? 'selected' : ''}>${sp}</option>`).join('')}
-                  </select>
-                ` : ''}
               </div>
             `;
           }).join('')}
@@ -982,15 +946,10 @@
         pickerHtml = `<p style="color:#4a9ab8;">Skills below are granted automatically.</p>`;
       }
 
-      const autoText = grant.auto ? grant.auto.map(sk => `${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''} ${sk.level || 0}`).join(', ') : '';
-      const ready = grant.pickLevels
-        ? grant.pickLevels.every(l => chooser.chosen && chooser.chosen[l] && chooser.chosen[l].name && (!BG_BY_NAME[chooser.chosen[l].name] || !BG_BY_NAME[chooser.chosen[l].name].specialties || chooser.chosen[l].specialty))
-        : grant.chooseN
-          ? (chooser.chosen || []).length === grant.chooseN.n && (chooser.chosen || []).every(c => {
-              const def = grant.chooseN.from.find(sk => sk.name === c.name);
-              return !def || !def.specialties || c.specialty;
-            })
-          : true;
+      const autoText = grant.auto ? grant.auto.map(sk => `${sk.name} ${sk.level || 0}`).join(', ') : '';
+      const ready = grant.chooseN
+        ? (chooser.chosen || []).length === grant.chooseN.n
+        : true;
 
       return `
         <div class="rule-card wizard-card">
@@ -1005,41 +964,15 @@
       `;
     }
 
-    async function setEntrySkillPick(level, name) {
-      const s = step4State();
-      const chooser = s.entrySkillChooser || {};
-      const chosen = Object.assign({}, chooser.chosen);
-      if (!name) { delete chosen[level]; } else { chosen[level] = { name, specialty: '' }; }
-      await saveStep4State({ entrySkillChooser: { chosen } });
-      renderStep();
-    }
-
-    async function setEntrySkillSpecialty(level, specialty) {
-      const s = step4State();
-      const chooser = s.entrySkillChooser || {};
-      const chosen = Object.assign({}, chooser.chosen);
-      chosen[level] = Object.assign({}, chosen[level], { specialty });
-      await saveStep4State({ entrySkillChooser: { chosen } });
-      renderStep();
-    }
-
     async function toggleEntryChooseN(name, checked) {
       const s = step4State();
       const chooser = s.entrySkillChooser || {};
       let chosen = (chooser.chosen || []).slice();
       if (checked) {
-        chosen.push({ name, specialty: '' });
+        chosen.push({ name });
       } else {
         chosen = chosen.filter(c => c.name !== name);
       }
-      await saveStep4State({ entrySkillChooser: { chosen } });
-      renderStep();
-    }
-
-    async function setEntryChooseNSpecialty(name, specialty) {
-      const s = step4State();
-      const chooser = s.entrySkillChooser || {};
-      const chosen = (chooser.chosen || []).map(c => c.name === name ? Object.assign({}, c, { specialty }) : c);
       await saveStep4State({ entrySkillChooser: { chosen } });
       renderStep();
     }
@@ -1051,17 +984,11 @@
       const skills = Object.assign({}, draft.skills || {});
 
       if (grant.auto) {
-        grant.auto.forEach(sk => grantSkillMin(skills, sk.name, sk.specialty, sk.level || 0));
+        grant.auto.forEach(sk => grantSkillMin(skills, sk.name, null, sk.level || 0));
       }
       const chooser = s.entrySkillChooser || {};
-      if (grant.pickLevels) {
-        grant.pickLevels.forEach(level => {
-          const c = chooser.chosen && chooser.chosen[level];
-          if (c) grantSkillMin(skills, c.name, c.specialty, level);
-        });
-      }
       if (grant.chooseN) {
-        (chooser.chosen || []).forEach(c => grantSkillMin(skills, c.name, c.specialty, grant.chooseN.level));
+        (chooser.chosen || []).forEach(c => grantSkillMin(skills, c.name, null, grant.chooseN.level));
       }
 
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
