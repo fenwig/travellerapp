@@ -1606,6 +1606,1182 @@
       renderStep();
     }
 
+    // ── Step 5: Career ────────────────────────────────────────
+    // Core Rulebook pp.17-19 (general career rules) + pp.35-37 (Navy,
+    // built in full as the reference pattern) + pp.27-29 (Drifter, the
+    // career every Traveller can always fall back to). Other careers are
+    // listed but not yet built — see [[character-creation-wizard]] memory.
+    //
+    // Scope decision: rather than hand-code every Mishap/Event's exact
+    // sub-mechanic (dozens of bespoke rolls per career), unresolved
+    // outcomes use a small set of generic tools (Grant Skill / Adjust
+    // Characteristic / Add Associate) that the player applies themselves
+    // by reading the rolled text. Mechanics with a clearly defined single
+    // roll (Survival, Advancement, Commission, Qualification, skill
+    // training) ARE fully automated. Flagged to the user as a deliberate
+    // simplification, same treatment as other documented scope gaps.
+    const CAREER_LIST = [
+      { id: 'agent', name: 'Agent' }, { id: 'army', name: 'Army' }, { id: 'citizen', name: 'Citizen' },
+      { id: 'drifter', name: 'Drifter' }, { id: 'entertainer', name: 'Entertainer' }, { id: 'marine', name: 'Marine' },
+      { id: 'merchant', name: 'Merchant' }, { id: 'navy', name: 'Navy' }, { id: 'noble', name: 'Noble' },
+      { id: 'rogue', name: 'Rogue' }, { id: 'scholar', name: 'Scholar' }, { id: 'scout', name: 'Scout' },
+      { id: 'psion', name: 'Psion' }
+    ];
+
+    const CAREERS_DATA = {
+      navy: {
+        id: 'navy', name: 'Navy', source: 'Core Rulebook pp.35-37', military: true,
+        qualification: { stat: 'int_stat', target: 6, agePenalty: { minAge: 34, dm: -2 } },
+        commission: { stat: 'soc', target: 8 },
+        assignments: [
+          { key: 'line', label: 'Line/Crew', survival: { stat: 'int_stat', target: 5 }, advancement: { stat: 'edu', target: 7 },
+            serviceSkills: [{ name: 'Electronics' }, { name: 'Mechanic' }, { name: 'Gun Combat' }, { name: 'Flyer' }, { name: 'Melee' }, { name: 'Vacc Suit' }] },
+          { key: 'engineer', label: 'Engineer/Gunner', survival: { stat: 'int_stat', target: 6 }, advancement: { stat: 'edu', target: 6 },
+            serviceSkills: [{ name: 'Engineer' }, { name: 'Mechanic' }, { name: 'Electronics' }, { name: 'Engineer' }, { name: 'Gunner' }, { name: 'Flyer' }] },
+          { key: 'flight', label: 'Flight', survival: { stat: 'dex', target: 7 }, advancement: { stat: 'edu', target: 5 },
+            serviceSkills: [{ name: 'Pilot' }, { name: 'Flyer' }, { name: 'Gunner' }, { name: 'Pilot', specialty: 'Small Craft' }, { name: 'Astrogation' }, { name: 'Electronics' }] }
+        ],
+        personalDevelopment: [{ stat: 'str' }, { stat: 'dex' }, { stat: 'end_stat' }, { stat: 'int_stat' }, { stat: 'edu' }, { stat: 'soc' }],
+        advancedEducation: [{ name: 'Electronics' }, { name: 'Astrogation' }, { name: 'Engineer' }, { name: 'Flyer' }, { name: 'Medic' }, { name: 'Admin' }],
+        officerTable: [{ name: 'Leadership' }, { name: 'Electronics' }, { name: 'Pilot' }, { name: 'Melee', specialty: 'Blade' }, { name: 'Admin' }, { name: 'Tactics', specialty: 'Naval' }],
+        ranksEnlisted: [
+          { rank: 0, title: 'Crewman' },
+          { rank: 1, title: 'Able Spacehand', skill: { name: 'Mechanic', level: 1 } },
+          { rank: 2, title: 'Petty Officer, 3rd class', skill: { name: 'Vacc Suit', level: 1 } },
+          { rank: 3, title: 'Petty Officer, 2nd class' },
+          { rank: 4, title: 'Petty Officer, 1st class', stat: { key: 'end_stat', amount: 1 } },
+          { rank: 5, title: 'Chief Petty Officer' },
+          { rank: 6, title: 'Master Chief' }
+        ],
+        ranksOfficer: [
+          { rank: 1, title: 'Ensign', skill: { name: 'Melee', specialty: 'Blade', level: 1 } },
+          { rank: 2, title: 'Sublieutenant', skill: { name: 'Leadership', level: 1 } },
+          { rank: 3, title: 'Lieutenant' },
+          { rank: 4, title: 'Commander', skill: { name: 'Tactics', specialty: 'Naval', level: 1 } },
+          { rank: 5, title: 'Captain', stat: { key: 'soc', min: 10 } },
+          { rank: 6, title: 'Admiral', stat: { key: 'soc', min: 12 } }
+        ],
+        musteringCash: [1000, 5000, 5000, 10000, 20000, 50000, 50000],
+        musteringBenefits: ['Personal Vehicle or Ship Share', 'INT +1', 'EDU +1 or two Ship Shares', 'Weapon', 'TAS Membership', "Ship's Boat or two Ship Shares", 'SOC +2'],
+        mishaps: [
+          { roll: 1, text: 'Severely injured in action (same as Injury table result 2, or roll twice and take the lower).' },
+          { roll: 2, text: 'Placed in frozen watch and revived improperly. Reduce STR, DEX or END by 1 (muscle wastage). You are not ejected from this career.' },
+          { roll: 3, text: "Battle's outcome depends on your actions — make an 8+ skill roll (Electronics/Gunner if Line, Mechanic/Vacc Suit if Engineer/Gunner, Pilot/Tactics if Flight). Fail: ship suffers severe damage, you're court-martialled and discharged. Succeed: honourably discharged, you may keep this term's Benefit roll." },
+          { roll: 4, text: 'Blamed for an accident causing crew deaths. If responsible: gain one free Skills & Training roll before ejection. If not: gain the blaming officer as an Enemy but keep this term\'s Benefit roll.' },
+          { roll: 5, text: 'Tormented by or quarrel with an officer or crewman — gain them as a Rival, forced out of the Navy.' },
+          { roll: 6, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).' }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.' },
+          { roll: 3, text: 'You join a gambling circle on board. Gain Gambler 1 or Deception 1. May throw Gambler 8+ for an extra Benefit roll (lose one if failed).' },
+          { roll: 4, text: 'Given a special assignment or duty. Gain DM+1 to any one Benefit roll.' },
+          { roll: 5, text: 'Given advanced training. Roll EDU 8+ to gain one level in any skill you already have.' },
+          { roll: 6, text: 'Your vessel takes part in a notable military engagement. Gain one of Electronics 1, Engineer 1, Gunner 1 or Pilot 1.' },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).' },
+          { roll: 8, text: 'Your vessel takes part in a diplomatic mission. Gain one of Recon 1, Diplomat 1, Steward 1, or a Contact.' },
+          { roll: 9, text: 'You foil an attempted crime aboard. Gain an Enemy, but DM+2 to your next advancement roll in the Navy.' },
+          { roll: 10, text: 'Opportunity to abuse your position for profit. Accept: extra Benefit roll this term. Refuse: DM+2 to next advancement roll.' },
+          { roll: 11, text: 'Your commanding officer takes an interest in your career. Gain Tactics (naval) 1, or DM+4 to your next advancement roll.' },
+          { roll: 12, text: 'You display heroism in battle, saving the ship. Automatically pass your next promotion or commission roll.' }
+        ]
+      },
+      drifter: {
+        id: 'drifter', name: 'Drifter', source: 'Core Rulebook pp.27-29', military: false,
+        qualification: { auto: true },
+        assignments: [
+          { key: 'barbarian', label: 'Barbarian', survival: { stat: 'end_stat', target: 7 }, advancement: { stat: 'str', target: 7 },
+            serviceSkills: [{ name: 'Animals' }, { name: 'Carouse' }, { name: 'Melee', specialty: 'Blade' }, { name: 'Stealth' }, { name: 'Seafarer' }, { name: 'Survival' }],
+            ranks: [
+              { rank: 1, title: '—', skill: { name: 'Survival', level: 1 } },
+              { rank: 2, title: 'Warrior', skill: { name: 'Melee', specialty: 'Blade', level: 1 } },
+              { rank: 4, title: 'Chieftain', skill: { name: 'Leadership', level: 1 } },
+              { rank: 6, title: 'Warlord' }
+            ] },
+          { key: 'wanderer', label: 'Wanderer', survival: { stat: 'end_stat', target: 7 }, advancement: { stat: 'int_stat', target: 7 },
+            serviceSkills: [{ name: 'Drive' }, { name: 'Deception' }, { name: 'Recon' }, { name: 'Stealth' }, { name: 'Streetwise' }, { name: 'Survival' }],
+            ranks: [
+              { rank: 1, title: '—', skill: { name: 'Streetwise', level: 1 } },
+              { rank: 3, title: '—', skill: { name: 'Deception', level: 1 } }
+            ] },
+          { key: 'scavenger', label: 'Scavenger', survival: { stat: 'dex', target: 7 }, advancement: { stat: 'end_stat', target: 7 },
+            serviceSkills: [{ name: 'Pilot', specialty: 'Small Craft' }, { name: 'Mechanic' }, { name: 'Astrogation' }, { name: 'Vacc Suit' }, { name: 'Profession' }, { name: 'Gun Combat' }],
+            ranks: [
+              { rank: 1, title: '—', skill: { name: 'Vacc Suit', level: 1 } },
+              { rank: 3, title: '—', skill: { name: 'Profession', specialty: 'Belter', level: 1 } }
+            ] }
+        ],
+        personalDevelopment: [{ stat: 'str' }, { stat: 'end_stat' }, { stat: 'dex' }, { name: 'Language' }, { name: 'Profession' }, { name: 'Jack-of-all-Trades' }],
+        musteringCash: [0, 0, 1000, 2000, 3000, 4000, 8000],
+        musteringBenefits: ['Contact', 'Weapon', 'Ally', 'Weapon', 'EDU +1', 'Ship Share', 'Two Ship Shares'],
+        mishaps: [
+          { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).' },
+          { roll: 2, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).' },
+          { roll: 3, text: 'You run afoul of a criminal gang, corrupt bureaucrat or other foe. Gain an Enemy.' },
+          { roll: 4, text: 'You suffer from a life-threatening illness. Reduce your END by 1.' },
+          { roll: 5, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have none, gain a Rival or Enemy anyway.' },
+          { roll: 6, text: 'You do not know what happened to you. There is a gap in your memory.' }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.' },
+          { roll: 3, text: 'A patron offers you a chance at a job. If you accept, gain DM+4 to your next qualification roll but you owe that patron a favour.' },
+          { roll: 4, text: 'You pick up a few useful skills here and there. Gain one level of Jack-of-all-Trades, Survival, Streetwise or Melee (any).' },
+          { roll: 5, text: 'You manage to scavenge something of use. Gain DM+1 to any one Benefit roll.' },
+          { roll: 6, text: 'You encounter something unusual (Life Events table, Core p.46 — not yet built).' },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).' },
+          { roll: 8, text: 'You are attacked by enemies. Gain an Enemy if you do not have one already, and roll Melee 8+, Gun Combat 8+ or Stealth 8+ to avoid a roll on the Injury table.' },
+          { roll: 9, text: 'Offered a risky but rewarding adventure. 1D: 1-2 injured/arrested, 3-4 survive with nothing, 5-6 succeed for DM+4 to one Benefit roll.' },
+          { roll: 10, text: 'Life on the edge hones your abilities. Increase any skill you already have by one level.' },
+          { roll: 11, text: 'You are forcibly drafted. Roll for the Draft next term.' },
+          { roll: 12, text: 'You thrive on adversity. You are automatically promoted.' }
+        ]
+      }
+    };
+
+    const DRAFT_TABLE = { 1: 'navy', 2: 'army', 3: 'marine', 4: 'merchant', 5: 'scout', 6: 'agent' };
+
+    function careerData(id) { return CAREERS_DATA[id]; }
+
+    function step5State() {
+      return (draft.creation_data && draft.creation_data.step5) || { phase: 'choose', terms: 0, careerHistory: [], draftUsed: false };
+    }
+
+    async function saveStep5State(patch) {
+      const data = draft.creation_data || {};
+      data.step5 = Object.assign({}, step5State(), patch);
+      draft.creation_data = data;
+      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+    }
+
+    function gainSkillStep(skills, name, specialty) {
+      const key = skillKey(name, specialty);
+      const existing = skills[key];
+      const newLevel = existing ? Math.min(4, existing.level + 1) : 1;
+      skills[key] = { name, specialty: specialty || null, level: newLevel };
+    }
+
+    async function applyStatChange(key, amount) {
+      const update = {};
+      update[key] = (draft[key] || 0) + amount;
+      await supabaseClient.from('characters').update(update).eq('id', draft.id);
+      Object.assign(draft, update);
+    }
+
+    function currentAge() {
+      return 18 + 4 * step5State().terms;
+    }
+
+    // ── Ageing — Core Rulebook p.48 ───────────────────────────
+    // Begins at 34 (end of 4th term); rolled at the end of every term from
+    // then on, DM = −(total terms served). Player chooses which
+    // characteristics absorb the reduction. Reducing any characteristic to
+    // 0 triggers an Ageing Crisis (pay 1D×Cr10000 or die).
+    const AGEING_PHYS = ['str', 'dex', 'end_stat'];
+    const AGEING_MENTAL = ['int_stat', 'edu', 'soc'];
+
+    function ageingRequirements(sum) {
+      if (sum <= -6) return [{ type: 'phys', amount: 2 }, { type: 'phys', amount: 2 }, { type: 'phys', amount: 2 }, { type: 'mental', amount: 1 }];
+      if (sum === -5) return [{ type: 'phys', amount: 2 }, { type: 'phys', amount: 2 }, { type: 'phys', amount: 2 }];
+      if (sum === -4) return [{ type: 'phys', amount: 2 }, { type: 'phys', amount: 2 }, { type: 'phys', amount: 1 }];
+      if (sum === -3) return [{ type: 'phys', amount: 2 }, { type: 'phys', amount: 1 }, { type: 'phys', amount: 1 }];
+      if (sum === -2) return [{ type: 'phys', amount: 1 }, { type: 'phys', amount: 1 }, { type: 'phys', amount: 1 }];
+      if (sum === -1) return [{ type: 'phys', amount: 1 }, { type: 'phys', amount: 1 }];
+      if (sum === 0) return [{ type: 'phys', amount: 1 }];
+      return [];
+    }
+
+    async function goToAgeingOrPhase(resumePhase) {
+      const s = step5State();
+      if (s.terms >= 4) {
+        await saveStep5State({ phase: 'ageing', ageingRoll: null, ageingPicks: {}, ageingResumePhase: resumePhase });
+      } else {
+        await saveStep5State({ phase: resumePhase });
+      }
+      renderStep();
+    }
+
+    function renderCareerAgeing() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+
+      if (!s.ageingRoll) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">Ageing — Age ${currentAge()}</div>
+            <div class="wizard-card-sub">Roll 2D, DM−${s.terms} (your total terms served). (Core Rulebook p.48)</div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="rollAgeing()">Roll Ageing</button>
+            </div>
+          </div>
+        `;
+      }
+
+      const reqs = s.ageingReqs || [];
+      const picks = s.ageingPicks || {};
+      const allPicked = reqs.every((r, i) => picks[i]);
+
+      if (!reqs.length) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">Ageing — No Effect</div>
+            <div class="wizard-card-sub">Rolled ${s.ageingRoll.total} (${s.ageingRoll.dice.join(' + ')} − ${s.terms}) — no effect this term.</div>
+            <div class="wizard-actions"><button class="btn-outline" onclick="resumeAfterAgeing()">Continue</button></div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">Ageing — Effects</div>
+          <div class="wizard-card-sub">Rolled ${s.ageingRoll.total} (${s.ageingRoll.dice.join(' + ')} − ${s.terms}). Choose which characteristics absorb each reduction (your choice, Core p.48).</div>
+          ${reqs.map((r, i) => {
+            const pool = r.type === 'phys' ? AGEING_PHYS : AGEING_MENTAL;
+            const labelMap = { str: 'STR', dex: 'DEX', end_stat: 'END', int_stat: 'INT', edu: 'EDU', soc: 'SOC' };
+            return `
+              <div class="wizard-field">
+                <label>Reduce a ${r.type === 'phys' ? 'physical' : 'mental'} characteristic by ${r.amount}</label>
+                <select onchange="pickAgeingTarget(${i}, this.value)">
+                  <option value="">— choose —</option>
+                  ${pool.map(k => `<option value="${k}" ${picks[i] === k ? 'selected' : ''}>${labelMap[k]} (currently ${draft[k]})</option>`).join('')}
+                </select>
+              </div>
+            `;
+          }).join('')}
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="applyAgeingPicks()" ${allPicked ? '' : 'disabled'}>Apply</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function rollAgeing() {
+      const s = step5State();
+      const d1 = rollDie(), d2 = rollDie();
+      const total = d1 + d2 - s.terms;
+      const reqs = ageingRequirements(total);
+      await saveStep5State({ ageingRoll: { dice: [d1, d2], total }, ageingReqs: reqs, ageingPicks: {} });
+      await logCreation(`Ageing roll at age ${currentAge()}: ${total} (${d1}+${d2}−${s.terms})${reqs.length ? ' — characteristic reduction required.' : ' — no effect.'}`);
+      if (!reqs.length) renderStep();
+      else renderStep();
+    }
+
+    function pickAgeingTarget(idx, key) {
+      const s = step5State();
+      const picks = Object.assign({}, s.ageingPicks, { [idx]: key });
+      saveStep5State({ ageingPicks: picks }).then(renderStep);
+    }
+
+    async function applyAgeingPicks() {
+      const s = step5State();
+      const reqs = s.ageingReqs || [];
+      const picks = s.ageingPicks || {};
+      for (let i = 0; i < reqs.length; i++) {
+        await applyStatChange(picks[i], -reqs[i].amount);
+      }
+      const crisisKey = AGEING_PHYS.concat(AGEING_MENTAL).find(k => (draft[k] || 0) <= 0);
+      await logCreation(`Ageing applied: ${reqs.map((r, i) => `${picks[i]} −${r.amount}`).join(', ')}.`);
+      if (crisisKey) {
+        await saveStep5State({ phase: 'ageingCrisis', ageingCrisisKey: crisisKey });
+      } else {
+        await resumeAfterAgeing();
+        return;
+      }
+      renderStep();
+    }
+
+    function renderCareerAgeingCrisis() {
+      const s = step5State();
+      const labelMap = { str: 'STR', dex: 'DEX', end_stat: 'END', int_stat: 'INT', edu: 'EDU', soc: 'SOC' };
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">Ageing Crisis — ${labelMap[s.ageingCrisisKey]} Reduced to 0</div>
+          <div class="wizard-card-sub">The Traveller dies unless they pay 1D×Cr10000 for medical care, which restores any characteristic at 0 back to 1. Doing so means automatically failing all future qualification rolls.</div>
+          <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
+            <button class="btn-outline" onclick="payAgeingCrisis()">Pay for Medical Care</button>
+            <button class="btn-outline-danger" onclick="dieFromAgeingCrisis()">Cannot Pay — Character Dies</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function payAgeingCrisis() {
+      const cost = rollDie() * 10000;
+      await applyStatChange('cash_on_hand', -cost);
+      const restores = {};
+      AGEING_PHYS.concat(AGEING_MENTAL).forEach(k => { if ((draft[k] || 0) <= 0) restores[k] = 1; });
+      await supabaseClient.from('characters').update(restores).eq('id', draft.id);
+      Object.assign(draft, restores);
+      const data = draft.creation_data || {};
+      data.ageingCrisisOccurred = true;
+      draft.creation_data = data;
+      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+      await logCreation(`Ageing Crisis — paid Cr${cost} for medical care. Will automatically fail all future qualification rolls.`);
+      await resumeAfterAgeing();
+    }
+
+    async function dieFromAgeingCrisis() {
+      await supabaseClient.from('characters').update({ status: 'deceased' }).eq('id', draft.id);
+      await logCreation('Ageing Crisis — could not afford medical care. The Traveller has died.');
+      document.getElementById('wizard-shell').innerHTML = `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">The Traveller Has Died</div>
+          <div class="wizard-card-sub">This character record has been marked deceased.</div>
+          <div class="wizard-actions"><button class="btn-outline" onclick="window.location.href='character-list.html'">Return to Roster</button></div>
+        </div>
+      `;
+    }
+
+    async function resumeAfterAgeing() {
+      const s = step5State();
+      await saveStep5State({ phase: s.ageingResumePhase || 'survival' });
+      renderStep();
+    }
+
+    function renderStepCareer() {
+      const s = step5State();
+      switch (s.phase) {
+        case 'qualify':         return renderCareerQualify();
+        case 'qualifyResult':   return renderCareerQualifyResult();
+        case 'draftOrDrifter':  return renderDraftOrDrifter();
+        case 'draftResult':     return renderDraftResult();
+        case 'assignment':      return renderCareerAssignment();
+        case 'commission':      return renderCareerCommission();
+        case 'survival':        return renderCareerSurvival();
+        case 'mishap':          return renderCareerMishap();
+        case 'events':          return renderCareerEvents();
+        case 'advancement':     return renderCareerAdvancement();
+        case 'skillTraining':   return renderCareerSkillTraining();
+        case 'termEnd':         return renderCareerTermEnd();
+        case 'mustering':       return renderCareerMustering();
+        case 'musteringDone':   return renderCareerMusteringDone();
+        case 'ageing':          return renderCareerAgeing();
+        case 'ageingCrisis':    return renderCareerAgeingCrisis();
+        default:                return renderCareerChoose();
+      }
+    }
+
+    function renderCareerChoose() {
+      const s = step5State();
+      const rows = CAREER_LIST.map(c => {
+        const built = !!CAREERS_DATA[c.id];
+        return `
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid #0a4a60; border-radius:6px; margin-bottom:8px;">
+            <span style="font-weight:600; ${built ? 'color:#00e5ff;' : 'color:#4a9ab8;'}">${c.name}</span>
+            ${built
+              ? `<button class="btn-outline" onclick="chooseCareer('${c.id}')">Attempt Qualification</button>`
+              : `<span style="font-size:0.75rem; color:#4a9ab8;">Not yet built</span>`
+            }
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="rule-card wizard-card" style="max-width:none;">
+          <div class="wizard-card-title">Choose a Career</div>
+          <div class="wizard-card-sub">
+            ${s.terms ? `Age ${currentAge()}, ${s.terms} term${s.terms === 1 ? '' : 's'} served so far.` : 'Pick a career to attempt qualification for.'}
+            Only Navy and Drifter are fully built right now — the rest are listed for reference. (Core Rulebook pp.17-37)
+          </div>
+          ${rows}
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="goStep(4)">Back</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function chooseCareer(id) {
+      await saveStep5State({ phase: 'qualify', careerId: id, qualResult: null });
+      renderStep();
+    }
+
+    function renderCareerQualify() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const previousCount = (s.careerHistory || []).length;
+
+      if (c.qualification.auto) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Qualification</div>
+            <div class="wizard-card-sub">Automatic qualification.</div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="doCareerQualify(true)">Confirm Entry</button>
+            </div>
+            <div class="wizard-actions">
+              <button class="btn-outline" onclick="saveStep5State({phase:'choose'}).then(renderStep)">Back</button>
+            </div>
+          </div>
+        `;
+      }
+
+      const statLabel = (CHARS.find(x => x.key === c.qualification.stat) || {}).label || c.qualification.stat.toUpperCase();
+      const agePenalty = c.qualification.agePenalty && currentAge() >= c.qualification.agePenalty.minAge ? c.qualification.agePenalty.dm : 0;
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${c.name} — Qualification</div>
+          <div class="wizard-card-sub">
+            Roll 2D + ${statLabel} DM (need ${c.qualification.target}+).
+            DM-1 for every previous career (${previousCount} so far${previousCount ? ', DM-' + previousCount : ''}).
+            ${agePenalty ? `DM${agePenalty} for being age ${c.qualification.agePenalty.minAge}+.` : ''}
+          </div>
+          <div class="wizard-actions" style="justify-content:flex-start;">
+            <button class="btn-outline" onclick="doCareerQualify(false)">Roll Qualification</button>
+          </div>
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="saveStep5State({phase:'choose'}).then(renderStep)">Back</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function doCareerQualify(auto) {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      let result;
+
+      if (auto) {
+        result = { success: true, auto: true };
+      } else if (draft.creation_data && draft.creation_data.ageingCrisisOccurred) {
+        result = { success: false, forcedByAgeingCrisis: true, dice: [0, 0], statDM: 0, previousCount: 0, agePenalty: 0, total: 0, target: c.qualification.target };
+      } else {
+        const d1 = rollDie(), d2 = rollDie();
+        const previousCount = (s.careerHistory || []).length;
+        const agePenalty = c.qualification.agePenalty && currentAge() >= c.qualification.agePenalty.minAge ? c.qualification.agePenalty.dm : 0;
+        const statDM = dmNum(draft[c.qualification.stat]);
+        const total = d1 + d2 + statDM - previousCount + agePenalty;
+        result = { dice: [d1, d2], statDM, previousCount, agePenalty, total, target: c.qualification.target, success: total >= c.qualification.target };
+      }
+
+      await saveStep5State({ phase: 'qualifyResult', qualResult: result });
+      await logCreation(`${c.name} — Qualification ${result.success ? 'succeeded' : 'failed'}${result.total !== undefined ? ` (rolled ${result.total} vs ${result.target}+)` : ' (automatic)'}.`);
+      renderStep();
+    }
+
+    function renderCareerQualifyResult() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const r = s.qualResult;
+
+      if (r.success) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Qualified!</div>
+            <div class="wizard-card-sub">${r.dice ? `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM} stat DM − ${r.previousCount} previous careers${r.agePenalty ? ' + ' + r.agePenalty + ' age' : ''}), needed ${r.target}+.` : 'Entry was automatic.'}</div>
+            <div class="wizard-actions">
+              <button class="btn-outline" onclick="goCareerAssignment()">Continue</button>
+            </div>
+          </div>
+        `;
+      }
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${c.name} — Qualification Failed</div>
+          <div class="wizard-card-sub">${r.forcedByAgeingCrisis ? 'An Ageing Crisis means you automatically fail all qualification rolls from now on.' : `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM} − ${r.previousCount}${r.agePenalty ? ' + ' + r.agePenalty : ''}), needed ${r.target}+.`}</div>
+          <div class="wizard-card-sub">You must either submit to the Draft (if you haven't already in this lifetime) or spend this term as a Drifter.</div>
+          <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
+            <button class="btn-outline" onclick="saveStep5State({phase:'draftOrDrifter'}).then(renderStep)">Continue</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDraftOrDrifter() {
+      const s = step5State();
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">Draft or Drifter</div>
+          <div class="wizard-card-sub">Core Rulebook p.19. A Traveller may only enter the draft once in their lifetime.</div>
+          <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
+            <button class="btn-outline" onclick="rollDraft()" ${s.draftUsed ? 'disabled' : ''}>${s.draftUsed ? 'Draft Already Used' : 'Submit to the Draft'}</button>
+            <button class="btn-outline" onclick="chooseCareer('drifter')">Become a Drifter This Term</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function rollDraft() {
+      const roll = rollDie();
+      const branch = DRAFT_TABLE[roll];
+      const built = !!CAREERS_DATA[branch];
+      await saveStep5State({ draftUsed: true, phase: 'draftResult', draftRoll: roll, draftBranch: branch, draftBuilt: built });
+      await logCreation(`Drafted: rolled ${roll} — ${branch}${built ? '' : ' (not yet built — substituting Drifter for this term)'}.`);
+      renderStep();
+    }
+
+    function renderDraftResult() {
+      const s = step5State();
+      const branchName = (CAREER_LIST.find(c => c.id === s.draftBranch) || {}).name || s.draftBranch;
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">Drafted: ${branchName}</div>
+          <div class="wizard-card-sub">
+            ${s.draftBuilt
+              ? `You are automatically enlisted into ${branchName} for this term — no qualification roll needed.`
+              : `${branchName} isn't built yet in this app — substituting the Drifter career for this term instead. Note this in your background notes if you'd like to track the real outcome.`}
+          </div>
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="confirmDraftEntry()">Continue</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function confirmDraftEntry() {
+      const s = step5State();
+      const id = s.draftBuilt ? s.draftBranch : 'drifter';
+      await saveStep5State({ careerId: id, phase: 'assignment' });
+      renderStep();
+    }
+
+    async function goCareerAssignment() {
+      await saveStep5State({ phase: 'assignment' });
+      renderStep();
+    }
+
+    function renderCareerAssignment() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${c.name} — Choose an Assignment</div>
+          <div class="wizard-actions" style="justify-content:flex-start; gap:12px; flex-wrap:wrap;">
+            ${c.assignments.map(a => `<button class="btn-outline" onclick="chooseAssignment('${a.key}')">${a.label}</button>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    async function chooseAssignment(key) {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const isFirstCareer = (s.careerHistory || []).length === 0;
+      const assignment = c.assignments.find(a => a.key === key);
+      const skills = Object.assign({}, draft.skills || {});
+
+      if (isFirstCareer) {
+        assignment.serviceSkills.forEach(sk => grantSkillMin(skills, sk.name, sk.specialty, 0));
+      }
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+
+      await saveStep5State({
+        assignmentKey: key, rank: 0, isOfficer: false, termInCareer: 0,
+        basicTrainingDone: isFirstCareer, benefitRolls: 0,
+        phase: 'survival'
+      });
+      await logCreation(`${c.name} — chose ${assignment.label} assignment.${isFirstCareer ? ' Basic Training: gained all Service Skills at level 0.' : ''}`);
+      renderStep();
+    }
+
+    function currentAssignment(s, c) { return c.assignments.find(a => a.key === s.assignmentKey); }
+
+    function renderCareerSurvival() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const a = currentAssignment(s, c);
+      const statLabel = (CHARS.find(x => x.key === a.survival.stat) || {}).label || a.survival.stat.toUpperCase();
+      const r = s.survivalResult;
+
+      if (!r) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} (${a.label}) — Term ${s.termInCareer + 1}, Survival</div>
+            <div class="wizard-card-sub">Roll 2D + ${statLabel} DM (need ${a.survival.target}+). A natural 2 always fails.</div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="rollCareerSurvival()">Roll Survival</button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (r.success) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">Survived</div>
+            <div class="wizard-card-sub">Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}), needed ${a.survival.target}+.</div>
+            <div class="wizard-actions">
+              <button class="btn-outline" onclick="goCareerEvents()">Continue to Events</button>
+            </div>
+          </div>
+        `;
+      }
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">Survival Failed</div>
+          <div class="wizard-card-sub">Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}), needed ${a.survival.target}+. You must roll on the Mishap table.</div>
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="goCareerMishap()">Roll Mishap</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function rollCareerSurvival() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const a = currentAssignment(s, c);
+      const d1 = rollDie(), d2 = rollDie();
+      const statDM = dmNum(draft[a.survival.stat]);
+      const total = d1 + d2 + statDM;
+      const success = (d1 + d2) !== 2 && total >= a.survival.target;
+      await saveStep5State({ survivalResult: { dice: [d1, d2], statDM, total, success } });
+      await logCreation(`${c.name} (${a.label}) — Survival: rolled ${total} (need ${a.survival.target}+) — ${success ? 'survived.' : 'failed.'}`);
+      renderStep();
+    }
+
+    async function goCareerMishap() {
+      await saveStep5State({ phase: 'mishap', mishapRoll: null, mishapResolved: false });
+      renderStep();
+    }
+
+    function renderCareerMishap() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      if (!s.mishapRoll) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Mishap</div>
+            <div class="wizard-card-sub">This mishap forces you to leave the career immediately (unless its text says otherwise), and you lose this term's Benefit roll.</div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="rollCareerMishap()">Roll 1D</button>
+            </div>
+          </div>
+        `;
+      }
+      const m = c.mishaps.find(x => x.roll === s.mishapRoll);
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${c.name} — Mishap ${s.mishapRoll}</div>
+          <p style="margin-bottom:14px;">${m.text}</p>
+          ${renderGenericResolver('mishap')}
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="leaveCareerAfterMishap()" ${s.mishapResolved ? '' : 'disabled'}>Leave Career</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function rollCareerMishap() {
+      const roll = rollDie();
+      await saveStep5State({ mishapRoll: roll });
+      const s = step5State();
+      const c = careerData(s.careerId);
+      await logCreation(`${c.name} — Mishap roll: ${roll} — ${c.mishaps.find(x => x.roll === roll).text}`);
+      renderStep();
+    }
+
+    async function leaveCareerAfterMishap() {
+      await recordCareerHistory(false);
+      const s = step5State();
+      const newTerms = s.terms + 1;
+      await supabaseClient.from('characters').update({ age: 18 + 4 * newTerms }).eq('id', draft.id);
+      draft.age = 18 + 4 * newTerms;
+      await saveStep5State({ terms: newTerms });
+      await goToAgeingOrPhase('mustering');
+    }
+
+    // ── Generic resolver — Grant Skill / Adjust Characteristic / Add Associate ──
+    function renderGenericResolver(tag) {
+      return `
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+          <button class="btn-outline" onclick="openResolver('${tag}','skill')">Grant Skill</button>
+          <button class="btn-outline" onclick="openResolver('${tag}','stat')">Adjust Characteristic</button>
+          <button class="btn-outline" onclick="openResolver('${tag}','associate')">Add Associate</button>
+          <button class="btn-outline" onclick="markResolverDone('${tag}')">Mark Resolved / No Further Effect</button>
+        </div>
+        <div id="resolver-${tag}"></div>
+      `;
+    }
+
+    function openResolver(tag, kind) {
+      const el = document.getElementById('resolver-' + tag);
+      if (kind === 'skill') {
+        el.innerHTML = `
+          <div class="wizard-field"><label>Skill</label>
+            <select id="resolver-${tag}-skill">
+              <option value="">— choose —</option>
+              ${SKILLS.map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="wizard-field"><label>Level</label>
+            <input id="resolver-${tag}-level" type="number" min="0" max="4" value="1" />
+          </div>
+          <button class="btn-outline" onclick="applyResolverSkill('${tag}')">Apply</button>
+        `;
+      } else if (kind === 'stat') {
+        el.innerHTML = `
+          <div class="wizard-field"><label>Characteristic</label>
+            <select id="resolver-${tag}-stat">${CHARS.map(c => `<option value="${c.key}">${c.label}</option>`).join('')}</select>
+          </div>
+          <div class="wizard-field"><label>Amount (+/-)</label><input id="resolver-${tag}-amount" type="number" value="1" /></div>
+          <button class="btn-outline" onclick="applyResolverStat('${tag}')">Apply</button>
+        `;
+      } else {
+        el.innerHTML = `
+          <div class="wizard-field"><label>Type</label>
+            <select id="resolver-${tag}-type">
+              <option value="ally">Ally</option><option value="contact">Contact</option>
+              <option value="rival">Rival</option><option value="enemy">Enemy</option>
+            </select>
+          </div>
+          <div class="wizard-field"><label>Name</label><input id="resolver-${tag}-name" type="text" /></div>
+          <button class="btn-outline" onclick="applyResolverAssociate('${tag}')">Apply</button>
+        `;
+      }
+    }
+
+    async function applyResolverSkill(tag) {
+      const name = document.getElementById(`resolver-${tag}-skill`).value;
+      const level = parseInt(document.getElementById(`resolver-${tag}-level`).value, 10) || 0;
+      if (!name) return;
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, name, null, level);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await logCreation(`Resolved outcome — granted ${name} ${level}.`);
+      document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
+    }
+
+    async function applyResolverStat(tag) {
+      const key = document.getElementById(`resolver-${tag}-stat`).value;
+      const amount = parseInt(document.getElementById(`resolver-${tag}-amount`).value, 10) || 0;
+      await applyStatChange(key, amount);
+      await logCreation(`Resolved outcome — ${key} ${amount > 0 ? '+' : ''}${amount}.`);
+      document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
+    }
+
+    async function applyResolverAssociate(tag) {
+      const type = document.getElementById(`resolver-${tag}-type`).value;
+      const name = document.getElementById(`resolver-${tag}-name`).value.trim();
+      if (!name) return;
+      await addAssociate(type, name, 'Gained during a career term.');
+      await logCreation(`Resolved outcome — gained ${name} as a ${type}.`);
+      document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
+    }
+
+    function markResolverDone(tag) {
+      if (tag === 'mishap') saveStep5State({ mishapResolved: true }).then(renderStep);
+      else if (tag === 'event') saveStep5State({ eventResolved: true }).then(renderStep);
+    }
+
+    async function goCareerEvents() {
+      await saveStep5State({ phase: 'events', eventRoll: null, eventResolved: false });
+      renderStep();
+    }
+
+    function renderCareerEvents() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      if (!s.eventRoll) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Events</div>
+            <div class="wizard-card-sub">Roll 2D on the Events table.</div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="rollCareerEvent()">Roll Event</button>
+            </div>
+          </div>
+        `;
+      }
+      const e = c.events.find(x => x.roll === s.eventRoll);
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${c.name} — Event ${s.eventRoll}</div>
+          <p style="margin-bottom:14px;">${e.text}</p>
+          ${renderGenericResolver('event')}
+          ${s.eventResolved ? renderConnectionWidget('careerEvent_' + (draft.id || '') + '_' + s.terms) : ''}
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="goCareerAfterEvents()" ${s.eventResolved ? '' : 'disabled'}>Continue</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function rollCareerEvent() {
+      const d1 = rollDie(), d2 = rollDie();
+      const total = d1 + d2;
+      const s = step5State();
+      const c = careerData(s.careerId);
+      await saveStep5State({ eventRoll: total });
+      await logCreation(`${c.name} — Event roll: ${total} — ${c.events.find(x => x.roll === total).text}`);
+      renderStep();
+    }
+
+    async function goCareerAfterEvents() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const firstTermNoBasic = !s.basicTrainingDone;
+      if (c.military && s.rank === 0 && !s.isOfficer) {
+        await saveStep5State({ phase: 'commission' });
+      } else {
+        await saveStep5State({ phase: 'advancement' });
+      }
+      renderStep();
+    }
+
+    function renderCareerCommission() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const eligible = s.termInCareer === 0 || draft.soc >= 9;
+      if (!eligible) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Commission</div>
+            <div class="wizard-card-sub">You may only attempt a commission in your first term unless SOC is 9+. Not eligible this term.</div>
+            <div class="wizard-actions"><button class="btn-outline" onclick="saveStep5State({phase:'advancement'}).then(renderStep)">Continue to Advancement</button></div>
+          </div>
+        `;
+      }
+      const r = s.commissionResult;
+      if (!r) {
+        const dmLate = s.termInCareer > 0 ? -1 * s.termInCareer : 0;
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Attempt Commission?</div>
+            <div class="wizard-card-sub">Roll 2D + SOC DM (need ${c.commission.target}+)${dmLate ? `, DM${dmLate} for attempting after the first term` : ''}. Optional — you may also just roll Advancement instead.</div>
+            <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
+              <button class="btn-outline" onclick="rollCommission()">Attempt Commission</button>
+              <button class="btn-outline" onclick="saveStep5State({phase:'advancement'}).then(renderStep)">Skip — Roll Advancement</button>
+            </div>
+          </div>
+        `;
+      }
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${c.name} — Commission ${r.success ? 'Granted' : 'Failed'}</div>
+          <div class="wizard-card-sub">Rolled ${r.total} (need ${c.commission.target}+).${r.success ? ' You are now a rank 1 officer.' : ' You may still attempt Advancement this term.'}</div>
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="afterCommission()">Continue</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function rollCommission() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const d1 = rollDie(), d2 = rollDie();
+      const dmLate = s.termInCareer > 0 ? -1 * s.termInCareer : 0;
+      const total = d1 + d2 + dmNum(draft.soc) + dmLate;
+      const success = total >= c.commission.target;
+      await saveStep5State({ commissionResult: { dice: [d1, d2], total, success } });
+      await logCreation(`${c.name} — Commission roll: ${total} (need ${c.commission.target}+) — ${success ? 'granted.' : 'failed.'}`);
+      renderStep();
+    }
+
+    async function afterCommission() {
+      const s = step5State();
+      if (s.commissionResult && s.commissionResult.success) {
+        await saveStep5State({ isOfficer: true, rank: 1, phase: 'skillTraining', skillRollsRemaining: 1 });
+      } else {
+        await saveStep5State({ phase: 'advancement' });
+      }
+      renderStep();
+    }
+
+    function renderCareerAdvancement() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const a = currentAssignment(s, c);
+      const r = s.advancementResult;
+      if (!r) {
+        const statLabel = (CHARS.find(x => x.key === a.advancement.stat) || {}).label || a.advancement.stat.toUpperCase();
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Advancement</div>
+            <div class="wizard-card-sub">Roll 2D + ${statLabel} DM (need ${a.advancement.target}+). You may only attempt this once per term.</div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="rollAdvancement()">Roll Advancement</button>
+            </div>
+          </div>
+        `;
+      }
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${c.name} — Advancement</div>
+          <div class="wizard-card-sub">
+            Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}), needed ${a.advancement.target}+.
+            ${r.success ? `Promoted to rank ${s.rank}${r.rankBonus ? ' — ' + r.rankBonus : ''}.` : 'No promotion this term.'}
+            ${r.mustLeave ? ' This roll was at or below your terms in this career — you must leave after this term (unless overridden by a natural 12).' : ''}
+          </div>
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="goCareerSkillTraining()">Continue to Skill Training</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function rankTableFor(s, c, a) {
+      if (s.isOfficer) return c.ranksOfficer || [];
+      return c.ranksEnlisted || a.ranks || [];
+    }
+
+    async function rollAdvancement() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const a = currentAssignment(s, c);
+      const d1 = rollDie(), d2 = rollDie();
+      const natural = d1 + d2;
+      const statDM = dmNum(draft[a.advancement.stat]);
+      const total = natural + statDM;
+      const success = total >= a.advancement.target;
+      const mustLeave = success && total <= s.termInCareer && natural !== 12;
+
+      let newRank = s.rank;
+      let rankBonus = '';
+      if (success) {
+        newRank = s.rank + 1;
+        const table = rankTableFor(s, c, a);
+        const entry = table.find(x => x.rank === newRank);
+        if (entry) {
+          const parts = [];
+          if (entry.title && entry.title !== '—') parts.push(entry.title);
+          if (entry.skill) {
+            const skills = Object.assign({}, draft.skills || {});
+            grantSkillMin(skills, entry.skill.name, entry.skill.specialty, entry.skill.level);
+            await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+            draft.skills = skills;
+            parts.push(`${entry.skill.name}${entry.skill.specialty ? ' (' + entry.skill.specialty + ')' : ''} ${entry.skill.level}`);
+          }
+          if (entry.stat) {
+            if (entry.stat.min !== undefined) {
+              if ((draft[entry.stat.key] || 0) < entry.stat.min) await applyStatChange(entry.stat.key, entry.stat.min - (draft[entry.stat.key] || 0));
+              else await applyStatChange(entry.stat.key, 1);
+            } else {
+              await applyStatChange(entry.stat.key, entry.stat.amount);
+            }
+            parts.push(`${entry.stat.key} adjusted`);
+          }
+          rankBonus = parts.join(', ');
+        }
+      }
+
+      await saveStep5State({
+        rank: newRank,
+        advancementResult: { dice: [d1, d2], statDM, total, success, mustLeave, rankBonus },
+        skillRollsRemaining: 1 + (success ? 1 : 0)
+      });
+      await logCreation(`${c.name} — Advancement: rolled ${total} (need ${a.advancement.target}+) — ${success ? `promoted to rank ${newRank}${rankBonus ? ' (' + rankBonus + ')' : ''}.` : 'no promotion.'}`);
+      renderStep();
+    }
+
+    async function goCareerSkillTraining() {
+      const s = step5State();
+      await saveStep5State({ phase: 'skillTraining', skillRollsRemaining: s.skillRollsRemaining || 1 });
+      renderStep();
+    }
+
+    function renderCareerSkillTraining() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const a = currentAssignment(s, c);
+
+      if (!s.basicTrainingDone) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Basic Training</div>
+            <div class="wizard-card-sub">Not your first career — choose one Service Skill table entry to gain at level 0.</div>
+            <div class="wizard-actions" style="justify-content:flex-start; gap:10px; flex-wrap:wrap;">
+              ${a.serviceSkills.map((sk, i) => `<button class="btn-outline" onclick="applyBasicTraining(${i})">${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''}</button>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if ((s.skillRollsRemaining || 0) <= 0) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Skill Training Done</div>
+            <div class="wizard-actions"><button class="btn-outline" onclick="goCareerTermEnd()">Continue</button></div>
+          </div>
+        `;
+      }
+
+      const tables = [{ key: 'personal', label: 'Personal Development', list: c.personalDevelopment }];
+      tables.push({ key: 'service', label: `Service Skills (${a.label})`, list: a.serviceSkills });
+      if (c.advancedEducation && draft.edu >= 8) tables.push({ key: 'advEd', label: 'Advanced Education (EDU 8+)', list: c.advancedEducation });
+      if (c.officerTable && s.isOfficer) tables.push({ key: 'officer', label: 'Officer (commissioned only)', list: c.officerTable });
+
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${c.name} — Skill Training (${s.skillRollsRemaining} roll${s.skillRollsRemaining > 1 ? 's' : ''} remaining)</div>
+          <div class="wizard-card-sub">Choose a table, then roll 1D against it.</div>
+          <div class="wizard-actions" style="justify-content:flex-start; gap:12px; flex-wrap:wrap;">
+            ${tables.map(t => `<button class="btn-outline" onclick="rollSkillTable('${t.key}')">${t.label}</button>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    async function applyBasicTraining(idx) {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const a = currentAssignment(s, c);
+      const sk = a.serviceSkills[idx];
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, sk.name, sk.specialty, 0);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await saveStep5State({ basicTrainingDone: true });
+      await logCreation(`${c.name} — Basic Training (subsequent career): gained ${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''} 0.`);
+      renderStep();
+    }
+
+    async function rollSkillTable(tableKey) {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const a = currentAssignment(s, c);
+      const tableMap = { personal: c.personalDevelopment, service: a.serviceSkills, advEd: c.advancedEducation, officer: c.officerTable };
+      const list = tableMap[tableKey];
+      const idx = rollDie() - 1;
+      const entry = list[idx];
+      const skills = Object.assign({}, draft.skills || {});
+      let desc;
+      if (entry.stat) {
+        await applyStatChange(entry.stat, 1);
+        desc = `${entry.stat} +1`;
+      } else {
+        gainSkillStep(skills, entry.name, entry.specialty);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        desc = `${entry.name}${entry.specialty ? ' (' + entry.specialty + ')' : ''}`;
+      }
+      await saveStep5State({ skillRollsRemaining: (s.skillRollsRemaining || 1) - 1 });
+      await logCreation(`${c.name} — Skill Training roll ${idx + 1} on ${tableKey}: ${desc}.`);
+      renderStep();
+    }
+
+    async function goCareerTermEnd() {
+      const s = step5State();
+      const benefitRolls = (s.benefitRolls || 0) + 1;
+      await saveStep5State({ benefitRolls, phase: 'termEnd' });
+      renderStep();
+    }
+
+    function renderCareerTermEnd() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const a = currentAssignment(s, c);
+      const forcedLeave = s.advancementResult && s.advancementResult.mustLeave;
+
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${c.name} (${a.label}) — Term ${s.termInCareer + 1} Complete</div>
+          <div class="wizard-card-sub">Rank ${s.rank}${s.isOfficer ? ' (officer)' : ''}. Benefit rolls banked: ${s.benefitRolls}. You'll be age ${currentAge() + 4} next term.</div>
+          ${forcedLeave ? '<p style="color:#ff5a4a; font-size:0.85rem; margin-bottom:10px;">Your services are no longer required — you must leave this career.</p>' : ''}
+          <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
+            ${forcedLeave ? '' : '<button class="btn-outline" onclick="continueCareerTerm()">Serve Another Term</button>'}
+            <button class="btn-outline" onclick="leaveCareerVoluntary()">Leave Career — Muster Out</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function continueCareerTerm() {
+      const s = step5State();
+      const newTerms = s.terms + 1;
+      await supabaseClient.from('characters').update({ age: 18 + 4 * newTerms }).eq('id', draft.id);
+      draft.age = 18 + 4 * newTerms;
+      await saveStep5State({
+        termInCareer: s.termInCareer + 1, terms: newTerms,
+        survivalResult: null, eventRoll: null, eventResolved: false,
+        commissionResult: null, advancementResult: null, skillRollsRemaining: 0
+      });
+      await goToAgeingOrPhase('survival');
+    }
+
+    async function leaveCareerVoluntary() {
+      await recordCareerHistory(true);
+      const s = step5State();
+      const newTerms = s.terms + 1;
+      await supabaseClient.from('characters').update({ age: 18 + 4 * newTerms }).eq('id', draft.id);
+      draft.age = 18 + 4 * newTerms;
+      await saveStep5State({ terms: newTerms });
+      await goToAgeingOrPhase('mustering');
+    }
+
+    async function recordCareerHistory(servedFullTerm) {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const a = currentAssignment(s, c);
+      const table = rankTableFor(s, c, a);
+      const rankEntry = table.find(x => x.rank === s.rank);
+      const rankTitle = (rankEntry && rankEntry.title && rankEntry.title !== '—') ? rankEntry.title : (s.isOfficer ? 'Officer' : '');
+
+      await supabaseClient.from('character_careers').insert({
+        character_id: draft.id, term_order: (s.careerHistory || []).length + 1,
+        career: c.name, assignment: a.label, rank: s.rank, rank_title: rankTitle,
+        terms_served: s.termInCareer + 1
+      });
+
+      const history = (s.careerHistory || []).concat([{ careerId: s.careerId, assignment: a.label, rank: s.rank, termInCareer: s.termInCareer }]);
+      await saveStep5State({ careerHistory: history });
+      await logCreation(`Left ${c.name} (${a.label}) at rank ${s.rank} after ${s.termInCareer + 1} term(s) in this career.${servedFullTerm ? '' : ' (mishap-forced departure)'}`);
+    }
+
+    function renderCareerMustering() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const done = s.musteringResolved || [];
+      const remaining = (s.benefitRolls || 0) - done.length;
+
+      if (remaining <= 0) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Mustering Out Complete</div>
+            <div class="wizard-card-sub">All Benefit rolls from this career have been applied.</div>
+            <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
+              <button class="btn-outline" onclick="saveStep5State({phase:'choose'}).then(renderStep)">Attempt Another Career</button>
+              <button class="btn-outline" onclick="finishCareerStep()">Finish Career Step</button>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${c.name} — Mustering Out (${remaining} Benefit roll${remaining > 1 ? 's' : ''} remaining)</div>
+          <div class="wizard-card-sub">For each roll, choose the Cash table or the Benefits table, then roll 1D (capped at 7).</div>
+          <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
+            <button class="btn-outline" onclick="rollMustering('cash')">Roll Cash</button>
+            <button class="btn-outline" onclick="rollMustering('benefits')">Roll Benefits</button>
+          </div>
+          ${done.length ? `<div style="margin-top:14px; font-size:0.85rem; color:#4a9ab8;">${done.map(d => `<div>${d}</div>`).join('')}</div>` : ''}
+        </div>
+      `;
+    }
+
+    async function rollMustering(table) {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const idx = Math.min(6, rollDie() - 1);
+      let line;
+      if (table === 'cash') {
+        const amount = c.musteringCash[idx];
+        await applyStatChange('cash_on_hand', amount);
+        line = `Cash roll ${idx + 1}: Cr${amount}`;
+      } else {
+        const text = c.musteringBenefits[idx];
+        await appendNote(`[MUSTERING OUT]\n${c.name} — Benefit roll ${idx + 1}: ${text}\n[/MUSTERING OUT]`);
+        line = `Benefit roll ${idx + 1}: ${text}`;
+      }
+      const done = (s.musteringResolved || []).concat([line]);
+      await saveStep5State({ musteringResolved: done });
+      await logCreation(`Mustering Out — ${line}.`);
+      renderStep();
+    }
+
+    function renderCareerMusteringDone() {
+      return renderCareerChoose();
+    }
+
+    async function finishCareerStep() {
+      await supabaseClient.from('characters').update({ creation_step: 8 }).eq('id', draft.id);
+      draft.creation_step = 8;
+      await logCreation('Finished the Career step — moving to Finalize.');
+      renderStep();
+    }
+
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = '../../index.html'; return; }
@@ -1677,6 +2853,8 @@
         body = renderStepBackgroundSkills();
       } else if (step === 4) {
         body = renderStepPreEd();
+      } else if (step === 5) {
+        body = renderStepCareer();
       } else {
         body = `
           <div class="rule-card wizard-card">
