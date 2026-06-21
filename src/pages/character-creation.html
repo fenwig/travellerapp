@@ -540,6 +540,10 @@
       { name: 'Profession' }, { name: 'Science' }
     ];
 
+    const COLONIAL_SKILLS = [{ name: 'Animals' }, { name: 'Athletics' }, { name: 'Drive' }, { name: 'Gun Combat' }, { name: 'Mechanic' }, { name: 'Medic' }, { name: 'Navigation' }, { name: 'Recon' }, { name: 'Profession' }, { name: 'Seafarer' }, { name: 'Survival', level: 1 }];
+    const HARDKNOCKS_SKILLS = [{ name: 'Streetwise', level: 1 }, { name: 'Athletics' }, { name: 'Deception' }, { name: 'Drive' }, { name: 'Gambler' }, { name: 'Melee' }, { name: 'Persuade' }, { name: 'Stealth' }];
+    const SPACER_SKILLS = [{ name: 'Vacc Suit', level: 1 }, { name: 'Astrogation' }, { name: 'Electronics' }, { name: 'Engineer' }, { name: 'Profession' }];
+
     const PRE_ED_OPTIONS = [
       {
         id: 'university', name: 'University', source: 'Core Rulebook p.16',
@@ -550,7 +554,8 @@
         benefits: [
           { id: 'bump_chosen', text: 'Increase both skills chosen at entry by one level.', type: 'bumpEntrySkills', amount: 1 },
           { id: 'edu1', text: 'Increase EDU by an additional +1.', type: 'stat', key: 'edu', amount: 1 },
-          { id: 'qual_dm', text: 'DM+1 (DM+2 with honours) to qualify for Agent, Army, Citizen (corporate), Entertainer (journalist), Marines, Navy, Scholar, Scouts.', type: 'flag' },
+          { id: 'qual_dm', text: 'DM+1 to qualify for Agent, Army, Citizen (corporate), Entertainer (journalist), Marines, Navy, Scholar, Scouts.', type: 'pendingMod', key: 'qualificationDM', amount: 1 },
+          { id: 'qual_dm_honours', text: 'Honours graduates get an additional DM+1 to that same qualification roll (DM+2 total).', type: 'pendingMod', key: 'qualificationDM', amount: 1, honoursOnly: true },
           { id: 'commission_preroll', text: 'May attempt a commission roll before the first term of a military career, if it is the first career chosen after university (officer rank 1 on success; automatic with honours).', type: 'flag' }
         ]
       },
@@ -566,10 +571,14 @@
           const b = PRE_ED_OPTIONS.find(o => o.id === 'military').branchChoice.find(x => x.key === branch);
           return { stat: b.entryStat, target: b.entryTarget, extraDM: 0, dmLabel: '' };
         },
-        entryGrant: { deferred: true, note: 'Gain all Service Skills of the chosen military career at level 0 — career tables aren\'t built yet, apply manually once Careers exists.' },
+        // Navy's Service Skills tables are built (CAREERS_DATA.navy); Army/Marines aren't, so
+        // those branches stay deferred-note until those careers exist.
+        entryGrant: (s) => s.branch === 'Navy'
+          ? { auto: militaryServiceSkillPool() }
+          : { deferred: true, note: 'Gain all Service Skills of the chosen military career at level 0 — Army/Marines tables aren\'t built yet, apply manually once those Careers exist.' },
         graduation: () => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: 0, dmLabel: '' }),
         benefits: [
-          { id: 'three_service', text: 'If entering the same military career, select any three Service Skills and increase them to level 1.', type: 'flag' },
+          { id: 'three_service', text: 'If entering the same military career, select any three Service Skills and increase them to level 1.', type: 'chooseN', n: 3, level: 1, pool: (s) => s.branch === 'Navy' ? militaryServiceSkillPool() : [] },
           { id: 'edu1', text: 'Increase EDU by +1.', type: 'stat', key: 'edu', amount: 1 },
           { id: 'soc1_honours', text: 'Honours graduates also increase SOC by +1.', type: 'stat', key: 'soc', amount: 1, honoursOnly: true },
           { id: 'auto_entry', text: 'Automatic entry into the tied military career at rank 1 (officer), if it is the first career after the academy.', type: 'flag' }
@@ -579,14 +588,15 @@
         id: 'colonial', name: 'Colonial Upbringing', source: 'Traveller Companion p.32',
         summary: 'Grown up in the outback of a developed world or a new colony — more skills early, but DM-2 to qualify for other careers and DM-1 on commission/promotion checks. Homeworld TL isn\'t tracked in this app, so entry is treated as automatic.',
         entry: () => ({ auto: true, dmLabel: 'Automatic if homeworld is TL8 or lower (assumed — homeworld TL isn\'t tracked)' }),
-        entryGrant: { auto: [{ name: 'Animals' }, { name: 'Athletics' }, { name: 'Drive' }, { name: 'Gun Combat' }, { name: 'Mechanic' }, { name: 'Medic' }, { name: 'Navigation' }, { name: 'Recon' }, { name: 'Profession' }, { name: 'Seafarer' }, { name: 'Survival', level: 1 }] },
+        entryGrant: { auto: COLONIAL_SKILLS },
         graduation: (d) => ({ stat: 'int_stat', target: 8, honours: 12, extraDM: d.end_stat >= 8 ? 1 : 0, dmLabel: 'DM+1 if END 8+' }),
         benefits: [
-          { id: 'bump_one_entry', text: 'Increase one skill already gained at level 0 to level 1.', type: 'flag' },
-          { id: 'two_more', text: 'Gain any two other skills from the list above at level 1, or increase one already-possessed skill by one level.', type: 'flag' },
+          { id: 'bump_one_entry', text: 'Increase one skill already gained at level 0 to level 1.', type: 'chooseN', n: 1, level: 1, pool: () => COLONIAL_SKILLS },
+          { id: 'two_more', text: 'Gain any two other skills from the list above at level 1 (simplified — the rulebook also allows bumping one already-possessed skill instead).', type: 'chooseN', n: 2, level: 1, pool: () => COLONIAL_SKILLS },
           { id: 'jot1', text: 'Gain Jack-of-all-Trades at level 1.', type: 'fixedSkill', name: 'Jack-of-all-Trades', level: 1 },
-          { id: 'honours_extra', text: 'Honours graduates gain Leadership 1 and may increase any other level-0 skill to level 1.', type: 'fixedSkill', name: 'Leadership', level: 1, honoursOnly: true },
-          { id: 'end1_edu_down', text: 'Increase END by +1, decrease EDU by D3.', type: 'flag' }
+          { id: 'honours_extra', text: 'Honours graduates gain Leadership 1.', type: 'fixedSkill', name: 'Leadership', level: 1, honoursOnly: true },
+          { id: 'honours_extra_pick', text: 'Honours graduates may also increase any other level-0 skill to level 1.', type: 'chooseN', n: 1, level: 1, pool: () => COLONIAL_SKILLS, honoursOnly: true },
+          { id: 'end1_edu_down', text: 'Increase END by +1, decrease EDU by D3.', type: 'rollMultiStat', fixed: { end_stat: 1 }, rolled: { edu: 3 }, rolledSign: { edu: -1 } }
         ],
         ageNote: 'Enters first career aged 22+2D3 (older than the usual 18).'
       },
@@ -624,25 +634,26 @@
         id: 'hardknocks', name: 'School of Hard Knocks', source: 'Traveller Companion p.33',
         summary: 'Grew up on the fringes of society — Streetwise comes easy, but expect DM-2 on first-career promotion/commission checks and reduced SOC.',
         entry: (d) => ({ auto: d.soc <= 6, requiresSoc6: true, dmLabel: 'Automatic if SOC 6 or lower' }),
-        entryGrant: { auto: [{ name: 'Streetwise', level: 1 }], chooseN: { n: 2, level: 0, from: [{ name: 'Athletics' }, { name: 'Deception' }, { name: 'Drive' }, { name: 'Gambler' }, { name: 'Melee' }, { name: 'Persuade' }, { name: 'Stealth' }] } },
+        entryGrant: { auto: [{ name: 'Streetwise', level: 1 }], chooseN: { n: 2, level: 0, from: HARDKNOCKS_SKILLS.slice(1) } },
         graduation: (d) => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: d.end_stat >= 9 ? 1 : 0, dmLabel: 'DM+1 if END 9+' }),
         benefits: [
-          { id: 'three_more', text: 'Gain any three other skills listed above at level 0.', type: 'flag' },
+          { id: 'three_more', text: 'Gain any three other skills listed above at level 0.', type: 'chooseN', n: 3, level: 0, pool: () => HARDKNOCKS_SKILLS },
           { id: 'gun0', text: 'Gain Gun Combat 0.', type: 'fixedSkill', name: 'Gun Combat', level: 0 },
-          { id: 'carouse_honours', text: 'Honours graduates gain Carouse 1 and may increase any other level-0 skill to level 1.', type: 'fixedSkill', name: 'Carouse', level: 1, honoursOnly: true },
+          { id: 'carouse_honours', text: 'Honours graduates gain Carouse 1.', type: 'fixedSkill', name: 'Carouse', level: 1, honoursOnly: true },
+          { id: 'carouse_honours_pick', text: 'Honours graduates may also increase any other level-0 skill to level 1.', type: 'chooseN', n: 1, level: 1, pool: () => HARDKNOCKS_SKILLS, honoursOnly: true },
           { id: 'soc_down', text: 'Decrease SOC by 1.', type: 'stat', key: 'soc', amount: -1 },
-          { id: 'promo_dm', text: 'DM-2 on promotion/commission checks in first career (unless you left it by choice).', type: 'flag' }
+          { id: 'promo_dm', text: 'DM-2 on promotion/commission checks in your first career (unless you left it by choice).', type: 'flag' }
         ]
       },
       {
         id: 'spacer', name: 'Spacer Community', source: 'Traveller Companion p.34',
         summary: 'Grown up on an orbital habitat or asteroid belt community. Homeworld size isn\'t tracked in this app, so entry always uses the INT 4+ roll.',
         entry: (d) => ({ stat: 'int_stat', target: 4, extraDM: d.dex >= 8 ? 1 : 0, dmLabel: d.dex >= 8 ? 'DM+1 (DEX 8+)' : '' }),
-        entryGrant: { auto: [{ name: 'Vacc Suit', level: 1 }], chooseN: { n: 2, level: 0, from: [{ name: 'Astrogation' }, { name: 'Electronics' }, { name: 'Engineer' }, { name: 'Profession' }] } },
+        entryGrant: { auto: [{ name: 'Vacc Suit', level: 1 }], chooseN: { n: 2, level: 0, from: SPACER_SKILLS.slice(1) } },
         graduation: (d) => ({ stat: 'int_stat', target: 8, honours: 12, extraDM: d.dex >= 6 ? 1 : 0, dmLabel: 'DM+1 if DEX 6+' }),
         benefits: [
-          { id: 'two_more', text: 'Gain any two other skills listed above at level 0.', type: 'flag' },
-          { id: 'one_more_1', text: 'Gain any skill listed above at level 1.', type: 'flag' },
+          { id: 'two_more', text: 'Gain any two other skills listed above at level 0.', type: 'chooseN', n: 2, level: 0, pool: () => SPACER_SKILLS },
+          { id: 'one_more_1', text: 'Gain any skill listed above at level 1.', type: 'chooseN', n: 1, level: 1, pool: () => SPACER_SKILLS },
           { id: 'pilot0', text: 'Gain Pilot 0.', type: 'fixedSkill', name: 'Pilot', level: 0 },
           { id: 'jot_honours', text: 'Honours graduates gain Jack-of-all-Trades 1.', type: 'fixedSkill', name: 'Jack-of-all-Trades', level: 1, honoursOnly: true },
           { id: 'dex1_soc2', text: 'Increase DEX by +1, decrease SOC by 2.', type: 'multiStat', changes: { dex: 1, soc: -2 } },
@@ -934,10 +945,14 @@
       renderStep();
     }
 
+    function resolveEntryGrant(opt, s) {
+      return typeof opt.entryGrant === 'function' ? opt.entryGrant(s) : opt.entryGrant;
+    }
+
     function renderPreEdEntrySkills() {
       const s = step4State();
       const opt = findOption(s.optionId);
-      const grant = opt.entryGrant;
+      const grant = resolveEntryGrant(opt, s);
       const chooser = s.entrySkillChooser || {};
 
       let pickerHtml = '';
@@ -995,7 +1010,7 @@
     async function goEntryEvents() {
       const s = step4State();
       const opt = findOption(s.optionId);
-      const grant = opt.entryGrant;
+      const grant = resolveEntryGrant(opt, s);
       const skills = Object.assign({}, draft.skills || {});
 
       if (grant.auto) {
@@ -1289,8 +1304,9 @@
     function termSkillOptions() {
       const s = step4State();
       const opt = findOption(s.optionId);
+      const grant = resolveEntryGrant(opt, s);
       const keys = new Set();
-      if (opt.entryGrant.auto) opt.entryGrant.auto.forEach(sk => keys.add(skillKey(sk.name, sk.specialty)));
+      if (grant.auto) grant.auto.forEach(sk => keys.add(skillKey(sk.name, sk.specialty)));
       const chooser = s.entrySkillChooser || {};
       if (chooser.chosen) {
         const vals = Array.isArray(chooser.chosen) ? chooser.chosen : Object.values(chooser.chosen);
@@ -1536,10 +1552,12 @@
 
       const applicable = opt.benefits.filter(b => !b.honoursOnly || s.gradRoll.honours);
       const applied = s.benefitsApplied || {};
+      const actionableTypes = ['stat', 'multiStat', 'fixedSkill', 'bumpEntrySkills', 'pendingMod', 'rollMultiStat'];
 
       const rows = applicable.map(b => {
-        const isAuto = b.type === 'stat' || b.type === 'multiStat' || b.type === 'fixedSkill' || b.type === 'bumpEntrySkills';
         const done = applied[b.id];
+        if (b.type === 'chooseN') return renderChooseNBenefit(b, s, done);
+        const isAuto = actionableTypes.includes(b.type);
         return `
           <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
             <div style="font-size:0.85rem;">${b.text}</div>
@@ -1551,7 +1569,7 @@
         `;
       }).join('');
 
-      const allDone = applicable.every(b => b.type !== 'stat' && b.type !== 'multiStat' && b.type !== 'fixedSkill' && b.type !== 'bumpEntrySkills' ? true : applied[b.id]);
+      const allDone = applicable.every(b => (actionableTypes.includes(b.type) || b.type === 'chooseN') ? applied[b.id] : true);
 
       return `
         <div class="rule-card wizard-card">
@@ -1565,11 +1583,61 @@
       `;
     }
 
+    function benefitPool(b, s) {
+      return typeof b.pool === 'function' ? b.pool(s) : b.pool;
+    }
+
+    function renderChooseNBenefit(b, s, done) {
+      const pool = benefitPool(b, s) || [];
+      const choosers = s.benefitChoosers || {};
+      const chosen = choosers[b.id] || [];
+      if (!pool.length) {
+        return `
+          <div style="margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
+            <div style="font-size:0.85rem; margin-bottom:8px;">${b.text}</div>
+            <span style="font-size:0.75rem; color:#4a9ab8;">No applicable skill table available yet for this branch/option — recorded as a note instead.</span>
+          </div>
+        `;
+      }
+      return `
+        <div style="margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
+          <div style="font-size:0.85rem; margin-bottom:8px;">${b.text} (selected ${chosen.length} of ${b.n})</div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+            ${pool.map(sk => {
+              const key = skillKey(sk.name, sk.specialty);
+              const isChosen = chosen.includes(key);
+              const disable = !isChosen && chosen.length >= b.n;
+              return `
+                <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; ${disable ? 'opacity:0.5;' : ''}">
+                  <input type="checkbox" ${isChosen ? 'checked' : ''} ${disable ? 'disabled' : ''} ${done ? 'disabled' : ''}
+                         onchange="toggleChooseNBenefit('${b.id}','${key}',${b.n})" style="width:16px; height:16px; accent-color:#00e5ff;" />
+                  ${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''}
+                </label>
+              `;
+            }).join('')}
+          </div>
+          <button class="btn-outline" onclick="applyPreEdBenefit('${b.id}')" ${done || chosen.length !== b.n ? 'disabled' : ''}>${done ? 'Applied' : 'Apply'}</button>
+        </div>
+      `;
+    }
+
+    async function toggleChooseNBenefit(benefitId, key, n) {
+      const s = step4State();
+      const choosers = Object.assign({}, s.benefitChoosers);
+      let chosen = (choosers[benefitId] || []).slice();
+      if (chosen.includes(key)) chosen = chosen.filter(k => k !== key);
+      else if (chosen.length < n) chosen.push(key);
+      choosers[benefitId] = chosen;
+      await saveStep4State({ benefitChoosers: choosers });
+      renderStep();
+    }
+
     async function applyPreEdBenefit(benefitId) {
       const s = step4State();
       const opt = findOption(s.optionId);
       const b = opt.benefits.find(x => x.id === benefitId);
       const update = {};
+      let appliedText = b.text;
 
       if (b.type === 'stat') {
         update[b.key] = (draft[b.key] || 0) + b.amount;
@@ -1586,6 +1654,28 @@
           Object.values(chosen).forEach(c => bumpSkill(skills, c.name, c.specialty, b.amount));
         }
         update.skills = skills;
+      } else if (b.type === 'chooseN') {
+        const chosen = (s.benefitChoosers && s.benefitChoosers[b.id]) || [];
+        const skills = Object.assign({}, draft.skills || {});
+        chosen.forEach(key => {
+          const sk = skills[key] ? skills[key] : { name: key.split('|')[0], specialty: key.split('|')[1] || null };
+          grantSkillMin(skills, sk.name, sk.specialty, b.level);
+        });
+        update.skills = skills;
+        appliedText = `${b.text} — chose ${chosen.join(', ') || 'none'}.`;
+      } else if (b.type === 'pendingMod') {
+        await addPendingMod(b.key, b.amount);
+        appliedText = `${b.text} (banked).`;
+      } else if (b.type === 'rollMultiStat') {
+        const rolled = {};
+        Object.keys(b.fixed || {}).forEach(k => { update[k] = (draft[k] || 0) + b.fixed[k]; });
+        Object.keys(b.rolled || {}).forEach(k => {
+          const die = b.rolled[k];
+          const amount = Math.ceil(rollDie() / (6 / die)) * (b.rolledSign && b.rolledSign[k] < 0 ? -1 : 1);
+          update[k] = (draft[k] || 0) + amount;
+          rolled[k] = amount;
+        });
+        appliedText = `${b.text} — rolled ${Object.keys(rolled).map(k => `${k} ${rolled[k] > 0 ? '+' : ''}${rolled[k]}`).join(', ')}.`;
       }
 
       await supabaseClient.from('characters').update(update).eq('id', draft.id);
@@ -1593,7 +1683,7 @@
 
       const applied = Object.assign({}, s.benefitsApplied, { [benefitId]: true });
       await saveStep4State({ benefitsApplied: applied });
-      await logCreation(`Applied Graduation Benefit: ${b.text}`);
+      await logCreation(`Applied Graduation Benefit: ${appliedText}`);
       renderStep();
     }
 
@@ -1756,6 +1846,15 @@
 
     function careerData(id) { return CAREERS_DATA[id]; }
 
+    // Union of Navy's three assignment Service Skills tables, de-duplicated by name+specialty.
+    function militaryServiceSkillPool() {
+      const seen = new Map();
+      CAREERS_DATA.navy.assignments.forEach(a => a.serviceSkills.forEach(sk => {
+        seen.set(skillKey(sk.name, sk.specialty), sk);
+      }));
+      return Array.from(seen.values());
+    }
+
     function step5State() {
       return (draft.creation_data && draft.creation_data.step5) || { phase: 'choose', terms: 0, careerHistory: [], draftUsed: false };
     }
@@ -1765,6 +1864,61 @@
       data.step5 = Object.assign({}, step5State(), patch);
       draft.creation_data = data;
       await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+    }
+
+    // ── Pending Modifiers — tracks +/- DMs and flags that an event or
+    // benefit grants to a FUTURE roll, so they actually apply when that
+    // roll happens instead of just being text. Numeric fields are
+    // additive (multiple sources can stack) and consumed (zeroed) the
+    // moment they're used; `autoPromote` is a one-shot flag.
+    function pendingMods() {
+      return (draft.creation_data && draft.creation_data.pendingMods) || {};
+    }
+
+    async function addPendingMod(key, amount) {
+      const m = Object.assign({}, pendingMods());
+      m[key] = (m[key] || 0) + amount;
+      const data = draft.creation_data || {};
+      data.pendingMods = m;
+      draft.creation_data = data;
+      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+    }
+
+    async function setPendingFlag(key, value) {
+      const m = Object.assign({}, pendingMods());
+      m[key] = value;
+      const data = draft.creation_data || {};
+      data.pendingMods = m;
+      draft.creation_data = data;
+      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+    }
+
+    async function consumePendingMod(key) {
+      const m = pendingMods();
+      const v = m[key] || 0;
+      if (v) {
+        const m2 = Object.assign({}, m);
+        delete m2[key];
+        const data = draft.creation_data || {};
+        data.pendingMods = m2;
+        draft.creation_data = data;
+        await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+      }
+      return v;
+    }
+
+    async function consumePendingFlag(key) {
+      const m = pendingMods();
+      const v = !!m[key];
+      if (v) {
+        const m2 = Object.assign({}, m);
+        delete m2[key];
+        const data = draft.creation_data || {};
+        data.pendingMods = m2;
+        draft.creation_data = data;
+        await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+      }
+      return v;
     }
 
     function gainSkillStep(skills, name, specialty) {
@@ -1996,12 +2150,23 @@
             ${s.terms ? `Age ${currentAge()}, ${s.terms} term${s.terms === 1 ? '' : 's'} served so far.` : 'Pick a career to attempt qualification for.'}
             Only Navy and Drifter are fully built right now — the rest are listed for reference. (Core Rulebook pp.17-37)
           </div>
+          ${s.forcedDraftNextTerm ? `
+            <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
+              A prior event forced a Draft roll this term instead of a free choice.
+              <button class="btn-outline" style="margin-top:8px;" onclick="rollForcedDraft()">Roll the Draft</button>
+            </div>
+          ` : ''}
           ${rows}
           <div class="wizard-actions">
             <button class="btn-outline" onclick="goStep(4)">Back</button>
           </div>
         </div>
       `;
+    }
+
+    async function rollForcedDraft() {
+      await saveStep5State({ forcedDraftNextTerm: false });
+      await rollDraft();
     }
 
     async function chooseCareer(id) {
@@ -2063,8 +2228,9 @@
         const previousCount = (s.careerHistory || []).length;
         const agePenalty = c.qualification.agePenalty && currentAge() >= c.qualification.agePenalty.minAge ? c.qualification.agePenalty.dm : 0;
         const statDM = dmNum(draft[c.qualification.stat]);
-        const total = d1 + d2 + statDM - previousCount + agePenalty;
-        result = { dice: [d1, d2], statDM, previousCount, agePenalty, total, target: c.qualification.target, success: total >= c.qualification.target };
+        const bonusDM = await consumePendingMod('qualificationDM');
+        const total = d1 + d2 + statDM - previousCount + agePenalty + bonusDM;
+        result = { dice: [d1, d2], statDM, previousCount, agePenalty, bonusDM, total, target: c.qualification.target, success: total >= c.qualification.target };
       }
 
       await saveStep5State({ phase: 'qualifyResult', qualResult: result });
@@ -2081,7 +2247,7 @@
         return `
           <div class="rule-card wizard-card">
             <div class="wizard-card-title">${c.name} — Qualified!</div>
-            <div class="wizard-card-sub">${r.dice ? `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM} stat DM − ${r.previousCount} previous careers${r.agePenalty ? ' + ' + r.agePenalty + ' age' : ''}), needed ${r.target}+.` : 'Entry was automatic.'}</div>
+            <div class="wizard-card-sub">${r.dice ? `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM} stat DM − ${r.previousCount} previous careers${r.agePenalty ? ' + ' + r.agePenalty + ' age' : ''}${r.bonusDM ? ' + ' + r.bonusDM + ' from a prior bonus' : ''}), needed ${r.target}+.` : 'Entry was automatic.'}</div>
             <div class="wizard-actions">
               <button class="btn-outline" onclick="goCareerAssignment()">Continue</button>
             </div>
@@ -2091,7 +2257,7 @@
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Qualification Failed</div>
-          <div class="wizard-card-sub">${r.forcedByAgeingCrisis ? 'An Ageing Crisis means you automatically fail all qualification rolls from now on.' : `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM} − ${r.previousCount}${r.agePenalty ? ' + ' + r.agePenalty : ''}), needed ${r.target}+.`}</div>
+          <div class="wizard-card-sub">${r.forcedByAgeingCrisis ? 'An Ageing Crisis means you automatically fail all qualification rolls from now on.' : `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM} − ${r.previousCount}${r.agePenalty ? ' + ' + r.agePenalty : ''}${r.bonusDM ? ' + ' + r.bonusDM + ' from a prior bonus' : ''}), needed ${r.target}+.`}</div>
           <div class="wizard-card-sub">You must either submit to the Draft (if you haven't already in this lifetime) or spend this term as a Drifter.</div>
           <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
             <button class="btn-outline" onclick="saveStep5State({phase:'draftOrDrifter'}).then(renderStep)">Continue</button>
@@ -2264,11 +2430,12 @@
         `;
       }
       const m = c.mishaps.find(x => x.roll === s.mishapRoll);
+      const bespoke = renderBespokeOutcome('mishap', s.careerId, 'mishap' + s.mishapRoll);
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Mishap ${s.mishapRoll}</div>
           <p style="margin-bottom:14px;">${m.text}</p>
-          ${renderGenericResolver('mishap', m.tools)}
+          ${bespoke !== null ? bespoke : renderGenericResolver('mishap', m.tools)}
           <div class="wizard-actions">
             ${m.noEject
               ? `<button class="btn-outline" onclick="continueCareerAfterMishap()" ${s.mishapResolved ? '' : 'disabled'}>Continue Career — Not Ejected</button>`
@@ -2307,7 +2474,7 @@
     }
 
     // ── Generic resolver — Grant Skill / Adjust Characteristic / Add Associate ──
-    function renderGenericResolver(tag, tools) {
+    function renderGenericResolver(tag, tools, hideMarkButton) {
       tools = tools || [];
       const toolButtons = {
         skill: `<button class="btn-outline" onclick="openResolver('${tag}','skill')">Grant Skill</button>`,
@@ -2317,7 +2484,7 @@
       return `
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
           ${tools.map(t => toolButtons[t]).join('')}
-          <button class="btn-outline" onclick="markResolverDone('${tag}')">Mark Resolved / No Further Effect</button>
+          ${hideMarkButton ? '' : `<button class="btn-outline" onclick="markResolverDone('${tag}')">Mark Resolved / No Further Effect</button>`}
         </div>
         <div id="resolver-${tag}"></div>
       `;
@@ -2394,6 +2561,382 @@
       else if (tag === 'event') saveStep5State({ eventResolved: true }).then(renderStep);
     }
 
+    // ── Bespoke event/mishap mechanics ────────────────────────
+    // For rolls whose text calls for a specific roll/choice beyond the
+    // generic resolver (e.g. "throw Gambler 8+ for an extra Benefit roll,
+    // lose one if you fail"), this replaces the generic resolver with the
+    // real mechanic. Resolution still writes into s.eventMechanic /
+    // s.mishapMechanic and flips eventResolved/mishapResolved so the
+    // existing Continue/Leave gating keeps working unchanged.
+    function bespokeKey(careerId, roll) { return careerId + ':' + roll; }
+
+    function mechanicState(tag) {
+      const s = step5State();
+      return (tag === 'mishap' ? s.mishapMechanic : s.eventMechanic) || {};
+    }
+
+    async function saveMechanic(tag, patch) {
+      const key = tag === 'mishap' ? 'mishapMechanic' : 'eventMechanic';
+      const merged = Object.assign({}, mechanicState(tag), patch);
+      await saveStep5State({ [key]: merged });
+    }
+
+    async function resolveMechanic(tag) {
+      const key = tag === 'mishap' ? 'mishapResolved' : 'eventResolved';
+      await saveStep5State({ [key]: true });
+    }
+
+    function renderBespokeOutcome(tag, careerId, roll) {
+      const key = bespokeKey(careerId, roll);
+      const m = mechanicState(tag);
+      switch (key) {
+        case 'navy:2':
+        case 'drifter:2':   return renderInlineMishapNotEjected(tag, careerId, m);
+        case 'navy:3':      return renderOptionalSkillRollForBenefit(tag, m, ['Gambler', 'Deception'], 'Gambler', 8);
+        case 'navy:5':      return renderRollSkillToGainLevel(tag, m, 'edu', 8);
+        case 'navy:9':      return renderAutoAssociatePlusDM(tag, m, 'enemy', 'advancementDM', 2);
+        case 'navy:10':     return renderAcceptRefuse(tag, m, 'Abuse your position — extra Benefit roll this term', 'Refuse — DM+2 to your next advancement roll', () => addPendingMod('extraBenefitRolls', 1), () => addPendingMod('advancementDM', 2));
+        case 'navy:11':     return renderChooseSkillOrDM(tag, m, { name: 'Tactics', specialty: 'Naval', level: 1 }, 'advancementDM', 4);
+        case 'navy:12':     return renderBankAutoPromote(tag, m);
+        case 'drifter:3':   return renderAcceptRefuse(tag, m, 'Accept the job — DM+4 to your next qualification roll (you owe a favour)', 'Decline', () => addPendingMod('qualificationDM', 4), () => Promise.resolve());
+        case 'drifter:9':   return renderDrifterAdventureRoll(tag, m);
+        case 'drifter:11':  return renderForcedDraftNextTerm(tag, m);
+        case 'drifter:12':  return renderBankAutoPromote(tag, m);
+        case 'navy:mishap3': return renderNavyMishap3(tag, m);
+        case 'navy:mishap4': return renderNavyMishap4(tag, m);
+        default: return null;
+      }
+    }
+
+    function resolverHeader(text) {
+      return `<div class="wizard-card-sub" style="margin-bottom:10px;">${text}</div>`;
+    }
+
+    // "Gain SkillA 1 or SkillB 1. You may throw SkillX 8+: success gains an
+    // extra Benefit roll, failure loses one." (Navy event 3)
+    function renderOptionalSkillRollForBenefit(tag, m, skillChoices, rollSkill, target) {
+      if (!m.skillChosen) {
+        return resolverHeader('Choose which skill to gain:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            ${skillChoices.map(name => `<button class="btn-outline" onclick="pickOptionalSkill('${tag}','${name}')">${name} 1</button>`).join('')}
+          </div>
+        `;
+      }
+      if (!m.rollOffered) {
+        return resolverHeader(`Gained ${m.skillChosen} 1. You may throw ${rollSkill} ${target}+ for an extra Benefit roll (lose one if you fail).`) + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="rollOptionalBenefit('${tag}','${rollSkill}',${target})">Throw ${rollSkill} ${target}+</button>
+            <button class="btn-outline" onclick="declineOptionalBenefit('${tag}')">Don't Risk It</button>
+          </div>
+        `;
+      }
+      return resolverHeader(m.resultText) ;
+    }
+
+    async function pickOptionalSkill(tag, name) {
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, name, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await saveMechanic(tag, { skillChosen: name });
+      await logCreation(`Gained ${name} 1.`);
+      renderStep();
+    }
+
+    async function rollOptionalBenefit(tag, rollSkill, target) {
+      const key = skillKey(rollSkill, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= target;
+      await addPendingMod('extraBenefitRolls', success ? 1 : -1);
+      await saveMechanic(tag, { rollOffered: true, resultText: `Rolled ${total} (need ${target}+) — ${success ? 'gained an extra Benefit roll.' : 'lost one Benefit roll.'}` });
+      await resolveMechanic(tag);
+      await logCreation(`Rolled ${total} on ${rollSkill} (need ${target}+) — ${success ? 'extra Benefit roll.' : 'lost a Benefit roll.'}`);
+      renderStep();
+    }
+
+    async function declineOptionalBenefit(tag) {
+      await saveMechanic(tag, { rollOffered: true, resultText: 'Declined the risk — no change to Benefit rolls.' });
+      await resolveMechanic(tag);
+      renderStep();
+    }
+
+    // "Roll STAT 8+ to gain one level in any skill you already have." (Navy event 5)
+    function renderRollSkillToGainLevel(tag, m, statKey, target) {
+      const owned = Object.keys(draft.skills || {}).map(k => draft.skills[k]);
+      if (!owned.length) {
+        return resolverHeader('You have no skills yet to improve — nothing to roll for.') +
+          `<button class="btn-outline" onclick="markMechanicResolved('${tag}')">Continue</button>`;
+      }
+      if (!m.chosenKey) {
+        return resolverHeader('Choose a skill you already have:') + `
+          <select id="skillgain-${tag}">
+            ${owned.map(o => `<option value="${skillKey(o.name, o.specialty)}">${o.name}${o.specialty ? ' (' + o.specialty + ')' : ''} ${o.level}</option>`).join('')}
+          </select>
+          <button class="btn-outline" onclick="chooseSkillGainTarget('${tag}')">Choose</button>
+        `;
+      }
+      if (!m.rolled) {
+        const statLabel = (CHARS.find(x => x.key === statKey) || {}).label || statKey.toUpperCase();
+        return resolverHeader(`Roll 2D + ${statLabel} DM (need ${target}+) to increase ${m.chosenKey}.`) + `
+          <button class="btn-outline" onclick="rollSkillGain('${tag}','${statKey}',${target})">Roll</button>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function chooseSkillGainTarget(tag) {
+      const key = document.getElementById('skillgain-' + tag).value;
+      await saveMechanic(tag, { chosenKey: key });
+      renderStep();
+    }
+
+    async function rollSkillGain(tag, statKey, target) {
+      const m = mechanicState(tag);
+      const total = roll2d6() + dmNum(draft[statKey]);
+      const success = total >= target;
+      if (success) {
+        const skills = Object.assign({}, draft.skills || {});
+        const owned = skills[m.chosenKey];
+        bumpSkill(skills, owned.name, owned.specialty, 1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+      }
+      await saveMechanic(tag, { rolled: true, resultText: `Rolled ${total} (need ${target}+) — ${success ? 'gained a level.' : 'no improvement this time.'}` });
+      await resolveMechanic(tag);
+      await logCreation(`Skill-gain roll: ${total} (need ${target}+) on ${m.chosenKey} — ${success ? 'success.' : 'failed.'}`);
+      renderStep();
+    }
+
+    function markMechanicResolved(tag) { resolveMechanic(tag).then(renderStep); }
+
+    // Gain an Enemy/Rival automatically, plus an automatic DM to a future roll.
+    function renderAutoAssociatePlusDM(tag, m, type, dmKey, amount) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return resolverHeader(`Name the ${type === 'enemy' ? 'Enemy' : 'Rival'} you gained:`) + `
+        <input id="assoc-${tag}" type="text" placeholder="Name" />
+        <button class="btn-outline" onclick="confirmAutoAssociate('${tag}','${type}','${dmKey}',${amount})">Confirm</button>
+      `;
+    }
+
+    async function confirmAutoAssociate(tag, type, dmKey, amount) {
+      const name = document.getElementById('assoc-' + tag).value.trim() || 'Unnamed';
+      await addAssociate(type, name, 'Gained during a career term.');
+      await addPendingMod(dmKey, amount);
+      await saveMechanic(tag, { resolved: true, resultText: `Gained ${name} as a ${type}. Banked DM${amount > 0 ? '+' : ''}${amount} to your next roll.` });
+      await resolveMechanic(tag);
+      await logCreation(`Gained ${name} as a ${type}; banked DM${amount > 0 ? '+' : ''}${amount} to a future roll.`);
+      renderStep();
+    }
+
+    // Accept/Refuse style choice with two different consequences.
+    function renderAcceptRefuse(tag, m, acceptLabel, refuseLabel, onAccept, onRefuse) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      window.__acceptRefuse = window.__acceptRefuse || {};
+      window.__acceptRefuse[tag] = { onAccept, onRefuse };
+      return `
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          <button class="btn-outline" onclick="chooseAcceptRefuse('${tag}', true)">${acceptLabel}</button>
+          <button class="btn-outline" onclick="chooseAcceptRefuse('${tag}', false)">${refuseLabel}</button>
+        </div>
+      `;
+    }
+
+    async function chooseAcceptRefuse(tag, accepted) {
+      const handlers = (window.__acceptRefuse || {})[tag];
+      if (handlers) await (accepted ? handlers.onAccept() : handlers.onRefuse())();
+      await saveMechanic(tag, { resolved: true, resultText: accepted ? 'Accepted.' : 'Declined.' });
+      await resolveMechanic(tag);
+      await logCreation(accepted ? 'Accepted the opportunity.' : 'Declined the opportunity.');
+      renderStep();
+    }
+
+    // "Gain SKILL, or DM+N to your next ADVANCEMENT/QUALIFICATION roll." choice.
+    function renderChooseSkillOrDM(tag, m, skillGrant, dmKey, amount) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      const label = `${skillGrant.name}${skillGrant.specialty ? ' (' + skillGrant.specialty + ')' : ''} ${skillGrant.level}`;
+      return `
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          <button class="btn-outline" onclick="chooseSkillOrDM('${tag}', true, '${skillGrant.name}', '${skillGrant.specialty || ''}', ${skillGrant.level}, '${dmKey}', ${amount})">Gain ${label}</button>
+          <button class="btn-outline" onclick="chooseSkillOrDM('${tag}', false, '${skillGrant.name}', '${skillGrant.specialty || ''}', ${skillGrant.level}, '${dmKey}', ${amount})">DM${amount > 0 ? '+' : ''}${amount} to next roll instead</button>
+        </div>
+      `;
+    }
+
+    async function chooseSkillOrDM(tag, takeSkill, name, specialty, level, dmKey, amount) {
+      let resultText;
+      if (takeSkill) {
+        const skills = Object.assign({}, draft.skills || {});
+        grantSkillMin(skills, name, specialty || null, level);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        resultText = `Gained ${name}${specialty ? ' (' + specialty + ')' : ''} ${level}.`;
+      } else {
+        await addPendingMod(dmKey, amount);
+        resultText = `Banked DM${amount > 0 ? '+' : ''}${amount} to your next roll.`;
+      }
+      await saveMechanic(tag, { resolved: true, resultText });
+      await resolveMechanic(tag);
+      await logCreation(resultText);
+      renderStep();
+    }
+
+    // "Automatically pass your next promotion or commission roll."
+    function renderBankAutoPromote(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return `<button class="btn-outline" onclick="bankAutoPromote('${tag}')">Bank an Automatic Promotion/Commission</button>`;
+    }
+
+    async function bankAutoPromote(tag) {
+      await setPendingFlag('autoPromote', true);
+      await saveMechanic(tag, { resolved: true, resultText: 'Banked — your next promotion or commission roll auto-succeeds.' });
+      await resolveMechanic(tag);
+      await logCreation('Banked an automatic promotion/commission for a future roll.');
+      renderStep();
+    }
+
+    // Drifter event 9 — 1D sub-table.
+    function renderDrifterAdventureRoll(tag, m) {
+      if (!m.rolled) {
+        return resolverHeader('Accept the risky adventure?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="rollDrifterAdventure('${tag}')">Accept and Roll 1D</button>
+            <button class="btn-outline" onclick="markMechanicResolved('${tag}')">Decline</button>
+          </div>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollDrifterAdventure(tag) {
+      const roll = rollDie();
+      let resultText;
+      if (roll <= 2) {
+        resultText = `Rolled ${roll} — injured or arrested (Injury table / Prisoner career not tracked in this app — note it yourself if it applies).`;
+      } else if (roll <= 4) {
+        resultText = `Rolled ${roll} — you survive, but gain nothing.`;
+      } else {
+        await addPendingMod('benefitRollDM', 4);
+        resultText = `Rolled ${roll} — success! Banked DM+4 to one Benefit roll.`;
+      }
+      await saveMechanic(tag, { rolled: true, resultText });
+      await resolveMechanic(tag);
+      await logCreation(`Drifter adventure roll: ${roll} — ${resultText}`);
+      renderStep();
+    }
+
+    // Navy mishap 3 — branch determines whether the Benefit roll is kept.
+    function renderNavyMishap3(tag, m) {
+      if (!m.rolled) {
+        return resolverHeader('Make an 8+ skill roll matching your assignment (Electronics/Gunner if Line, Mechanic/Vacc Suit if Engineer/Gunner, Pilot/Tactics if Flight).') + `
+          <select id="navy-m3-skill">
+            <option>Electronics</option><option>Gunner</option><option>Mechanic</option>
+            <option>Vacc Suit</option><option>Pilot</option><option>Tactics</option>
+          </select>
+          <button class="btn-outline" onclick="rollNavyMishap3()">Roll 8+</button>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollNavyMishap3() {
+      const name = document.getElementById('navy-m3-skill').value;
+      const key = skillKey(name, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      if (success) {
+        const s = step5State();
+        await saveStep5State({ benefitRolls: (s.benefitRolls || 0) + 1 });
+      }
+      const resultText = `Rolled ${total} on ${name} (need 8+) — ${success ? 'honourably discharged; you keep this term\'s Benefit roll.' : 'court-martialled and discharged.'}`;
+      await saveMechanic('mishap', { rolled: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Navy Mishap 3: ${resultText}`);
+      renderStep();
+    }
+
+    // Navy mishap 4 — responsible or not.
+    function renderNavyMishap4(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return resolverHeader('Were you responsible for the accident?') + `
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          <button class="btn-outline" onclick="navyMishap4Responsible()">Yes — Take a Free Skill Training Roll</button>
+          <button class="btn-outline" onclick="navyMishap4NotResponsible()">No — Gain the Officer as an Enemy, Keep Benefit Roll</button>
+        </div>
+      `;
+    }
+
+    async function navyMishap4Responsible() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const a = currentAssignment(s, c);
+      const idx = rollDie() - 1;
+      const entry = a.serviceSkills[idx];
+      const skills = Object.assign({}, draft.skills || {});
+      gainSkillStep(skills, entry.name, entry.specialty);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const resultText = `Responsible — free Service Skills roll (${idx + 1}): ${entry.name}${entry.specialty ? ' (' + entry.specialty + ')' : ''}.`;
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Navy Mishap 4: ${resultText}`);
+      renderStep();
+    }
+
+    async function navyMishap4NotResponsible() {
+      const name = (document.getElementById('m4-officer-name') || {}).value || 'A blaming officer';
+      await addAssociate('enemy', name, 'Blamed you for an accident.');
+      const s = step5State();
+      await saveStep5State({ benefitRolls: (s.benefitRolls || 0) + 1 });
+      const resultText = `Not responsible — gained ${name} as an Enemy, kept this term's Benefit roll.`;
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Navy Mishap 4: ${resultText}`);
+      renderStep();
+    }
+
+    // "Disaster! Roll on the Mishap table but you are not ejected from this career." (Navy/Drifter event 2)
+    function renderInlineMishapNotEjected(tag, careerId, m) {
+      const c = careerData(careerId);
+      if (!m.rolled) {
+        return resolverHeader('Roll on the Mishap table — you are not ejected from this career.') +
+          `<button class="btn-outline" onclick="rollInlineMishap('${tag}','${careerId}')">Roll 1D</button>`;
+      }
+      const entry = c.mishaps.find(x => x.roll === m.rolled);
+      const subResolver = m.subResolved ? resolverHeader('Resolved.') : renderGenericResolver(tag + 'Sub', entry.tools, true);
+      return resolverHeader(`Rolled ${m.rolled} — ${entry.text}`) +
+        subResolver +
+        (m.subResolved ? '' : `<button class="btn-outline" onclick="markInlineMishapResolved('${tag}')">Mark Resolved</button>`);
+    }
+
+    async function rollInlineMishap(tag, careerId) {
+      const roll = rollDie();
+      await saveMechanic(tag, { rolled: roll });
+      await logCreation(`Inline Mishap roll (no ejection): ${roll}.`);
+      renderStep();
+    }
+
+    async function markInlineMishapResolved(tag) {
+      await saveMechanic(tag, { subResolved: true });
+      await resolveMechanic(tag);
+      renderStep();
+    }
+
+    // "You are forcibly drafted. Roll for the Draft next term." (Drifter event 11)
+    function renderForcedDraftNextTerm(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return `<button class="btn-outline" onclick="bankForcedDraft('${tag}')">Acknowledge — Roll the Draft Next Term</button>`;
+    }
+
+    async function bankForcedDraft(tag) {
+      await saveStep5State({ forcedDraftNextTerm: true });
+      await saveMechanic(tag, { resolved: true, resultText: 'Banked — next term you must roll the Draft instead of choosing a career.' });
+      await resolveMechanic(tag);
+      await logCreation('Forced draft banked for next term.');
+      renderStep();
+    }
+
     async function goCareerEvents() {
       await saveStep5State({ phase: 'events', eventRoll: null, eventResolved: false });
       renderStep();
@@ -2414,11 +2957,12 @@
         `;
       }
       const e = c.events.find(x => x.roll === s.eventRoll);
+      const bespoke = renderBespokeOutcome('event', s.careerId, s.eventRoll);
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Event ${s.eventRoll}</div>
           <p style="margin-bottom:14px;">${e.text}</p>
-          ${renderGenericResolver('event', e.tools)}
+          ${bespoke !== null ? bespoke : renderGenericResolver('event', e.tools)}
           ${s.eventResolved ? renderConnectionWidget('careerEvent_' + (draft.id || '') + '_' + s.terms) : ''}
           <div class="wizard-actions">
             <button class="btn-outline" onclick="goCareerAfterEvents()" ${s.eventResolved ? '' : 'disabled'}>Continue</button>
@@ -2463,14 +3007,16 @@
         `;
       }
       const r = s.commissionResult;
+      const pm = pendingMods();
       if (!r) {
         const dmLate = s.termInCareer > 0 ? -1 * s.termInCareer : 0;
         return `
           <div class="rule-card wizard-card">
             <div class="wizard-card-title">${c.name} — Attempt Commission?</div>
-            <div class="wizard-card-sub">Roll 2D + SOC DM (need ${c.commission.target}+)${dmLate ? `, DM${dmLate} for attempting after the first term` : ''}. Optional — you may also just roll Advancement instead.</div>
-            <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
+            <div class="wizard-card-sub">Roll 2D + SOC DM (need ${c.commission.target}+)${dmLate ? `, DM${dmLate} for attempting after the first term` : ''}${pm.commissionDM ? `, plus DM${pm.commissionDM > 0 ? '+' : ''}${pm.commissionDM} banked from a prior bonus` : ''}. Optional — you may also just roll Advancement instead.</div>
+            <div class="wizard-actions" style="justify-content:flex-start; gap:12px; flex-wrap:wrap;">
               <button class="btn-outline" onclick="rollCommission()">Attempt Commission</button>
+              ${pm.autoPromote ? '<button class="btn-outline" onclick="applyAutoPromote()">Apply Automatic Promotion/Commission (banked)</button>' : ''}
               <button class="btn-outline" onclick="saveStep5State({phase:'advancement'}).then(renderStep)">Skip — Roll Advancement</button>
             </div>
           </div>
@@ -2479,7 +3025,7 @@
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Commission ${r.success ? 'Granted' : 'Failed'}</div>
-          <div class="wizard-card-sub">Rolled ${r.total} (need ${c.commission.target}+).${r.success ? ' You are now a rank 1 officer.' : ' You may still attempt Advancement this term.'}</div>
+          <div class="wizard-card-sub">Rolled ${r.total} (need ${c.commission.target}+)${r.bonusDM ? `, incl. ${r.bonusDM > 0 ? '+' : ''}${r.bonusDM} banked bonus` : ''}.${r.success ? ' You are now a rank 1 officer.' : ' You may still attempt Advancement this term.'}</div>
           <div class="wizard-actions">
             <button class="btn-outline" onclick="afterCommission()">Continue</button>
           </div>
@@ -2492,10 +3038,26 @@
       const c = careerData(s.careerId);
       const d1 = rollDie(), d2 = rollDie();
       const dmLate = s.termInCareer > 0 ? -1 * s.termInCareer : 0;
-      const total = d1 + d2 + dmNum(draft.soc) + dmLate;
+      const bonusDM = await consumePendingMod('commissionDM');
+      const total = d1 + d2 + dmNum(draft.soc) + dmLate + bonusDM;
       const success = total >= c.commission.target;
-      await saveStep5State({ commissionResult: { dice: [d1, d2], total, success } });
-      await logCreation(`${c.name} — Commission roll: ${total} (need ${c.commission.target}+) — ${success ? 'granted.' : 'failed.'}`);
+      await saveStep5State({ commissionResult: { dice: [d1, d2], total, bonusDM, success } });
+      await logCreation(`${c.name} — Commission roll: ${total} (need ${c.commission.target}+)${bonusDM ? ` incl. ${bonusDM > 0 ? '+' : ''}${bonusDM} from a prior bonus` : ''} — ${success ? 'granted.' : 'failed.'}`);
+      renderStep();
+    }
+
+    async function applyAutoPromote() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      await consumePendingFlag('autoPromote');
+      if (s.phase === 'commission') {
+        await saveStep5State({ isOfficer: true, rank: 1, phase: 'skillTraining', skillRollsRemaining: 1 });
+        await logCreation(`${c.name} — applied an automatic commission from a prior bonus.`);
+      } else {
+        const newRank = s.rank + 1;
+        await saveStep5State({ rank: newRank, advancementResult: { success: true, total: 99, dice: [0, 0], statDM: 0, mustLeave: false, rankBonus: 'automatic' }, skillRollsRemaining: 2 });
+        await logCreation(`${c.name} — applied an automatic promotion (to rank ${newRank}) from a prior bonus.`);
+      }
       renderStep();
     }
 
@@ -2514,14 +3076,16 @@
       const c = careerData(s.careerId);
       const a = currentAssignment(s, c);
       const r = s.advancementResult;
+      const pm = pendingMods();
       if (!r) {
         const statLabel = (CHARS.find(x => x.key === a.advancement.stat) || {}).label || a.advancement.stat.toUpperCase();
         return `
           <div class="rule-card wizard-card">
             <div class="wizard-card-title">${c.name} — Advancement</div>
-            <div class="wizard-card-sub">Roll 2D + ${statLabel} DM (need ${a.advancement.target}+). You may only attempt this once per term.</div>
-            <div class="wizard-actions" style="justify-content:flex-start;">
+            <div class="wizard-card-sub">Roll 2D + ${statLabel} DM (need ${a.advancement.target}+)${pm.advancementDM ? `, plus DM${pm.advancementDM > 0 ? '+' : ''}${pm.advancementDM} banked from a prior bonus` : ''}. You may only attempt this once per term.</div>
+            <div class="wizard-actions" style="justify-content:flex-start; gap:12px; flex-wrap:wrap;">
               <button class="btn-outline" onclick="rollAdvancement()">Roll Advancement</button>
+              ${pm.autoPromote ? '<button class="btn-outline" onclick="applyAutoPromote()">Apply Automatic Promotion (banked)</button>' : ''}
             </div>
           </div>
         `;
@@ -2530,8 +3094,8 @@
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Advancement</div>
           <div class="wizard-card-sub">
-            Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}), needed ${a.advancement.target}+.
-            ${r.success ? `Promoted to rank ${s.rank}${r.rankBonus ? ' — ' + r.rankBonus : ''}.` : 'No promotion this term.'}
+            ${r.rankBonus === 'automatic' ? 'Automatic promotion applied.' : `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}${r.bonusDM ? ' + ' + r.bonusDM + ' banked bonus' : ''}), needed ${a.advancement.target}+.`}
+            ${r.success ? `Promoted to rank ${s.rank}${r.rankBonus && r.rankBonus !== 'automatic' ? ' — ' + r.rankBonus : ''}.` : 'No promotion this term.'}
             ${r.mustLeave ? ' This roll was at or below your terms in this career — you must leave after this term (unless overridden by a natural 12).' : ''}
           </div>
           <div class="wizard-actions">
@@ -2553,7 +3117,8 @@
       const d1 = rollDie(), d2 = rollDie();
       const natural = d1 + d2;
       const statDM = dmNum(draft[a.advancement.stat]);
-      const total = natural + statDM;
+      const bonusDM = await consumePendingMod('advancementDM');
+      const total = natural + statDM + bonusDM;
       const success = total >= a.advancement.target;
       const mustLeave = success && total <= s.termInCareer && natural !== 12;
 
@@ -2588,7 +3153,7 @@
 
       await saveStep5State({
         rank: newRank,
-        advancementResult: { dice: [d1, d2], statDM, total, success, mustLeave, rankBonus },
+        advancementResult: { dice: [d1, d2], statDM, bonusDM, total, success, mustLeave, rankBonus },
         skillRollsRemaining: 1 + (success ? 1 : 0)
       });
       await logCreation(`${c.name} — Advancement: rolled ${total} (need ${a.advancement.target}+) — ${success ? `promoted to rank ${newRank}${rankBonus ? ' (' + rankBonus + ')' : ''}.` : 'no promotion.'}`);
@@ -2683,8 +3248,11 @@
 
     async function goCareerTermEnd() {
       const s = step5State();
-      const benefitRolls = (s.benefitRolls || 0) + 1;
+      const c = careerData(s.careerId);
+      const extra = await consumePendingMod('extraBenefitRolls');
+      const benefitRolls = Math.max(0, (s.benefitRolls || 0) + 1 + extra);
       await saveStep5State({ benefitRolls, phase: 'termEnd' });
+      if (extra) await logCreation(`${c.name} — banked Benefit roll count adjusted by ${extra > 0 ? '+' : ''}${extra} from a prior bonus (now ${benefitRolls}).`);
       renderStep();
     }
 
@@ -2784,16 +3352,17 @@
     async function rollMustering(table) {
       const s = step5State();
       const c = careerData(s.careerId);
-      const idx = Math.min(6, rollDie() - 1);
+      const bonusDM = await consumePendingMod('benefitRollDM');
+      const idx = Math.max(0, Math.min(6, rollDie() - 1 + bonusDM));
       let line;
       if (table === 'cash') {
         const amount = c.musteringCash[idx];
         await applyStatChange('cash_on_hand', amount);
-        line = `Cash roll ${idx + 1}: Cr${amount}`;
+        line = `Cash roll ${idx + 1}: Cr${amount}${bonusDM ? ` (incl. ${bonusDM > 0 ? '+' : ''}${bonusDM} banked bonus)` : ''}`;
       } else {
         const text = c.musteringBenefits[idx];
         await appendNote(`[MUSTERING OUT]\n${c.name} — Benefit roll ${idx + 1}: ${text}\n[/MUSTERING OUT]`);
-        line = `Benefit roll ${idx + 1}: ${text}`;
+        line = `Benefit roll ${idx + 1}: ${text}${bonusDM ? ` (incl. ${bonusDM > 0 ? '+' : ''}${bonusDM} banked bonus)` : ''}`;
       }
       const done = (s.musteringResolved || []).concat([line]);
       await saveStep5State({ musteringResolved: done });
