@@ -571,14 +571,10 @@
           const b = PRE_ED_OPTIONS.find(o => o.id === 'military').branchChoice.find(x => x.key === branch);
           return { stat: b.entryStat, target: b.entryTarget, extraDM: 0, dmLabel: '' };
         },
-        // Navy and Army Service Skills tables are built; Marines isn't yet,
-        // so that branch stays deferred-note until that career exists.
-        entryGrant: (s) => (s.branch === 'Navy' || s.branch === 'Army')
-          ? { auto: militaryServiceSkillPool(s.branch) }
-          : { deferred: true, note: 'Gain all Service Skills of the chosen military career at level 0 — Marines tables aren\'t built yet, apply manually once that Career exists.' },
+        entryGrant: (s) => ({ auto: militaryServiceSkillPool(s.branch) }),
         graduation: () => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: 0, dmLabel: '' }),
         benefits: [
-          { id: 'three_service', text: 'If entering the same military career, select any three Service Skills and increase them to level 1.', type: 'chooseN', n: 3, level: 1, pool: (s) => (s.branch === 'Navy' || s.branch === 'Army') ? militaryServiceSkillPool(s.branch) : [] },
+          { id: 'three_service', text: 'If entering the same military career, select any three Service Skills and increase them to level 1.', type: 'chooseN', n: 3, level: 1, pool: (s) => militaryServiceSkillPool(s.branch) },
           { id: 'edu1', text: 'Increase EDU by +1.', type: 'stat', key: 'edu', amount: 1 },
           { id: 'soc1_honours', text: 'Honours graduates also increase SOC by +1.', type: 'stat', key: 'soc', amount: 1, honoursOnly: true },
           { id: 'auto_entry', text: 'Automatic entry into the tied military career at rank 1 (officer), if it is the first career after the academy.', type: 'flag' }
@@ -2275,6 +2271,63 @@
           { roll: 11, text: 'As an artist, you lead a strange and charmed life. Go directly to the Life Events table and have an Unusual Event.', tools: [] },
           { roll: 12, text: 'You win a prestigious prize. You are automatically promoted.', tools: [] }
         ]
+      },
+      marine: {
+        id: 'marine', name: 'Marine', source: 'Core Rulebook pp.31-33', military: true,
+        qualification: { stat: 'end_stat', target: 6, agePenalty: { minAge: 30, dm: -2 } },
+        commission: { stat: 'soc', target: 8 },
+        serviceSkills: [{ name: 'Athletics' }, { name: 'Vacc Suit' }, { name: 'Tactics' }, { name: 'Heavy Weapons' }, { name: 'Gun Combat' }, { name: 'Melee', specialty: 'Blade' }],
+        assignments: [
+          { key: 'support', label: 'Support', survival: { stat: 'end_stat', target: 5 }, advancement: { stat: 'edu', target: 7 },
+            specialistSkills: [{ name: 'Electronics' }, { name: 'Mechanic' }, { name: 'Drive' }, { name: 'Medic' }, { name: 'Heavy Weapons' }, { name: 'Gun Combat' }] },
+          { key: 'starMarine', label: 'Star Marine', survival: { stat: 'end_stat', target: 6 }, advancement: { stat: 'edu', target: 6 },
+            specialistSkills: [{ name: 'Vacc Suit' }, { name: 'Athletics' }, { name: 'Gunner' }, { name: 'Melee', specialty: 'Blade' }, { name: 'Electronics' }, { name: 'Gun Combat' }] },
+          { key: 'groundAssault', label: 'Ground Assault', survival: { stat: 'end_stat', target: 7 }, advancement: { stat: 'edu', target: 5 },
+            specialistSkills: [{ name: 'Vacc Suit' }, { name: 'Heavy Weapons' }, { name: 'Recon' }, { name: 'Melee', specialty: 'Blade' }, { name: 'Tactics', specialty: 'Military' }, { name: 'Gun Combat' }] }
+        ],
+        personalDevelopment: [{ stat: 'str' }, { stat: 'dex' }, { stat: 'end_stat' }, { name: 'Gambler' }, { name: 'Melee', specialty: 'Unarmed' }, { name: 'Melee', specialty: 'Blade' }],
+        advancedEducation: [{ name: 'Medic' }, { name: 'Survival' }, { name: 'Explosives' }, { name: 'Engineer' }, { name: 'Pilot' }, { name: 'Navigation' }],
+        officerTable: [{ name: 'Electronics' }, { name: 'Tactics' }, { name: 'Admin' }, { name: 'Advocate' }, { name: 'Diplomat' }, { name: 'Leadership' }],
+        ranksOfficer: [
+          { rank: 1, title: 'Lieutenant', skill: { name: 'Leadership', level: 1 } },
+          { rank: 2, title: 'Captain' },
+          { rank: 3, title: 'Force Commander', skill: { name: 'Tactics', level: 1 } },
+          { rank: 4, title: 'Lieutenant Colonel' },
+          { rank: 5, title: 'Colonel', stat: { key: 'soc', min: 10 } },
+          { rank: 6, title: 'Brigadier' }
+        ],
+        ranksEnlisted: [
+          { rank: 0, title: 'Marine', skill: { name: 'Gun Combat', level: 1 } },
+          { rank: 1, title: 'Lance Corporal', skill: { name: 'Gun Combat', level: 1 } },
+          { rank: 2, title: 'Corporal' },
+          { rank: 3, title: 'Lance Sergeant', skill: { name: 'Leadership', level: 1 } },
+          { rank: 4, title: 'Sergeant' },
+          { rank: 5, title: 'Gunnery Sergeant', stat: { key: 'end_stat', amount: 1 } },
+          { rank: 6, title: 'Sergeant Major' }
+        ],
+        musteringCash: [2000, 5000, 5000, 10000, 20000, 30000, 40000],
+        musteringBenefits: ['Armour', 'INT +1', 'EDU +1', 'Weapon', 'TAS Membership', 'Armour or END +1', 'SOC +2'],
+        mishaps: [
+          { roll: 1, text: 'Severely injured in action (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
+          { roll: 2, text: 'A mission goes wrong; you and several others are captured and mistreated by the enemy. Discharged early due to your injuries. Gain your jailer as an Enemy and reduce STR and DEX by one.', tools: ['associate'], autoStats: [{ key: 'str', amount: -1 }, { key: 'dex', amount: -1 }] },
+          { roll: 3, text: "A mission goes wrong and you are stranded behind enemy lines. Increase Stealth or Survival by one level, but you are ejected from the service due to the mission's failure.", tools: ['skill'] },
+          { roll: 4, text: 'Ordered to take part in a black ops mission against your conscience. Refuse and you are ejected from the service. Accept and stay with the Marines, but gain the lone survivor as an Enemy.', tools: [] },
+          { roll: 5, text: 'Tormented by or quarrel with an officer or fellow marine — gain them as a Rival, driven out of the service.', tools: ['associate'] },
+          { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 3, text: 'Trapped behind enemy lines, you have to survive on your own. Gain one of Survival 1, Stealth 1, Deception 1, or Streetwise 1.', tools: ['skill'] },
+          { roll: 4, text: 'Assigned to the security staff of a space station. Increase Vacc Suit or Athletics (Dexterity) by one level.', tools: ['skill'] },
+          { roll: 5, text: 'Given advanced training in a specialist field. Roll EDU 8+ to gain any one skill of your choice at level 1.', tools: [] },
+          { roll: 6, text: 'Assigned to an assault on an enemy fortress. Roll Melee or Gun Combat 8+: success gains Tactics (military) or Leadership; failure injures you, losing 1 point from any physical characteristic.', tools: [] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
+          { roll: 8, text: 'On the front lines of a planetary assault and occupation. Gain one of Recon 1, Gun Combat 1, Leadership 1, or Electronics (comms) 1.', tools: ['skill'] },
+          { roll: 9, text: "A mission goes disastrously wrong due to your commander's error, but you survive. Report them: gain DM+2 to your next advancement roll and gain them as an Enemy. Say nothing and protect them: gain them as an Ally instead.", tools: [] },
+          { roll: 10, text: 'Assigned to a black ops mission. Gain DM+2 to your next advancement roll.', tools: [], autoDM: { key: 'advancementDM', amount: 2 } },
+          { roll: 11, text: 'A commanding officer takes an interest in your career. Gain Tactics 1, or DM+4 to your next advancement roll instead.', tools: [] },
+          { roll: 12, text: 'You display heroism in battle. You may gain a promotion or commission automatically.', tools: [] }
+        ]
       }
     };
 
@@ -2291,7 +2344,7 @@
     // Union of a military career's Service Skills (career-level if shared,
     // else the union of each assignment's own table), de-duplicated.
     function militaryServiceSkillPool(branch) {
-      const c = branch === 'Army' ? CAREERS_DATA.army : CAREERS_DATA.navy;
+      const c = branch === 'Army' ? CAREERS_DATA.army : branch === 'Marines' ? CAREERS_DATA.marine : CAREERS_DATA.navy;
       if (!c) return [];
       if (c.serviceSkills) return c.serviceSkills;
       const seen = new Map();
@@ -2633,7 +2686,7 @@
           <div class="wizard-card-title">Choose a Career</div>
           <div class="wizard-card-sub">
             ${s.terms ? `Age ${currentAge()}, ${s.terms} term${s.terms === 1 ? '' : 's'} served so far.` : 'Pick a career to attempt qualification for.'}
-            Navy, Drifter, Agent, Army, Citizen and Entertainer are fully built right now — the rest are listed for reference. (Core Rulebook pp.17-37)
+            Navy, Drifter, Agent, Army, Citizen, Entertainer and Marine are fully built right now — the rest are listed for reference. (Core Rulebook pp.17-37)
           </div>
           ${s.forcedDraftNextTerm ? `
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
@@ -2960,6 +3013,12 @@
       if (entry.autoStat) {
         await applyStatChange(entry.autoStat.key, entry.autoStat.amount);
         parts.push(`${entry.autoStat.key} ${entry.autoStat.amount > 0 ? '+' : ''}${entry.autoStat.amount}`);
+      }
+      if (entry.autoStats) {
+        for (const s of entry.autoStats) {
+          await applyStatChange(s.key, s.amount);
+          parts.push(`${s.key} ${s.amount > 0 ? '+' : ''}${s.amount}`);
+        }
       }
       return parts.join(', ');
     }
@@ -3342,7 +3401,7 @@
         case 'army:mishap4': return renderArmyMishap4(tag, m);
         case 'citizen:2':    return renderInlineMishapNotEjected(tag, careerId, m);
         case 'citizen:3':    return renderCitizenEvent3(tag, m);
-        case 'citizen:6':    return renderCitizenEvent6(tag, m);
+        case 'citizen:6':    return renderChooseSkillThenRollEdu(tag, m, 10, 'Citizen Event 6');
         case 'citizen:8':    return renderCitizenEvent8(tag, m);
         case 'citizen:11':   return renderChooseSkillOrDM(tag, m, { name: 'Diplomat', level: 1 }, 'advancementDM', 4);
         case 'citizen:12':   return renderBankAutoPromote(tag, m);
@@ -3354,6 +3413,13 @@
         case 'entertainer:9':   return renderGainDiceAssociates(tag, m, 'contact', 3);
         case 'entertainer:11':  return renderEntertainerEvent11(tag, m);
         case 'entertainer:12':  return renderBankAutoPromote(tag, m);
+        case 'marine:2':     return renderInlineMishapNotEjected(tag, careerId, m);
+        case 'marine:5':     return renderChooseSkillThenRollEdu(tag, m, 8, 'Marine Event 5');
+        case 'marine:6':     return renderMarineEvent6(tag, m);
+        case 'marine:9':     return renderMarineEvent9(tag, m);
+        case 'marine:11':    return renderChooseSkillOrDM(tag, m, { name: 'Tactics', level: 1 }, 'advancementDM', 4);
+        case 'marine:12':    return renderBankAutoPromote(tag, m);
+        case 'marine:mishap4': return renderMarineMishap4(tag, m);
         default: return null;
       }
     }
@@ -4072,44 +4138,45 @@
       renderStep();
     }
 
-    // Citizen event 6 — Roll EDU 10+ to gain any one skill of choice at level 1.
-    function renderCitizenEvent6(tag, m) {
+    // Generic "choose any skill, roll EDU N+ to gain it at level 1" (Citizen
+    // event 6, Marine event 5). `label` is used in the Creation Log only.
+    function renderChooseSkillThenRollEdu(tag, m, target, label) {
       if (!m.chosenName) {
         return resolverHeader('Choose a skill to gain (if your roll succeeds):') + `
-          <select id="citizen-e6-skill">${SKILLS.map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
-          <button class="btn-outline" onclick="chooseCitizenEvent6()">Choose</button>
+          <select id="${tag}-cstr-skill">${SKILLS.map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
+          <button class="btn-outline" onclick="chooseSkillThenRollEdu('${tag}','${label}')">Choose</button>
         `;
       }
       if (!m.rolled) {
-        return resolverHeader(`Roll EDU 10+ to gain ${m.chosenName} 1.`) +
-          `<button class="btn-outline" onclick="rollCitizenEvent6()">Roll</button>`;
+        return resolverHeader(`Roll EDU ${target}+ to gain ${m.chosenName} 1.`) +
+          `<button class="btn-outline" onclick="rollChooseSkillThenRollEdu('${tag}',${target},'${label}')">Roll</button>`;
       }
       return resolverHeader(m.resultText);
     }
 
-    async function chooseCitizenEvent6() {
-      const name = document.getElementById('citizen-e6-skill').value;
-      await saveMechanic('event', { chosenName: name });
+    async function chooseSkillThenRollEdu(tag, label) {
+      const name = document.getElementById(`${tag}-cstr-skill`).value;
+      await saveMechanic(tag, { chosenName: name });
       renderStep();
     }
 
-    async function rollCitizenEvent6() {
-      const m = mechanicState('event');
+    async function rollChooseSkillThenRollEdu(tag, target, label) {
+      const m = mechanicState(tag);
       const total = roll2d6() + dmNum(draft.edu);
-      const success = total >= 10;
+      const success = total >= target;
       let resultText;
       if (success) {
         const skills = Object.assign({}, draft.skills || {});
         grantSkillMin(skills, m.chosenName, null, 1);
         await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
         draft.skills = skills;
-        resultText = `Rolled ${total} (need 10+) — gained ${m.chosenName} 1.`;
+        resultText = `Rolled ${total} (need ${target}+) — gained ${m.chosenName} 1.`;
       } else {
-        resultText = `Rolled ${total} (need 10+) — no skill gained this time.`;
+        resultText = `Rolled ${total} (need ${target}+) — no skill gained this time.`;
       }
-      await saveMechanic('event', { rolled: true, resultText });
-      await resolveMechanic('event');
-      await logCreation(`Citizen Event 6: ${resultText}`);
+      await saveMechanic(tag, { rolled: true, resultText });
+      await resolveMechanic(tag);
+      await logCreation(`${label}: ${resultText}`);
       renderStep();
     }
 
@@ -4163,6 +4230,142 @@
       await saveMechanic('event', { resolved: true, resultText });
       await resolveMechanic('event');
       await logCreation(`Citizen Event 8: ${resultText}`);
+      renderStep();
+    }
+
+    // Marine mishap 4 — refuse (ejected) or accept (stay, gain an Enemy).
+    function renderMarineMishap4(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.accepted) {
+        return resolverHeader('Take part in the black ops mission, or refuse?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="marineMishap4Accept()">Accept — Stay with the Marines</button>
+            <button class="btn-outline" onclick="marineMishap4Refuse()">Refuse — Ejected from the Service</button>
+          </div>
+        `;
+      }
+      return resolverHeader('Name the lone survivor you gained as an Enemy:') + `
+        <input id="marine-m4-name" type="text" placeholder="Name" style="margin-bottom:8px;" />
+        <button class="btn-outline" onclick="confirmMarineMishap4Accept()">Confirm</button>
+      `;
+    }
+
+    async function marineMishap4Refuse() {
+      const resultText = 'Refused — ejected from the service.';
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Marine Mishap 4: ${resultText}`);
+      renderStep();
+    }
+
+    async function marineMishap4Accept() {
+      await saveMechanic('mishap', { accepted: true });
+      renderStep();
+    }
+
+    async function confirmMarineMishap4Accept() {
+      const name = (document.getElementById('marine-m4-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('enemy', name, 'The lone survivor of a black ops mission you took part in.');
+      const resultText = `Stayed with the Marines — gained ${name} as an Enemy.`;
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Marine Mishap 4: ${resultText}`);
+      renderStep();
+    }
+
+    // Marine event 6 — Melee or Gun Combat 8+: success choice of Tactics or
+    // Leadership; failure injures you, losing 1 point from a physical stat.
+    function renderMarineEvent6(tag, m) {
+      if (!m.rolled) {
+        return resolverHeader('Roll Melee or Gun Combat 8+:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="rollMarineEvent6('Melee')">Melee</button>
+            <button class="btn-outline" onclick="rollMarineEvent6('Gun Combat')">Gun Combat</button>
+          </div>
+        `;
+      }
+      if (m.success && !m.resolved) {
+        return resolverHeader(`Rolled ${m.total} on ${m.skillName} (need 8+) — success! Choose a skill to gain:`) + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="confirmMarineEvent6('Tactics')">Tactics</button>
+            <button class="btn-outline" onclick="confirmMarineEvent6('Leadership')">Leadership</button>
+          </div>
+        `;
+      }
+      if (!m.success && !m.statChosen) {
+        return resolverHeader(`Rolled ${m.total} on ${m.skillName} (need 8+) — injured. Choose which physical characteristic loses 1 point:`) + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="chooseMarineEvent6Injury('str')">STR</button>
+            <button class="btn-outline" onclick="chooseMarineEvent6Injury('dex')">DEX</button>
+            <button class="btn-outline" onclick="chooseMarineEvent6Injury('end_stat')">END</button>
+          </div>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollMarineEvent6(skillName) {
+      const key = skillKey(skillName, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      await saveMechanic('event', { rolled: true, skillName, total, success });
+      await logCreation(`Marine Event 6: rolled ${total} (need 8+) on ${skillName} — ${success ? 'success.' : 'failed.'}`);
+      renderStep();
+    }
+
+    async function confirmMarineEvent6(skillName) {
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, skillName, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const resultText = `Gained ${skillName} 1.`;
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Marine Event 6: ${resultText}`);
+      renderStep();
+    }
+
+    async function chooseMarineEvent6Injury(statKey) {
+      await applyStatChange(statKey, -1);
+      const label = (CHARS.find(x => x.key === statKey) || {}).label || statKey.toUpperCase();
+      const resultText = `Injured — reduced ${label} by 1.`;
+      await saveMechanic('event', { statChosen: statKey, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Marine Event 6: ${resultText}`);
+      renderStep();
+    }
+
+    // Marine event 9 — report the commander (DM+2 advancement + Enemy) or protect them (Ally).
+    function renderMarineEvent9(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return resolverHeader('Report your commanding officer, or protect them?') + `
+        <input id="marine-e9-name" type="text" placeholder="Commanding officer's name" style="margin-bottom:8px;" />
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          <button class="btn-outline" onclick="marineEvent9Report()">Report Them — DM+2 Advancement, Gain Them as an Enemy</button>
+          <button class="btn-outline" onclick="marineEvent9Protect()">Protect Them — Gain Them as an Ally</button>
+        </div>
+      `;
+    }
+
+    async function marineEvent9Report() {
+      const name = (document.getElementById('marine-e9-name') || {}).value.trim() || 'Unnamed officer';
+      await addAssociate('enemy', name, 'Reported them for a mission failure caused by their error.');
+      await addPendingMod('advancementDM', 2);
+      const resultText = `Reported ${name} — gained them as an Enemy and banked DM+2 to your next advancement roll.`;
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Marine Event 9: ${resultText}`);
+      renderStep();
+    }
+
+    async function marineEvent9Protect() {
+      const name = (document.getElementById('marine-e9-name') || {}).value.trim() || 'Unnamed officer';
+      await addAssociate('ally', name, 'You protected them after a mission failure caused by their error.');
+      const resultText = `Protected ${name} — gained them as an Ally.`;
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Marine Event 9: ${resultText}`);
       renderStep();
     }
 
