@@ -151,8 +151,10 @@
     .type-contact { background: rgba(0,229,255,0.1);  color: #00e5ff; }
     .type-rival   { background: rgba(255,180,0,0.1);  color: #ffb400; }
     .type-enemy   { background: rgba(255,90,74,0.1);  color: #ff5a4a; }
-    .assoc-name { color: #00e5ff; flex-shrink: 0; min-width: 100px; }
-    .assoc-desc { color: #b0d8e8; flex: 1; font-size: 0.8rem; }
+    .assoc-name-input { color: #00e5ff; flex-shrink: 0; width: 140px; background: transparent; border: 1px solid transparent; border-radius: 3px; padding: 3px 6px; font-size: 0.85rem; font-family: inherit; }
+    .assoc-desc-input { color: #b0d8e8; flex: 1; background: transparent; border: 1px solid transparent; border-radius: 3px; padding: 3px 6px; font-size: 0.8rem; font-family: inherit; }
+    .assoc-name-input:hover, .assoc-desc-input:hover { border-color: #0a4a60; }
+    .assoc-name-input:focus, .assoc-desc-input:focus { border-color: #00e5ff; outline: none; background: rgba(0,229,255,0.05); }
 
     /* ── Notes ── */
     .notes-textarea { width: 100%; min-height: 130px; background: rgba(13,21,32,0.7); border: 1px solid #0a4a60; border-radius: 6px; color: #b0d8e8; font-size: 0.88rem; padding: 12px; resize: vertical; outline: none; font-family: inherit; line-height: 1.55; box-sizing: border-box; }
@@ -443,7 +445,7 @@
           <div class="cr-section">
             <div class="cr-section-title">People You Know</div>
             <div id="associates-list"></div>
-            <div class="edit-only">
+            <div>
               <button class="add-row-btn" onclick="toggleAssocForm()">+ Add Person</button>
               <div id="assoc-form" class="inline-form">
                 <select id="new-assoc-type">
@@ -453,7 +455,7 @@
                   <option value="enemy">Enemy</option>
                 </select>
                 <input type="text" id="new-assoc-name" placeholder="Name" style="max-width:180px" />
-                <input type="text" id="new-assoc-desc" placeholder="Description" />
+                <input type="text" id="new-assoc-desc" placeholder="Notes" />
                 <button class="btn btn-primary btn-sm" onclick="addAssociate()">Add</button>
                 <button class="btn btn-ghost btn-sm" onclick="toggleAssocForm()">Cancel</button>
               </div>
@@ -525,7 +527,6 @@ let pendingAugments   = [];
 let pendingEquipment  = [];
 let pendingComputers  = [];
 let pendingCareers    = [];
-let pendingAssociates = [];
 let pendingWounds     = [];
 
 const CHARS = [
@@ -1307,40 +1308,41 @@ async function renderAssociates() {
   list.innerHTML = data.map(r => `
     <div class="associate-row" data-id="${r.id}">
       <span class="assoc-type-badge type-${r.type}">${r.type}</span>
-      <span class="assoc-name">${r.name}</span>
-      <span class="assoc-desc">${r.description || ''}</span>
-      <button class="skill-remove edit-only" onclick="queueAssocDelete('${r.id}',this)">✕</button>
+      <input class="assoc-name-input" type="text" value="${escapeAttr(r.name)}" onchange="autoSaveAssociate('${r.id}','name',this.value)" />
+      <input class="assoc-desc-input" type="text" value="${escapeAttr(r.description || '')}" placeholder="Notes" onchange="autoSaveAssociate('${r.id}','description',this.value)" />
+      <button class="skill-remove" onclick="deleteAssociate('${r.id}',this)">✕</button>
     </div>`).join('');
+}
+
+function escapeAttr(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+function autoSaveAssociate(id, column, value) {
+  supabaseClient.from('character_associates').update({ [column]: value }).eq('id', id)
+    .then(({ error }) => { if (error) console.error('character_associates update failed:', error.message); });
 }
 
 function toggleAssocForm() {
   document.getElementById('assoc-form').classList.toggle('open');
 }
 
-function addAssociate() {
+async function addAssociate() {
   const type = document.getElementById('new-assoc-type').value;
   const name = document.getElementById('new-assoc-name').value.trim();
   const desc = document.getElementById('new-assoc-desc').value.trim();
   if (!name) return;
-  pendingAssociates.push({ action: 'add', data: { type, name, description: desc } });
-
-  const list = document.getElementById('associates-list');
-  const empty = list.querySelector('div[style]');
-  if (empty) empty.remove();
-  list.innerHTML += `
-    <div class="associate-row">
-      <span class="assoc-type-badge type-${type}">${type}</span>
-      <span class="assoc-name">${name}</span>
-      <span class="assoc-desc">${desc}</span>
-      <button class="skill-remove edit-only" onclick="this.closest('.associate-row').remove()">✕</button>
-    </div>`;
+  const { error } = await supabaseClient.from('character_associates')
+    .insert({ character_id: character.id, type, name, description: desc || null });
+  if (error) { console.error('character_associates insert failed:', error.message); return; }
   document.getElementById('new-assoc-name').value = '';
   document.getElementById('new-assoc-desc').value = '';
   toggleAssocForm();
+  await renderAssociates();
 }
 
-function queueAssocDelete(id, btn) {
-  pendingAssociates.push({ action: 'delete', id });
+async function deleteAssociate(id, btn) {
+  await supabaseClient.from('character_associates').delete().eq('id', id);
   btn.closest('.associate-row').remove();
 }
 
@@ -1411,7 +1413,7 @@ function cancelEdit() {
 
 function clearPending() {
   pendingArmour=[]; pendingWeapons=[]; pendingAugments=[]; pendingComputers=[];
-  pendingEquipment=[]; pendingCareers=[]; pendingAssociates=[]; pendingWounds=[];
+  pendingEquipment=[]; pendingCareers=[]; pendingWounds=[];
 }
 
 // ── Save ───────────────────────────────────────────────────
@@ -1523,12 +1525,6 @@ async function saveAll() {
           rank_title: i[4].value||null, notes: i[5].value||null, terms_served: 1
         });
       }
-    }
-
-    // Associates
-    for (const p of pendingAssociates) {
-      if (p.action === 'delete') { await supabaseClient.from('character_associates').delete().eq('id', p.id); }
-      else await supabaseClient.from('character_associates').insert({ character_id: character.id, ...p.data });
     }
 
     // Wounds
