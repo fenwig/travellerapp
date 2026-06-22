@@ -3874,6 +3874,92 @@
       renderStep();
     }
 
+    // ── Step 8: Finalize ──────────────────────────────────────
+    // Review screen — no further spending here. Cash sits in
+    // cash_on_hand for the Character Record's Finance tab to handle.
+    function musteringLogLines() {
+      const log = draft.creation_log || '';
+      return log.split('\n').filter(line => line.includes('Mustering Out —'));
+    }
+
+    let finalizeCareerHistory = null;
+
+    async function loadFinalizeCareerHistory() {
+      const { data } = await supabaseClient.from('character_careers')
+        .select('*').eq('character_id', draft.id).order('term_order');
+      finalizeCareerHistory = data || [];
+      renderStep();
+    }
+
+    function renderStepFinalize() {
+      if (finalizeCareerHistory === null) {
+        loadFinalizeCareerHistory();
+        return `<div class="rule-card wizard-card"><p class="placeholder-msg">Loading summary…</p></div>`;
+      }
+
+      const skills = Object.values(draft.skills || {}).sort((a, b) => a.name.localeCompare(b.name));
+      const skillsText = skills.length
+        ? skills.map(sk => `${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''} ${sk.level}`).join(', ')
+        : 'None';
+
+      const careerRows = finalizeCareerHistory.map(c => `
+        <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #0a4a60;">
+          <span>${c.career}${c.assignment ? ' (' + c.assignment + ')' : ''}</span>
+          <span style="color:#4a9ab8;">Rank ${c.rank}${c.rank_title ? ' — ' + c.rank_title : ''}, ${c.terms_served} term${c.terms_served === 1 ? '' : 's'}</span>
+        </div>
+      `).join('') || '<p style="color:#4a9ab8; font-size:0.85rem;">No careers completed.</p>';
+
+      const benefitLines = musteringLogLines();
+      const benefitsHtml = benefitLines.length
+        ? `<div style="font-size:0.85rem;">${benefitLines.map(l => `<div style="margin-bottom:4px;">${l.replace(/^\[[^\]]*\]\s*/, '')}</div>`).join('')}</div>`
+        : '<p style="color:#4a9ab8; font-size:0.85rem;">No mustering-out benefits recorded.</p>';
+
+      return `
+        <div class="rule-card wizard-card" style="max-width:none;">
+          <div class="wizard-card-title">Finalize</div>
+          <div class="wizard-card-sub">Review your Traveller before activating the character. Cash on hand carries straight over to the Character Record's Finance tab — nothing to spend here.</div>
+
+          <div style="margin-bottom:18px;">
+            <div style="color:#00e5ff; font-weight:600; margin-bottom:6px;">${draft.name} — ${draft.species}, age ${draft.age || 18}</div>
+            <div style="font-size:0.85rem; color:#b0d8e8;">
+              ${CHARS.map(c => `${c.label} ${draft[c.key]} (${charDM(draft[c.key])})`).join(' · ')}
+            </div>
+          </div>
+
+          <div style="margin-bottom:18px;">
+            <div style="color:#00e5ff; font-weight:600; margin-bottom:6px;">Career History</div>
+            ${careerRows}
+          </div>
+
+          <div style="margin-bottom:18px;">
+            <div style="color:#00e5ff; font-weight:600; margin-bottom:6px;">Skills</div>
+            <div style="font-size:0.85rem;">${skillsText}</div>
+          </div>
+
+          <div style="margin-bottom:18px;">
+            <div style="color:#00e5ff; font-weight:600; margin-bottom:6px;">Mustering-Out Benefits Gained</div>
+            ${benefitsHtml}
+          </div>
+
+          <div style="margin-bottom:18px;">
+            <div style="color:#00e5ff; font-weight:600; margin-bottom:6px;">Cash on Hand</div>
+            <div style="font-size:0.85rem;">Cr${draft.cash_on_hand || 0}</div>
+          </div>
+
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="goStep(5)">Back</button>
+            <button class="btn-outline" onclick="finishFinalize()">Finish & Activate Character</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function finishFinalize() {
+      await supabaseClient.from('characters').update({ status: 'active' }).eq('id', draft.id);
+      await logCreation('Character creation complete — activated.');
+      window.location.href = 'character-record.html?id=' + draft.id;
+    }
+
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = '../../index.html'; return; }
@@ -3947,6 +4033,8 @@
         body = renderStepPreEd();
       } else if (step === 5) {
         body = renderStepCareer();
+      } else if (step === 8) {
+        body = renderStepFinalize();
       } else {
         body = `
           <div class="rule-card wizard-card">
