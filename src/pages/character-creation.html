@@ -1123,11 +1123,55 @@
 
       if (total === 4) return renderEvent4(m);
       if (total === 6) return renderEvent6(m);
+      if (total === 7) return renderEvent7(m);
       if (total === 8) return renderEvent8(m);
       if (total === 9) return renderEvent9(m);
       if (total === 10) return renderEvent10(m);
       if (total === 11) return renderEvent11(m);
       return '';
+    }
+
+    // Pre-Career Events roll 7 ("Life Event") — rolls on the same Life
+    // Events table the Career step uses (Core p.46).
+    function renderEvent7(m) {
+      if (!m.rolled) {
+        return `
+          <div class="wizard-actions" style="justify-content:flex-start; margin-top:0;">
+            <button class="btn-outline" onclick="rollEvent7()">Roll 2D for a Life Event</button>
+          </div>
+        `;
+      }
+      const entry = LIFE_EVENTS_TABLE.find(x => x.roll === m.rolled);
+      const header = `<div class="wizard-card-sub">Rolled ${m.rolled} — ${entry.text}${m.autoGranted ? ` Applied automatically: ${m.autoGranted}.` : ''}</div>`;
+      if (m.resolved) return header + `<div class="wizard-card-sub" style="color:#00ffaa;">Resolved.</div>`;
+      if (entry.unusual) {
+        if (!m.unusualRoll) return header + `<button class="btn-outline" onclick="rollEvent7Unusual()">Roll 1D for the Unusual Event</button>`;
+        return header + `<div class="wizard-card-sub" style="color:#00ffaa;">${LIFE_EVENTS_UNUSUAL[m.unusualRoll]}</div>`;
+      }
+      const tools = entry.injury ? ['injury'] : (entry.tools || []);
+      return header + renderGenericResolver('preed7', tools, true) +
+        `<div class="wizard-actions" style="justify-content:flex-start; margin-top:10px;"><button class="btn-outline" onclick="finishEvent7()">Mark Resolved</button></div>`;
+    }
+
+    async function rollEvent7() {
+      const total = roll2d6();
+      const entry = LIFE_EVENTS_TABLE.find(x => x.roll === total);
+      const granted = await applyAutoGrants(entry);
+      await saveEventMechanic({ rolled: total, autoGranted: granted || null });
+      await logCreation(`Pre-Career Life Event roll: ${total} — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''}`);
+      renderStep();
+    }
+
+    async function rollEvent7Unusual() {
+      const roll = rollDie();
+      await saveEventMechanic({ unusualRoll: roll, resolved: true });
+      await logCreation(`Pre-Career Life Event — Unusual Event roll ${roll}: ${LIFE_EVENTS_UNUSUAL[roll]}`);
+      renderStep();
+    }
+
+    async function finishEvent7() {
+      await saveEventMechanic({ resolved: true });
+      renderStep();
     }
 
     function renderEvent4(m) {
@@ -1780,8 +1824,8 @@
           { roll: 2, text: 'A target of your investigation offers you a deal. Accept and leave the career cleanly (losing this term\'s Benefit roll as normal). Refuse and suffer a worse injury, but gain an Enemy and a level in a skill of your choice.', tools: [] },
           { roll: 3, text: 'An investigation goes critically wrong. Roll Advocate 8+ to keep this term\'s Benefit roll; a natural 2 also forces the Prisoner career next term (not tracked).', tools: [] },
           { roll: 4, text: 'You learn something dangerous. Gain an Enemy and Deception 1.', tools: ['associate'], autoSkill: { name: 'Deception', level: 1 } },
-          { roll: 5, text: 'Your work follows you home and a Contact, Ally, or family member is hurt (Injury table — not tracked in this app).', tools: [] },
-          { roll: 6, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).', tools: [] }
+          { roll: 5, text: 'Your work follows you home and a Contact, Ally, or family member is hurt — roll on the Injury table for them (effects applied to your own characteristics as a stand-in, since associates aren\'t tracked separately).', tools: ['injury'] },
+          { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
         ],
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
@@ -1789,7 +1833,7 @@
           { roll: 4, text: 'You complete a mission and are rewarded. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
           { roll: 5, text: 'You establish a network of contacts. Gain D3 Contacts.', tools: [] },
           { roll: 6, text: 'Given advanced training. Roll EDU 8+ to increase one skill you already have by a level.', tools: [] },
-          { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).', tools: [] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
           { roll: 8, text: 'You go undercover. Roll Deception 8+: success defers to the Rogue/Citizen Events tables (not built — noted), failure rolls on your own Mishap table.', tools: [] },
           { roll: 9, text: 'You go above and beyond. Gain DM+2 to your next advancement roll.', tools: [] },
           { roll: 10, text: 'Specialist vehicle training. Gain one of Drive 1, Flyer 1, Pilot 1, or Gunner 1.', tools: ['skill'] },
@@ -1849,7 +1893,7 @@
           { roll: 3, text: 'Sent to a hostile region to fight guerrillas; discharged due to stress, injury, or a government cover-up. Increase Recon or Survival by one level, but gain the rebels as an Enemy.', tools: [] },
           { roll: 4, text: "You discover your commanding officer is running an illegal operation. Join their ring (gain them as an Ally) before the investigation discharges you, or cooperate with the military police (discharged anyway, but you keep this term's Benefit roll).", tools: [] },
           { roll: 5, text: 'Tormented by or quarrel with an officer or fellow soldier — gain them as a Rival, driven out of the service.', tools: ['associate'] },
-          { roll: 6, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).', tools: [] }
+          { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
         ],
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
@@ -1857,7 +1901,7 @@
           { roll: 4, text: 'Assigned to a war-torn urbanised planet. Gain one of Stealth 1, Streetwise 1, Persuade 1, or Recon 1.', tools: ['skill'] },
           { roll: 5, text: 'Given a special assignment or duty. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
           { roll: 6, text: 'Thrown into a brutal ground war. Roll EDU 8+ to avoid injury; success also gains a level in Gun Combat or Leadership.', tools: [] },
-          { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).', tools: [] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
           { roll: 8, text: 'Given advanced training. Roll EDU 8+ to increase one skill you already have by a level.', tools: [] },
           { roll: 9, text: 'Surrounded and outnumbered, you hold out until relief arrives. Gain DM+2 to your next advancement roll.', tools: [], autoDM: { key: 'advancementDM', amount: 2 } },
           { roll: 10, text: 'Assigned to a peacekeeping role. Gain one of Admin 1, Investigate 1, Deception 1, or Recon 1.', tools: ['skill'] },
@@ -1905,7 +1949,7 @@
           { roll: 3, text: "Battle's outcome depends on your actions — make an 8+ skill roll (Electronics/Gunner if Line, Mechanic/Vacc Suit if Engineer/Gunner, Pilot/Tactics if Flight). Fail: ship suffers severe damage, you're court-martialled and discharged. Succeed: honourably discharged, you may keep this term's Benefit roll.", tools: [] },
           { roll: 4, text: 'Blamed for an accident causing crew deaths. If responsible: gain one free Skills & Training roll before ejection. If not: gain the blaming officer as an Enemy but keep this term\'s Benefit roll.', tools: ['associate'] },
           { roll: 5, text: 'Tormented by or quarrel with an officer or crewman — gain them as a Rival, forced out of the Navy.', tools: ['associate'] },
-          { roll: 6, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).', tools: [] }
+          { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
         ],
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
@@ -1913,7 +1957,7 @@
           { roll: 4, text: 'Given a special assignment or duty. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
           { roll: 5, text: 'Given advanced training. Roll EDU 8+ to gain one level in any skill you already have.', tools: ['skill'] },
           { roll: 6, text: 'Your vessel takes part in a notable military engagement. Gain one of Electronics 1, Engineer 1, Gunner 1 or Pilot 1.', tools: ['skill'] },
-          { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).', tools: [] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
           { roll: 8, text: 'Your vessel takes part in a diplomatic mission. Gain one of Recon 1, Diplomat 1, Steward 1, or a Contact.', tools: ['skill', 'associate'] },
           { roll: 9, text: 'You foil an attempted crime aboard. Gain an Enemy, but DM+2 to your next advancement roll in the Navy.', tools: ['associate'] },
           { roll: 10, text: 'Opportunity to abuse your position for profit. Accept: extra Benefit roll this term. Refuse: DM+2 to next advancement roll.', tools: [] },
@@ -1951,7 +1995,7 @@
         musteringBenefits: ['Contact', 'Weapon', 'Ally', 'Weapon', 'EDU +1', 'Ship Share', 'Two Ship Shares'],
         mishaps: [
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
-          { roll: 2, text: 'Injured. Roll on the Injury table (Core p.49 — not tracked in this app).', tools: [] },
+          { roll: 2, text: 'Injured. Roll on the Injury table.', tools: ['injury'] },
           { roll: 3, text: 'You run afoul of a criminal gang, corrupt bureaucrat or other foe. Gain an Enemy.', tools: ['associate'] },
           { roll: 4, text: 'You suffer from a life-threatening illness. Reduce your END by 1.', tools: [], autoStat: { key: 'end_stat', amount: -1 } },
           { roll: 5, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have none, gain a Rival or Enemy anyway.', tools: ['associate'] },
@@ -1963,8 +2007,8 @@
           { roll: 4, text: 'You pick up a few useful skills here and there. Gain one level of Jack-of-all-Trades, Survival, Streetwise or Melee (any).', tools: ['skill'] },
           { roll: 5, text: 'You manage to scavenge something of use. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
           { roll: 6, text: 'You encounter something unusual (Life Events table, Core p.46 — not yet built).', tools: [] },
-          { roll: 7, text: 'Life Event. Roll on the Life Events table (Core p.46 — not yet built in this app).', tools: [] },
-          { roll: 8, text: 'You are attacked by enemies. Gain an Enemy if you do not have one already, and roll Melee 8+, Gun Combat 8+ or Stealth 8+ to avoid a roll on the Injury table.', tools: ['associate'] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
+          { roll: 8, text: 'You are attacked by enemies. Gain an Enemy if you do not have one already, and roll Melee 8+, Gun Combat 8+ or Stealth 8+ to avoid a roll on the Injury table.', tools: ['associate', 'injury'] },
           { roll: 9, text: 'Offered a risky but rewarding adventure. 1D: 1-2 injured/arrested, 3-4 survive with nothing, 5-6 succeed for DM+4 to one Benefit roll.', tools: [] },
           { roll: 10, text: 'Life on the edge hones your abilities. Increase any skill you already have by one level.', tools: ['skill'] },
           { roll: 11, text: 'You are forcibly drafted. Roll for the Draft next term.', tools: [] },
@@ -2087,6 +2131,45 @@
     // 0 triggers an Ageing Crisis (pay 1D×Cr10000 or die).
     const AGEING_PHYS = ['str', 'dex', 'end_stat'];
     const AGEING_MENTAL = ['int_stat', 'edu', 'soc'];
+
+    // ── Injury Table — Core Rulebook p.49 ─────────────────────
+    // Triggered by mishaps/events whose text says "Roll on the Injury
+    // table." A 1D roll, worst at 1 and trivial at 6. Physical
+    // characteristics only (STR/DEX/END — reuses AGEING_PHYS).
+    const INJURY_TABLE = [
+      { roll: 1, text: 'Nearly killed — reduce one physical characteristic by 1D, and the other two physical characteristics by 2 each.' },
+      { roll: 2, text: 'Severely injured — reduce one physical characteristic by 1D.' },
+      { roll: 3, text: 'Missing an eye or limb — reduce STR or DEX by 2.' },
+      { roll: 4, text: 'Scarred — reduce any physical characteristic by 2.' },
+      { roll: 5, text: 'Injured — reduce any physical characteristic by 1.' },
+      { roll: 6, text: 'Lightly injured — no permanent effect.' }
+    ];
+
+    // ── Life Events Table — Core Rulebook p.46 ────────────────
+    // Triggered by mishaps/events whose text says "Life Event. Roll on
+    // the Life Events table." 2D roll; roll 12 has its own 1D sub-table.
+    const LIFE_EVENTS_TABLE = [
+      { roll: 2, text: 'Sickness or Injury — roll on the Injury table.', injury: true, tools: [] },
+      { roll: 3, text: 'Birth or Death — someone close to you dies or gives birth, and you are involved in some way.', tools: [] },
+      { roll: 4, text: 'Ending of a Relationship — a romantic relationship of yours ends badly. Gain a Rival or Enemy.', tools: ['associate'] },
+      { roll: 5, text: 'Improved Relationship — a relationship deepens. Gain an Ally.', tools: ['associate'] },
+      { roll: 6, text: 'New Relationship — you become romantically involved with someone. Gain an Ally.', tools: ['associate'] },
+      { roll: 7, text: 'New Contact — you gain a new Contact.', tools: ['associate'] },
+      { roll: 8, text: 'Betrayal — a friend betrays you. Convert an existing Contact or Ally into a Rival or Enemy, or gain a fresh Rival/Enemy if you have neither.', tools: ['associate'] },
+      { roll: 9, text: 'Travel — you move to another world. Gain DM+2 to your next qualification roll.', tools: [], autoDM: { key: 'qualificationDM', amount: 2 } },
+      { roll: 10, text: 'Good Fortune — something good happens to you. Gain DM+2 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 2 } },
+      { roll: 11, text: "Crime — you commit, suffer, or are accused of a crime. Lose one Benefit roll, or take the Prisoner career next term instead (Prisoner isn't built — note it yourself if you choose this).", tools: [], autoDM: { key: 'extraBenefitRolls', amount: -1 } },
+      { roll: 12, text: 'Unusual Event — roll 1D for what happens.', unusual: true, tools: [] }
+    ];
+
+    const LIFE_EVENTS_UNUSUAL = {
+      1: 'Psionics — you encounter a Psionic institute and may test your Psionic Strength (not tracked in this app).',
+      2: 'Aliens — you spend time among an alien species. Gain Science 1 and a Contact among that species.',
+      3: "Alien Artefact — you come into possession of a strange device not normally available to humans.",
+      4: 'Amnesia — something happened to you, but you have no idea what.',
+      5: 'Contact with Government — you briefly cross paths with the highest levels of the Imperium.',
+      6: 'Ancient Technology — you have something older than the Imperium, or even older than humanity.'
+    };
 
     function ageingRequirements(sum) {
       if (sum <= -6) return [{ type: 'phys', amount: 2 }, { type: 'phys', amount: 2 }, { type: 'phys', amount: 2 }, { type: 'mental', amount: 1 }];
@@ -2650,7 +2733,9 @@
       const toolButtons = {
         skill: `<button class="btn-outline" onclick="openResolver('${tag}','skill')">Grant Skill</button>`,
         stat: `<button class="btn-outline" onclick="openResolver('${tag}','stat')">Adjust Characteristic</button>`,
-        associate: `<button class="btn-outline" onclick="openResolver('${tag}','associate')">Add Associate</button>`
+        associate: `<button class="btn-outline" onclick="openResolver('${tag}','associate')">Add Associate</button>`,
+        injury: `<button class="btn-outline" onclick="openInjuryResolver('${tag}')">Roll on the Injury Table</button>`,
+        lifeEvent: `<button class="btn-outline" onclick="openLifeEventResolver('${tag}')">Roll a Life Event</button>`
       };
       return `
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
@@ -2730,6 +2815,119 @@
     function markResolverDone(tag) {
       if (tag === 'mishap') saveStep5State({ mishapResolved: true }).then(renderStep);
       else if (tag === 'event') saveStep5State({ eventResolved: true }).then(renderStep);
+    }
+
+    // ── Injury Table (Core p.49) — reachable from any mishap/event that
+    // lists 'injury' as a tool. Reduces physical characteristics (reuses
+    // AGEING_PHYS); always closes out via markResolverDone(tag).
+    const INJURY_LABEL = { str: 'STR', dex: 'DEX', end_stat: 'END' };
+
+    function openInjuryResolver(tag) {
+      document.getElementById('resolver-' + tag).innerHTML =
+        `<button class="btn-outline" onclick="rollInjuryTable('${tag}')">Roll 1D on the Injury Table</button>`;
+    }
+
+    function rollInjuryTable(tag) {
+      const roll = rollDie();
+      const entry = INJURY_TABLE.find(x => x.roll === roll);
+      renderInjuryPicker(tag, roll, entry);
+    }
+
+    function renderInjuryPicker(tag, roll, entry) {
+      const el = document.getElementById('resolver-' + tag);
+      const picker = (id) => `<select id="${id}">${AGEING_PHYS.map(k => `<option value="${k}">${INJURY_LABEL[k]}</option>`).join('')}</select>`;
+      let body = `<div style="margin-bottom:8px;">Rolled ${roll} — ${entry.text}</div>`;
+      if (roll === 6) {
+        body += `<button class="btn-outline" onclick="finishInjury('${tag}', null)">Continue</button>`;
+      } else if (roll === 3) {
+        body += `<select id="injury-pick-${tag}"><option value="str">STR</option><option value="dex">DEX</option></select>
+          <button class="btn-outline" onclick="applyInjurySimple('${tag}', 2)">Apply −2</button>`;
+      } else if (roll === 4 || roll === 5) {
+        body += `${picker('injury-pick-' + tag)}
+          <button class="btn-outline" onclick="applyInjurySimple('${tag}', ${roll === 4 ? 2 : 1})">Apply −${roll === 4 ? 2 : 1}</button>`;
+      } else if (roll === 2) {
+        body += `${picker('injury-pick-' + tag)}
+          <button class="btn-outline" onclick="applyInjuryDie('${tag}')">Roll 1D and Apply</button>`;
+      } else {
+        body += `<div style="margin-bottom:6px; font-size:0.82rem; color:#4a9ab8;">Choose which characteristic takes the 1D hit — the other two automatically take −2 each.</div>
+          ${picker('injury-pick-' + tag)}
+          <button class="btn-outline" onclick="applyInjuryNearlyKilled('${tag}')">Roll 1D and Apply</button>`;
+      }
+      el.innerHTML = body;
+    }
+
+    async function applyInjurySimple(tag, amount) {
+      const key = document.getElementById('injury-pick-' + tag).value;
+      await applyStatChange(key, -amount);
+      await finishInjury(tag, `${INJURY_LABEL[key]} −${amount}`);
+    }
+
+    async function applyInjuryDie(tag) {
+      const key = document.getElementById('injury-pick-' + tag).value;
+      const amt = rollDie();
+      await applyStatChange(key, -amt);
+      await finishInjury(tag, `${INJURY_LABEL[key]} −${amt}`);
+    }
+
+    async function applyInjuryNearlyKilled(tag) {
+      const key = document.getElementById('injury-pick-' + tag).value;
+      const amt = rollDie();
+      await applyStatChange(key, -amt);
+      const others = AGEING_PHYS.filter(k => k !== key);
+      for (const k of others) await applyStatChange(k, -2);
+      await finishInjury(tag, `${INJURY_LABEL[key]} −${amt}, ${others.map(k => INJURY_LABEL[k]).join(' & ')} −2 each`);
+    }
+
+    async function finishInjury(tag, desc) {
+      document.getElementById('resolver-' + tag).innerHTML =
+        `<p style="color:#00ffaa; font-size:0.85rem;">Injury resolved${desc ? ': ' + desc : ' (no permanent effect)'}.</p>`;
+      await logCreation(`Injury Table — ${desc || 'no permanent effect'}.`);
+      markResolverDone(tag);
+    }
+
+    // ── Life Events Table (Core p.46) — reachable from any mishap/event
+    // that lists 'lifeEvent' as a tool. Nests the generic resolver tools
+    // for its own associate/skill grants, then closes out the parent tag.
+    function openLifeEventResolver(tag) {
+      document.getElementById('resolver-' + tag).innerHTML =
+        `<button class="btn-outline" onclick="rollLifeEvent('${tag}')">Roll 2D for a Life Event</button>`;
+    }
+
+    function rollLifeEvent(tag) {
+      const roll = roll2d6();
+      const entry = LIFE_EVENTS_TABLE.find(x => x.roll === roll);
+      logCreation(`Life Event roll: ${roll} — ${entry.text}`);
+      renderLifeEventBody(tag, entry);
+    }
+
+    function renderLifeEventBody(tag, entry) {
+      const el = document.getElementById('resolver-' + tag);
+      let body = `<div style="margin-bottom:8px;">Rolled ${entry.roll} — ${entry.text}</div>`;
+      if (entry.injury) {
+        body += `<button class="btn-outline" onclick="openInjuryResolver('${tag}')">Roll on the Injury Table</button>`;
+      } else if (entry.unusual) {
+        body += `<button class="btn-outline" onclick="rollLifeEventUnusual('${tag}')">Roll 1D for the Unusual Event</button>`;
+      } else {
+        body += renderGenericResolver(tag + 'Life', entry.tools, true) +
+          `<button class="btn-outline" onclick="finishLifeEvent('${tag}')">Mark Resolved</button>`;
+      }
+      el.innerHTML = body;
+      if (entry.autoDM) {
+        addPendingMod(entry.autoDM.key, entry.autoDM.amount);
+        logCreation(`Life Event — banked DM${entry.autoDM.amount > 0 ? '+' : ''}${entry.autoDM.amount} (${entry.autoDM.key}).`);
+      }
+    }
+
+    function rollLifeEventUnusual(tag) {
+      const roll = rollDie();
+      document.getElementById('resolver-' + tag).innerHTML =
+        `<p style="color:#00ffaa; font-size:0.85rem;">${LIFE_EVENTS_UNUSUAL[roll]}</p>`;
+      logCreation(`Life Event — Unusual Event roll ${roll}: ${LIFE_EVENTS_UNUSUAL[roll]}`);
+      markResolverDone(tag);
+    }
+
+    function finishLifeEvent(tag) {
+      markResolverDone(tag);
     }
 
     // ── Bespoke event/mishap mechanics ────────────────────────
@@ -3854,7 +4052,6 @@
         line = `Cash roll ${idx + 1}: Cr${amount}${bonusDM ? ` (incl. ${bonusDM > 0 ? '+' : ''}${bonusDM} banked bonus)` : ''}`;
       } else {
         const text = c.musteringBenefits[idx];
-        await appendNote(`[MUSTERING OUT]\n${c.name} — Benefit roll ${idx + 1}: ${text}\n[/MUSTERING OUT]`);
         line = `Benefit roll ${idx + 1}: ${text}${bonusDM ? ` (incl. ${bonusDM > 0 ? '+' : ''}${bonusDM} banked bonus)` : ''}`;
       }
       const done = (s.musteringResolved || []).concat([line]);
@@ -3955,6 +4152,11 @@
     }
 
     async function finishFinalize() {
+      const benefitLines = musteringLogLines().map(l => l.replace(/^\[[^\]]*\]\s*/, ''));
+      const summary = benefitLines.length
+        ? `=== Mustering-Out Benefits Summary ===\n${benefitLines.map(l => `- ${l}`).join('\n')}`
+        : '=== Mustering-Out Benefits Summary ===\nNo benefits gained.';
+      await logCreation(summary);
       await supabaseClient.from('characters').update({ status: 'active' }).eq('id', draft.id);
       await logCreation('Character creation complete — activated.');
       window.location.href = 'character-record.html?id=' + draft.id;
