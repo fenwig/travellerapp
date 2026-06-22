@@ -1966,7 +1966,7 @@
         mishaps: [
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
           { roll: 2, text: 'A target of your investigation offers you a deal. Accept and leave the career cleanly (losing this term\'s Benefit roll as normal). Refuse and suffer a worse injury, but gain an Enemy and a level in a skill of your choice.', tools: [] },
-          { roll: 3, text: 'An investigation goes critically wrong. Roll Advocate 8+ to keep this term\'s Benefit roll; a natural 2 also forces the Prisoner career next term (not tracked).', tools: [] },
+          { roll: 3, text: 'An investigation goes critically wrong. Roll Advocate 8+ to keep this term\'s Benefit roll; a natural 2 also forces the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry if this applies — not automated here).', tools: [] },
           { roll: 4, text: 'You learn something dangerous. Gain an Enemy and Deception 1.', tools: ['associate'], autoSkill: { name: 'Deception', level: 1 } },
           { roll: 5, text: 'Your work follows you home and a Contact, Ally, or family member is hurt — roll on the Injury table for them (effects applied to your own characteristics as a stand-in, since associates aren\'t tracked separately).', tools: ['injury'] },
           { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
@@ -2390,7 +2390,7 @@
           { roll: 5, text: 'You have a chance to risk your fortune on a possibly lucrative deal. Gamble a number of Benefit rolls and roll Gambler 8+ or Broker 8+: success gains half as many Benefit rolls as risked (rounding up); failure loses all the rolls risked. Either way, gain one level in whichever skill you used.', tools: [] },
           { roll: 6, text: 'You make an unexpected connection outside your normal circles. Gain a Contact.', tools: ['associate'] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
-          { roll: 8, text: 'You are embroiled in legal trouble. Gain one of Advocate 1, Admin 1, Diplomat 1, or Investigate 1 — then, on a rare natural 2 on 2D (not automated here), you would be forced to take the Prisoner career next term, which is not yet built in this app.', tools: ['skill'] },
+          { roll: 8, text: 'You are embroiled in legal trouble. Gain one of Advocate 1, Admin 1, Diplomat 1, or Investigate 1 — then, on a rare natural 2 on 2D (not automated here), you would be forced to take the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry).', tools: ['skill'] },
           { roll: 9, text: 'Given advanced training in a specialist field. Roll EDU 8+ to increase any one skill you already have by one level.', tools: [] },
           { roll: 10, text: 'A good deal ensures you are living the high life for a few years. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
           { roll: 11, text: 'You befriend a useful ally in one sphere. Gain an Ally, and either gain a level in Carouse or DM+4 to your next advancement roll thanks to their aid.', tools: [] },
@@ -2507,15 +2507,15 @@
         musteringBenefits: ['Ship Share', 'Weapon', 'INT +1', '1D Ship Shares', 'Armour', 'DEX +1', '2D Ship Shares'],
         mishaps: [
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
-          { roll: 2, text: 'Arrested. You must take the Prisoner career for your next term (not yet built in this app — note it yourself if it applies).', tools: [] },
-          { roll: 3, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have neither, gain a Rival or Enemy anyway. On a rare natural 2 on a further 2D roll (not automated here), you would also be forced into the Prisoner career next term, which is not yet built in this app.', tools: ['associate'] },
+          { roll: 2, text: 'Arrested. You must take the Prisoner career for your next term — choose Prisoner at the next Career screen and confirm forced entry.', tools: [] },
+          { roll: 3, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have neither, gain a Rival or Enemy anyway. On a rare natural 2 on a further 2D roll (not automated here), you would also be forced into the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry).', tools: ['associate'] },
           { roll: 4, text: 'A job goes wrong, forcing you to flee off-planet. Gain one of Deception 1, Pilot 1, Athletics 1, or Gunner 1.', tools: ['skill'] },
           { roll: 5, text: 'A police detective or rival criminal forces you to flee and vows to hunt you down. Gain them as an Enemy.', tools: ['associate'] },
           { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
         ],
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
-          { roll: 3, text: 'You are arrested and charged. Defend yourself and roll Advocate 8+: success drops the charges, failure gains an Enemy and forces the Prisoner career next term (not built). Hire a lawyer instead: gain them as a Contact, but lose a Benefit roll.', tools: [] },
+          { roll: 3, text: 'You are arrested and charged. Defend yourself and roll Advocate 8+: success drops the charges, failure gains an Enemy and forces the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry). Hire a lawyer instead: gain them as a Contact, but lose a Benefit roll.', tools: [] },
           { roll: 4, text: 'You are involved in the planning of an impressive heist. Gain Electronics 1 or Mechanic 1.', tools: ['skill'] },
           { roll: 5, text: 'One of your crimes pays off. Gain DM+2 to any one Benefit roll, and gain your victim as an Enemy.', tools: ['associate'], autoDM: { key: 'benefitRollDM', amount: 2 } },
           { roll: 6, text: 'You have the opportunity to backstab a fellow rogue for personal gain. Do so and gain DM+4 to your next advancement roll. Refuse and gain them as an Ally instead.', tools: [] },
@@ -2834,7 +2834,7 @@
       { roll: 8, text: 'Betrayal — a friend betrays you. Convert an existing Contact or Ally into a Rival or Enemy, or gain a fresh Rival/Enemy if you have neither.', tools: ['associate'] },
       { roll: 9, text: 'Travel — you move to another world. Gain DM+2 to your next qualification roll.', tools: [], autoDM: { key: 'qualificationDM', amount: 2 } },
       { roll: 10, text: 'Good Fortune — something good happens to you. Gain DM+2 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 2 } },
-      { roll: 11, text: "Crime — you commit, suffer, or are accused of a crime. Lose one Benefit roll, or take the Prisoner career next term instead (Prisoner isn't built — note it yourself if you choose this).", tools: [], autoDM: { key: 'extraBenefitRolls', amount: -1 } },
+      { roll: 11, text: "Crime — you commit, suffer, or are accused of a crime. Lose one Benefit roll, or take the Prisoner career next term instead (choose Prisoner at the next Career screen and confirm forced entry).", tools: [], autoDM: { key: 'extraBenefitRolls', amount: -1 } },
       { roll: 12, text: 'Unusual Event — roll 1D for what happens.', unusual: true, tools: [] }
     ];
 
@@ -4148,7 +4148,7 @@
       const roll = rollDie();
       let resultText;
       if (roll <= 2) {
-        resultText = `Rolled ${roll} — injured or arrested (Injury table / Prisoner career not tracked in this app — note it yourself if it applies).`;
+        resultText = `Rolled ${roll} — injured or arrested. Resolve manually: roll on the Injury table yourself, or choose Prisoner at the next Career screen and confirm forced entry.`;
       } else if (roll <= 4) {
         resultText = `Rolled ${roll} — you survive, but gain nothing.`;
       } else {
@@ -4295,7 +4295,7 @@
         const s = step5State();
         await saveStep5State({ benefitRolls: (s.benefitRolls || 0) + 1 });
       }
-      const resultText = `Rolled ${total} on Advocate (need 8+) — ${success ? 'kept this term\'s Benefit roll.' : 'lost it as normal (a natural 2 would also force the Prisoner career next term — not tracked, note it if it applies).'}`;
+      const resultText = `Rolled ${total} on Advocate (need 8+) — ${success ? 'kept this term\'s Benefit roll.' : 'lost it as normal (a natural 2 would also force the Prisoner career next term — choose Prisoner at the next Career screen and confirm forced entry if that applies).'}`;
       await saveMechanic('mishap', { rolled: true, resultText });
       await resolveMechanic('mishap');
       await logCreation(`Agent Mishap 3: ${resultText}`);
@@ -5455,7 +5455,7 @@
       const success = total >= 8;
       const resultText = success
         ? `Rolled ${total} on Advocate (need 8+) — the charges are dropped.`
-        : `Rolled ${total} on Advocate (need 8+) — convicted. Gained an Enemy, and forced into the Prisoner career next term (not built in this app — note it yourself).`;
+        : `Rolled ${total} on Advocate (need 8+) — convicted. Gained an Enemy, and forced into the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry).`;
       await saveMechanic('event', { rolled: true, resolved: true, resultText });
       await resolveMechanic('event');
       if (!success) await addAssociate('enemy', 'The prosecutor', 'Convicted you in court.');
