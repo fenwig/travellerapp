@@ -3572,28 +3572,38 @@
     }
 
     // "Disaster! Roll on the Mishap table but you are not ejected from this career." (Navy/Drifter event 2)
+    // Reuses the literal 'mishap' tag/state for the roll itself, so every
+    // bespoke mishap mechanic (Navy 3/4, Agent 2/3, Army 3/4 — which all
+    // hardcode tag='mishap' internally) fires correctly here too, not
+    // just the generic resolver tools. Bridges completion back to the
+    // outer event's own resolved flag via finishInlineMishap().
     function renderInlineMishapNotEjected(tag, careerId, m) {
       const c = careerData(careerId);
       if (!m.rolled) {
         return resolverHeader('Roll on the Mishap table — you are not ejected from this career.') +
           `<button class="btn-outline" onclick="rollInlineMishap('${tag}','${careerId}')">Roll 1D</button>`;
       }
+      const s = step5State();
       const entry = c.mishaps.find(x => x.roll === m.rolled);
-      const subResolver = m.subResolved ? resolverHeader('Resolved.') : renderGenericResolver(tag + 'Sub', entry.tools, true);
-      return resolverHeader(`Rolled ${m.rolled} — ${entry.text}`) +
-        subResolver +
-        (m.subResolved ? '' : `<button class="btn-outline" onclick="markInlineMishapResolved('${tag}')">Mark Resolved</button>`);
+      if (s.mishapResolved) {
+        return resolverHeader(`Rolled ${m.rolled} — ${entry.text}`) +
+          resolverHeader('Resolved.') +
+          `<button class="btn-outline" onclick="finishInlineMishap('${tag}')">Continue</button>`;
+      }
+      const bespoke = renderBespokeOutcome('mishap', careerId, 'mishap' + m.rolled);
+      const body = bespoke !== null ? bespoke : renderGenericResolver('mishap', entry.tools);
+      return resolverHeader(`Rolled ${m.rolled} — ${entry.text}`) + body;
     }
 
     async function rollInlineMishap(tag, careerId) {
       const roll = rollDie();
+      await saveStep5State({ mishapResolved: false, mishapMechanic: {} });
       await saveMechanic(tag, { rolled: roll });
       await logCreation(`Inline Mishap roll (no ejection): ${roll}.`);
       renderStep();
     }
 
-    async function markInlineMishapResolved(tag) {
-      await saveMechanic(tag, { subResolved: true });
+    async function finishInlineMishap(tag) {
       await resolveMechanic(tag);
       renderStep();
     }
