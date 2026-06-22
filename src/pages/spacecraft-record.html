@@ -608,13 +608,21 @@
           <div id="crew-roles-list"></div>
         </div>
 
-        <div class="cr-section">
-          <div class="cr-section-title">Hired Crew</div>
-          <div style="font-size:0.7rem;color:#4a9ab8;display:grid;grid-template-columns:1fr 140px 120px 24px;gap:8px;padding:0 10px 6px;text-transform:uppercase;letter-spacing:0.06em">
-            <div>Name</div><div>Role</div><div>Salary / Period</div><div></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:10px;">
+          <div class="cr-section">
+            <div class="cr-section-title">Characters Onboard</div>
+            <div style="font-size:0.78rem;color:#4a9ab8;margin-bottom:8px;">Toggled from the character roster's "Onboard" column — these are who's available to assign a role above.</div>
+            <div id="characters-onboard-list"></div>
           </div>
-          <div id="hired-crew-list"></div>
-          <button class="add-row-btn edit-only" onclick="addHiredCrewRow()">+ Add Hired Crew</button>
+
+          <div class="cr-section">
+            <div class="cr-section-title">Hired Crew</div>
+            <div style="font-size:0.7rem;color:#4a9ab8;display:grid;grid-template-columns:1fr 100px 100px 24px;gap:8px;padding:0 10px 6px;text-transform:uppercase;letter-spacing:0.06em">
+              <div>Name</div><div>Role</div><div>Salary</div><div></div>
+            </div>
+            <div id="hired-crew-list"></div>
+            <button class="add-row-btn edit-only" onclick="addHiredCrewRow()">+ Add Hired Crew</button>
+          </div>
         </div>
 
       </div><!-- /tab-crew -->
@@ -700,6 +708,12 @@ let pendingSensors    = [];
 let pendingSystems    = [];
 let pendingHired      = [];
 
+// Headcounts feeding Life Support's per-person surcharge (Cr1,000 each for
+// onboard characters, hired crew/NPCs, and passengers) — populated by
+// renderCrew()/renderPassengers() before renderFinance() reads them.
+let hiredCrewCount = 0;
+let passengerCount = 0;
+
 // ── Init ─────────────────────────────────────────────────
 async function init() {
   const { data:{ session } } = await supabaseClient.auth.getSession();
@@ -708,7 +722,7 @@ async function init() {
     session.user.user_metadata?.display_name || session.user.email;
 
   const { data:chars } = await supabaseClient
-    .from('characters').select('id,name').eq('status','active');
+    .from('characters').select('id,name,player_name,primary_role,secondary_role,onboard').eq('status','active');
   allCharacters = chars || [];
 
   await loadShip();
@@ -739,10 +753,10 @@ async function loadShip() {
   renderPowerTable();
   renderCritGrid();
   compileCritDamage();
-  renderFinance();
   await renderCargo();
   await renderPassengers();
   await renderCrew();
+  renderFinance();
   renderNotes();
 }
 
@@ -1242,11 +1256,15 @@ function moveTip(e) {
 // ── Finance ──────────────────────────────────────────────
 function renderFinance() {
   const s = ship;
-  const fuelCost    = (s.fuel_max || 0) * 500;
-  const maintenance = Math.round((parseFloat(s.purchase_value)||0) * 1000000 / 12000);
-  const lifeBase    = (s.staterooms || 0) * 1000;
-  const mortgageVal = parseFloat(s.mortgage_value) || 0;
-  const mortgagePmt = Math.round(mortgageVal * 1000000 / 240);
+  const fuelCost      = (s.fuel_max || 0) * 500;
+  const maintenance   = Math.round((parseFloat(s.purchase_value)||0) * 1000000 / 12000);
+  const onboardCount  = allCharacters.filter(c => c.onboard).length;
+  const personCount   = onboardCount + hiredCrewCount + passengerCount;
+  const lifeStaterooms = (s.staterooms || 0) * 1000;
+  const lifePersons    = personCount * 1000;
+  const lifeBase       = lifeStaterooms + lifePersons;
+  const mortgageVal   = parseFloat(s.mortgage_value) || 0;
+  const mortgagePmt   = Math.round(mortgageVal * 1000000 / 240);
 
   const total = mortgagePmt+lifeBase+fuelCost+maintenance+(s.fin_salaries||0)+(s.fin_other||0);
 
@@ -1257,7 +1275,7 @@ function renderFinance() {
     </div>
     <div class="finance-box">
       <div class="finance-label">Life Support (base)</div>
-      <div class="finance-value" title="${s.staterooms||0} staterooms × Cr1,000 + Cr1,000 per person aboard">${lifeBase.toLocaleString()}</div>
+      <div class="finance-value" title="${s.staterooms||0} staterooms × Cr1,000 (Cr${lifeStaterooms.toLocaleString()}) + Cr1,000 × ${personCount} aboard (${onboardCount} characters, ${hiredCrewCount} hired crew, ${passengerCount} passengers) = Cr${lifePersons.toLocaleString()}">${lifeBase.toLocaleString()}</div>
     </div>
     <div class="finance-box">
       <div class="finance-label">Fuel (full tank)</div>
@@ -1347,6 +1365,8 @@ async function deleteCargoRow(id, tr) {
 async function renderPassengers() {
   const { data } = await supabaseClient.from('spacecraft_passengers').select('*').eq('spacecraft_id',ship.id);
   const rows = data || [];
+  passengerCount = rows.reduce((sum, r) =>
+    sum + (r.high_passage||0) + (r.middle_passage||0) + (r.basic_passage||0) + (r.working_passage||0) + (r.low_passage||0), 0);
   const tbody = document.getElementById('passengers-tbody');
   tbody.innerHTML = rows.length ? rows.map(r => `
     <tr data-id="${r.id}">
@@ -1381,12 +1401,14 @@ async function savePassengerRow(tr) {
     low_passage: parseInt(i[5].value)||0
   });
   await renderPassengers();
+  renderFinance();
 }
 
 async function deletePassengerRow(id, tr) {
   await supabaseClient.from('spacecraft_passengers').delete().eq('id', id);
   tr.remove();
   await renderPassengers();
+  renderFinance();
 }
 
 // ── Crew ─────────────────────────────────────────────────
@@ -1397,8 +1419,13 @@ async function renderCrew() {
   ]);
   const assigned = rolesRes.data || [];
   const hired    = hiredRes.data || [];
+  hiredCrewCount = hired.length;
 
-  const charOpts = allCharacters.map(c => `<option value="char:${c.id}">${c.name}</option>`).join('');
+  // Only characters marked "onboard" on the roster are offered as
+  // assignable crew — together with hired NPCs, that's the pool of who's
+  // actually here to take a role.
+  const onboardChars = allCharacters.filter(c => c.onboard);
+  const charOpts = onboardChars.map(c => `<option value="char:${c.id}">${c.name}</option>`).join('');
   const npcOpts  = hired.map(h => `<option value="npc:${h.id}">${h.name} (NPC)</option>`).join('');
   const allOpts  = `<option value="">— Unassigned —</option>${charOpts}${npcOpts}`;
 
@@ -1434,6 +1461,16 @@ async function renderCrew() {
     sel.value = sel.dataset.origVal;
   });
 
+  // Characters Onboard
+  const onboardList = document.getElementById('characters-onboard-list');
+  onboardList.innerHTML = onboardChars.length ? onboardChars.map(c => `
+    <div style="padding:7px 10px; background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:5px; margin-bottom:5px; font-size:0.85rem;">
+      <span style="color:#b0d8e8;">${c.name}</span>
+      ${c.player_name ? `<span style="color:#4a9ab8;"> — ${c.player_name}</span>` : ''}
+      ${c.primary_role || c.secondary_role ? `<span style="color:#4a9ab8;"> (${[c.primary_role, c.secondary_role].filter(Boolean).join(' / ')})</span>` : ''}
+    </div>`).join('')
+  : '<div style="color:#4a9ab8;font-size:0.85rem;padding:6px 0">No characters marked onboard — toggle them on the roster.</div>';
+
   // Hired crew
   const hiredList = document.getElementById('hired-crew-list');
   hiredList.innerHTML = hired.length ? hired.map(h => `
@@ -1468,7 +1505,7 @@ function addCrewSlot(role) {
   div.dataset.rowId = '';
 
   // Build fresh options
-  const charOpts = allCharacters.map(c => `<option value="char:${c.id}">${c.name}</option>`).join('');
+  const charOpts = allCharacters.filter(c => c.onboard).map(c => `<option value="char:${c.id}">${c.name}</option>`).join('');
 
   div.innerHTML = `
     <div class="crew-role-label">${role} ${n}</div>
