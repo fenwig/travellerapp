@@ -582,7 +582,7 @@ async function loadCharacter() {
   }
 
   character = data;
-  isOwner   = (character.user_id === currentUser.id);
+  isOwner   = (character.user_id === currentUser.id) || isGM(currentUser);
   document.getElementById('char-body').style.display = 'block';
   if (isOwner) document.getElementById('edit-btn').style.display = 'inline-flex';
 

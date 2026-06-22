@@ -726,6 +726,43 @@
       skills[key] = { name, specialty: specialty || null, level: newLevel };
     }
 
+    // ── Specialty resolution ──────────────────────────────────
+    // A skill that has specialties (Drive, Electronics, Gunner, etc.)
+    // only needs one chosen once it reaches level 1+; level 0 can stay
+    // generic. When a table/picker grants a skill at level 1+ without
+    // pinning a specific specialty, the player must choose which
+    // specialty it goes to — either a brand new one, or bumping a
+    // specialty they already hold in that skill (Core Rulebook p.9:
+    // specialties are tracked per-specialty above level 0).
+    function skillSpecialtiesFor(name) {
+      const def = SKILLS.find(sk => sk.name === name);
+      return (def && def.specialties) || [];
+    }
+
+    function existingSpecialtiesFor(skills, name) {
+      return Object.keys(skills).filter(k => skills[k].name === name && skills[k].specialty).map(k => skills[k].specialty);
+    }
+
+    // Sets skill+specialty to at least `level`, merging away any
+    // untyped (no-specialty) entry for the same skill — once a
+    // specialty is chosen, the generic placeholder is absorbed into it.
+    function grantSpecialtySkillMin(skills, name, specialty, level) {
+      const key = skillKey(name, specialty);
+      const current = skills[key] ? skills[key].level : -1;
+      delete skills[name];
+      skills[key] = { name, specialty, level: Math.min(4, Math.max(current, level)) };
+    }
+
+    // Increments skill+specialty by `delta` from its own current level
+    // (not the generic entry's level — picking a new specialty always
+    // starts that specialty fresh), merging away the untyped entry.
+    function bumpSpecialtySkill(skills, name, specialty, delta) {
+      const key = skillKey(name, specialty);
+      const current = skills[key] ? skills[key].level : 0;
+      delete skills[name];
+      skills[key] = { name, specialty, level: Math.min(4, Math.max(0, current + delta)) };
+    }
+
     function findOption(id) { return PRE_ED_OPTIONS.find(o => o.id === id); }
 
     function renderStepPreEd() {
@@ -995,13 +1032,21 @@
         pickerHtml = `
           <div class="wizard-card-sub">Choose ${grant.chooseN.n} of the following, gained at level ${grant.chooseN.level} (selected ${chosen.length} of ${grant.chooseN.n}):</div>
           ${grant.chooseN.from.map(sk => {
-            const isChosen = chosen.some(c => c.name === sk.name);
+            const picked = chosen.find(c => c.name === sk.name);
+            const isChosen = !!picked;
             const disable = !isChosen && chosen.length >= grant.chooseN.n;
+            const specs = grant.chooseN.level >= 1 ? skillSpecialtiesFor(sk.name) : [];
             return `
-              <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap;">
                 <input type="checkbox" ${isChosen ? 'checked' : ''} ${disable ? 'disabled' : ''}
                        onchange="toggleEntryChooseN('${sk.name}', this.checked)" style="width:18px; height:18px; accent-color:#00e5ff;" />
                 <span style="min-width:110px;">${sk.name}</span>
+                ${isChosen && specs.length ? `
+                  <select onchange="setEntryChooseNSpecialty('${sk.name}', this.value)">
+                    <option value="">— specialty —</option>
+                    ${specs.map(sp => `<option value="${sp.name}" ${picked.specialty === sp.name ? 'selected' : ''}>${sp.name}</option>`).join('')}
+                  </select>
+                ` : ''}
               </div>
             `;
           }).join('')}
@@ -1017,7 +1062,8 @@
         const needsSpecialty = level1Def && level1Def.specialties && level1Def.specialties.length;
         ready = !!chooser.level0Skill && !!chooser.level1Skill && (!needsSpecialty || !!chooser.level1Specialty);
       } else if (grant.chooseN) {
-        ready = (chooser.chosen || []).length === grant.chooseN.n;
+        const chosen = chooser.chosen || [];
+        ready = chosen.length === grant.chooseN.n && chosen.every(c => grant.chooseN.level < 1 || !skillSpecialtiesFor(c.name).length || c.specialty);
       }
 
       return `
@@ -1059,10 +1105,18 @@
       const chooser = s.entrySkillChooser || {};
       let chosen = (chooser.chosen || []).slice();
       if (checked) {
-        chosen.push({ name });
+        chosen.push({ name, specialty: null });
       } else {
         chosen = chosen.filter(c => c.name !== name);
       }
+      await saveStep4State({ entrySkillChooser: { chosen } });
+      renderStep();
+    }
+
+    async function setEntryChooseNSpecialty(name, specialty) {
+      const s = step4State();
+      const chooser = s.entrySkillChooser || {};
+      const chosen = (chooser.chosen || []).map(c => c.name === name ? Object.assign({}, c, { specialty: specialty || null }) : c);
       await saveStep4State({ entrySkillChooser: { chosen } });
       renderStep();
     }
@@ -1078,7 +1132,7 @@
       }
       const chooser = s.entrySkillChooser || {};
       if (grant.chooseN) {
-        (chooser.chosen || []).forEach(c => grantSkillMin(skills, c.name, null, grant.chooseN.level));
+        (chooser.chosen || []).forEach(c => grantSpecialtySkillMin(skills, c.name, c.specialty || null, grant.chooseN.level));
       }
       if (grant.pickLevel0Level1 && chooser.level0Skill) {
         grantSkillMin(skills, chooser.level0Skill, null, 0);
@@ -1712,34 +1766,52 @@
           </div>
         `;
       }
+      const ready = chosen.length === b.n && chosen.every(c => b.level < 1 || !skillSpecialtiesFor(c.name).length || c.specialty);
       return `
         <div style="margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
           <div style="font-size:0.85rem; margin-bottom:8px;">${b.text} (selected ${chosen.length} of ${b.n})</div>
           <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
             ${pool.map(sk => {
-              const key = skillKey(sk.name, sk.specialty);
-              const isChosen = chosen.includes(key);
+              const picked = chosen.find(c => c.name === sk.name && c.fixedSpecialty === (sk.specialty || null));
+              const isChosen = !!picked;
               const disable = !isChosen && chosen.length >= b.n;
+              const specs = (!sk.specialty && b.level >= 1) ? skillSpecialtiesFor(sk.name) : [];
               return `
                 <label style="display:flex; align-items:center; gap:6px; font-size:0.82rem; ${disable ? 'opacity:0.5;' : ''}">
-                  <input type="checkbox" ${isChosen ? 'checked' : ''} ${disable ? 'disabled' : ''} ${done ? 'disabled' : ''}
-                         onchange="toggleChooseNBenefit('${b.id}','${key}',${b.n})" style="width:16px; height:16px; accent-color:#00e5ff;" />
+                  <input type="checkbox" ${isChosen ? 'checked' : ''} ${disable || done ? 'disabled' : ''}
+                         onchange="toggleChooseNBenefit('${b.id}','${sk.name}',${sk.specialty ? "'" + sk.specialty + "'" : 'null'},${b.n})" style="width:16px; height:16px; accent-color:#00e5ff;" />
                   ${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''}
                 </label>
+                ${isChosen && specs.length ? `
+                  <select ${done ? 'disabled' : ''} onchange="setChooseNBenefitSpecialty('${b.id}','${sk.name}', this.value)">
+                    <option value="">— specialty —</option>
+                    ${specs.map(sp => `<option value="${sp.name}" ${picked.specialty === sp.name ? 'selected' : ''}>${sp.name}</option>`).join('')}
+                  </select>
+                ` : ''}
               `;
             }).join('')}
           </div>
-          <button class="btn-outline" onclick="applyPreEdBenefit('${b.id}')" ${done || chosen.length !== b.n ? 'disabled' : ''}>${done ? 'Applied' : 'Apply'}</button>
+          <button class="btn-outline" onclick="applyPreEdBenefit('${b.id}')" ${done || !ready ? 'disabled' : ''}>${done ? 'Applied' : 'Apply'}</button>
         </div>
       `;
     }
 
-    async function toggleChooseNBenefit(benefitId, key, n) {
+    async function toggleChooseNBenefit(benefitId, name, fixedSpecialty, n) {
       const s = step4State();
       const choosers = Object.assign({}, s.benefitChoosers);
       let chosen = (choosers[benefitId] || []).slice();
-      if (chosen.includes(key)) chosen = chosen.filter(k => k !== key);
-      else if (chosen.length < n) chosen.push(key);
+      const idx = chosen.findIndex(c => c.name === name && c.fixedSpecialty === fixedSpecialty);
+      if (idx >= 0) chosen.splice(idx, 1);
+      else if (chosen.length < n) chosen.push({ name, specialty: fixedSpecialty, fixedSpecialty });
+      choosers[benefitId] = chosen;
+      await saveStep4State({ benefitChoosers: choosers });
+      renderStep();
+    }
+
+    async function setChooseNBenefitSpecialty(benefitId, name, specialty) {
+      const s = step4State();
+      const choosers = Object.assign({}, s.benefitChoosers);
+      const chosen = (choosers[benefitId] || []).map(c => c.name === name ? Object.assign({}, c, { specialty: specialty || null }) : c);
       choosers[benefitId] = chosen;
       await saveStep4State({ benefitChoosers: choosers });
       renderStep();
@@ -1845,12 +1917,9 @@
       } else if (b.type === 'chooseN') {
         const chosen = (s.benefitChoosers && s.benefitChoosers[b.id]) || [];
         const skills = Object.assign({}, draft.skills || {});
-        chosen.forEach(key => {
-          const sk = skills[key] ? skills[key] : { name: key.split('|')[0], specialty: key.split('|')[1] || null };
-          grantSkillMin(skills, sk.name, sk.specialty, b.level);
-        });
+        chosen.forEach(c => grantSpecialtySkillMin(skills, c.name, c.specialty || null, b.level));
         update.skills = skills;
-        appliedText = `${b.text} — chose ${chosen.join(', ') || 'none'}.`;
+        appliedText = `${b.text} — chose ${chosen.map(c => `${c.name}${c.specialty ? ' (' + c.specialty + ')' : ''}`).join(', ') || 'none'}.`;
       } else if (b.type === 'pendingMod') {
         await addPendingMod(b.key, b.amount);
         appliedText = `${b.text} (banked).`;
@@ -2092,7 +2161,7 @@
           { roll: 2, text: 'Placed in frozen watch and revived improperly. Reduce STR, DEX or END by 1 (muscle wastage). You are not ejected from this career.', noEject: true, tools: ['stat'] },
           { roll: 3, text: "Battle's outcome depends on your actions — make an 8+ skill roll (Electronics/Gunner if Line, Mechanic/Vacc Suit if Engineer/Gunner, Pilot/Tactics if Flight). Fail: ship suffers severe damage, you're court-martialled and discharged. Succeed: honourably discharged, you may keep this term's Benefit roll.", tools: [] },
           { roll: 4, text: 'Blamed for an accident causing crew deaths. If responsible: gain one free Skills & Training roll before ejection. If not: gain the blaming officer as an Enemy but keep this term\'s Benefit roll.', tools: ['associate'] },
-          { roll: 5, text: 'Tormented by or quarrel with an officer or crewman — gain them as a Rival, forced out of the Navy.', tools: ['associate'] },
+          { roll: 5, text: 'Tormented by or quarrel with an officer or crewman — gain them as a Rival, forced out of the Navy.', tools: ['associate'], associateTypes: ['rival'] },
           { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
         ],
         events: [
@@ -2100,9 +2169,9 @@
           { roll: 3, text: 'You join a gambling circle on board. Gain Gambler 1 or Deception 1. May throw Gambler 8+ for an extra Benefit roll (lose one if failed).', tools: ['skill'] },
           { roll: 4, text: 'Given a special assignment or duty. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
           { roll: 5, text: 'Given advanced training. Roll EDU 8+ to gain one level in any skill you already have.', tools: ['skill'] },
-          { roll: 6, text: 'Your vessel takes part in a notable military engagement. Gain one of Electronics 1, Engineer 1, Gunner 1 or Pilot 1.', tools: ['skill'] },
+          { roll: 6, text: 'Your vessel takes part in a notable military engagement. Gain one of Electronics 1, Engineer 1, Gunner 1 or Pilot 1.', tools: ['skill'], skillOptions: [{ name: 'Electronics', level: 1 }, { name: 'Engineer', level: 1 }, { name: 'Gunner', level: 1 }, { name: 'Pilot', level: 1 }] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
-          { roll: 8, text: 'Your vessel takes part in a diplomatic mission. Gain one of Recon 1, Diplomat 1, Steward 1, or a Contact.', tools: ['skill', 'associate'] },
+          { roll: 8, text: 'Your vessel takes part in a diplomatic mission. Gain one of Recon 1, Diplomat 1, Steward 1, or a Contact.', tools: ['skill', 'associate'], skillOptions: [{ name: 'Recon', level: 1 }, { name: 'Diplomat', level: 1 }, { name: 'Steward', level: 1 }], associateTypes: ['contact'] },
           { roll: 9, text: 'You foil an attempted crime aboard. Gain an Enemy, but DM+2 to your next advancement roll in the Navy.', tools: ['associate'] },
           { roll: 10, text: 'Opportunity to abuse your position for profit. Accept: extra Benefit roll this term. Refuse: DM+2 to next advancement roll.', tools: [] },
           { roll: 11, text: 'Your commanding officer takes an interest in your career. Gain Tactics (naval) 1, or DM+4 to your next advancement roll.', tools: ['skill'] },
@@ -3352,7 +3421,7 @@
     }
 
     async function goCareerMishap() {
-      await saveStep5State({ phase: 'mishap', mishapRoll: null, mishapResolved: false, autoGranted: null });
+      await saveStep5State({ phase: 'mishap', mishapRoll: null, mishapResolved: false, mishapResolvedText: null, mishapMechanic: {}, autoGranted: null });
       renderStep();
     }
 
@@ -3379,16 +3448,28 @@
       // to leave" (Core p.53) — leaving is governed entirely by the Parole
       // Threshold check at term end, never by a mishap roll.
       const noEject = m.noEject || (s.mishapMechanic && s.mishapMechanic.noEjectOverride) || c.id === 'prisoner';
+      const medCareDone = !s.medCareReductions || s.medCareResolved;
+      const ready = s.mishapResolved && medCareDone;
+      // Once resolved via the generic resolver, show the persisted outcome
+      // instead of re-rendering the tool buttons — otherwise the full-card
+      // re-render after "Mark Resolved" rebuilds a fresh "Roll on the
+      // Injury Table" (etc.) button with no sign the first roll happened,
+      // inviting a second, unintended roll.
+      const genericBody = (bespoke !== null) ? bespoke
+        : (s.mishapResolved
+          ? `<div class="wizard-card-sub" style="color:#00ffaa;">${s.mishapResolvedText || 'Resolved.'}</div>`
+          : renderGenericResolver('mishap', m.tools, false, { skillOptions: m.skillOptions, associateTypes: m.associateTypes }));
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Mishap ${s.mishapRoll}</div>
           <p style="margin-bottom:14px;">${m.text}</p>
           ${s.autoGranted ? `<div class="wizard-card-sub" style="color:#00ffaa;">Applied automatically: ${s.autoGranted}.</div>` : ''}
-          ${bespoke !== null ? bespoke : renderGenericResolver('mishap', m.tools)}
+          ${s.medCareReductions ? renderAutoMedCareBlock('mishap', s.medCareReductions, s.medCareResolved, s.medCareResultText) : ''}
+          ${genericBody}
           <div class="wizard-actions">
             ${noEject
-              ? `<button class="btn-outline" onclick="continueCareerAfterMishap()" ${s.mishapResolved ? '' : 'disabled'}>Continue Career — Not Ejected</button>`
-              : `<button class="btn-outline" onclick="leaveCareerAfterMishap()" ${s.mishapResolved ? '' : 'disabled'}>Leave Career</button>`
+              ? `<button class="btn-outline" onclick="continueCareerAfterMishap()" ${ready ? '' : 'disabled'}>Continue Career — Not Ejected</button>`
+              : `<button class="btn-outline" onclick="leaveCareerAfterMishap()" ${ready ? '' : 'disabled'}>Leave Career</button>`
             }
           </div>
         </div>
@@ -3451,7 +3532,12 @@
       const c = careerData(s0.careerId);
       const entry = c.mishaps.find(x => x.roll === roll);
       const granted = await applyAutoGrants(entry);
-      await saveStep5State({ mishapRoll: roll, autoGranted: granted || null });
+      const physReductions = physicalAutoReductions(entry);
+      await saveStep5State({
+        mishapRoll: roll, autoGranted: granted || null,
+        medCareReductions: physReductions.length ? physReductions : null,
+        medCareResolved: false, medCareResultText: null
+      });
       await logCreation(`${c.name} — Mishap roll: ${roll} — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''}`);
       renderStep();
     }
@@ -3470,13 +3556,22 @@
       const s = step5State();
       const c = careerData(s.careerId);
       await logCreation(`${c.name} — survived the mishap without ejection; continuing this term.`);
-      await saveStep5State({ phase: 'events', eventRoll: null, eventResolved: false, mishapRoll: null, mishapResolved: false });
+      await saveStep5State({ phase: 'events', eventRoll: null, eventResolved: false, eventResolvedText: null, eventMechanic: {}, mishapRoll: null, mishapResolved: false, mishapResolvedText: null, mishapMechanic: {} });
       renderStep();
     }
 
     // ── Generic resolver — Grant Skill / Adjust Characteristic / Add Associate ──
-    function renderGenericResolver(tag, tools, hideMarkButton) {
+    // `restrict` narrows the generic Grant Skill / Add Associate pickers to
+    // what the rolled text actually offers (e.g. "Gain one of Electronics,
+    // Engineer, Gunner or Pilot" or "gain them as a Rival") instead of
+    // showing every skill/associate type. Optional — entries without it
+    // keep the full picker. Stashed on a module-level cache since the
+    // picker is opened later, from an onclick, after this render call returns.
+    window.__resolverRestrict = window.__resolverRestrict || {};
+
+    function renderGenericResolver(tag, tools, hideMarkButton, restrict) {
       tools = tools || [];
+      window.__resolverRestrict[tag] = restrict || {};
       const toolButtons = {
         skill: `<button class="btn-outline" onclick="openResolver('${tag}','skill')">Grant Skill</button>`,
         stat: `<button class="btn-outline" onclick="openResolver('${tag}','stat')">Adjust Characteristic</button>`,
@@ -3487,7 +3582,7 @@
       return `
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
           ${tools.map(t => toolButtons[t]).join('')}
-          ${hideMarkButton ? '' : `<button class="btn-outline" onclick="markResolverDone('${tag}')">Mark Resolved / No Further Effect</button>`}
+          ${hideMarkButton ? '' : `<button class="btn-outline" onclick="markResolverDone('${tag}', 'No further effect.')">Mark Resolved / No Further Effect</button>`}
         </div>
         <div id="resolver-${tag}"></div>
       `;
@@ -3495,16 +3590,19 @@
 
     function openResolver(tag, kind) {
       const el = document.getElementById('resolver-' + tag);
+      const restrict = window.__resolverRestrict[tag] || {};
       if (kind === 'skill') {
+        const options = restrict.skillOptions && restrict.skillOptions.length ? restrict.skillOptions : SKILLS.map(sk => ({ name: sk.name }));
         el.innerHTML = `
           <div class="wizard-field"><label>Skill</label>
-            <select id="resolver-${tag}-skill">
+            <select id="resolver-${tag}-skill" onchange="updateResolverSkillSpecialty('${tag}')">
               <option value="">— choose —</option>
-              ${SKILLS.map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}
+              ${options.map(sk => `<option value="${sk.name}" data-level="${sk.level || 1}">${sk.name}</option>`).join('')}
             </select>
           </div>
+          <div id="resolver-${tag}-specialty-wrap"></div>
           <div class="wizard-field"><label>Level</label>
-            <input id="resolver-${tag}-level" type="number" min="0" max="4" value="1" />
+            <input id="resolver-${tag}-level" type="number" min="0" max="4" value="${(options[0] && options[0].level) || 1}" />
           </div>
           <button class="btn-outline" onclick="applyResolverSkill('${tag}')">Apply</button>
         `;
@@ -3517,37 +3615,74 @@
           <button class="btn-outline" onclick="applyResolverStat('${tag}')">Apply</button>
         `;
       } else {
+        const typeLabels = { ally: 'Ally', contact: 'Contact', rival: 'Rival', enemy: 'Enemy' };
+        const types = restrict.associateTypes && restrict.associateTypes.length ? restrict.associateTypes : ['ally', 'contact', 'rival', 'enemy'];
         el.innerHTML = `
-          <div class="wizard-field"><label>Type</label>
-            <select id="resolver-${tag}-type">
-              <option value="ally">Ally</option><option value="contact">Contact</option>
-              <option value="rival">Rival</option><option value="enemy">Enemy</option>
-            </select>
-          </div>
+          ${types.length > 1 ? `
+            <div class="wizard-field"><label>Type</label>
+              <select id="resolver-${tag}-type">
+                ${types.map(t => `<option value="${t}">${typeLabels[t]}</option>`).join('')}
+              </select>
+            </div>
+          ` : `
+            <input type="hidden" id="resolver-${tag}-type" value="${types[0]}" />
+            <div class="wizard-card-sub">Type: ${typeLabels[types[0]]}</div>
+          `}
           <div class="wizard-field"><label>Name</label><input id="resolver-${tag}-name" type="text" /></div>
           <button class="btn-outline" onclick="applyResolverAssociate('${tag}')">Apply</button>
         `;
       }
     }
 
+    function updateResolverSkillSpecialty(tag) {
+      const sel = document.getElementById(`resolver-${tag}-skill`);
+      const wrap = document.getElementById(`resolver-${tag}-specialty-wrap`);
+      const name = sel.value;
+      const opt = sel.selectedOptions[0];
+      if (opt && opt.dataset.level) document.getElementById(`resolver-${tag}-level`).value = opt.dataset.level;
+      const specs = name ? skillSpecialtiesFor(name) : [];
+      wrap.innerHTML = specs.length ? `
+        <div class="wizard-field"><label>Specialty</label>
+          <select id="resolver-${tag}-specialty">
+            <option value="">— specialty —</option>
+            ${specs.map(sp => `<option value="${sp.name}">${sp.name}</option>`).join('')}
+          </select>
+        </div>
+      ` : '';
+    }
+
     async function applyResolverSkill(tag) {
       const name = document.getElementById(`resolver-${tag}-skill`).value;
       const level = parseInt(document.getElementById(`resolver-${tag}-level`).value, 10) || 0;
       if (!name) return;
+      const specEl = document.getElementById(`resolver-${tag}-specialty`);
+      const specialty = specEl ? (specEl.value || null) : null;
+      if (level >= 1 && skillSpecialtiesFor(name).length && !specialty) {
+        alert('Choose a specialty for this skill.');
+        return;
+      }
       const skills = Object.assign({}, draft.skills || {});
-      grantSkillMin(skills, name, null, level);
+      if (skillSpecialtiesFor(name).length) {
+        grantSpecialtySkillMin(skills, name, specialty, level);
+      } else {
+        grantSkillMin(skills, name, null, level);
+      }
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
       draft.skills = skills;
-      await logCreation(`Resolved outcome — granted ${name} ${level}.`);
+      const desc = `Granted ${name}${specialty ? ' (' + specialty + ')' : ''} ${level}.`;
+      await logCreation(`Resolved outcome — ${desc}`);
       document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
+      await persistResolverNote(tag, desc);
     }
 
     async function applyResolverStat(tag) {
       const key = document.getElementById(`resolver-${tag}-stat`).value;
       const amount = parseInt(document.getElementById(`resolver-${tag}-amount`).value, 10) || 0;
       await applyStatChange(key, amount);
-      await logCreation(`Resolved outcome — ${key} ${amount > 0 ? '+' : ''}${amount}.`);
+      const desc = `${key} ${amount > 0 ? '+' : ''}${amount}.`;
+      await logCreation(`Resolved outcome — ${desc}`);
       document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
+      await persistResolverNote(tag, desc);
     }
 
     async function applyResolverAssociate(tag) {
@@ -3555,13 +3690,34 @@
       const name = document.getElementById(`resolver-${tag}-name`).value.trim();
       if (!name) return;
       await addAssociate(type, name, 'Gained during a career term.');
-      await logCreation(`Resolved outcome — gained ${name} as a ${type}.`);
+      const desc = `Gained ${name} as a ${type}.`;
+      await logCreation(`Resolved outcome — ${desc}`);
       document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
+      await persistResolverNote(tag, desc);
     }
 
-    function markResolverDone(tag) {
-      if (tag === 'mishap') saveStep5State({ mishapResolved: true }).then(renderStep);
-      else if (tag === 'event') saveStep5State({ eventResolved: true }).then(renderStep);
+    // Keeps a human-readable trail of what's been applied via the generic
+    // resolver so it survives the full-card re-render that happens when
+    // the player later clicks "Mark Resolved" — without this, the status
+    // is wiped and the tool buttons reappear looking unused.
+    async function persistResolverNote(tag, text) {
+      if (tag === 'mishap') {
+        const prev = step5State().mishapResolvedText;
+        await saveStep5State({ mishapResolvedText: prev ? `${prev} ${text}` : text });
+      } else if (tag === 'event') {
+        const prev = step5State().eventResolvedText;
+        await saveStep5State({ eventResolvedText: prev ? `${prev} ${text}` : text });
+      }
+    }
+
+    function markResolverDone(tag, resultText) {
+      if (tag === 'mishap') {
+        const prev = step5State().mishapResolvedText;
+        saveStep5State({ mishapResolved: true, mishapResolvedText: resultText || prev || 'Resolved.' }).then(renderStep);
+      } else if (tag === 'event') {
+        const prev = step5State().eventResolvedText;
+        saveStep5State({ eventResolved: true, eventResolvedText: resultText || prev || 'Resolved.' }).then(renderStep);
+      }
     }
 
     // ── Injury Table (Core p.49) — reachable from any mishap/event that
@@ -3645,6 +3801,75 @@
       return roll >= 12 ? 0.75 : roll >= 8 ? 0.5 : 0; // tier C
     }
 
+    // ── Medical Care for non-Injury-Table stat losses ─────────
+    // Mishaps/events can also reduce a physical characteristic directly
+    // (e.g. Drifter Mishap 4, Marine Mishap 2) without routing through
+    // the Injury Table. These get the same Medical Care offer as a
+    // genuine Injury Table result — applies immediately, then offers
+    // treatment at Cr5000/point with the same coverage-roll/debt rules.
+    // Does NOT apply to Ageing rolls (those are a separate, later phase).
+    function physicalAutoReductions(entry) {
+      const list = entry.autoStats ? entry.autoStats : (entry.autoStat ? [entry.autoStat] : []);
+      return list.filter(r => AGEING_PHYS.includes(r.key) && r.amount < 0).map(r => ({ key: r.key, amount: -r.amount }));
+    }
+
+    function renderAutoMedCareBlock(phase, reductions, resolved, resultText) {
+      if (resolved) {
+        return resultText ? `<div class="wizard-card-sub" style="color:#00ffaa;">${resultText}</div>` : '';
+      }
+      const rows = reductions.map((r, i) => `
+        <div style="margin-bottom:6px;">
+          ${INJURY_LABEL[r.key]} lost ${r.amount} — restore
+          <input id="automedcare-${phase}-${i}" type="number" min="0" max="${r.amount}" value="0" style="width:50px;" /> point(s) at Cr5000 each
+        </div>
+      `).join('');
+      return `
+        <div style="margin:8px 0; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
+          <div style="margin-bottom:8px; font-size:0.85rem; color:#4a9ab8;">Medical care can restore lost characteristics at Cr5000 per point. Unpaid (and any uncovered) cost goes to debt — no cap.</div>
+          ${rows}
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:8px;">
+            <button class="btn-outline" onclick="confirmAutoMedCare('${phase}')">Seek Medical Care</button>
+            <button class="btn-outline" onclick="declineAutoMedCare('${phase}')">Decline — Leave the Damage</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function confirmAutoMedCare(phase) {
+      const s = step5State();
+      const reductions = s.medCareReductions || [];
+      let totalPoints = 0;
+      for (let i = 0; i < reductions.length; i++) {
+        const r = reductions[i];
+        const points = Math.max(0, Math.min(r.amount, parseInt(document.getElementById(`automedcare-${phase}-${i}`).value, 10) || 0));
+        totalPoints += points;
+        if (points) await applyStatChange(r.key, points);
+      }
+      if (totalPoints === 0) {
+        await declineAutoMedCare(phase);
+        return;
+      }
+      const cost = totalPoints * 5000;
+      let coverage = 0, rollText = 'No career active — no coverage.';
+      if (s.careerId && MEDICAL_BILLS_TIER[s.careerId]) {
+        const roll = roll2d6() + (s.rank || 0);
+        coverage = medicalBillsCoverage(s.careerId, roll);
+        rollText = `Medical Bills roll: ${roll} (incl. rank ${s.rank || 0}) — ${Math.round(coverage * 100)}% covered.`;
+      }
+      const debtAdded = Math.round(cost * (1 - coverage));
+      if (debtAdded > 0) await applyStatChange('debt', debtAdded);
+      const resultText = `Medical Care — restored ${totalPoints} point(s) for Cr${cost}. ${rollText}${debtAdded > 0 ? ` Cr${debtAdded} added to debt (total debt now Cr${(draft.debt || 0)}).` : ' Fully covered — no debt added.'}`;
+      await logCreation(resultText);
+      await saveStep5State({ medCareResolved: true, medCareResultText: resultText });
+      renderStep();
+    }
+
+    async function declineAutoMedCare(phase) {
+      await logCreation('Medical Care — declined; damage left as-is.');
+      await saveStep5State({ medCareResolved: true, medCareResultText: 'Declined medical care.' });
+      renderStep();
+    }
+
     function offerMedicalCare(tag, reductions) {
       const desc = reductions.map(r => `${INJURY_LABEL[r.key]} −${r.amount}`).join(', ');
       saveMechanic(tag, { medCare: { reductions, desc } }).then(() => renderMedicalCareOffer(tag));
@@ -3709,11 +3934,10 @@
     }
 
     async function finishInjury(tag, desc, medicalResultText) {
-      document.getElementById('resolver-' + tag).innerHTML =
-        `<p style="color:#00ffaa; font-size:0.85rem;">Injury resolved${desc ? ': ' + desc : ' (no permanent effect)'}.</p>` +
-        (medicalResultText ? `<p style="color:#00ffaa; font-size:0.85rem;">${medicalResultText}</p>` : '');
+      const summary = `Injury sustained${desc ? ': ' + desc : ' — no permanent effect'}.${medicalResultText ? ' ' + medicalResultText : ''}`;
+      document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">${summary}</p>`;
       if (!medicalResultText) await logCreation(`Injury Table — ${desc || 'no permanent effect'}.`);
-      markResolverDone(tag);
+      markResolverDone(tag, summary);
     }
 
     // ── Life Events Table (Core p.46) — reachable from any mishap/event
@@ -3754,11 +3978,11 @@
       document.getElementById('resolver-' + tag).innerHTML =
         `<p style="color:#00ffaa; font-size:0.85rem;">${LIFE_EVENTS_UNUSUAL[roll]}</p>`;
       logCreation(`Life Event — Unusual Event roll ${roll}: ${LIFE_EVENTS_UNUSUAL[roll]}`);
-      markResolverDone(tag);
+      markResolverDone(tag, `Life Event — ${LIFE_EVENTS_UNUSUAL[roll]}`);
     }
 
     function finishLifeEvent(tag) {
-      markResolverDone(tag);
+      markResolverDone(tag, 'Life Event resolved.');
     }
 
     // ── Bespoke event/mishap mechanics ────────────────────────
@@ -3825,7 +4049,7 @@
         case 'citizen:3':    return renderCitizenEvent3(tag, m);
         case 'citizen:6':    return renderChooseSkillThenRollEdu(tag, m, 10, 'Citizen Event 6');
         case 'citizen:8':    return renderCitizenEvent8(tag, m);
-        case 'citizen:11':   return renderChooseSkillOrDM(tag, m, { name: 'Diplomat', level: 1 }, 'advancementDM', 4);
+        case 'citizen:11':   return renderGainAllyThenChooseSkillOrDM(tag, m, 'Diplomat', 4, 'A superior in the corporation or colony you befriended.', 'Citizen Event 11');
         case 'citizen:12':   return renderBankAutoPromote(tag, m);
         case 'citizen:mishap4': return renderCitizenMishap4(tag, m);
         case 'citizen:mishap5': return renderCitizenMishap5(tag, m);
@@ -6659,7 +6883,7 @@
     }
 
     async function goCareerEvents() {
-      await saveStep5State({ phase: 'events', eventRoll: null, eventResolved: false, autoGranted: null });
+      await saveStep5State({ phase: 'events', eventRoll: null, eventResolved: false, eventResolvedText: null, eventMechanic: {}, autoGranted: null });
       renderStep();
     }
 
@@ -6679,15 +6903,21 @@
       }
       const e = c.events.find(x => x.roll === s.eventRoll);
       const bespoke = renderBespokeOutcome('event', s.careerId, s.eventRoll);
+      const medCareDone = !s.medCareReductions || s.medCareResolved;
+      const genericBody = (bespoke !== null) ? bespoke
+        : (s.eventResolved
+          ? `<div class="wizard-card-sub" style="color:#00ffaa;">${s.eventResolvedText || 'Resolved.'}</div>`
+          : renderGenericResolver('event', e.tools, false, { skillOptions: e.skillOptions, associateTypes: e.associateTypes }));
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Event ${s.eventRoll}</div>
           <p style="margin-bottom:14px;">${e.text}</p>
           ${s.autoGranted ? `<div class="wizard-card-sub" style="color:#00ffaa;">Applied automatically: ${s.autoGranted}.</div>` : ''}
-          ${bespoke !== null ? bespoke : renderGenericResolver('event', e.tools)}
+          ${s.medCareReductions ? renderAutoMedCareBlock('event', s.medCareReductions, s.medCareResolved, s.medCareResultText) : ''}
+          ${genericBody}
           ${s.eventResolved ? renderConnectionWidget('careerEvent_' + (draft.id || '') + '_' + s.terms) : ''}
           <div class="wizard-actions">
-            <button class="btn-outline" onclick="goCareerAfterEvents()" ${s.eventResolved ? '' : 'disabled'}>Continue</button>
+            <button class="btn-outline" onclick="goCareerAfterEvents()" ${s.eventResolved && medCareDone ? '' : 'disabled'}>Continue</button>
           </div>
         </div>
       `;
@@ -6700,7 +6930,12 @@
       const c = careerData(s.careerId);
       const entry = c.events.find(x => x.roll === total);
       const granted = await applyAutoGrants(entry);
-      await saveStep5State({ eventRoll: total, autoGranted: granted || null });
+      const physReductions = physicalAutoReductions(entry);
+      await saveStep5State({
+        eventRoll: total, autoGranted: granted || null,
+        medCareReductions: physReductions.length ? physReductions : null,
+        medCareResolved: false, medCareResultText: null
+      });
       await logCreation(`${c.name} — Event roll: ${total} — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''}`);
       renderStep();
     }
@@ -6910,6 +7145,25 @@
 
       const lastResult = s.lastSkillResult ? `<div class="wizard-card-sub" style="color:#00ffaa;">Gained: ${s.lastSkillResult}</div>` : '';
 
+      if (s.pendingSpecialty) {
+        const specs = skillSpecialtiesFor(s.pendingSpecialty.name);
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Choose a Specialty</div>
+            <div class="wizard-card-sub">Rolled ${s.pendingSpecialty.name} — pick which specialty gains the level (an existing one is increased, a new one starts at 1).</div>
+            <div class="wizard-field">
+              <select id="career-skill-specialty">
+                <option value="">— specialty —</option>
+                ${specs.map(sp => `<option value="${sp.name}">${sp.name}</option>`).join('')}
+              </select>
+            </div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="confirmCareerSkillSpecialty()">Confirm</button>
+            </div>
+          </div>
+        `;
+      }
+
       if ((s.skillRollsRemaining || 0) <= 0) {
         return `
           <div class="rule-card wizard-card">
@@ -6927,13 +7181,21 @@
       if (c.advancedEducation && draft.edu >= advEdMin) tables.push({ key: 'advEd', label: `Advanced Education (EDU ${advEdMin}+)`, list: c.advancedEducation });
       if (c.officerTable && s.isOfficer) tables.push({ key: 'officer', label: 'Officer (commissioned only)', list: c.officerTable });
 
+      const entryLabel = e => e.stat ? `${e.stat.toUpperCase()} +1` : `${e.name}${e.specialty ? ' (' + e.specialty + ')' : ''}`;
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Skill Training (${s.skillRollsRemaining} roll${s.skillRollsRemaining > 1 ? 's' : ''} remaining)</div>
           <div class="wizard-card-sub">Choose a table, then roll 1D against it.</div>
           ${lastResult}
-          <div class="wizard-actions" style="justify-content:flex-start; gap:12px; flex-wrap:wrap;">
-            ${tables.map(t => `<button class="btn-outline" onclick="rollSkillTable('${t.key}')">${t.label}</button>`).join('')}
+          <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:10px;">
+            ${tables.map(t => `
+              <div style="min-width:170px;">
+                <button class="btn-outline" onclick="rollSkillTable('${t.key}')" style="margin-bottom:6px; width:100%;">${t.label}</button>
+                <ol style="margin:0; padding-left:20px; font-size:0.78rem; color:#4a9ab8;">
+                  ${t.list.map(e => `<li>${entryLabel(e)}</li>`).join('')}
+                </ol>
+              </div>
+            `).join('')}
           </div>
         </div>
       `;
@@ -6967,6 +7229,11 @@
       if (entry.stat) {
         await applyStatChange(entry.stat, 1);
         desc = `${entry.stat} +1`;
+      } else if (!entry.specialty && skillSpecialtiesFor(entry.name).length) {
+        await saveStep5State({ pendingSpecialty: { name: entry.name, tableKey, idx } });
+        await logCreation(`${c.name} — Skill Training roll ${idx + 1} on ${tableKey}: ${entry.name} — choosing a specialty.`);
+        renderStep();
+        return;
       } else {
         gainSkillStep(skills, entry.name, entry.specialty);
         await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
@@ -6975,6 +7242,23 @@
       }
       await saveStep5State({ skillRollsRemaining: (s.skillRollsRemaining || 1) - 1, lastSkillResult: desc });
       await logCreation(`${c.name} — Skill Training roll ${idx + 1} on ${tableKey}: ${desc}.`);
+      renderStep();
+    }
+
+    async function confirmCareerSkillSpecialty() {
+      const sel = document.getElementById('career-skill-specialty');
+      const specialty = sel ? sel.value : '';
+      if (!specialty) return;
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const pending = s.pendingSpecialty;
+      const skills = Object.assign({}, draft.skills || {});
+      bumpSpecialtySkill(skills, pending.name, specialty, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const desc = `${pending.name} (${specialty})`;
+      await saveStep5State({ skillRollsRemaining: (s.skillRollsRemaining || 1) - 1, lastSkillResult: desc, pendingSpecialty: null });
+      await logCreation(`${c.name} — Skill Training roll ${pending.idx + 1} on ${pending.tableKey}: ${desc}.`);
       renderStep();
     }
 
@@ -7245,6 +7529,12 @@
               ${draft.debt ? `<span style="color:#ff5a4a;">Debt: Cr${draft.debt}</span><br/>` : ''}
               ${draft.pension ? `Pension: Cr${draft.pension}/year<br/>` : ''}
             </div>
+            ${(draft.debt || 0) > 0 ? `
+              <div style="font-size:0.8rem; color:#4a9ab8; margin-top:6px;">
+                On activation, Cr${Math.min(draft.debt || 0, draft.cash_on_hand || 0)} of cash on hand will be applied to debt automatically
+                (medical bills owed during character creation). Remaining debt after that: Cr${Math.max(0, (draft.debt || 0) - (draft.cash_on_hand || 0))}.
+              </div>
+            ` : ''}
           </div>
 
           <div class="wizard-actions">
@@ -7256,6 +7546,17 @@
     }
 
     async function finishFinalize() {
+      const debt = draft.debt || 0;
+      const cash = draft.cash_on_hand || 0;
+      if (debt > 0) {
+        const paid = Math.min(debt, cash);
+        const newCash = cash - paid;
+        const newDebt = debt - paid;
+        await supabaseClient.from('characters').update({ cash_on_hand: newCash, debt: newDebt }).eq('id', draft.id);
+        draft.cash_on_hand = newCash;
+        draft.debt = newDebt;
+        await logCreation(`Debt settled from cash on hand: Cr${paid} applied. Cash on hand now Cr${newCash}; remaining debt Cr${newDebt}.`);
+      }
       const benefitLines = musteringLogLines().map(l => l.replace(/^\[[^\]]*\]\s*/, ''));
       const summary = benefitLines.length
         ? `=== Mustering-Out Benefits Summary ===\n${benefitLines.map(l => `- ${l}`).join('\n')}`
@@ -7305,6 +7606,11 @@
       if (error || !data) {
         document.getElementById('wizard-shell').innerHTML =
           `<p class="wizard-error">Character not found.</p>`;
+        return;
+      }
+      if (data.user_id !== currentUser.id && !isGM(currentUser)) {
+        document.getElementById('wizard-shell').innerHTML =
+          `<p class="wizard-error">This character belongs to another player — you don't have access to edit it.</p>`;
         return;
       }
       draft = data;

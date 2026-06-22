@@ -137,7 +137,7 @@
     async function loadCharacters() {
       const { data, error } = await supabaseClient
         .from('characters')
-        .select('id,name,player_name,species,primary_role,secondary_role,status,onboard')
+        .select('id,name,player_name,species,primary_role,secondary_role,status,onboard,user_id')
         .order('name');
 
       const tbody = document.getElementById('char-tbody');
@@ -146,7 +146,10 @@
         return;
       }
 
-      tbody.innerHTML = data.map(c => `
+      const gm = isGM(currentUser);
+      tbody.innerHTML = data.map(c => {
+        const canManage = gm || c.user_id === currentUser.id;
+        return `
         <tr data-id="${c.id}">
           <td onclick="openCharacter('${c.id}', '${c.status}')">${c.name || '—'}</td>
           <td onclick="openCharacter('${c.id}', '${c.status}')">${c.player_name || '—'}</td>
@@ -154,15 +157,16 @@
           <td onclick="openCharacter('${c.id}', '${c.status}')">${c.primary_role || '—'}</td>
           <td onclick="openCharacter('${c.id}', '${c.status}')">${c.secondary_role || '—'}</td>
           <td onclick="openCharacter('${c.id}', '${c.status}')"><span class="status-badge status-${c.status||'active'}">${statusLabel(c.status)}</span></td>
-          <td><input type="checkbox" class="onboard-check" ${c.onboard ? 'checked' : ''}
+          <td><input type="checkbox" class="onboard-check" ${c.onboard ? 'checked' : ''} ${canManage ? '' : 'disabled'}
                 onclick="event.stopPropagation()" onchange="toggleOnboard('${c.id}', this.checked)" /></td>
           <td onclick="event.stopPropagation()">
             <span class="delete-cell" data-id="${c.id}">
-              <button class="btn-outline-danger" onclick="confirmDelete(this, 'char')">Delete</button>
+              ${canManage ? `<button class="btn-outline-danger" onclick="confirmDelete(this, 'char')">Delete</button>` : ''}
             </span>
           </td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
     }
 
     function confirmDelete(btn, kind) {
