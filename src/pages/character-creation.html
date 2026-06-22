@@ -4076,6 +4076,20 @@
       await goToAgeingOrPhase('mustering');
     }
 
+    // ── Pension (Core p.48) — leaving a career (other than Scout, Rogue,
+    // Prisoner, or Drifter) after at least 5 terms in that career grants
+    // a yearly pension. Pay scales with terms served in THAT career.
+    const PENSION_EXCLUDED = ['scout', 'rogue', 'prisoner', 'drifter'];
+
+    function pensionAmount(terms) {
+      if (terms < 5) return 0;
+      if (terms === 5) return 10000;
+      if (terms === 6) return 12000;
+      if (terms === 7) return 14000;
+      if (terms === 8) return 16000;
+      return 16000 + 2000 * (terms - 8);
+    }
+
     async function recordCareerHistory(servedFullTerm) {
       const s = step5State();
       const c = careerData(s.careerId);
@@ -4083,16 +4097,25 @@
       const table = rankTableFor(s, c, a);
       const rankEntry = table.find(x => x.rank === s.rank);
       const rankTitle = (rankEntry && rankEntry.title && rankEntry.title !== '—') ? rankEntry.title : (s.isOfficer ? 'Officer' : '');
+      const termsServed = s.termInCareer + 1;
 
       await supabaseClient.from('character_careers').insert({
         character_id: draft.id, term_order: (s.careerHistory || []).length + 1,
         career: c.name, assignment: a.label, rank: s.rank, rank_title: rankTitle,
-        terms_served: s.termInCareer + 1
+        terms_served: termsServed
       });
 
       const history = (s.careerHistory || []).concat([{ careerId: s.careerId, assignment: a.label, rank: s.rank, termInCareer: s.termInCareer }]);
       await saveStep5State({ careerHistory: history });
-      await logCreation(`Left ${c.name} (${a.label}) at rank ${s.rank} after ${s.termInCareer + 1} term(s) in this career.${servedFullTerm ? '' : ' (mishap-forced departure)'}`);
+
+      let pensionNote = '';
+      if (!PENSION_EXCLUDED.includes(s.careerId) && termsServed >= 5) {
+        const amount = pensionAmount(termsServed);
+        await applyStatChange('pension', amount);
+        pensionNote = ` Qualified for a pension of Cr${amount}/year (total pension now Cr${draft.pension || 0}/year).`;
+      }
+
+      await logCreation(`Left ${c.name} (${a.label}) at rank ${s.rank} after ${termsServed} term(s) in this career.${servedFullTerm ? '' : ' (mishap-forced departure)'}${pensionNote}`);
     }
 
     function renderCareerMustering() {
@@ -4226,8 +4249,12 @@
           </div>
 
           <div style="margin-bottom:18px;">
-            <div style="color:#00e5ff; font-weight:600; margin-bottom:6px;">Cash on Hand</div>
-            <div style="font-size:0.85rem;">Cr${draft.cash_on_hand || 0}</div>
+            <div style="color:#00e5ff; font-weight:600; margin-bottom:6px;">Finances</div>
+            <div style="font-size:0.85rem;">
+              Cash on Hand: Cr${draft.cash_on_hand || 0}<br/>
+              ${draft.debt ? `<span style="color:#ff5a4a;">Debt: Cr${draft.debt}</span><br/>` : ''}
+              ${draft.pension ? `Pension: Cr${draft.pension}/year<br/>` : ''}
+            </div>
           </div>
 
           <div class="wizard-actions">
