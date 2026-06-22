@@ -3402,30 +3402,37 @@
     // Agent event 3 — Investigate/Streetwise 8+: fail rolls on the Mishap
     // table, success grants a choice of skill.
     function renderAgentEvent3(tag, m) {
-      if (!m.rolled) {
-        return resolverHeader('Roll Investigate 8+ or Streetwise 8+ (best of the two).') + `<button class="btn-outline" onclick="rollAgentEvent3()">Roll</button>`;
+      if (!m.skillChoice) {
+        const invKey = skillKey('Investigate', null), strKey = skillKey('Streetwise', null);
+        const invDM = draft.skills && draft.skills[invKey] ? draft.skills[invKey].level : -3;
+        const strDM = draft.skills && draft.skills[strKey] ? draft.skills[strKey].level : -3;
+        return resolverHeader('Choose which skill to roll (need 8+):') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="rollAgentEvent3('Investigate')">Investigate (DM${invDM >= 0 ? '+' : ''}${invDM})</button>
+            <button class="btn-outline" onclick="rollAgentEvent3('Streetwise')">Streetwise (DM${strDM >= 0 ? '+' : ''}${strDM})</button>
+          </div>
+        `;
       }
       if (m.success && !m.resolved) {
-        return resolverHeader(`Rolled ${m.total} (need 8+) — success! Choose a skill to increase by one level:`) + `
+        return resolverHeader(`Rolled ${m.total} on ${m.skillChoice} (need 8+) — success! Choose a skill to increase by one level:`) + `
           <select id="agent-e3-skill"><option>Deception</option><option>Jack-of-all-Trades</option><option>Persuade</option><option>Tactics</option></select>
           <button class="btn-outline" onclick="confirmAgentEvent3()">Confirm</button>
         `;
       }
-      if (!m.success && !m.rolledMishap) {
-        return resolverHeader(`Rolled ${m.total} (need 8+) — failed. Roll on the Mishap table.`) + `<button class="btn-outline" onclick="agentEvent3RollMishap()">Roll Mishap</button>`;
+      if (!m.success) {
+        return resolverHeader(`Rolled ${m.total} on ${m.skillChoice} (need 8+) — failed.`) +
+          `<button class="btn-outline" onclick="goCareerMishap()">Roll on the Mishap Table</button>`;
       }
       return resolverHeader(m.resultText);
     }
 
-    async function rollAgentEvent3() {
-      const invKey = skillKey('Investigate', null), strKey = skillKey('Streetwise', null);
-      const invLevel = draft.skills && draft.skills[invKey] ? draft.skills[invKey].level : -3;
-      const strLevel = draft.skills && draft.skills[strKey] ? draft.skills[strKey].level : -3;
-      const best = Math.max(invLevel, strLevel);
-      const total = roll2d6() + best;
+    async function rollAgentEvent3(skillName) {
+      const key = skillKey(skillName, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
       const success = total >= 8;
-      await saveMechanic('event', { rolled: true, total, success });
-      await logCreation(`Agent Event 3: rolled ${total} (need 8+) on best of Investigate/Streetwise — ${success ? 'success.' : 'failed.'}`);
+      await saveMechanic('event', { skillChoice: skillName, total, success });
+      await logCreation(`Agent Event 3: rolled ${total} (need 8+) on ${skillName} — ${success ? 'success.' : 'failed.'}`);
       renderStep();
     }
 
@@ -3442,25 +3449,21 @@
       renderStep();
     }
 
-    async function agentEvent3RollMishap() {
-      const roll = rollDie();
-      const c = careerData('agent');
-      const entry = c.mishaps.find(x => x.roll === roll);
-      const granted = await applyAutoGrants(entry);
-      const resultText = `Rolled ${roll} on the Mishap table — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''} (Resolve any further choices yourself — this doesn't force you out of the Agent career.)`;
-      await saveMechanic('event', { resolved: true, rolledMishap: true, resultText });
-      await resolveMechanic('event');
-      await logCreation(`Agent Event 3 — Mishap roll: ${roll} — ${entry.text}`);
-      renderStep();
-    }
-
     // Agent event 8 — Deception 8+: success defers to Rogue/Citizen tables
-    // (not built yet, noted), failure rolls on the Agent's own Mishap table.
+    // (not built yet, noted), failure routes to the real Mishap phase —
+    // resolved exactly like a Survival-triggered mishap (full bespoke
+    // mechanics, leave/continue, the works), not a flattened summary.
     function renderAgentEvent8(tag, m) {
+      const key = skillKey('Deception', null);
+      const dm = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
       if (!m.rolled) {
-        return resolverHeader('Roll Deception 8+.') + `<button class="btn-outline" onclick="rollAgentEvent8()">Roll</button>`;
+        return resolverHeader(`Roll Deception (DM${dm >= 0 ? '+' : ''}${dm}) 8+.`) + `<button class="btn-outline" onclick="rollAgentEvent8()">Roll</button>`;
       }
-      return resolverHeader(m.resultText);
+      if (m.success) {
+        return resolverHeader(`Rolled ${m.total} on Deception (need 8+) — success! Per the rulebook this rolls on the Rogue or Citizen Events table and a Specialist skill table for that career — neither is built yet, so note this manually if you'd like the full effect.`);
+      }
+      return resolverHeader(`Rolled ${m.total} on Deception (need 8+) — failed.`) +
+        `<button class="btn-outline" onclick="goCareerMishap()">Roll on the Mishap Table</button>`;
     }
 
     async function rollAgentEvent8() {
@@ -3468,19 +3471,9 @@
       const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
       const total = roll2d6() + level;
       const success = total >= 8;
-      let resultText;
-      if (success) {
-        resultText = `Rolled ${total} on Deception (need 8+) — success! Per the rulebook this rolls on the Rogue or Citizen Events table and a Specialist skill table for that career — neither is built yet, so note this manually if you'd like the full effect.`;
-      } else {
-        const roll = rollDie();
-        const c = careerData('agent');
-        const entry = c.mishaps.find(x => x.roll === roll);
-        const granted = await applyAutoGrants(entry);
-        resultText = `Rolled ${total} on Deception (need 8+) — failed. Rolled ${roll} on the Mishap table — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''}`;
-      }
-      await saveMechanic('event', { rolled: true, resultText });
-      await resolveMechanic('event');
-      await logCreation(`Agent Event 8: ${resultText}`);
+      await saveMechanic('event', { rolled: true, total, success });
+      if (success) await resolveMechanic('event');
+      await logCreation(`Agent Event 8: rolled ${total} (need 8+) on Deception — ${success ? 'success.' : 'failed.'}`);
       renderStep();
     }
 
