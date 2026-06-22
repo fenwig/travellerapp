@@ -180,8 +180,12 @@
     }
 
     async function deleteCharacter(id) {
-      const { error } = await supabaseClient.from('characters').delete().eq('id', id);
+      const { data, error } = await supabaseClient.from('characters').delete().eq('id', id).select();
       if (error) { alert('Error: ' + error.message); return; }
+      if (!data || data.length === 0) {
+        alert('Delete did not go through — the database\'s row-level security rejected it (this character\'s user_id likely doesn\'t match your account, and there is no GM override at the database level yet, only in this app\'s UI). Ask Mikel to remove it directly via the Supabase SQL editor, or set up an RLS policy granting the GM account delete rights.');
+        return;
+      }
       await loadCharacters();
     }
 
