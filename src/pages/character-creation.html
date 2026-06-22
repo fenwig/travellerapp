@@ -2526,6 +2526,71 @@
           { roll: 11, text: 'A crime lord considers you their protégé. Gain Tactics (military) 1, or DM+4 to your next advancement roll instead.', tools: [] },
           { roll: 12, text: 'You commit a legendary crime. You are automatically promoted.', tools: [] }
         ]
+      },
+      scholar: {
+        id: 'scholar', name: 'Scholar', source: 'Core Rulebook pp.41-43', military: false,
+        qualification: { stat: 'int_stat', target: 6 },
+        serviceSkills: [{ name: 'Drive' }, { name: 'Electronics' }, { name: 'Diplomat' }, { name: 'Medic' }, { name: 'Investigate' }, { name: 'Science' }],
+        assignments: [
+          { key: 'fieldResearcher', label: 'Field Researcher', survival: { stat: 'end_stat', target: 6 }, advancement: { stat: 'int_stat', target: 6 },
+            ranks: [
+              { rank: 0, title: '—' },
+              { rank: 1, title: '—', skill: { name: 'Science', level: 1 } },
+              { rank: 2, title: '—', skill: { name: 'Electronics', specialty: 'Computers', level: 1 } },
+              { rank: 3, title: '—', skill: { name: 'Investigate', level: 1 } },
+              { rank: 4, title: '—' },
+              { rank: 5, title: '—', skill: { name: 'Science', level: 2 } },
+              { rank: 6, title: '—' }
+            ],
+            specialistSkills: [{ name: 'Electronics' }, { name: 'Vacc Suit' }, { name: 'Navigation' }, { name: 'Survival' }, { name: 'Investigate' }, { name: 'Science' }] },
+          { key: 'scientist', label: 'Scientist', survival: { stat: 'edu', target: 4 }, advancement: { stat: 'int_stat', target: 8 },
+            ranks: [
+              { rank: 0, title: '—' },
+              { rank: 1, title: '—', skill: { name: 'Science', level: 1 } },
+              { rank: 2, title: '—', skill: { name: 'Electronics', specialty: 'Computers', level: 1 } },
+              { rank: 3, title: '—', skill: { name: 'Investigate', level: 1 } },
+              { rank: 4, title: '—', skill: { name: 'Science', level: 2 } },
+              { rank: 5, title: '—' }, { rank: 6, title: '—' }
+            ],
+            specialistSkills: [{ name: 'Admin' }, { name: 'Engineer' }, { name: 'Science' }, { name: 'Science' }, { name: 'Electronics' }, { name: 'Science' }] },
+          { key: 'physician', label: 'Physician', survival: { stat: 'edu', target: 4 }, advancement: { stat: 'edu', target: 8 },
+            ranks: [
+              { rank: 0, title: '—' },
+              { rank: 1, title: '—', skill: { name: 'Medic', level: 1 } },
+              { rank: 2, title: '—' },
+              { rank: 3, title: '—', skill: { name: 'Science', level: 1 } },
+              { rank: 4, title: '—' },
+              { rank: 5, title: '—', skill: { name: 'Science', level: 2 } },
+              { rank: 6, title: '—' }
+            ],
+            specialistSkills: [{ name: 'Medic' }, { name: 'Electronics' }, { name: 'Investigate' }, { name: 'Medic' }, { name: 'Persuade' }, { name: 'Science' }] }
+        ],
+        personalDevelopment: [{ stat: 'int_stat' }, { stat: 'edu' }, { stat: 'soc' }, { stat: 'dex' }, { stat: 'end_stat' }, { name: 'Language' }],
+        advancedEducation: [{ name: 'Art' }, { name: 'Advocate' }, { name: 'Electronics' }, { name: 'Language' }, { name: 'Engineer' }, { name: 'Science' }],
+        advancedEducationMin: 10,
+        musteringCash: [5000, 10000, 20000, 30000, 40000, 60000, 100000],
+        musteringBenefits: ['INT +1', 'EDU +1', 'Two Ship Shares', 'SOC +1', 'Scientific Equipment', 'Lab Ship', 'Lab Ship'],
+        mishaps: [
+          { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
+          { roll: 2, text: 'A disaster leaves several injured and others blame you, forcing you to leave your career. Roll on the Injury table twice, taking the higher (less severe) result, and gain a Rival.', tools: [] },
+          { roll: 3, text: 'The planetary government interferes with your research for political or religious reasons. Continue openly: increase Science by one level and gain an Enemy. Continue secretly: increase Science by one level and reduce your SOC by 2. Either way, you do not leave this career.', tools: [], noEject: true },
+          { roll: 4, text: 'An expedition or voyage goes wrong, leaving you stranded in the wilderness. Gain Survival 1 or Athletics 1. By the time you find your way home, your job is gone.', tools: ['skill'] },
+          { roll: 5, text: 'Your work is sabotaged by unknown parties. Salvage what you can and give up (leave the career but keep this term\'s Benefit roll), or start again from scratch (lose all Benefit rolls from this career, but you do not have to leave).', tools: [] },
+          { roll: 6, text: 'A rival researcher blackens your name or steals your research. Gain them as a Rival, but you do not have to leave this career.', tools: ['associate'], noEject: true }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 3, text: 'You are called upon to perform research that goes against your conscience. Refuse and gain nothing. Accept and gain an extra Benefit roll, a level in each of any two Science specialties, and D3 Enemies.', tools: [] },
+          { roll: 4, text: 'You are assigned to a secret project for a patron or organisation. Gain one of Medic 1, Science 1, Engineer 1, Electronics 1, or Investigate 1.', tools: ['skill'] },
+          { roll: 5, text: 'You win a prestigious prize for your work, garnering both praise and envy. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
+          { roll: 6, text: 'Given advanced training in a specialist field. Roll EDU 8+ to gain any one skill of your choice at level 1.', tools: [] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
+          { roll: 8, text: 'You have the opportunity to cheat in some fashion — stealing another\'s work, using an alien device, taking a shortcut. Refuse and gain nothing. Accept and roll Deception 8+ or Admin 8+: success gains DM+2 to any one Benefit roll and lets you increase any skill by one level, but also gains an Enemy; failure gains an Enemy and loses one Benefit roll from this career.', tools: [] },
+          { roll: 9, text: 'You make a breakthrough in your field. Gain DM+2 to your next advancement roll.', tools: [], autoDM: { key: 'advancementDM', amount: 2 } },
+          { roll: 10, text: 'You become entangled in a bureaucratic or legal morass that distracts you from your work. Gain one of Admin 1, Advocate 1, Persuade 1, or Diplomat 1.', tools: ['skill'] },
+          { roll: 11, text: 'You work for an eccentric but brilliant mentor, who becomes an Ally. Either increase Science by one level or DM+4 to your next advancement roll thanks to their aid.', tools: [] },
+          { roll: 12, text: 'Your work leads to a considerable breakthrough. You are automatically promoted.', tools: [] }
+        ]
       }
     };
 
@@ -2884,7 +2949,7 @@
           <div class="wizard-card-title">Choose a Career</div>
           <div class="wizard-card-sub">
             ${s.terms ? `Age ${currentAge()}, ${s.terms} term${s.terms === 1 ? '' : 's'} served so far.` : 'Pick a career to attempt qualification for.'}
-            Navy, Drifter, Agent, Army, Citizen, Entertainer, Marine, Merchant, Noble and Rogue are fully built right now — the rest are listed for reference. (Core Rulebook pp.17-41)
+            Navy, Drifter, Agent, Army, Citizen, Entertainer, Marine, Merchant, Noble, Rogue and Scholar are fully built right now — the rest are listed for reference. (Core Rulebook pp.17-43)
           </div>
           ${s.forcedDraftNextTerm ? `
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
@@ -3177,6 +3242,10 @@
       }
       const m = c.mishaps.find(x => x.roll === s.mishapRoll);
       const bespoke = renderBespokeOutcome('mishap', s.careerId, 'mishap' + s.mishapRoll);
+      // Most mishaps' eject/stay outcome is fixed per entry (m.noEject), but
+      // a few (Scholar mishap 5) let the player CHOOSE whether they're
+      // ejected — bespoke mechanics signal that via mishapMechanic.noEjectOverride.
+      const noEject = m.noEject || (s.mishapMechanic && s.mishapMechanic.noEjectOverride);
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Mishap ${s.mishapRoll}</div>
@@ -3184,7 +3253,7 @@
           ${s.autoGranted ? `<div class="wizard-card-sub" style="color:#00ffaa;">Applied automatically: ${s.autoGranted}.</div>` : ''}
           ${bespoke !== null ? bespoke : renderGenericResolver('mishap', m.tools)}
           <div class="wizard-actions">
-            ${m.noEject
+            ${noEject
               ? `<button class="btn-outline" onclick="continueCareerAfterMishap()" ${s.mishapResolved ? '' : 'disabled'}>Continue Career — Not Ejected</button>`
               : `<button class="btn-outline" onclick="leaveCareerAfterMishap()" ${s.mishapResolved ? '' : 'disabled'}>Leave Career</button>`
             }
@@ -3641,6 +3710,15 @@
         case 'rogue:10':      return renderRogueEvent10(tag, m);
         case 'rogue:11':      return renderChooseSkillOrDM(tag, m, { name: 'Tactics', specialty: 'Military', level: 1 }, 'advancementDM', 4);
         case 'rogue:12':      return renderBankAutoPromote(tag, m);
+        case 'scholar:2':     return renderInlineMishapNotEjected(tag, careerId, m);
+        case 'scholar:3':     return renderScholarEvent3(tag, m);
+        case 'scholar:6':     return renderChooseSkillThenRollEdu(tag, m, 8, 'Scholar Event 6');
+        case 'scholar:8':     return renderScholarEvent8(tag, m);
+        case 'scholar:11':    return renderGainAllyThenChooseSkillOrDM(tag, m, 'Science', 4, 'An eccentric but brilliant mentor.', 'Scholar Event 11');
+        case 'scholar:12':    return renderBankAutoPromote(tag, m);
+        case 'scholar:mishap2': return renderScholarMishap2(tag, m);
+        case 'scholar:mishap3': return renderScholarMishap3(tag, m);
+        case 'scholar:mishap5': return renderScholarMishap5(tag, m);
         default: return null;
       }
     }
@@ -3848,12 +3926,14 @@
     }
 
     // "Gain D3/D6 Allies/Contacts" — roll the die, name each one gained.
+    const ASSOC_PLURAL = { ally: 'Allies', contact: 'Contacts', rival: 'Rivals', enemy: 'Enemies' };
+
     function renderGainDiceAssociates(tag, m, type, dieMax) {
       if (!m.count) {
         return `<button class="btn-outline" onclick="rollDiceAssociates('${tag}','${type}',${dieMax})">Roll D${dieMax}</button>`;
       }
       if (!m.resolved) {
-        return resolverHeader(`Rolled ${m.count}. Name your new ${type === 'ally' ? 'Allies' : 'Contacts'}:`) +
+        return resolverHeader(`Rolled ${m.count}. Name your new ${ASSOC_PLURAL[type] || 'Associates'}:`) +
           Array.from({ length: m.count }).map((_, i) => `<input id="dice-assoc-${tag}-${i}" type="text" placeholder="Name" style="margin:4px;" />`).join('') +
           `<div><button class="btn-outline" onclick="confirmDiceAssociates('${tag}',${m.count},'${type}')">Confirm</button></div>`;
       }
@@ -3873,7 +3953,7 @@
         const name = el && el.value.trim();
         if (name) { await addAssociate(type, name, 'Gained during a career term.'); names.push(name); }
       }
-      await saveMechanic(tag, { resolved: true, resultText: `Gained ${names.length} ${type === 'ally' ? 'Allies' : 'Contacts'}: ${names.join(', ') || 'none named'}.` });
+      await saveMechanic(tag, { resolved: true, resultText: `Gained ${names.length} ${ASSOC_PLURAL[type] || 'Associates'}: ${names.join(', ') || 'none named'}.` });
       await resolveMechanic(tag);
       await logCreation(`Gained ${names.length} ${type}(s): ${names.join(', ') || 'none named'}.`);
       renderStep();
@@ -5333,6 +5413,276 @@
       await saveMechanic('event', { rolled: true, resolved: true, resultText });
       await resolveMechanic('event');
       await logCreation(`Rogue Event 10: ${resultText}`);
+      renderStep();
+    }
+
+    // Scholar mishap 2 — name the Rival first (this mishap ejects, so the
+    // Rival must be named before delegating to the terminal injury roll,
+    // per the injury-ordering rule), then roll the Injury table twice and
+    // keep the higher (less severe) of the two results.
+    function renderScholarMishap2(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.rivalNamed) {
+        return resolverHeader('Name the Rival you gained:') + `
+          <input id="scholar-m2-name" type="text" placeholder="Name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmScholarMishap2Rival()">Confirm</button>
+        `;
+      }
+      if (!m.rolled) {
+        return resolverHeader('Roll twice on the Injury table — the higher (less severe) result applies.') +
+          `<button class="btn-outline" onclick="rollScholarMishap2Injury()">Roll Twice</button>
+           <div id="resolver-mishap"></div>`;
+      }
+      return resolverHeader(m.resultText) + `<div id="resolver-mishap"></div>`;
+    }
+
+    async function confirmScholarMishap2Rival() {
+      const name = (document.getElementById('scholar-m2-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('rival', name, 'Blamed you after a disaster left several people injured.');
+      await saveMechanic('mishap', { rivalNamed: true });
+      await logCreation(`Scholar Mishap 2: gained ${name} as a Rival.`);
+      renderStep();
+    }
+
+    async function rollScholarMishap2Injury() {
+      const roll1 = rollDie(), roll2 = rollDie();
+      const chosen = Math.max(roll1, roll2);
+      const entry = INJURY_TABLE.find(x => x.roll === chosen);
+      await saveMechanic('mishap', { rolled: true, resultText: `Rolled ${roll1} and ${roll2} — keeping the higher result, ${chosen}.` });
+      await logCreation(`Scholar Mishap 2: rolled ${roll1} and ${roll2} on the Injury table — kept the higher result (${chosen}).`);
+      renderStep();
+      renderInjuryPicker('mishap', chosen, entry);
+    }
+
+    // Scholar mishap 3 — continue openly (Science +1, gain an Enemy) or
+    // secretly (Science +1, SOC -2); neither ejects you (the entry's
+    // static noEject:true already covers both branches).
+    function renderScholarMishap3(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.choice) {
+        return resolverHeader('Continue your work openly, or secretly?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="scholarMishap3Openly()">Openly — Gain an Enemy</button>
+            <button class="btn-outline" onclick="scholarMishap3Secretly()">Secretly — Lose 2 SOC</button>
+          </div>
+        `;
+      }
+      if (m.choice === 'openly' && !m.enemyNamed) {
+        return resolverHeader('Name the Enemy made by your open defiance:') + `
+          <input id="scholar-m3-name" type="text" placeholder="Name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmScholarMishap3Enemy()">Confirm</button>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function scholarMishap3Openly() {
+      const skills = Object.assign({}, draft.skills || {});
+      bumpSkill(skills, 'Science', null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await saveMechanic('mishap', { choice: 'openly' });
+      await logCreation('Scholar Mishap 3: continued openly — increased Science by one level.');
+      renderStep();
+    }
+
+    async function confirmScholarMishap3Enemy() {
+      const name = (document.getElementById('scholar-m3-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('enemy', name, 'Opposed your research for political or religious reasons.');
+      const resultText = `Continued openly — increased Science by one level, gained ${name} as an Enemy.`;
+      await saveMechanic('mishap', { enemyNamed: true, resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Scholar Mishap 3: ${resultText}`);
+      renderStep();
+    }
+
+    async function scholarMishap3Secretly() {
+      const skills = Object.assign({}, draft.skills || {});
+      bumpSkill(skills, 'Science', null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await applyStatChange('soc', -2);
+      const resultText = 'Continued secretly — increased Science by one level, lost 2 SOC.';
+      await saveMechanic('mishap', { choice: 'secretly', resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Scholar Mishap 3: ${resultText}`);
+      renderStep();
+    }
+
+    // Scholar mishap 5 — salvage and leave (keep this term's Benefit roll,
+    // ejected as normal) or start again (lose all Benefit rolls from this
+    // career, but stay — sets mishapMechanic.noEjectOverride).
+    function renderScholarMishap5(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return resolverHeader('Salvage what you can and give up, or start again from scratch?') + `
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          <button class="btn-outline" onclick="scholarMishap5Salvage()">Salvage and Give Up — Keep This Term's Benefit Roll</button>
+          <button class="btn-outline" onclick="scholarMishap5StartAgain()">Start Again — Lose All Benefit Rolls, Stay</button>
+        </div>
+      `;
+    }
+
+    async function scholarMishap5Salvage() {
+      const s = step5State();
+      await saveStep5State({ benefitRolls: (s.benefitRolls || 0) + 1 });
+      const resultText = "Salvaged what you could and gave up — kept this term's Benefit roll.";
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Scholar Mishap 5: ${resultText}`);
+      renderStep();
+    }
+
+    async function scholarMishap5StartAgain() {
+      await saveStep5State({ benefitRolls: 0 });
+      const resultText = 'Started again from scratch — lost all Benefit rolls from this career, but did not have to leave.';
+      await saveMechanic('mishap', { resolved: true, noEjectOverride: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Scholar Mishap 5: ${resultText}`);
+      renderStep();
+    }
+
+    // Scholar event 3 — refuse (nothing) or accept (extra Benefit roll,
+    // two Science specialties at level 1, D3 Enemies).
+    function renderScholarEvent3(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.choice) {
+        return resolverHeader('Perform the research, even though it goes against your conscience?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="scholarEvent3Accept()">Accept</button>
+            <button class="btn-outline" onclick="scholarEvent3Refuse()">Refuse</button>
+          </div>
+        `;
+      }
+      if (!m.specialtiesChosen) {
+        return resolverHeader('Name two Science specialties to gain at level 1:') + `
+          <input id="scholar-e3-sp1" type="text" placeholder="Specialty 1" style="margin-bottom:6px;" /><br/>
+          <input id="scholar-e3-sp2" type="text" placeholder="Specialty 2" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmScholarEvent3Specialties()">Confirm</button>
+        `;
+      }
+      return resolverHeader(m.resultText) + renderGainDiceAssociates('event', m, 'enemy', 3);
+    }
+
+    async function scholarEvent3Refuse() {
+      const resultText = 'Refused — gained nothing.';
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Scholar Event 3: ${resultText}`);
+      renderStep();
+    }
+
+    async function scholarEvent3Accept() {
+      await addPendingMod('extraBenefitRolls', 1);
+      await saveMechanic('event', { choice: 'accept' });
+      await logCreation('Scholar Event 3: accepted — banked an extra Benefit roll.');
+      renderStep();
+    }
+
+    async function confirmScholarEvent3Specialties() {
+      const sp1 = (document.getElementById('scholar-e3-sp1') || {}).value.trim() || 'Specialty 1';
+      const sp2 = (document.getElementById('scholar-e3-sp2') || {}).value.trim() || 'Specialty 2';
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, 'Science', sp1, 1);
+      grantSkillMin(skills, 'Science', sp2, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const resultText = `Accepted — gained Science (${sp1}) 1, Science (${sp2}) 1, and an extra Benefit roll. Now roll for your D3 Enemies:`;
+      await saveMechanic('event', { specialtiesChosen: true, resultText });
+      await logCreation(`Scholar Event 3: gained Science (${sp1}) 1, Science (${sp2}) 1.`);
+      renderStep();
+    }
+
+    // Scholar event 8 — refuse (nothing) or accept (Deception/Admin 8+:
+    // success DM+2 Benefit roll + skill increase + Enemy; failure Enemy +
+    // lose a Benefit roll).
+    function renderScholarEvent8(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.choice) {
+        return resolverHeader('Cheat to advance your career and research?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="scholarEvent8Accept()">Accept</button>
+            <button class="btn-outline" onclick="scholarEvent8Refuse()">Refuse</button>
+          </div>
+        `;
+      }
+      if (!m.rolled) {
+        return resolverHeader('Roll Deception 8+ or Admin 8+:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="rollScholarEvent8('Deception')">Deception</button>
+            <button class="btn-outline" onclick="rollScholarEvent8('Admin')">Admin</button>
+          </div>
+        `;
+      }
+      if (!m.enemyNamed) {
+        return resolverHeader(m.resultText) + `
+          <input id="scholar-e8-name" type="text" placeholder="Enemy name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmScholarEvent8Enemy()">Confirm Enemy</button>
+        `;
+      }
+      if (m.success && !m.skillChosen) {
+        return resolverHeader(m.resultText) + `
+          <select id="scholar-e8-skill">${SKILLS.map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
+          <button class="btn-outline" onclick="confirmScholarEvent8Skill()">Increase This Skill</button>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function scholarEvent8Refuse() {
+      const resultText = 'Refused — gained nothing.';
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Scholar Event 8: ${resultText}`);
+      renderStep();
+    }
+
+    async function scholarEvent8Accept() {
+      await saveMechanic('event', { choice: 'accept' });
+      renderStep();
+    }
+
+    async function rollScholarEvent8(skillName) {
+      const key = skillKey(skillName, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      let resultText;
+      if (success) {
+        await addPendingMod('benefitRollDM', 2);
+        resultText = `Rolled ${total} on ${skillName} (need 8+) — success! Banked DM+2 to a Benefit roll. Name the Enemy you also gained:`;
+      } else {
+        const s = step5State();
+        await saveStep5State({ benefitRolls: Math.max(0, (s.benefitRolls || 0) - 1) });
+        resultText = `Rolled ${total} on ${skillName} (need 8+) — failed. Lost one Benefit roll from this career. Name the Enemy you gained:`;
+      }
+      await saveMechanic('event', { rolled: true, success, resultText });
+      await logCreation(`Scholar Event 8: rolled ${total} on ${skillName} — ${success ? 'success.' : 'failed.'}`);
+      renderStep();
+    }
+
+    async function confirmScholarEvent8Enemy() {
+      const name = (document.getElementById('scholar-e8-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('enemy', name, 'Learned of the shortcut you took to advance your career.');
+      const m = mechanicState('event');
+      const needsSkillChoice = m.success;
+      const resultText = `${m.resultText.split(' Name')[0]} Gained ${name} as an Enemy.`;
+      await saveMechanic('event', { enemyNamed: true, resolved: !needsSkillChoice, resultText });
+      if (!needsSkillChoice) await resolveMechanic('event');
+      await logCreation(`Scholar Event 8: gained ${name} as an Enemy.`);
+      renderStep();
+    }
+
+    async function confirmScholarEvent8Skill() {
+      const skillName = document.getElementById('scholar-e8-skill').value;
+      const skills = Object.assign({}, draft.skills || {});
+      bumpSkill(skills, skillName, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const m = mechanicState('event');
+      const resultText = `${m.resultText} Increased ${skillName} by one level.`;
+      await saveMechanic('event', { skillChosen: skillName, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Scholar Event 8: increased ${skillName} by one level.`);
       renderStep();
     }
 
