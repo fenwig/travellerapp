@@ -2591,6 +2591,55 @@
           { roll: 11, text: 'You work for an eccentric but brilliant mentor, who becomes an Ally. Either increase Science by one level or DM+4 to your next advancement roll thanks to their aid.', tools: [] },
           { roll: 12, text: 'Your work leads to a considerable breakthrough. You are automatically promoted.', tools: [] }
         ]
+      },
+      scout: {
+        id: 'scout', name: 'Scout', source: 'Core Rulebook pp.43-46', military: false,
+        qualification: { stat: 'int_stat', target: 5 },
+        serviceSkills: [{ name: 'Pilot' }, { name: 'Survival' }, { name: 'Mechanic' }, { name: 'Astrogation' }, { name: 'Vacc Suit' }, { name: 'Gun Combat' }],
+        // Scout uses ONE shared rank table across all three assignments
+        // (Core p.44's single "Title" column) rather than per-assignment
+        // ranks like most other careers — set at career level like Navy's
+        // ranksEnlisted, so rankTableFor() picks it up for any assignment.
+        ranksEnlisted: [
+          { rank: 0, title: '—' },
+          { rank: 1, title: 'Scout', skill: { name: 'Vacc Suit', level: 1 } },
+          { rank: 2, title: '—' },
+          { rank: 3, title: 'Senior Scout', skill: { name: 'Pilot', level: 1 } },
+          { rank: 4, title: '—' }, { rank: 5, title: '—' }, { rank: 6, title: '—' }
+        ],
+        assignments: [
+          { key: 'courier', label: 'Courier', survival: { stat: 'end_stat', target: 5 }, advancement: { stat: 'edu', target: 9 },
+            specialistSkills: [{ name: 'Electronics' }, { name: 'Flyer' }, { name: 'Pilot', specialty: 'Spacecraft' }, { name: 'Engineer' }, { name: 'Athletics' }, { name: 'Astrogation' }] },
+          { key: 'surveyor', label: 'Surveyor', survival: { stat: 'end_stat', target: 6 }, advancement: { stat: 'int_stat', target: 8 },
+            specialistSkills: [{ name: 'Electronics' }, { name: 'Persuade' }, { name: 'Pilot' }, { name: 'Navigation' }, { name: 'Diplomat' }, { name: 'Streetwise' }] },
+          { key: 'explorer', label: 'Explorer', survival: { stat: 'end_stat', target: 7 }, advancement: { stat: 'edu', target: 7 },
+            specialistSkills: [{ name: 'Electronics' }, { name: 'Pilot' }, { name: 'Engineer' }, { name: 'Science' }, { name: 'Stealth' }, { name: 'Recon' }] }
+        ],
+        personalDevelopment: [{ stat: 'str' }, { stat: 'dex' }, { stat: 'end_stat' }, { stat: 'int_stat' }, { stat: 'edu' }, { name: 'Jack-of-all-Trades' }],
+        advancedEducation: [{ name: 'Medic' }, { name: 'Language' }, { name: 'Seafarer' }, { name: 'Explosives' }, { name: 'Science' }, { name: 'Jack-of-all-Trades' }],
+        musteringCash: [20000, 20000, 30000, 30000, 50000, 50000, 50000],
+        musteringBenefits: ['Ship Share', 'INT +1', 'EDU +1', 'Weapon', 'Weapon', 'Scout Ship', 'Scout Ship'],
+        mishaps: [
+          { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
+          { roll: 2, text: 'Psychologically damaged by your time in the Scouts. Reduce your INT or SOC by 1.', tools: ['stat'] },
+          { roll: 3, text: 'Your ship is damaged and you have to hitch-hike your way back across the stars to the nearest Scout base. Gain 1D Contacts and D3 Enemies.', tools: [] },
+          { roll: 4, text: 'You inadvertently cause a conflict between the Imperium and a minor world or species. Gain a Rival and Diplomat 1.', tools: ['skill', 'associate'] },
+          { roll: 5, text: 'You have no idea what happened to you — they found your ship drifting on the fringes of friendly space.', tools: [] },
+          { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 3, text: 'Your ship is ambushed by enemy vessels. Run and roll Pilot 8+ to escape, or treat with them and roll Persuade 10+ to bargain. Failure destroys your ship and bars you from re-enlisting in the Scouts (not automated — note it yourself). Success means you survive and gain Electronics (sensors) 1. Either way, gain an Enemy.', tools: [] },
+          { roll: 4, text: 'You survey an alien world. Gain one of Animals 1, Survival 1, Recon 1, or Science 1.', tools: ['skill'] },
+          { roll: 5, text: 'You perform an exemplary service for the Scouts. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
+          { roll: 6, text: 'You spend several years jumping from world to world in your scout ship. Gain one of Astrogation 1, Electronics 1, Navigation 1, Pilot 1, or Mechanic 1.', tools: ['skill'] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
+          { roll: 8, text: 'When dealing with an alien species, you have an opportunity to gather extra intelligence about them. Roll Electronics 8+ or Deception 8+: success gains an Ally in the Imperium and DM+2 to your next advancement roll, failure rolls on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 9, text: 'Your scout ship is one of the first on the scene to rescue the survivors of a disaster. Roll Medic 8+ or Engineer 8+: success gains a Contact and DM+2 to your next advancement roll, failure gains an Enemy.', tools: [] },
+          { roll: 10, text: 'You spend a great deal of time on the fringes of Charted Space. Roll Survival 8+ or Pilot 8+: success gains a Contact in an alien species and one level in any skill of your choice, failure rolls on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 11, text: 'You serve as the courier for an important message from the Imperium. Gain one level of Diplomat, or DM+4 to your next advancement roll instead.', tools: [] },
+          { roll: 12, text: 'You discover a world, item, or information of worth to the Imperium. You are automatically promoted.', tools: [] }
+        ]
       }
     };
 
@@ -2949,7 +2998,7 @@
           <div class="wizard-card-title">Choose a Career</div>
           <div class="wizard-card-sub">
             ${s.terms ? `Age ${currentAge()}, ${s.terms} term${s.terms === 1 ? '' : 's'} served so far.` : 'Pick a career to attempt qualification for.'}
-            Navy, Drifter, Agent, Army, Citizen, Entertainer, Marine, Merchant, Noble, Rogue and Scholar are fully built right now — the rest are listed for reference. (Core Rulebook pp.17-43)
+            All careers are built: Navy, Drifter, Agent, Army, Citizen, Entertainer, Marine, Merchant, Noble, Rogue, Scholar and Scout. Only Psion remains unavailable (no PSI characteristic tracked). (Core Rulebook pp.17-46)
           </div>
           ${s.forcedDraftNextTerm ? `
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
@@ -3719,6 +3768,14 @@
         case 'scholar:mishap2': return renderScholarMishap2(tag, m);
         case 'scholar:mishap3': return renderScholarMishap3(tag, m);
         case 'scholar:mishap5': return renderScholarMishap5(tag, m);
+        case 'scout:2':       return renderInlineMishapNotEjected(tag, careerId, m);
+        case 'scout:3':       return renderScoutEvent3(tag, m);
+        case 'scout:8':       return renderScoutEvent8(tag, m);
+        case 'scout:9':       return renderScoutEvent9(tag, m);
+        case 'scout:10':      return renderScoutEvent10(tag, m);
+        case 'scout:11':      return renderChooseSkillOrDM(tag, m, { name: 'Diplomat', level: 1 }, 'advancementDM', 4);
+        case 'scout:12':      return renderBankAutoPromote(tag, m);
+        case 'scout:mishap3': return renderScoutMishap3(tag, m);
         default: return null;
       }
     }
@@ -5683,6 +5740,297 @@
       await saveMechanic('event', { skillChosen: skillName, resolved: true, resultText });
       await resolveMechanic('event');
       await logCreation(`Scholar Event 8: increased ${skillName} by one level.`);
+      renderStep();
+    }
+
+    // Generic "as a FAILURE branch within a larger event, roll on the
+    // Mishap table but you are not ejected" — distinct from
+    // renderInlineMishapNotEjected (which is only for an event/mishap
+    // roll's OWN primary roll-2 case and stores the roll in m.rolled,
+    // which would collide with a roll already stored under that name by
+    // the event's own earlier skill roll). Uses m.nestedMishapRoll instead.
+    // Does not apply the rolled mishap's autoSkill/autoDM/autoStat grants —
+    // none of the careers using this yet (Scout) have mishaps with those,
+    // so this is a known gap to extend if a future nested case needs it.
+    function renderNestedMishapRoll(tag, m) {
+      if (!m.nestedMishapRoll) {
+        return resolverHeader('Roll on the Mishap table — you are not ejected from this career.') +
+          `<button class="btn-outline" onclick="rollNestedMishap('${tag}')">Roll 1D</button>`;
+      }
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const entry = c.mishaps.find(x => x.roll === m.nestedMishapRoll);
+      const bespoke = renderBespokeOutcome('mishap', s.careerId, 'mishap' + m.nestedMishapRoll);
+      return resolverHeader(`Rolled ${m.nestedMishapRoll} — ${entry.text}`) +
+        (bespoke !== null ? bespoke : renderGenericResolver(tag, entry.tools));
+    }
+
+    async function rollNestedMishap(tag) {
+      const roll = rollDie();
+      await saveMechanic(tag, { nestedMishapRoll: roll });
+      await logCreation(`Nested Mishap roll (not ejected from career): ${roll}.`);
+      renderStep();
+    }
+
+    // Scout mishap 3 — gain 1D Contacts, then D3 Enemies.
+    function renderScoutMishap3(tag, m) {
+      if (!m.contactsRolled) {
+        return `<button class="btn-outline" onclick="rollScoutMishap3Contacts('${tag}')">Roll 1D for Contacts</button>`;
+      }
+      if (!m.contactsNamed) {
+        return resolverHeader(`Rolled ${m.contactsCount} — name your new Contacts:`) +
+          Array.from({ length: m.contactsCount }).map((_, i) => `<input id="scout-m3-contact-${tag}-${i}" type="text" placeholder="Name" style="margin:4px;" />`).join('') +
+          `<div><button class="btn-outline" onclick="confirmScoutMishap3Contacts('${tag}')">Confirm</button></div>`;
+      }
+      return resolverHeader(m.resultText) + renderGainDiceAssociates(tag, m, 'enemy', 3);
+    }
+
+    async function rollScoutMishap3Contacts(tag) {
+      const count = rollDie();
+      await saveMechanic(tag, { contactsRolled: true, contactsCount: count });
+      renderStep();
+    }
+
+    async function confirmScoutMishap3Contacts(tag) {
+      const m = mechanicState(tag);
+      const names = [];
+      for (let i = 0; i < m.contactsCount; i++) {
+        const el = document.getElementById(`scout-m3-contact-${tag}-${i}`);
+        const name = el && el.value.trim();
+        if (name) { await addAssociate('contact', name, 'Helped you after your ship was damaged.'); names.push(name); }
+      }
+      const resultText = `Gained ${names.length} Contact(s): ${names.join(', ') || 'none named'}. Now roll for your D3 Enemies:`;
+      await saveMechanic(tag, { contactsNamed: true, resultText });
+      await logCreation(`Scout Mishap 3: ${resultText}`);
+      renderStep();
+    }
+
+    // Scout event 3 — run (Pilot 8+) or treat (Persuade 10+); failure
+    // destroys the ship (noted, not automated); either way, gain an Enemy.
+    function renderScoutEvent3(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.choice) {
+        return resolverHeader('Run, or treat with the enemy vessels?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="scoutEvent3Choose('run')">Run — Roll Pilot 8+</button>
+            <button class="btn-outline" onclick="scoutEvent3Choose('treat')">Treat — Roll Persuade 10+</button>
+          </div>
+        `;
+      }
+      if (!m.rolled) {
+        const target = m.choice === 'run' ? 8 : 10;
+        const skillName = m.choice === 'run' ? 'Pilot' : 'Persuade';
+        return resolverHeader(`Roll ${skillName} ${target}+:`) + `<button class="btn-outline" onclick="rollScoutEvent3()">Roll</button>`;
+      }
+      if (!m.enemyNamed) {
+        return resolverHeader(m.resultText) + `
+          <input id="scout-e3-name" type="text" placeholder="Enemy name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmScoutEvent3Enemy()">Confirm</button>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function scoutEvent3Choose(choice) {
+      await saveMechanic('event', { choice });
+      renderStep();
+    }
+
+    async function rollScoutEvent3() {
+      const m = mechanicState('event');
+      const skillName = m.choice === 'run' ? 'Pilot' : 'Persuade';
+      const target = m.choice === 'run' ? 8 : 10;
+      const key = skillKey(skillName, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= target;
+      let resultText;
+      if (success) {
+        const skills = Object.assign({}, draft.skills || {});
+        grantSkillMin(skills, 'Electronics', 'Sensors', 1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        resultText = `Rolled ${total} on ${skillName} (need ${target}+) — survived and gained Electronics (Sensors) 1. Name the Enemy you gained:`;
+      } else {
+        resultText = `Rolled ${total} on ${skillName} (need ${target}+) — your ship is destroyed; you may not re-enlist in the Scouts (note this yourself). Name the Enemy you gained:`;
+      }
+      await saveMechanic('event', { rolled: true, success, resultText });
+      await logCreation(`Scout Event 3: rolled ${total} on ${skillName} (need ${target}+) — ${success ? 'success.' : 'failed.'}`);
+      renderStep();
+    }
+
+    async function confirmScoutEvent3Enemy() {
+      const name = (document.getElementById('scout-e3-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('enemy', name, 'One of the vessels that ambushed your ship.');
+      const m = mechanicState('event');
+      const resultText = `${m.resultText.split(' Name')[0]} Gained ${name} as an Enemy.`;
+      await saveMechanic('event', { enemyNamed: true, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Scout Event 3: gained ${name} as an Enemy.`);
+      renderStep();
+    }
+
+    // Scout event 8 — Electronics/Deception 8+: success Ally + DM+2
+    // advancement, failure nests into the Mishap table (not ejected).
+    function renderScoutEvent8(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.rolled) {
+        return resolverHeader('Roll Electronics 8+ or Deception 8+:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="rollScoutEvent8('Electronics')">Electronics</button>
+            <button class="btn-outline" onclick="rollScoutEvent8('Deception')">Deception</button>
+          </div>
+        `;
+      }
+      if (m.success && !m.allyNamed) {
+        return resolverHeader(m.resultText) + `
+          <input id="scout-e8-name" type="text" placeholder="Ally name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmScoutEvent8Ally()">Confirm</button>
+        `;
+      }
+      if (!m.success) {
+        return resolverHeader(m.resultText) + renderNestedMishapRoll('event', m);
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollScoutEvent8(skillName) {
+      const key = skillKey(skillName, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      let resultText;
+      if (success) {
+        await addPendingMod('advancementDM', 2);
+        resultText = `Rolled ${total} on ${skillName} (need 8+) — success! Banked DM+2 to your next advancement roll. Name the Ally you gained:`;
+      } else {
+        resultText = `Rolled ${total} on ${skillName} (need 8+) — failed.`;
+      }
+      await saveMechanic('event', { rolled: true, success, resultText });
+      await logCreation(`Scout Event 8: rolled ${total} on ${skillName} — ${success ? 'success.' : 'failed.'}`);
+      renderStep();
+    }
+
+    async function confirmScoutEvent8Ally() {
+      const name = (document.getElementById('scout-e8-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('ally', name, 'A contact in the Imperium made while gathering intelligence on an alien species.');
+      const resultText = `Gained ${name} as an Ally in the Imperium, plus DM+2 to your next advancement roll.`;
+      await saveMechanic('event', { allyNamed: true, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Scout Event 8: ${resultText}`);
+      renderStep();
+    }
+
+    // Scout event 9 — Medic/Engineer 8+: success Contact + DM+2
+    // advancement, failure gains an Enemy.
+    function renderScoutEvent9(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.rolled) {
+        return resolverHeader('Roll Medic 8+ or Engineer 8+:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="rollScoutEvent9('Medic')">Medic</button>
+            <button class="btn-outline" onclick="rollScoutEvent9('Engineer')">Engineer</button>
+          </div>
+        `;
+      }
+      if (!m.associateNamed) {
+        return resolverHeader(m.resultText) + `
+          <input id="scout-e9-name" type="text" placeholder="Name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmScoutEvent9Associate()">Confirm</button>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollScoutEvent9(skillName) {
+      const key = skillKey(skillName, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      let resultText;
+      if (success) {
+        await addPendingMod('advancementDM', 2);
+        resultText = `Rolled ${total} on ${skillName} (need 8+) — success! Banked DM+2 to your next advancement roll. Name the Contact you gained:`;
+      } else {
+        resultText = `Rolled ${total} on ${skillName} (need 8+) — failed. Name the Enemy you gained:`;
+      }
+      await saveMechanic('event', { rolled: true, success, resultText });
+      await logCreation(`Scout Event 9: rolled ${total} on ${skillName} — ${success ? 'success.' : 'failed.'}`);
+      renderStep();
+    }
+
+    async function confirmScoutEvent9Associate() {
+      const m = mechanicState('event');
+      const name = (document.getElementById('scout-e9-name') || {}).value.trim() || 'Unnamed';
+      const type = m.success ? 'contact' : 'enemy';
+      await addAssociate(type, name, 'From rescuing the survivors of a disaster.');
+      const resultText = `${m.resultText.split(' Name')[0]} Gained ${name} as ${type === 'contact' ? 'a Contact' : 'an Enemy'}.`;
+      await saveMechanic('event', { associateNamed: true, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Scout Event 9: gained ${name} as ${type === 'contact' ? 'a Contact' : 'an Enemy'}.`);
+      renderStep();
+    }
+
+    // Scout event 10 — Survival/Pilot 8+: success alien Contact + choice of
+    // skill at level 1, failure nests into the Mishap table (not ejected).
+    function renderScoutEvent10(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.rolled) {
+        return resolverHeader('Roll Survival 8+ or Pilot 8+:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="rollScoutEvent10('Survival')">Survival</button>
+            <button class="btn-outline" onclick="rollScoutEvent10('Pilot')">Pilot</button>
+          </div>
+        `;
+      }
+      if (m.success && !m.contactNamed) {
+        return resolverHeader(m.resultText) + `
+          <input id="scout-e10-name" type="text" placeholder="Contact name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmScoutEvent10Contact()">Confirm</button>
+        `;
+      }
+      if (m.success && !m.skillChosen) {
+        return resolverHeader(m.resultText) + `
+          <select id="scout-e10-skill">${SKILLS.map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
+          <button class="btn-outline" onclick="confirmScoutEvent10Skill()">Gain This Skill</button>
+        `;
+      }
+      if (!m.success) {
+        return resolverHeader(m.resultText) + renderNestedMishapRoll('event', m);
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollScoutEvent10(skillName) {
+      const key = skillKey(skillName, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      const resultText = `Rolled ${total} on ${skillName} (need 8+) — ${success ? 'success! Name the alien Contact you gained:' : 'failed.'}`;
+      await saveMechanic('event', { rolled: true, success, resultText });
+      await logCreation(`Scout Event 10: rolled ${total} on ${skillName} — ${success ? 'success.' : 'failed.'}`);
+      renderStep();
+    }
+
+    async function confirmScoutEvent10Contact() {
+      const name = (document.getElementById('scout-e10-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('contact', name, 'An alien you met on the fringes of Charted Space.');
+      const resultText = `Gained ${name} as a Contact. Choose a skill to gain at level 1:`;
+      await saveMechanic('event', { contactNamed: true, resultText });
+      await logCreation(`Scout Event 10: gained ${name} as a Contact.`);
+      renderStep();
+    }
+
+    async function confirmScoutEvent10Skill() {
+      const skillName = document.getElementById('scout-e10-skill').value;
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, skillName, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const resultText = `Gained an alien Contact and ${skillName} 1.`;
+      await saveMechanic('event', { skillChosen: skillName, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Scout Event 10: gained ${skillName} 1.`);
       renderStep();
     }
 
