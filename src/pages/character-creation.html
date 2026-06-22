@@ -549,14 +549,14 @@
         id: 'university', name: 'University', source: 'Core Rulebook p.16',
         summary: 'A narrow but deep education in academic subjects — few other paths sharpen specific skills this quickly.',
         entry: (d) => ({ stat: 'edu', target: 6, extraDM: d.soc >= 9 ? 1 : 0, dmLabel: d.soc >= 9 ? 'DM+1 (SOC 9+)' : '' }),
-        entryGrant: { chooseN: { n: 2, level: 0, from: UNIVERSITY_SKILLS } },
+        entryGrant: { pickLevel0Level1: { from: UNIVERSITY_SKILLS } },
         graduation: (d) => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: (d.end_stat >= 8 ? 1 : 0) + (d.soc >= 8 ? 1 : 0), dmLabel: 'DM+1 if END 8+, DM+1 if SOC 8+' }),
         benefits: [
           { id: 'bump_chosen', text: 'Increase both skills chosen at entry by one level.', type: 'bumpEntrySkills', amount: 1 },
           { id: 'edu1', text: 'Increase EDU by an additional +1.', type: 'stat', key: 'edu', amount: 1 },
           { id: 'qual_dm', text: 'DM+1 to qualify for Agent, Army, Citizen (corporate), Entertainer (journalist), Marines, Navy, Scholar, Scouts.', type: 'pendingMod', key: 'qualificationDM', amount: 1 },
           { id: 'qual_dm_honours', text: 'Honours graduates get an additional DM+1 to that same qualification roll (DM+2 total).', type: 'pendingMod', key: 'qualificationDM', amount: 1, honoursOnly: true },
-          { id: 'commission_preroll', text: 'May attempt a commission roll before the first term of a military career, if it is the first career chosen after university (officer rank 1 on success; automatic with honours).', type: 'flag' }
+          { id: 'commission_preroll', text: 'May attempt a commission roll before the first term of a military career, if it is the first career chosen after university (officer rank 1 on success; DM+2 to this roll if honours).', type: 'commissionPreroll' }
         ]
       },
       {
@@ -956,7 +956,36 @@
       const chooser = s.entrySkillChooser || {};
 
       let pickerHtml = '';
-      if (grant.chooseN) {
+      if (grant.pickLevel0Level1) {
+        const level1Def = chooser.level1Skill ? SKILLS.find(sk => sk.name === chooser.level1Skill) : null;
+        const needsSpecialty = level1Def && level1Def.specialties && level1Def.specialties.length;
+        pickerHtml = `
+          <div class="wizard-card-sub">Choose a level 0 skill and a level 1 skill from the list:</div>
+          <div class="wizard-field">
+            <label>Level 0 Skill</label>
+            <select onchange="setUniLevel0(this.value)">
+              <option value="">— choose —</option>
+              ${grant.pickLevel0Level1.from.map(sk => `<option value="${sk.name}" ${chooser.level0Skill === sk.name ? 'selected' : ''}>${sk.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="wizard-field">
+            <label>Level 1 Skill</label>
+            <select onchange="setUniLevel1(this.value)">
+              <option value="">— choose —</option>
+              ${grant.pickLevel0Level1.from.map(sk => `<option value="${sk.name}" ${chooser.level1Skill === sk.name ? 'selected' : ''}>${sk.name}</option>`).join('')}
+            </select>
+          </div>
+          ${needsSpecialty ? `
+            <div class="wizard-field">
+              <label>Specialty</label>
+              <select onchange="setUniLevel1Specialty(this.value)">
+                <option value="">— specialty —</option>
+                ${level1Def.specialties.map(sp => `<option value="${sp.name}" ${chooser.level1Specialty === sp.name ? 'selected' : ''}>${sp.name}</option>`).join('')}
+              </select>
+            </div>
+          ` : ''}
+        `;
+      } else if (grant.chooseN) {
         const chosen = chooser.chosen || [];
         pickerHtml = `
           <div class="wizard-card-sub">Choose ${grant.chooseN.n} of the following, gained at level ${grant.chooseN.level} (selected ${chosen.length} of ${grant.chooseN.n}):</div>
@@ -977,9 +1006,14 @@
       }
 
       const autoText = grant.auto ? grant.auto.map(sk => `${sk.name} ${sk.level || 0}`).join(', ') : '';
-      const ready = grant.chooseN
-        ? (chooser.chosen || []).length === grant.chooseN.n
-        : true;
+      let ready = true;
+      if (grant.pickLevel0Level1) {
+        const level1Def = chooser.level1Skill ? SKILLS.find(sk => sk.name === chooser.level1Skill) : null;
+        const needsSpecialty = level1Def && level1Def.specialties && level1Def.specialties.length;
+        ready = !!chooser.level0Skill && !!chooser.level1Skill && (!needsSpecialty || !!chooser.level1Specialty);
+      } else if (grant.chooseN) {
+        ready = (chooser.chosen || []).length === grant.chooseN.n;
+      }
 
       return `
         <div class="rule-card wizard-card">
@@ -992,6 +1026,27 @@
           </div>
         </div>
       `;
+    }
+
+    async function setUniLevel0(name) {
+      const s = step4State();
+      const chooser = Object.assign({}, s.entrySkillChooser, { level0Skill: name || null });
+      await saveStep4State({ entrySkillChooser: chooser });
+      renderStep();
+    }
+
+    async function setUniLevel1(name) {
+      const s = step4State();
+      const chooser = Object.assign({}, s.entrySkillChooser, { level1Skill: name || null, level1Specialty: null });
+      await saveStep4State({ entrySkillChooser: chooser });
+      renderStep();
+    }
+
+    async function setUniLevel1Specialty(sp) {
+      const s = step4State();
+      const chooser = Object.assign({}, s.entrySkillChooser, { level1Specialty: sp || null });
+      await saveStep4State({ entrySkillChooser: chooser });
+      renderStep();
     }
 
     async function toggleEntryChooseN(name, checked) {
@@ -1019,6 +1074,10 @@
       const chooser = s.entrySkillChooser || {};
       if (grant.chooseN) {
         (chooser.chosen || []).forEach(c => grantSkillMin(skills, c.name, null, grant.chooseN.level));
+      }
+      if (grant.pickLevel0Level1 && chooser.level0Skill) {
+        grantSkillMin(skills, chooser.level0Skill, null, 0);
+        grantSkillMin(skills, chooser.level1Skill, chooser.level1Specialty || null, 1);
       }
 
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
@@ -1356,6 +1415,10 @@
         const vals = Array.isArray(chooser.chosen) ? chooser.chosen : Object.values(chooser.chosen);
         vals.forEach(c => keys.add(skillKey(c.name, c.specialty)));
       }
+      if (chooser.level0Skill) {
+        keys.add(skillKey(chooser.level0Skill, null));
+        keys.add(skillKey(chooser.level1Skill, chooser.level1Specialty || null));
+      }
       return Array.from(keys).filter(k => draft.skills && draft.skills[k]).map(k => ({ key: k, ...draft.skills[k] }));
     }
 
@@ -1601,6 +1664,7 @@
       const rows = applicable.map(b => {
         const done = applied[b.id];
         if (b.type === 'chooseN') return renderChooseNBenefit(b, s, done);
+        if (b.type === 'commissionPreroll') return renderCommissionPrerollBenefit(b, s, done);
         const isAuto = actionableTypes.includes(b.type);
         return `
           <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
@@ -1613,7 +1677,7 @@
         `;
       }).join('');
 
-      const allDone = applicable.every(b => (actionableTypes.includes(b.type) || b.type === 'chooseN') ? applied[b.id] : true);
+      const allDone = applicable.every(b => (actionableTypes.includes(b.type) || b.type === 'chooseN' || b.type === 'commissionPreroll') ? applied[b.id] : true);
 
       return `
         <div class="rule-card wizard-card">
@@ -1676,6 +1740,78 @@
       renderStep();
     }
 
+    // University's pre-emptive commission roll — only Navy/Army are built
+    // (Marines isn't yet). Success enters that career directly at officer
+    // rank 1 once Step 5 is reached; honours adds DM+2 to this roll.
+    function renderCommissionPrerollBenefit(b, s, done) {
+      const cp = s.commissionPrerollState || {};
+      if (done) {
+        return `
+          <div style="margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
+            <div style="font-size:0.85rem; margin-bottom:6px;">${b.text}</div>
+            <div style="font-size:0.8rem; color:#00ffaa;">${cp.resultText}</div>
+          </div>
+        `;
+      }
+      if (!cp.branch) {
+        return `
+          <div style="margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
+            <div style="font-size:0.85rem; margin-bottom:8px;">${b.text}</div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn-outline" onclick="chooseCommissionPrerollBranch('navy')">Navy</button>
+              <button class="btn-outline" onclick="chooseCommissionPrerollBranch('army')">Army</button>
+              <button class="btn-outline" onclick="skipCommissionPreroll('${b.id}')">Skip</button>
+            </div>
+          </div>
+        `;
+      }
+      const c = careerData(cp.branch);
+      const honours = s.gradRoll && s.gradRoll.honours;
+      return `
+        <div style="margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
+          <div style="font-size:0.85rem; margin-bottom:8px;">Roll 2D + SOC DM (need ${c.commission.target}+)${honours ? ' + DM+2 (honours)' : ''} for ${c.name}.</div>
+          <button class="btn-outline" onclick="rollCommissionPreroll('${b.id}')">Roll</button>
+        </div>
+      `;
+    }
+
+    async function chooseCommissionPrerollBranch(branch) {
+      await saveStep4State({ commissionPrerollState: { branch } });
+      renderStep();
+    }
+
+    async function markCommissionPrerollDone(benefitId) {
+      const s = step4State();
+      const applied = Object.assign({}, s.benefitsApplied, { [benefitId]: true });
+      await saveStep4State({ benefitsApplied: applied });
+    }
+
+    async function skipCommissionPreroll(benefitId) {
+      await saveStep4State({ commissionPrerollState: { resolved: true, resultText: 'Skipped.' } });
+      await markCommissionPrerollDone(benefitId);
+      renderStep();
+    }
+
+    async function rollCommissionPreroll(benefitId) {
+      const s = step4State();
+      const cp = s.commissionPrerollState;
+      const c = careerData(cp.branch);
+      const honours = s.gradRoll && s.gradRoll.honours;
+      const total = roll2d6() + dmNum(draft.soc) + (honours ? 2 : 0);
+      const success = total >= c.commission.target;
+      let resultText;
+      if (success) {
+        await saveStep5State({ careerId: cp.branch, isOfficer: true, rank: 1, phase: 'assignment' });
+        resultText = `Rolled ${total} (need ${c.commission.target}+) — success! You'll enter ${c.name} at officer rank 1 once you reach the Career step.`;
+      } else {
+        resultText = `Rolled ${total} (need ${c.commission.target}+) — failed. You can still attempt ${c.name} normally in the Career step.`;
+      }
+      await saveStep4State({ commissionPrerollState: { resolved: true, resultText } });
+      await markCommissionPrerollDone(benefitId);
+      await logCreation(`University commission preroll (${c.name}): ${resultText}`);
+      renderStep();
+    }
+
     async function applyPreEdBenefit(benefitId) {
       const s = step4State();
       const opt = findOption(s.optionId);
@@ -1692,10 +1828,13 @@
         grantSkillMin(skills, b.name, b.specialty, b.level);
         update.skills = skills;
       } else if (b.type === 'bumpEntrySkills') {
-        const chosen = s.entrySkillChooser && s.entrySkillChooser.chosen;
+        const ch = s.entrySkillChooser || {};
         const skills = Object.assign({}, draft.skills || {});
-        if (chosen) {
-          Object.values(chosen).forEach(c => bumpSkill(skills, c.name, c.specialty, b.amount));
+        if (ch.level0Skill) {
+          bumpSkill(skills, ch.level0Skill, null, b.amount);
+          bumpSkill(skills, ch.level1Skill, ch.level1Specialty || null, b.amount);
+        } else if (ch.chosen) {
+          Object.values(ch.chosen).forEach(c => bumpSkill(skills, c.name, c.specialty, b.amount));
         }
         update.skills = skills;
       } else if (b.type === 'chooseN') {
