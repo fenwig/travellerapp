@@ -3289,6 +3289,7 @@
         case 'citizen:11':   return renderChooseSkillOrDM(tag, m, { name: 'Diplomat', level: 1 }, 'advancementDM', 4);
         case 'citizen:12':   return renderBankAutoPromote(tag, m);
         case 'citizen:mishap4': return renderCitizenMishap4(tag, m);
+        case 'citizen:mishap5': return renderCitizenMishap5(tag, m);
         default: return null;
       }
     }
@@ -3909,6 +3910,54 @@
       await saveMechanic('mishap', { resolved: true, resultText });
       await resolveMechanic('mishap');
       await logCreation(`Citizen Mishap 4: ${resultText}`);
+      renderStep();
+    }
+
+    // Citizen mishap 5 — Streetwise 8+: success increases any skill you
+    // already have by one level.
+    function renderCitizenMishap5(tag, m) {
+      if (!m.rolled) {
+        return resolverHeader('Roll Streetwise 8+.') + `<button class="btn-outline" onclick="rollCitizenMishap5()">Roll</button>`;
+      }
+      if (m.success && !m.resolved) {
+        const owned = Object.keys(draft.skills || {}).map(k => draft.skills[k]);
+        if (!owned.length) {
+          return resolverHeader(`${m.resultText} You have no skills yet to improve — nothing to roll for.`) +
+            `<button class="btn-outline" onclick="finishCitizenMishap5(null)">Continue</button>`;
+        }
+        return resolverHeader(`${m.resultText} Choose a skill you already have to increase by one level:`) + `
+          <select id="citizen-m5-skill">${owned.map(o => `<option value="${skillKey(o.name, o.specialty)}">${o.name}${o.specialty ? ' (' + o.specialty + ')' : ''} ${o.level}</option>`).join('')}</select>
+          <button class="btn-outline" onclick="finishCitizenMishap5(document.getElementById('citizen-m5-skill').value)">Confirm</button>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollCitizenMishap5() {
+      const key = skillKey('Streetwise', null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      const resultText = `Rolled ${total} on Streetwise (need 8+) — ${success ? 'success!' : 'no improvement this time.'}`;
+      await saveMechanic('mishap', { rolled: true, success, resultText });
+      if (!success) await resolveMechanic('mishap');
+      await logCreation(`Citizen Mishap 5: ${resultText}`);
+      renderStep();
+    }
+
+    async function finishCitizenMishap5(chosenKey) {
+      let resultText = mechanicState('mishap').resultText;
+      if (chosenKey) {
+        const skills = Object.assign({}, draft.skills || {});
+        const owned = skills[chosenKey];
+        bumpSkill(skills, owned.name, owned.specialty, 1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        resultText += ` Increased ${owned.name}${owned.specialty ? ' (' + owned.specialty + ')' : ''} by one level.`;
+      }
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Citizen Mishap 5: ${resultText}`);
       renderStep();
     }
 
