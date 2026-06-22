@@ -3643,7 +3643,7 @@
 
     async function goCareerSkillTraining() {
       const s = step5State();
-      await saveStep5State({ phase: 'skillTraining', skillRollsRemaining: s.skillRollsRemaining || 1 });
+      await saveStep5State({ phase: 'skillTraining', skillRollsRemaining: s.skillRollsRemaining || 1, lastSkillResult: null });
       renderStep();
     }
 
@@ -3664,10 +3664,13 @@
         `;
       }
 
+      const lastResult = s.lastSkillResult ? `<div class="wizard-card-sub" style="color:#00ffaa;">Gained: ${s.lastSkillResult}</div>` : '';
+
       if ((s.skillRollsRemaining || 0) <= 0) {
         return `
           <div class="rule-card wizard-card">
             <div class="wizard-card-title">${c.name} — Skill Training Done</div>
+            ${lastResult}
             <div class="wizard-actions"><button class="btn-outline" onclick="goCareerTermEnd()">Continue</button></div>
           </div>
         `;
@@ -3683,6 +3686,7 @@
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Skill Training (${s.skillRollsRemaining} roll${s.skillRollsRemaining > 1 ? 's' : ''} remaining)</div>
           <div class="wizard-card-sub">Choose a table, then roll 1D against it.</div>
+          ${lastResult}
           <div class="wizard-actions" style="justify-content:flex-start; gap:12px; flex-wrap:wrap;">
             ${tables.map(t => `<button class="btn-outline" onclick="rollSkillTable('${t.key}')">${t.label}</button>`).join('')}
           </div>
@@ -3699,8 +3703,9 @@
       grantSkillMin(skills, sk.name, sk.specialty, 0);
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
       draft.skills = skills;
-      await saveStep5State({ basicTrainingDone: true });
-      await logCreation(`${c.name} — Basic Training (subsequent career): gained ${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''} 0.`);
+      const desc = `${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''} 0`;
+      await saveStep5State({ basicTrainingDone: true, lastSkillResult: desc });
+      await logCreation(`${c.name} — Basic Training (subsequent career): gained ${desc}.`);
       renderStep();
     }
 
@@ -3723,7 +3728,7 @@
         draft.skills = skills;
         desc = `${entry.name}${entry.specialty ? ' (' + entry.specialty + ')' : ''}`;
       }
-      await saveStep5State({ skillRollsRemaining: (s.skillRollsRemaining || 1) - 1 });
+      await saveStep5State({ skillRollsRemaining: (s.skillRollsRemaining || 1) - 1, lastSkillResult: desc });
       await logCreation(`${c.name} — Skill Training roll ${idx + 1} on ${tableKey}: ${desc}.`);
       renderStep();
     }
