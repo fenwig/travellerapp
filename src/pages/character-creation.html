@@ -2480,8 +2480,11 @@
       const assignment = c.assignments.find(a => a.key === key);
       const skills = Object.assign({}, draft.skills || {});
 
+      let basicTrainingGrant = null;
       if (isFirstCareer) {
-        serviceSkillsFor(c, assignment).forEach(sk => grantSkillMin(skills, sk.name, sk.specialty, 0));
+        const granted = serviceSkillsFor(c, assignment);
+        granted.forEach(sk => grantSkillMin(skills, sk.name, sk.specialty, 0));
+        basicTrainingGrant = granted.map(sk => `${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''} 0`).join(', ');
       }
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
       draft.skills = skills;
@@ -2489,9 +2492,9 @@
       await saveStep5State({
         assignmentKey: key, rank: 0, isOfficer: false, termInCareer: 0,
         basicTrainingDone: isFirstCareer, benefitRolls: 0,
-        phase: 'survival'
+        phase: 'survival', basicTrainingGrant
       });
-      await logCreation(`${c.name} — chose ${assignment.label} assignment.${isFirstCareer ? ' Basic Training: gained all Service Skills at level 0.' : ''}`);
+      await logCreation(`${c.name} — chose ${assignment.label} assignment.${basicTrainingGrant ? ` Basic Training: gained ${basicTrainingGrant}.` : ''}`);
       renderStep();
     }
 
@@ -2508,6 +2511,7 @@
         return `
           <div class="rule-card wizard-card">
             <div class="wizard-card-title">${c.name} (${a.label}) — Term ${s.termInCareer + 1}, Survival</div>
+            ${s.basicTrainingGrant ? `<div class="wizard-card-sub" style="color:#00ffaa;">Basic Training — gained: ${s.basicTrainingGrant}.</div>` : ''}
             <div class="wizard-card-sub">Roll 2D + ${statLabel} DM (need ${a.survival.target}+). A natural 2 always fails.</div>
             <div class="wizard-actions" style="justify-content:flex-start;">
               <button class="btn-outline" onclick="rollCareerSurvival()">Roll Survival</button>
@@ -2546,13 +2550,13 @@
       const statDM = dmNum(draft[a.survival.stat]);
       const total = d1 + d2 + statDM;
       const success = (d1 + d2) !== 2 && total >= a.survival.target;
-      await saveStep5State({ survivalResult: { dice: [d1, d2], statDM, total, success } });
+      await saveStep5State({ survivalResult: { dice: [d1, d2], statDM, total, success }, basicTrainingGrant: null });
       await logCreation(`${c.name} (${a.label}) — Survival: rolled ${total} (need ${a.survival.target}+) — ${success ? 'survived.' : 'failed.'}`);
       renderStep();
     }
 
     async function goCareerMishap() {
-      await saveStep5State({ phase: 'mishap', mishapRoll: null, mishapResolved: false });
+      await saveStep5State({ phase: 'mishap', mishapRoll: null, mishapResolved: false, autoGranted: null });
       renderStep();
     }
 
@@ -2576,6 +2580,7 @@
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Mishap ${s.mishapRoll}</div>
           <p style="margin-bottom:14px;">${m.text}</p>
+          ${s.autoGranted ? `<div class="wizard-card-sub" style="color:#00ffaa;">Applied automatically: ${s.autoGranted}.</div>` : ''}
           ${bespoke !== null ? bespoke : renderGenericResolver('mishap', m.tools)}
           <div class="wizard-actions">
             ${m.noEject
@@ -2612,11 +2617,11 @@
 
     async function rollCareerMishap() {
       const roll = rollDie();
-      await saveStep5State({ mishapRoll: roll });
-      const s = step5State();
-      const c = careerData(s.careerId);
+      const s0 = step5State();
+      const c = careerData(s0.careerId);
       const entry = c.mishaps.find(x => x.roll === roll);
       const granted = await applyAutoGrants(entry);
+      await saveStep5State({ mishapRoll: roll, autoGranted: granted || null });
       await logCreation(`${c.name} — Mishap roll: ${roll} — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''}`);
       renderStep();
     }
@@ -3417,7 +3422,7 @@
     }
 
     async function goCareerEvents() {
-      await saveStep5State({ phase: 'events', eventRoll: null, eventResolved: false });
+      await saveStep5State({ phase: 'events', eventRoll: null, eventResolved: false, autoGranted: null });
       renderStep();
     }
 
@@ -3441,6 +3446,7 @@
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Event ${s.eventRoll}</div>
           <p style="margin-bottom:14px;">${e.text}</p>
+          ${s.autoGranted ? `<div class="wizard-card-sub" style="color:#00ffaa;">Applied automatically: ${s.autoGranted}.</div>` : ''}
           ${bespoke !== null ? bespoke : renderGenericResolver('event', e.tools)}
           ${s.eventResolved ? renderConnectionWidget('careerEvent_' + (draft.id || '') + '_' + s.terms) : ''}
           <div class="wizard-actions">
@@ -3456,8 +3462,8 @@
       const s = step5State();
       const c = careerData(s.careerId);
       const entry = c.events.find(x => x.roll === total);
-      await saveStep5State({ eventRoll: total });
       const granted = await applyAutoGrants(entry);
+      await saveStep5State({ eventRoll: total, autoGranted: granted || null });
       await logCreation(`${c.name} — Event roll: ${total} — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''}`);
       renderStep();
     }
