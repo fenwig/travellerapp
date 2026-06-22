@@ -2153,6 +2153,74 @@
           { roll: 11, text: 'You are forcibly drafted. Roll for the Draft next term.', tools: [] },
           { roll: 12, text: 'You thrive on adversity. You are automatically promoted.', tools: [] }
         ]
+      },
+      citizen: {
+        id: 'citizen', name: 'Citizen', source: 'Core Rulebook pp.26-28', military: false,
+        qualification: { stat: 'edu', target: 5 },
+        // Citizen has no shared career-level Service Skills table — each
+        // assignment's own skill table doubles as both basic training and
+        // the "Service Skills" roll during Skill Training (Core p.26 note:
+        // "Use your assignment skill table for basic training, not service
+        // skills" — Citizen and Drifter are the two exceptions to a normal
+        // separate Service Skills table). No separate Specialist table.
+        assignments: [
+          { key: 'corporate', label: 'Corporate', survival: { stat: 'soc', target: 6 }, advancement: { stat: 'int_stat', target: 6 },
+            serviceSkills: [{ name: 'Advocate' }, { name: 'Admin' }, { name: 'Broker' }, { name: 'Electronics', specialty: 'Computers' }, { name: 'Diplomat' }, { name: 'Leadership' }],
+            ranks: [
+              { rank: 0, title: '—' }, { rank: 1, title: '—' },
+              { rank: 2, title: 'Manager', skill: { name: 'Admin', level: 1 } },
+              { rank: 3, title: '—' },
+              { rank: 4, title: 'Senior Manager', skill: { name: 'Advocate', level: 1 } },
+              { rank: 5, title: '—' },
+              { rank: 6, title: 'Director', stat: { key: 'soc', amount: 1 } }
+            ] },
+          { key: 'worker', label: 'Worker', survival: { stat: 'end_stat', target: 4 }, advancement: { stat: 'edu', target: 8 },
+            serviceSkills: [{ name: 'Drive' }, { name: 'Mechanic' }, { name: 'Electronics' }, { name: 'Engineer' }, { name: 'Profession' }, { name: 'Science' }],
+            ranks: [
+              { rank: 0, title: '—' }, { rank: 1, title: '—' },
+              { rank: 2, title: 'Technician', skill: { name: 'Profession', level: 1 } },
+              { rank: 3, title: '—' },
+              { rank: 4, title: 'Craftsman', skill: { name: 'Mechanic', level: 1 } },
+              { rank: 5, title: '—' },
+              { rank: 6, title: 'Master Technician', skill: { name: 'Engineer', level: 1 } }
+            ] },
+          { key: 'colonist', label: 'Colonist', survival: { stat: 'int_stat', target: 7 }, advancement: { stat: 'end_stat', target: 5 },
+            serviceSkills: [{ name: 'Animals' }, { name: 'Athletics' }, { name: 'Jack-of-all-Trades' }, { name: 'Drive' }, { name: 'Survival' }, { name: 'Recon' }],
+            ranks: [
+              { rank: 0, title: '—' }, { rank: 1, title: '—' },
+              { rank: 2, title: 'Settler', skill: { name: 'Survival', level: 1 } },
+              { rank: 3, title: '—' },
+              { rank: 4, title: 'Explorer', skill: { name: 'Navigation', level: 1 } },
+              { rank: 5, title: '—' },
+              { rank: 6, title: '—', skill: { name: 'Gun Combat', level: 1 } }
+            ] }
+        ],
+        personalDevelopment: [{ stat: 'edu' }, { stat: 'int_stat' }, { name: 'Carouse' }, { name: 'Gambler' }, { name: 'Drive' }, { name: 'Jack-of-all-Trades' }],
+        advancedEducation: [{ name: 'Art' }, { name: 'Advocate' }, { name: 'Diplomat' }, { name: 'Language' }, { name: 'Electronics', specialty: 'Computers' }, { name: 'Medic' }],
+        advancedEducationMin: 10,
+        musteringCash: [2000, 5000, 10000, 10000, 10000, 50000, 100000],
+        musteringBenefits: ['Ship Share', 'Ally', 'INT +1', 'Gun', 'EDU +1', 'Two Ship Shares', 'TAS Membership'],
+        mishaps: [
+          { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
+          { roll: 2, text: 'Harassed and your life ruined by a criminal gang. Gain the gang as an Enemy.', tools: ['associate'] },
+          { roll: 3, text: 'Hard times from a lack of interstellar trade cost you your job. Lose one SOC.', tools: [], autoStat: { key: 'soc', amount: -1 } },
+          { roll: 4, text: 'Your business is investigated by the planetary authorities (or your colony suffers offworld interference). Co-operate and the business or colony is shut down, but gain DM+2 to your next qualification roll as a reward. Refuse and gain an Ally instead.', tools: [] },
+          { roll: 5, text: 'A revolution, attack, or other unusual event forces you to leave the planet. Roll Streetwise 8+ — success increases any skill you have by one level.', tools: [] },
+          { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 3, text: 'Political upheaval strikes your homeworld and you are caught up in the revolution. Gain one of Advocate 1, Persuade 1, Explosives 1, or Streetwise 1, then roll that skill 8+: success means you come out on the winning side (DM+2 to your next advancement roll); failure means DM-2 to your next Survival roll.', tools: [] },
+          { roll: 4, text: 'You spend time maintaining and using heavy vehicles, either for work or as a hobby. Increase Mechanic, Drive, Electronics, Flyer, or Engineer by one level.', tools: ['skill'] },
+          { roll: 5, text: 'Your business expands, your corporation grows, or your colony thrives. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
+          { roll: 6, text: 'Given advanced training in a specialist field. Roll EDU 10+ to gain any one skill of your choice at level 1.', tools: [] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
+          { roll: 8, text: 'You learn something you should not have — a corporate secret, a political scandal — which you could profit from illegally. Accept and gain DM+1 to a Benefit roll from this career plus Streetwise 1, Deception 1, or a criminal Contact. Refuse and gain nothing.', tools: [] },
+          { roll: 9, text: 'You are rewarded for your diligence or cunning. Gain DM+2 to your next advancement roll.', tools: [], autoDM: { key: 'advancementDM', amount: 2 } },
+          { roll: 10, text: 'You gain experience in a technical field as a computer operator or surveyor. Increase Electronics or Engineer by one level.', tools: ['skill'] },
+          { roll: 11, text: 'You befriend a superior in the corporation or colony. Gain an Ally, then either Diplomat 1 or DM+4 to your next advancement roll.', tools: [] },
+          { roll: 12, text: 'You rise to a position of power in your colony or corporation. You are automatically promoted.', tools: [] }
+        ]
       }
     };
 
@@ -2511,7 +2579,7 @@
           <div class="wizard-card-title">Choose a Career</div>
           <div class="wizard-card-sub">
             ${s.terms ? `Age ${currentAge()}, ${s.terms} term${s.terms === 1 ? '' : 's'} served so far.` : 'Pick a career to attempt qualification for.'}
-            Only Navy and Drifter are fully built right now — the rest are listed for reference. (Core Rulebook pp.17-37)
+            Navy, Drifter, Agent, Army and Citizen are fully built right now — the rest are listed for reference. (Core Rulebook pp.17-37)
           </div>
           ${s.forcedDraftNextTerm ? `
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
@@ -2746,7 +2814,7 @@
         return `
           <div class="rule-card wizard-card">
             <div class="wizard-card-title">Survived</div>
-            <div class="wizard-card-sub">Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}), needed ${a.survival.target}+.</div>
+            <div class="wizard-card-sub">Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}${r.bonusDM ? (r.bonusDM > 0 ? ' + ' : ' − ') + Math.abs(r.bonusDM) + ' banked DM' : ''}), needed ${a.survival.target}+.</div>
             <div class="wizard-actions">
               <button class="btn-outline" onclick="goCareerEvents()">Continue to Events</button>
             </div>
@@ -2756,7 +2824,7 @@
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">Survival Failed</div>
-          <div class="wizard-card-sub">Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}), needed ${a.survival.target}+. You must roll on the Mishap table.</div>
+          <div class="wizard-card-sub">Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}${r.bonusDM ? (r.bonusDM > 0 ? ' + ' : ' − ') + Math.abs(r.bonusDM) + ' banked DM' : ''}), needed ${a.survival.target}+. You must roll on the Mishap table.</div>
           <div class="wizard-actions">
             <button class="btn-outline" onclick="goCareerMishap()">Roll Mishap</button>
           </div>
@@ -2770,10 +2838,11 @@
       const a = currentAssignment(s, c);
       const d1 = rollDie(), d2 = rollDie();
       const statDM = dmNum(draft[a.survival.stat]);
-      const total = d1 + d2 + statDM;
+      const bonusDM = await consumePendingMod('survivalDM');
+      const total = d1 + d2 + statDM + bonusDM;
       const success = (d1 + d2) !== 2 && total >= a.survival.target;
-      await saveStep5State({ survivalResult: { dice: [d1, d2], statDM, total, success }, basicTrainingGrant: null });
-      await logCreation(`${c.name} (${a.label}) — Survival: rolled ${total} (need ${a.survival.target}+) — ${success ? 'survived.' : 'failed.'}`);
+      await saveStep5State({ survivalResult: { dice: [d1, d2], statDM, bonusDM, total, success }, basicTrainingGrant: null });
+      await logCreation(`${c.name} (${a.label}) — Survival: rolled ${total} (need ${a.survival.target}+${bonusDM ? ', incl. ' + (bonusDM > 0 ? '+' : '') + bonusDM + ' banked DM' : ''}) — ${success ? 'survived.' : 'failed.'}`);
       renderStep();
     }
 
@@ -3213,6 +3282,13 @@
         case 'army:12':      return renderBankAutoPromote(tag, m);
         case 'army:mishap3': return renderArmyMishap3(tag, m);
         case 'army:mishap4': return renderArmyMishap4(tag, m);
+        case 'citizen:2':    return renderInlineMishapNotEjected(tag, careerId, m);
+        case 'citizen:3':    return renderCitizenEvent3(tag, m);
+        case 'citizen:6':    return renderCitizenEvent6(tag, m);
+        case 'citizen:8':    return renderCitizenEvent8(tag, m);
+        case 'citizen:11':   return renderChooseSkillOrDM(tag, m, { name: 'Diplomat', level: 1 }, 'advancementDM', 4);
+        case 'citizen:12':   return renderBankAutoPromote(tag, m);
+        case 'citizen:mishap4': return renderCitizenMishap4(tag, m);
         default: return null;
       }
     }
@@ -3794,6 +3870,189 @@
       renderStep();
     }
 
+    // Citizen mishap 4 — co-operate (business/colony shut down, DM+2 to next
+    // qualification roll) or refuse (gain an Ally instead).
+    function renderCitizenMishap4(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.refused) {
+        return resolverHeader('Co-operate with the investigation/interference, or refuse?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="citizenMishap4Cooperate()">Co-operate — Business/Colony Shut Down, DM+2 to Next Qualification</button>
+            <button class="btn-outline" onclick="citizenMishap4Refuse()">Refuse</button>
+          </div>
+        `;
+      }
+      return resolverHeader('Name the Ally you gained:') + `
+        <input id="citizen-m4-name" type="text" placeholder="Name" style="margin-bottom:8px;" />
+        <button class="btn-outline" onclick="confirmCitizenMishap4Refuse()">Confirm</button>
+      `;
+    }
+
+    async function citizenMishap4Cooperate() {
+      await addPendingMod('qualificationDM', 2);
+      const resultText = 'Co-operated — the business or colony is shut down, but you gained DM+2 to your next qualification roll.';
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Citizen Mishap 4: ${resultText}`);
+      renderStep();
+    }
+
+    async function citizenMishap4Refuse() {
+      await saveMechanic('mishap', { refused: true });
+      renderStep();
+    }
+
+    async function confirmCitizenMishap4Refuse() {
+      const name = (document.getElementById('citizen-m4-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('ally', name, 'Helped you weather an investigation or offworld interference.');
+      const resultText = `Refused to co-operate — gained ${name} as an Ally.`;
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Citizen Mishap 4: ${resultText}`);
+      renderStep();
+    }
+
+    // Citizen event 3 — choose a skill, roll it 8+: success = DM+2 next
+    // advancement roll, failure = DM-2 next Survival roll.
+    function renderCitizenEvent3(tag, m) {
+      if (!m.skillChosen) {
+        return resolverHeader('Choose which skill to gain and then roll (need 8+):') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            ${['Advocate', 'Persuade', 'Explosives', 'Streetwise'].map(name => `<button class="btn-outline" onclick="pickCitizenEvent3('${name}')">${name} 1</button>`).join('')}
+          </div>
+        `;
+      }
+      if (!m.rolled) {
+        return resolverHeader(`Gained ${m.skillChosen} 1. Roll ${m.skillChosen} 8+.`) +
+          `<button class="btn-outline" onclick="rollCitizenEvent3()">Roll</button>`;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function pickCitizenEvent3(name) {
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, name, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await saveMechanic('event', { skillChosen: name });
+      await logCreation(`Citizen Event 3: gained ${name} 1.`);
+      renderStep();
+    }
+
+    async function rollCitizenEvent3() {
+      const m = mechanicState('event');
+      const key = skillKey(m.skillChosen, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      let resultText;
+      if (success) {
+        await addPendingMod('advancementDM', 2);
+        resultText = `Rolled ${total} on ${m.skillChosen} (need 8+) — you come out on the winning side. Banked DM+2 to your next advancement roll.`;
+      } else {
+        await addPendingMod('survivalDM', -2);
+        resultText = `Rolled ${total} on ${m.skillChosen} (need 8+) — failed. Banked DM-2 to your next Survival roll.`;
+      }
+      await saveMechanic('event', { rolled: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Citizen Event 3: ${resultText}`);
+      renderStep();
+    }
+
+    // Citizen event 6 — Roll EDU 10+ to gain any one skill of choice at level 1.
+    function renderCitizenEvent6(tag, m) {
+      if (!m.chosenName) {
+        return resolverHeader('Choose a skill to gain (if your roll succeeds):') + `
+          <select id="citizen-e6-skill">${SKILLS.map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
+          <button class="btn-outline" onclick="chooseCitizenEvent6()">Choose</button>
+        `;
+      }
+      if (!m.rolled) {
+        return resolverHeader(`Roll EDU 10+ to gain ${m.chosenName} 1.`) +
+          `<button class="btn-outline" onclick="rollCitizenEvent6()">Roll</button>`;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function chooseCitizenEvent6() {
+      const name = document.getElementById('citizen-e6-skill').value;
+      await saveMechanic('event', { chosenName: name });
+      renderStep();
+    }
+
+    async function rollCitizenEvent6() {
+      const m = mechanicState('event');
+      const total = roll2d6() + dmNum(draft.edu);
+      const success = total >= 10;
+      let resultText;
+      if (success) {
+        const skills = Object.assign({}, draft.skills || {});
+        grantSkillMin(skills, m.chosenName, null, 1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        resultText = `Rolled ${total} (need 10+) — gained ${m.chosenName} 1.`;
+      } else {
+        resultText = `Rolled ${total} (need 10+) — no skill gained this time.`;
+      }
+      await saveMechanic('event', { rolled: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Citizen Event 6: ${resultText}`);
+      renderStep();
+    }
+
+    // Citizen event 8 — accept (DM+1 Benefit roll + a skill/Contact choice) or refuse (nothing).
+    function renderCitizenEvent8(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.accepted) {
+        return resolverHeader('Profit from what you learned illegally, or refuse?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="citizenEvent8Accept()">Accept</button>
+            <button class="btn-outline" onclick="citizenEvent8Refuse()">Refuse</button>
+          </div>
+        `;
+      }
+      return resolverHeader('Gained DM+1 to a Benefit roll from this career. Choose your reward:') + `
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          <button class="btn-outline" onclick="confirmCitizenEvent8('Streetwise')">Streetwise 1</button>
+          <button class="btn-outline" onclick="confirmCitizenEvent8('Deception')">Deception 1</button>
+          <button class="btn-outline" onclick="confirmCitizenEvent8('Contact')">A Criminal Contact</button>
+        </div>
+      `;
+    }
+
+    async function citizenEvent8Accept() {
+      await addPendingMod('benefitRollDM', 1);
+      await saveMechanic('event', { accepted: true });
+      await logCreation('Citizen Event 8: accepted — banked DM+1 to a Benefit roll from this career.');
+      renderStep();
+    }
+
+    async function citizenEvent8Refuse() {
+      const resultText = 'Refused — gained nothing.';
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Citizen Event 8: ${resultText}`);
+      renderStep();
+    }
+
+    async function confirmCitizenEvent8(choice) {
+      let resultText;
+      if (choice === 'Contact') {
+        await addAssociate('contact', 'Criminal Contact', 'Knows the secret or scandal you profited from.');
+        resultText = 'Gained a criminal Contact.';
+      } else {
+        const skills = Object.assign({}, draft.skills || {});
+        grantSkillMin(skills, choice, null, 1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        resultText = `Gained ${choice} 1.`;
+      }
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Citizen Event 8: ${resultText}`);
+      renderStep();
+    }
+
     // "Disaster! Roll on the Mishap table but you are not ejected from this career." (Navy/Drifter event 2)
     // Reuses the literal 'mishap' tag/state for the roll itself, so every
     // bespoke mishap mechanic (Navy 3/4, Agent 2/3, Army 3/4 — which all
@@ -4109,7 +4368,8 @@
       const tables = [{ key: 'personal', label: 'Personal Development', list: c.personalDevelopment }];
       tables.push({ key: 'service', label: 'Service Skills', list: serviceSkillsFor(c, a) });
       if (a.specialistSkills) tables.push({ key: 'specialist', label: `Specialist (${a.label})`, list: a.specialistSkills });
-      if (c.advancedEducation && draft.edu >= 8) tables.push({ key: 'advEd', label: 'Advanced Education (EDU 8+)', list: c.advancedEducation });
+      const advEdMin = c.advancedEducationMin || 8;
+      if (c.advancedEducation && draft.edu >= advEdMin) tables.push({ key: 'advEd', label: `Advanced Education (EDU ${advEdMin}+)`, list: c.advancedEducation });
       if (c.officerTable && s.isOfficer) tables.push({ key: 'officer', label: 'Officer (commissioned only)', list: c.officerTable });
 
       return `
