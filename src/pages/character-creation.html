@@ -2859,14 +2859,14 @@
     async function applyInjurySimple(tag, amount) {
       const key = document.getElementById('injury-pick-' + tag).value;
       await applyStatChange(key, -amount);
-      await finishInjury(tag, `${INJURY_LABEL[key]} −${amount}`);
+      offerMedicalCare(tag, [{ key, amount }]);
     }
 
     async function applyInjuryDie(tag) {
       const key = document.getElementById('injury-pick-' + tag).value;
       const amt = rollDie();
       await applyStatChange(key, -amt);
-      await finishInjury(tag, `${INJURY_LABEL[key]} −${amt}`);
+      offerMedicalCare(tag, [{ key, amount: amt }]);
     }
 
     async function applyInjuryNearlyKilled(tag) {
@@ -2875,13 +2875,97 @@
       await applyStatChange(key, -amt);
       const others = AGEING_PHYS.filter(k => k !== key);
       for (const k of others) await applyStatChange(k, -2);
-      await finishInjury(tag, `${INJURY_LABEL[key]} −${amt}, ${others.map(k => INJURY_LABEL[k]).join(' & ')} −2 each`);
+      offerMedicalCare(tag, [{ key, amount: amt }, ...others.map(k => ({ key: k, amount: 2 }))]);
     }
 
-    async function finishInjury(tag, desc) {
+    // ── Medical Care (Core p.49) — restoring a lost characteristic costs
+    // Cr5000/point. If injured during a career, roll 2D + rank on the
+    // Medical Bills table for that career's coverage tier; the covered
+    // portion is free, the rest (and all of it if no career is active)
+    // goes straight to debt rather than being deducted from cash on hand,
+    // per the user's call. No cap — debt can go as high as it needs to.
+    const MEDICAL_BILLS_TIER = {
+      army: 'A', navy: 'A', marine: 'A',
+      agent: 'B', noble: 'B', scholar: 'B', entertainer: 'B', merchant: 'B', citizen: 'B',
+      scout: 'C', rogue: 'C', drifter: 'C'
+    };
+
+    function medicalBillsCoverage(careerId, roll) {
+      const tier = MEDICAL_BILLS_TIER[careerId];
+      if (!tier) return 0;
+      if (tier === 'A') return roll >= 8 ? 1 : roll >= 4 ? 0.75 : 0;
+      if (tier === 'B') return roll >= 12 ? 1 : roll >= 8 ? 0.75 : roll >= 4 ? 0.5 : 0;
+      return roll >= 12 ? 0.75 : roll >= 8 ? 0.5 : 0; // tier C
+    }
+
+    function offerMedicalCare(tag, reductions) {
+      const desc = reductions.map(r => `${INJURY_LABEL[r.key]} −${r.amount}`).join(', ');
+      saveMechanic(tag, { medCare: { reductions, desc } }).then(() => renderMedicalCareOffer(tag));
+    }
+
+    function renderMedicalCareOffer(tag) {
+      const m = mechanicState(tag);
+      const mc = m.medCare;
+      const el = document.getElementById('resolver-' + tag);
+      const rows = mc.reductions.map((r, i) => `
+        <div style="margin-bottom:6px;">
+          ${INJURY_LABEL[r.key]} lost ${r.amount} — restore
+          <input id="medcare-${tag}-${i}" type="number" min="0" max="${r.amount}" value="0" style="width:50px;" /> point(s) at Cr5000 each
+        </div>
+      `).join('');
+      el.innerHTML = `
+        <div style="margin-bottom:8px;">${mc.desc}.</div>
+        <div style="margin-bottom:8px; font-size:0.85rem; color:#4a9ab8;">Medical care can restore lost characteristics at Cr5000 per point. Unpaid (and any uncovered) cost goes to debt — no cap.</div>
+        ${rows}
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:8px;">
+          <button class="btn-outline" onclick="confirmMedicalCare('${tag}')">Seek Medical Care</button>
+          <button class="btn-outline" onclick="declineMedicalCare('${tag}')">Decline — Leave the Damage</button>
+        </div>
+      `;
+    }
+
+    async function declineMedicalCare(tag) {
+      const m = mechanicState(tag);
+      await finishInjury(tag, m.medCare.desc);
+    }
+
+    async function confirmMedicalCare(tag) {
+      const m = mechanicState(tag);
+      const mc = m.medCare;
+      let totalPoints = 0;
+      for (let i = 0; i < mc.reductions.length; i++) {
+        const r = mc.reductions[i];
+        const points = Math.max(0, Math.min(r.amount, parseInt(document.getElementById(`medcare-${tag}-${i}`).value, 10) || 0));
+        totalPoints += points;
+        if (points) await applyStatChange(r.key, points);
+      }
+
+      if (totalPoints === 0) {
+        await finishInjury(tag, mc.desc);
+        return;
+      }
+
+      const cost = totalPoints * 5000;
+      const s = step5State();
+      let coverage = 0, rollText = 'No career active — no coverage.';
+      if (s.careerId && MEDICAL_BILLS_TIER[s.careerId]) {
+        const roll = roll2d6() + (s.rank || 0);
+        coverage = medicalBillsCoverage(s.careerId, roll);
+        rollText = `Medical Bills roll: ${roll} (incl. rank ${s.rank || 0}) — ${Math.round(coverage * 100)}% covered.`;
+      }
+      const debtAdded = Math.round(cost * (1 - coverage));
+      if (debtAdded > 0) await applyStatChange('debt', debtAdded);
+
+      const resultText = `Restored ${totalPoints} point(s) for Cr${cost}. ${rollText}${debtAdded > 0 ? ` Cr${debtAdded} added to debt (total debt now Cr${(draft.debt || 0)}).` : ' Fully covered — no debt added.'}`;
+      await logCreation(`Medical Care — ${resultText}`);
+      await finishInjury(tag, `${mc.desc} (partially restored — see Creation Log)`, resultText);
+    }
+
+    async function finishInjury(tag, desc, medicalResultText) {
       document.getElementById('resolver-' + tag).innerHTML =
-        `<p style="color:#00ffaa; font-size:0.85rem;">Injury resolved${desc ? ': ' + desc : ' (no permanent effect)'}.</p>`;
-      await logCreation(`Injury Table — ${desc || 'no permanent effect'}.`);
+        `<p style="color:#00ffaa; font-size:0.85rem;">Injury resolved${desc ? ': ' + desc : ' (no permanent effect)'}.</p>` +
+        (medicalResultText ? `<p style="color:#00ffaa; font-size:0.85rem;">${medicalResultText}</p>` : '');
+      if (!medicalResultText) await logCreation(`Injury Table — ${desc || 'no permanent effect'}.`);
       markResolverDone(tag);
     }
 
