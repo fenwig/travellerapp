@@ -604,7 +604,16 @@
           { key: 'Shipboard', label: 'Shipboard (Merchant Marine track)' }
         ],
         entry: (d) => ({ stat: 'int_stat', target: 9, extraDM: d.soc >= 8 ? 1 : 0, dmLabel: d.soc >= 8 ? 'DM+1 (SOC 8+)' : '' }),
-        entryGrant: { deferred: true, note: 'Gain all skills on the Broker table (Business) or Merchant Marine table (Shipboard) at level 0, plus one random Service Skills roll at level 1 — career tables aren\'t built yet, apply manually once Careers exists.' },
+        // Now that Merchant exists, gain the Broker (Business) or Merchant
+        // Marine (Shipboard) specialist table at level 0. The rulebook's
+        // "one random Service Skills roll at level 1" is simplified to a
+        // player pick instead of an actual die roll (same simplification
+        // already used for Colonial Upbringing's "two_more" benefit).
+        entryGrant: (s) => ({
+          auto: (s.curriculum === 'Business' ? CAREERS_DATA.merchant.assignments.find(a => a.key === 'broker') : CAREERS_DATA.merchant.assignments.find(a => a.key === 'merchantMarine')).specialistSkills.map(sk => ({ name: sk.name, level: 0 })),
+          chooseN: { n: 1, level: 1, from: CAREERS_DATA.merchant.serviceSkills },
+          note: 'Also pick one Service Skill to gain at level 1 (simplified from a random roll).'
+        }),
         graduation: (d) => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: (d.edu >= 8 ? 1 : 0) + (d.soc >= 8 ? 1 : 0), dmLabel: 'DM+1 if EDU 8+, DM+1 if SOC 8+' }),
         benefits: [
           { id: 'bump_one', text: 'Increase one skill already gained from the Broker/Merchant Marine table to level 1.', type: 'flag' },
@@ -2328,6 +2337,65 @@
           { roll: 11, text: 'A commanding officer takes an interest in your career. Gain Tactics 1, or DM+4 to your next advancement roll instead.', tools: [] },
           { roll: 12, text: 'You display heroism in battle. You may gain a promotion or commission automatically.', tools: [] }
         ]
+      },
+      merchant: {
+        id: 'merchant', name: 'Merchant', source: 'Core Rulebook pp.33-36', military: false,
+        qualification: { stat: 'int_stat', target: 4 },
+        serviceSkills: [{ name: 'Drive' }, { name: 'Vacc Suit' }, { name: 'Broker' }, { name: 'Steward' }, { name: 'Electronics' }, { name: 'Persuade' }],
+        assignments: [
+          { key: 'merchantMarine', label: 'Merchant Marine', survival: { stat: 'edu', target: 5 }, advancement: { stat: 'int_stat', target: 7 },
+            ranks: [
+              { rank: 0, title: 'Crewman' },
+              { rank: 1, title: 'Senior Crewman', skill: { name: 'Mechanic', level: 1 } },
+              { rank: 2, title: '4th Officer' }, { rank: 3, title: '3rd Officer' },
+              { rank: 4, title: '2nd Officer', skill: { name: 'Pilot', level: 1 } },
+              { rank: 5, title: '1st Officer', stat: { key: 'soc', amount: 1 } },
+              { rank: 6, title: 'Captain' }
+            ],
+            specialistSkills: [{ name: 'Pilot' }, { name: 'Vacc Suit' }, { name: 'Athletics' }, { name: 'Mechanic' }, { name: 'Engineer' }, { name: 'Electronics' }] },
+          { key: 'freeTrader', label: 'Free Trader', survival: { stat: 'dex', target: 6 }, advancement: { stat: 'int_stat', target: 6 },
+            ranks: [
+              { rank: 0, title: '—' }, { rank: 1, title: '—' }, { rank: 2, title: '—' },
+              { rank: 3, title: '—', skill: { name: 'Persuade', level: 1 } },
+              { rank: 4, title: '—' }, { rank: 5, title: '—' },
+              { rank: 6, title: 'Experienced Trader', skill: { name: 'Jack-of-all-Trades', level: 1 } }
+            ],
+            specialistSkills: [{ name: 'Pilot', specialty: 'Spacecraft' }, { name: 'Vacc Suit' }, { name: 'Deception' }, { name: 'Mechanic' }, { name: 'Streetwise' }, { name: 'Gunner' }] },
+          { key: 'broker', label: 'Broker', survival: { stat: 'edu', target: 5 }, advancement: { stat: 'int_stat', target: 7 },
+            ranks: [
+              { rank: 0, title: '—' },
+              { rank: 1, title: '—', skill: { name: 'Broker', level: 1 } },
+              { rank: 2, title: '—' },
+              { rank: 3, title: 'Experienced Broker', skill: { name: 'Streetwise', level: 1 } },
+              { rank: 4, title: '—' }, { rank: 5, title: '—' }, { rank: 6, title: '—' }
+            ],
+            specialistSkills: [{ name: 'Admin' }, { name: 'Advocate' }, { name: 'Broker' }, { name: 'Streetwise' }, { name: 'Deception' }, { name: 'Persuade' }] }
+        ],
+        personalDevelopment: [{ stat: 'str' }, { stat: 'dex' }, { stat: 'end_stat' }, { stat: 'int_stat' }, { name: 'Language' }, { name: 'Streetwise' }],
+        advancedEducation: [{ name: 'Engineer' }, { name: 'Astrogation' }, { name: 'Electronics' }, { name: 'Pilot' }, { name: 'Admin' }, { name: 'Advocate' }],
+        musteringCash: [1000, 5000, 10000, 20000, 20000, 40000, 40000],
+        musteringBenefits: ['Blade', 'INT +1', 'EDU +1', 'Gun', 'Ship Share', 'Free Trader', 'Free Trader'],
+        mishaps: [
+          { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
+          { roll: 2, text: 'You are bankrupted by a rival. You lose all Benefits from this career and gain the other trader as a Rival.', tools: [] },
+          { roll: 3, text: 'A sudden war destroys your trade routes and contacts, forcing you to flee that region of space. Gain Gun Combat 1 or Pilot 1.', tools: ['skill'] },
+          { roll: 4, text: 'Your ship or starport is destroyed by criminals. Gain them as an Enemy.', tools: ['associate'] },
+          { roll: 5, text: 'Imperial trade restrictions force you out of business. You may take the Rogue career for your next term without needing to roll for qualification (Rogue is not yet built in this app — note it yourself if you take it).', tools: [] },
+          { roll: 6, text: 'A series of bad deals and decisions force you into bankruptcy. You salvage what you can — you may take a Benefit roll for this term as well as any others you are entitled to.', tools: [] }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 3, text: 'You are offered the opportunity to smuggle illegal items onto a planet. Accept and roll Deception 8+ or Persuade 8+ to gain Streetwise 1 and an extra Benefit roll. Refuse and gain an Enemy in the criminal sphere.', tools: [] },
+          { roll: 4, text: 'Gain any one of these skills, reflecting your time spent dealing with suppliers and spacers: Profession 1, Electronics 1, Engineer 1, Animals 1, or Science 1.', tools: ['skill'] },
+          { roll: 5, text: 'You have a chance to risk your fortune on a possibly lucrative deal. Gamble a number of Benefit rolls and roll Gambler 8+ or Broker 8+: success gains half as many Benefit rolls as risked (rounding up); failure loses all the rolls risked. Either way, gain one level in whichever skill you used.', tools: [] },
+          { roll: 6, text: 'You make an unexpected connection outside your normal circles. Gain a Contact.', tools: ['associate'] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
+          { roll: 8, text: 'You are embroiled in legal trouble. Gain one of Advocate 1, Admin 1, Diplomat 1, or Investigate 1 — then, on a rare natural 2 on 2D (not automated here), you would be forced to take the Prisoner career next term, which is not yet built in this app.', tools: ['skill'] },
+          { roll: 9, text: 'Given advanced training in a specialist field. Roll EDU 8+ to increase any one skill you already have by one level.', tools: [] },
+          { roll: 10, text: 'A good deal ensures you are living the high life for a few years. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
+          { roll: 11, text: 'You befriend a useful ally in one sphere. Gain an Ally, and either gain a level in Carouse or DM+4 to your next advancement roll thanks to their aid.', tools: [] },
+          { roll: 12, text: 'Your business or ship thrives. You are automatically promoted.', tools: [] }
+        ]
       }
     };
 
@@ -2686,7 +2754,7 @@
           <div class="wizard-card-title">Choose a Career</div>
           <div class="wizard-card-sub">
             ${s.terms ? `Age ${currentAge()}, ${s.terms} term${s.terms === 1 ? '' : 's'} served so far.` : 'Pick a career to attempt qualification for.'}
-            Navy, Drifter, Agent, Army, Citizen, Entertainer and Marine are fully built right now — the rest are listed for reference. (Core Rulebook pp.17-37)
+            Navy, Drifter, Agent, Army, Citizen, Entertainer, Marine and Merchant are fully built right now — the rest are listed for reference. (Core Rulebook pp.17-37)
           </div>
           ${s.forcedDraftNextTerm ? `
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
@@ -3420,6 +3488,14 @@
         case 'marine:11':    return renderChooseSkillOrDM(tag, m, { name: 'Tactics', level: 1 }, 'advancementDM', 4);
         case 'marine:12':    return renderBankAutoPromote(tag, m);
         case 'marine:mishap4': return renderMarineMishap4(tag, m);
+        case 'merchant:2':    return renderInlineMishapNotEjected(tag, careerId, m);
+        case 'merchant:3':    return renderMerchantEvent3(tag, m);
+        case 'merchant:5':    return renderMerchantEvent5(tag, m);
+        case 'merchant:9':    return renderRollSkillToGainLevel(tag, m, 'edu', 8);
+        case 'merchant:11':   return renderMerchantEvent11(tag, m);
+        case 'merchant:12':   return renderBankAutoPromote(tag, m);
+        case 'merchant:mishap2': return renderMerchantMishap2(tag, m);
+        case 'merchant:mishap6': return renderMerchantMishap6(tag, m);
         default: return null;
       }
     }
@@ -4496,6 +4572,213 @@
       await saveMechanic('event', { resolved: true, resultText });
       await resolveMechanic('event');
       await logCreation(`Entertainer Event 11 — Unusual Event: ${resultText}`);
+      renderStep();
+    }
+
+    // Merchant mishap 2 — bankrupted by a rival: lose all Benefits from this
+    // career (zero the accumulated benefitRolls count) and gain them as a Rival.
+    function renderMerchantMishap2(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return resolverHeader('Name the rival trader who bankrupted you:') + `
+        <input id="merch-m2-name" type="text" placeholder="Name" style="margin-bottom:8px;" />
+        <button class="btn-outline" onclick="confirmMerchantMishap2()">Confirm</button>
+      `;
+    }
+
+    async function confirmMerchantMishap2() {
+      const name = (document.getElementById('merch-m2-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('rival', name, 'Bankrupted you in a business dispute.');
+      await saveStep5State({ benefitRolls: 0 });
+      const resultText = `Gained ${name} as a Rival — lost all Benefit rolls accumulated in this career (now 0).`;
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Merchant Mishap 2: ${resultText}`);
+      renderStep();
+    }
+
+    // Merchant mishap 6 — bankruptcy, but you may keep this term's Benefit roll.
+    function renderMerchantMishap6(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return `<button class="btn-outline" onclick="confirmMerchantMishap6()">Salvage What You Can — Keep This Term's Benefit Roll</button>`;
+    }
+
+    async function confirmMerchantMishap6() {
+      const s = step5State();
+      await saveStep5State({ benefitRolls: (s.benefitRolls || 0) + 1 });
+      const resultText = "Salvaged what you could — kept this term's Benefit roll despite the bankruptcy.";
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Merchant Mishap 6: ${resultText}`);
+      renderStep();
+    }
+
+    // Merchant event 3 — accept (Deception/Persuade 8+ for Streetwise 1 +
+    // extra Benefit roll) or refuse (gain a criminal Enemy).
+    function renderMerchantEvent3(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.accepted) {
+        return resolverHeader('Smuggle the illegal items, or refuse?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="merchantEvent3Accept()">Accept</button>
+            <button class="btn-outline" onclick="merchantEvent3Refuse()">Refuse</button>
+          </div>
+        `;
+      }
+      if (!m.rolled) {
+        return resolverHeader('Roll Deception 8+ or Persuade 8+:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="rollMerchantEvent3('Deception')">Deception</button>
+            <button class="btn-outline" onclick="rollMerchantEvent3('Persuade')">Persuade</button>
+          </div>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function merchantEvent3Refuse() {
+      const name = 'A criminal contact';
+      await addAssociate('enemy', name, 'You refused to smuggle goods for them.');
+      const resultText = `Refused — gained ${name} as an Enemy in the criminal sphere.`;
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Merchant Event 3: ${resultText}`);
+      renderStep();
+    }
+
+    async function merchantEvent3Accept() {
+      await saveMechanic('event', { accepted: true });
+      renderStep();
+    }
+
+    async function rollMerchantEvent3(skillName) {
+      const key = skillKey(skillName, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      let resultText;
+      if (success) {
+        const skills = Object.assign({}, draft.skills || {});
+        grantSkillMin(skills, 'Streetwise', null, 1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        await addPendingMod('extraBenefitRolls', 1);
+        resultText = `Rolled ${total} on ${skillName} (need 8+) — success! Gained Streetwise 1 and an extra Benefit roll.`;
+      } else {
+        resultText = `Rolled ${total} on ${skillName} (need 8+) — failed. The smuggling run still went unreported, no further consequence.`;
+      }
+      await saveMechanic('event', { rolled: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Merchant Event 3: ${resultText}`);
+      renderStep();
+    }
+
+    // Merchant event 5 — gamble N Benefit rolls on Gambler 8+ or Broker 8+:
+    // success keeps half (rounded up), failure loses all risked; either way
+    // gain a level in whichever skill was used.
+    function renderMerchantEvent5(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      const s = step5State();
+      const available = s.benefitRolls || 0;
+      if (!available) {
+        return resolverHeader('You have no Benefit rolls accumulated yet to risk — nothing to gamble.') +
+          `<button class="btn-outline" onclick="markMechanicResolved('event')">Continue</button>`;
+      }
+      if (!m.risked) {
+        return resolverHeader(`You have ${available} Benefit roll(s) banked so far. How many do you want to risk?`) + `
+          <input id="merch-e5-risk" type="number" min="1" max="${available}" value="1" style="width:70px; margin-right:8px;" />
+          <button class="btn-outline" onclick="confirmMerchantEvent5Risk()">Confirm</button>
+        `;
+      }
+      if (!m.rolled) {
+        return resolverHeader(`Risking ${m.risked}. Roll Gambler 8+ or Broker 8+:`) + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="rollMerchantEvent5('Gambler')">Gambler</button>
+            <button class="btn-outline" onclick="rollMerchantEvent5('Broker')">Broker</button>
+          </div>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function confirmMerchantEvent5Risk() {
+      const s = step5State();
+      const available = s.benefitRolls || 0;
+      const risked = Math.max(1, Math.min(available, parseInt(document.getElementById('merch-e5-risk').value, 10) || 1));
+      await saveMechanic('event', { risked });
+      renderStep();
+    }
+
+    async function rollMerchantEvent5(skillName) {
+      const m = mechanicState('event');
+      const key = skillKey(skillName, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      const s = step5State();
+      let resultText;
+      if (success) {
+        const kept = Math.ceil(m.risked / 2);
+        const newBenefitRolls = (s.benefitRolls || 0) - m.risked + kept;
+        await saveStep5State({ benefitRolls: Math.max(0, newBenefitRolls) });
+        resultText = `Rolled ${total} on ${skillName} (need 8+) — success! Kept ${kept} of the ${m.risked} risked (now ${Math.max(0, newBenefitRolls)} Benefit roll(s) banked).`;
+      } else {
+        const newBenefitRolls = (s.benefitRolls || 0) - m.risked;
+        await saveStep5State({ benefitRolls: Math.max(0, newBenefitRolls) });
+        resultText = `Rolled ${total} on ${skillName} (need 8+) — failed. Lost all ${m.risked} risked (now ${Math.max(0, newBenefitRolls)} Benefit roll(s) banked).`;
+      }
+      const skills = Object.assign({}, draft.skills || {});
+      bumpSkill(skills, skillName, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      resultText += ` Gained a level in ${skillName}.`;
+      await saveMechanic('event', { rolled: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Merchant Event 5: ${resultText}`);
+      renderStep();
+    }
+
+    // Merchant event 11 — gain an Ally (unconditional), then choose
+    // Carouse 1 or DM+4 to the next advancement roll.
+    function renderMerchantEvent11(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.allyNamed) {
+        return resolverHeader('Name the Ally you befriended:') + `
+          <input id="merch-e11-name" type="text" placeholder="Name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmMerchantEvent11Ally()">Confirm</button>
+        `;
+      }
+      return resolverHeader('Choose your reward:') + `
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          <button class="btn-outline" onclick="confirmMerchantEvent11Choice(true)">Gain Carouse 1</button>
+          <button class="btn-outline" onclick="confirmMerchantEvent11Choice(false)">DM+4 to Next Advancement Roll</button>
+        </div>
+      `;
+    }
+
+    async function confirmMerchantEvent11Ally() {
+      const name = (document.getElementById('merch-e11-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('ally', name, 'A useful ally you befriended in business.');
+      await saveMechanic('event', { allyNamed: true, allyName: name });
+      await logCreation(`Merchant Event 11: gained ${name} as an Ally.`);
+      renderStep();
+    }
+
+    async function confirmMerchantEvent11Choice(takeSkill) {
+      const m = mechanicState('event');
+      let resultText;
+      if (takeSkill) {
+        const skills = Object.assign({}, draft.skills || {});
+        grantSkillMin(skills, 'Carouse', null, 1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        resultText = `Gained ${m.allyName} as an Ally and Carouse 1.`;
+      } else {
+        await addPendingMod('advancementDM', 4);
+        resultText = `Gained ${m.allyName} as an Ally and banked DM+4 to your next advancement roll.`;
+      }
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Merchant Event 11: ${resultText}`);
       renderStep();
     }
 
