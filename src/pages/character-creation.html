@@ -1918,7 +1918,7 @@
       { id: 'drifter', name: 'Drifter' }, { id: 'entertainer', name: 'Entertainer' }, { id: 'marine', name: 'Marine' },
       { id: 'merchant', name: 'Merchant' }, { id: 'navy', name: 'Navy' }, { id: 'noble', name: 'Noble' },
       { id: 'rogue', name: 'Rogue' }, { id: 'scholar', name: 'Scholar' }, { id: 'scout', name: 'Scout' },
-      { id: 'psion', name: 'Psion' }
+      { id: 'prisoner', name: 'Prisoner' }, { id: 'psion', name: 'Psion' }
     ];
 
     const CAREERS_DATA = {
@@ -2640,6 +2640,56 @@
           { roll: 11, text: 'You serve as the courier for an important message from the Imperium. Gain one level of Diplomat, or DM+4 to your next advancement roll instead.', tools: [] },
           { roll: 12, text: 'You discover a world, item, or information of worth to the Imperium. You are automatically promoted.', tools: [] }
         ]
+      },
+      prisoner: {
+        id: 'prisoner', name: 'Prisoner', source: 'Core Rulebook pp.53, 56-57', military: false,
+        // You cannot qualify for Prisoner — it's forced entry only, via
+        // another career's mishap/event text. See qualification.special
+        // handling in renderCareerQualify().
+        qualification: { special: true, specialLabel: "You don't qualify for prison — you're sentenced there for a crime, via another career's mishap or event." },
+        serviceSkills: [{ name: 'Athletics' }, { name: 'Deception' }, { name: 'Profession' }, { name: 'Streetwise' }, { name: 'Melee', specialty: 'Unarmed' }, { name: 'Persuade' }],
+        // Single shared rank table (Core p.56), like Scout.
+        ranksEnlisted: [
+          { rank: 0, title: '—', skill: { name: 'Melee', specialty: 'Unarmed', level: 1 } },
+          { rank: 1, title: '—' },
+          { rank: 2, title: '—', skill: { name: 'Athletics', level: 1 } },
+          { rank: 3, title: '—' },
+          { rank: 4, title: '—', skill: { name: 'Advocate', level: 1 } },
+          { rank: 5, title: '—' },
+          { rank: 6, title: '—', stat: { key: 'end_stat', amount: 1 } }
+        ],
+        assignments: [
+          { key: 'inmate', label: 'Inmate', survival: { stat: 'end_stat', target: 7 }, advancement: { stat: 'str', target: 7 },
+            specialistSkills: [{ name: 'Stealth' }, { name: 'Melee', specialty: 'Unarmed' }, { name: 'Streetwise' }, { name: 'Survival' }, { name: 'Athletics', specialty: 'Strength' }, { name: 'Mechanic' }] },
+          { key: 'thug', label: 'Thug', survival: { stat: 'str', target: 8 }, advancement: { stat: 'end_stat', target: 6 },
+            specialistSkills: [{ name: 'Persuade' }, { name: 'Melee', specialty: 'Unarmed' }, { name: 'Melee', specialty: 'Unarmed' }, { name: 'Melee', specialty: 'Blade' }, { name: 'Athletics', specialty: 'Strength' }, { name: 'Athletics', specialty: 'Strength' }] },
+          { key: 'fixer', label: 'Fixer', survival: { stat: 'int_stat', target: 9 }, advancement: { stat: 'end_stat', target: 5 },
+            specialistSkills: [{ name: 'Investigate' }, { name: 'Broker' }, { name: 'Deception' }, { name: 'Streetwise' }, { name: 'Stealth' }, { name: 'Admin' }] }
+        ],
+        personalDevelopment: [{ stat: 'str' }, { name: 'Melee', specialty: 'Unarmed' }, { stat: 'end_stat' }, { name: 'Jack-of-all-Trades' }, { stat: 'edu' }, { name: 'Gambler' }], // matches book's 1-6 order: STR+1, Melee(Unarmed), END+1, Jack-of-all-Trades, EDU+1, Gambler
+        musteringCash: [0, 0, 100, 200, 500, 1000, 2500],
+        musteringBenefits: ['Contact', 'Blade', 'Deception, Persuade, or Stealth', 'Ally', 'Melee, Recon, or Streetwise', 'STR +1 or END +1', 'Deception, Persuade, and Stealth'],
+        mishaps: [
+          { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
+          { roll: 2, text: 'You are accused of assaulting a prison guard. Parole Threshold +2.', tools: [], autoParole: { amount: 2 } },
+          { roll: 3, text: 'A prison gang persecutes you. Fight back if you wish, or lose all Benefit rolls from this career. If you fight: roll Melee (unarmed) 8+ — failure rolls on the Injury table twice (take the lower result), success gains an Enemy and raises your Parole Threshold by 1.', tools: [] },
+          { roll: 4, text: 'A guard takes a dislike to you. Gain an Enemy and raise your Parole Threshold by 1.', tools: ['associate'], autoParole: { amount: 1 } },
+          { roll: 5, text: 'Disgraced. Word of your criminal past reaches your homeworld. Lose 1 SOC.', tools: [], autoStat: { key: 'soc', amount: -1 } },
+          { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table. You are never ejected from this career regardless.', tools: [] },
+          { roll: 3, text: 'You have the opportunity to escape. Roll Stealth 10+ or Deception 10+: success means you leave this career immediately. Failure raises your Parole Threshold by 2.', tools: [] },
+          { roll: 4, text: 'You are assigned to difficult, backbreaking labour. Roll END 8+: failure raises your Parole Threshold by 1; success lets you reduce your Parole Threshold by 1 and gain one of Athletics 1, Mechanic 1, or Melee (unarmed) 1.', tools: [] },
+          { roll: 5, text: 'You have the opportunity to join a gang. Roll Persuade or Melee 8+: failure gains an Enemy. Success raises your Parole Threshold by 1, but grants DM+1 to all Survival rolls for the rest of this career and one of Deception 1, Persuade 1, Melee (unarmed) 1, or Stealth 1.', tools: [] },
+          { roll: 6, text: 'Vocational Training. Roll EDU 8+ to gain any one skill except Jack-of-all-Trades (which can never be trained).', tools: [] },
+          { roll: 7, text: 'Prison Event — roll 1D on the Prison Event sub-table.', tools: [] },
+          { roll: 8, text: 'Parole hearing. Reduce your Parole Threshold by 1.', tools: [], autoParole: { amount: -1 } },
+          { roll: 9, text: "You have the opportunity to hire a lawyer. Choose their Advocate skill level, then roll 2D plus that level: 8+ reduces your Parole Threshold by 1D (the lawyer's fee isn't deducted from cash on hand — this app doesn't track running cash mid-career).", tools: [] },
+          { roll: 10, text: 'Special Duty. You are given a special responsibility in the prison. Gain one of Admin 1, Advocate 1, Electronics 1, or Steward 1.', tools: ['skill'] },
+          { roll: 11, text: 'The warden takes an interest in your case. Reduce your Parole Threshold by 2.', tools: [], autoParole: { amount: -2 } },
+          { roll: 12, text: 'Heroism. You have the opportunity to save a guard or prison officer. If you take the risk, roll 2D: 7 or less rolls on the Injury table; 8+ gains an Ally and reduces your Parole Threshold by 2.', tools: [] }
+        ]
       }
     };
 
@@ -2986,7 +3036,7 @@
           <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid #0a4a60; border-radius:6px; margin-bottom:8px;">
             <span style="font-weight:600; ${built ? 'color:#00e5ff;' : 'color:#4a9ab8;'}">${c.name}</span>
             ${built
-              ? `<button class="btn-outline" onclick="chooseCareer('${c.id}')">Attempt Qualification</button>`
+              ? `<button class="btn-outline" onclick="chooseCareer('${c.id}')">${c.id === 'prisoner' ? 'Confirm Forced Entry' : 'Attempt Qualification'}</button>`
               : `<span style="font-size:0.75rem; color:#4a9ab8;">Not yet built</span>`
             }
           </div>
@@ -2998,7 +3048,7 @@
           <div class="wizard-card-title">Choose a Career</div>
           <div class="wizard-card-sub">
             ${s.terms ? `Age ${currentAge()}, ${s.terms} term${s.terms === 1 ? '' : 's'} served so far.` : 'Pick a career to attempt qualification for.'}
-            All careers are built: Navy, Drifter, Agent, Army, Citizen, Entertainer, Marine, Merchant, Noble, Rogue, Scholar and Scout. Only Psion remains unavailable (no PSI characteristic tracked). (Core Rulebook pp.17-46)
+            All careers are built: Navy, Drifter, Agent, Army, Citizen, Entertainer, Marine, Merchant, Noble, Rogue, Scholar, Scout and Prisoner. Only Psion remains unavailable (no PSI characteristic tracked). Note: Prisoner can't be entered voluntarily per the rules — only attempt qualification here if another career's mishap/event forced you into it. (Core Rulebook pp.17-57)
           </div>
           ${s.forcedDraftNextTerm ? `
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
@@ -3028,6 +3078,21 @@
       const s = step5State();
       const c = careerData(s.careerId);
       const previousCount = (s.careerHistory || []).length;
+
+      if (c.qualification.special) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Qualification</div>
+            <div class="wizard-card-sub">${c.qualification.specialLabel || 'This career cannot be qualified for normally — entry is forced by another career\'s mishap or event.'} Only confirm entry here if something else sent you here.</div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="doCareerQualify(true)">Confirm Forced Entry</button>
+            </div>
+            <div class="wizard-actions">
+              <button class="btn-outline" onclick="saveStep5State({phase:'choose'}).then(renderStep)">Back</button>
+            </div>
+          </div>
+        `;
+      }
 
       const conditionalAuto = c.qualification.autoIf && c.qualification.autoIf(draft);
       if (c.qualification.auto || conditionalAuto) {
@@ -3203,11 +3268,21 @@
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
       draft.skills = skills;
 
-      await saveStep5State({
+      // Prisoner's Parole Threshold (Core p.53) starts at 1D+2 the moment
+      // you're sentenced, and persists for the whole stay — only rolled
+      // once here, never reset by continueCareerTerm().
+      let extraPatch = {};
+      if (c.id === 'prisoner') {
+        const threshold = rollDie() + 2;
+        extraPatch = { paroleThreshold: threshold, survivalDMBonus: 0 };
+        await logCreation(`Prisoner — initial Parole Threshold set to ${threshold} (1D+2).`);
+      }
+
+      await saveStep5State(Object.assign({
         assignmentKey: key, rank: 0, isOfficer: false, termInCareer: 0,
         basicTrainingDone: isFirstCareer, benefitRolls: 0,
         phase: 'survival', basicTrainingGrant
-      });
+      }, extraPatch));
       await logCreation(`${c.name} — chose ${assignment.label} assignment.${basicTrainingGrant ? ` Basic Training: gained ${basicTrainingGrant}.` : ''}`);
       renderStep();
     }
@@ -3238,7 +3313,7 @@
         return `
           <div class="rule-card wizard-card">
             <div class="wizard-card-title">Survived</div>
-            <div class="wizard-card-sub">Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}${r.bonusDM ? (r.bonusDM > 0 ? ' + ' : ' − ') + Math.abs(r.bonusDM) + ' banked DM' : ''}), needed ${a.survival.target}+.</div>
+            <div class="wizard-card-sub">Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}${r.bonusDM ? (r.bonusDM > 0 ? ' + ' : ' − ') + Math.abs(r.bonusDM) + ' banked DM' : ''}${r.persistentDM ? (r.persistentDM > 0 ? ' + ' : ' − ') + Math.abs(r.persistentDM) + ' persistent DM' : ''}), needed ${a.survival.target}+.</div>
             <div class="wizard-actions">
               <button class="btn-outline" onclick="goCareerEvents()">Continue to Events</button>
             </div>
@@ -3263,10 +3338,16 @@
       const d1 = rollDie(), d2 = rollDie();
       const statDM = dmNum(draft[a.survival.stat]);
       const bonusDM = await consumePendingMod('survivalDM');
-      const total = d1 + d2 + statDM + bonusDM;
+      // Unlike bonusDM (a one-shot pending modifier, consumed the instant
+      // it's used), survivalDMBonus is a PERSISTENT buff for the rest of
+      // this stay in the career — Prisoner event 5 ("gang membership")
+      // grants DM+1 to all survival rolls for the remainder of the career,
+      // not just the next one.
+      const persistentDM = s.survivalDMBonus || 0;
+      const total = d1 + d2 + statDM + bonusDM + persistentDM;
       const success = (d1 + d2) !== 2 && total >= a.survival.target;
-      await saveStep5State({ survivalResult: { dice: [d1, d2], statDM, bonusDM, total, success }, basicTrainingGrant: null });
-      await logCreation(`${c.name} (${a.label}) — Survival: rolled ${total} (need ${a.survival.target}+${bonusDM ? ', incl. ' + (bonusDM > 0 ? '+' : '') + bonusDM + ' banked DM' : ''}) — ${success ? 'survived.' : 'failed.'}`);
+      await saveStep5State({ survivalResult: { dice: [d1, d2], statDM, bonusDM, persistentDM, total, success }, basicTrainingGrant: null });
+      await logCreation(`${c.name} (${a.label}) — Survival: rolled ${total} (need ${a.survival.target}+${bonusDM ? ', incl. ' + (bonusDM > 0 ? '+' : '') + bonusDM + ' banked DM' : ''}${persistentDM ? ', incl. ' + (persistentDM > 0 ? '+' : '') + persistentDM + ' persistent DM' : ''}) — ${success ? 'survived.' : 'failed.'}`);
       renderStep();
     }
 
@@ -3294,7 +3375,10 @@
       // Most mishaps' eject/stay outcome is fixed per entry (m.noEject), but
       // a few (Scholar mishap 5) let the player CHOOSE whether they're
       // ejected — bespoke mechanics signal that via mishapMechanic.noEjectOverride.
-      const noEject = m.noEject || (s.mishapMechanic && s.mishapMechanic.noEjectOverride);
+      // Prisoner is a blanket exception: "not even Mishaps will force them
+      // to leave" (Core p.53) — leaving is governed entirely by the Parole
+      // Threshold check at term end, never by a mishap roll.
+      const noEject = m.noEject || (s.mishapMechanic && s.mishapMechanic.noEjectOverride) || c.id === 'prisoner';
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Mishap ${s.mishapRoll}</div>
@@ -3337,7 +3421,28 @@
           parts.push(`${s.key} ${s.amount > 0 ? '+' : ''}${s.amount}`);
         }
       }
+      if (entry.autoParole) {
+        const newThreshold = await adjustParoleThreshold(entry.autoParole.amount);
+        parts.push(`Parole Threshold ${entry.autoParole.amount > 0 ? '+' : ''}${entry.autoParole.amount} (now ${newThreshold})`);
+      }
       return parts.join(', ');
+    }
+
+    // ── Prisoner's Parole Threshold (Core p.53) — persists for the whole
+    // stay in the career, capped at 12 (the book sets no floor, so none is
+    // imposed here either). Adjusted by many of Prisoner's own mishaps and
+    // events; re-rolled fresh on a prison transfer.
+    async function adjustParoleThreshold(amount) {
+      const s = step5State();
+      const newThreshold = Math.min(12, (s.paroleThreshold || 0) + amount);
+      await saveStep5State({ paroleThreshold: newThreshold });
+      return newThreshold;
+    }
+
+    async function rerollParoleThreshold() {
+      const newThreshold = rollDie() + 2;
+      await saveStep5State({ paroleThreshold: newThreshold });
+      return newThreshold;
     }
 
     async function rollCareerMishap() {
@@ -3777,6 +3882,15 @@
         case 'scout:11':      return renderChooseSkillOrDM(tag, m, { name: 'Diplomat', level: 1 }, 'advancementDM', 4);
         case 'scout:12':      return renderBankAutoPromote(tag, m);
         case 'scout:mishap3': return renderScoutMishap3(tag, m);
+        case 'prisoner:2':    return renderInlineMishapNotEjected(tag, careerId, m);
+        case 'prisoner:3':    return renderPrisonerEvent3(tag, m);
+        case 'prisoner:4':    return renderPrisonerEvent4(tag, m);
+        case 'prisoner:5':    return renderPrisonerEvent5(tag, m);
+        case 'prisoner:6':    return renderChooseSkillThenRollEdu(tag, m, 8, 'Prisoner Event 6', ['Jack-of-all-Trades']);
+        case 'prisoner:7':    return renderPrisonerEvent7(tag, m);
+        case 'prisoner:9':    return renderPrisonerEvent9(tag, m);
+        case 'prisoner:12':   return renderPrisonerEvent12(tag, m);
+        case 'prisoner:mishap3': return renderPrisonerMishap3(tag, m);
         default: return null;
       }
     }
@@ -4501,10 +4615,11 @@
 
     // Generic "choose any skill, roll EDU N+ to gain it at level 1" (Citizen
     // event 6, Marine event 5). `label` is used in the Creation Log only.
-    function renderChooseSkillThenRollEdu(tag, m, target, label) {
+    function renderChooseSkillThenRollEdu(tag, m, target, label, excludeNames) {
       if (!m.chosenName) {
-        return resolverHeader('Choose a skill to gain (if your roll succeeds):') + `
-          <select id="${tag}-cstr-skill">${SKILLS.map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
+        const pool = excludeNames ? SKILLS.filter(sk => !excludeNames.includes(sk.name)) : SKILLS;
+        return resolverHeader(`Choose a skill to gain (if your roll succeeds)${excludeNames ? ` — excludes ${excludeNames.join(', ')}, which can never be trained this way` : ''}:`) + `
+          <select id="${tag}-cstr-skill">${pool.map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
           <button class="btn-outline" onclick="chooseSkillThenRollEdu('${tag}','${label}')">Choose</button>
         `;
       }
@@ -6047,6 +6162,457 @@
     // hardcode tag='mishap' internally) fires correctly here too, not
     // just the generic resolver tools. Bridges completion back to the
     // outer event's own resolved flag via finishInlineMishap().
+    // Prisoner mishap 3 — fight back or lose all Benefit rolls from this
+    // career. If you fight: Melee (unarmed) 8+, failure rolls the Injury
+    // table twice and keeps the LOWER (more severe) result (mirrors
+    // Scholar mishap 2's "twice, keep higher" but the other direction),
+    // success gains an Enemy and raises Parole Threshold by 1.
+    function renderPrisonerMishap3(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.choice) {
+        return resolverHeader('Fight back, or let them have their way?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="prisonerMishap3Fight()">Fight Back — Roll Melee (Unarmed) 8+</button>
+            <button class="btn-outline" onclick="prisonerMishap3GiveUp()">Don't Fight — Lose All Benefit Rolls</button>
+          </div>
+        `;
+      }
+      if (!m.rolled) {
+        return resolverHeader('Roll Melee (Unarmed) 8+:') + `<button class="btn-outline" onclick="rollPrisonerMishap3()">Roll</button>
+          <div id="resolver-${tag}"></div>`;
+      }
+      if (!m.success) return resolverHeader(m.resultText) + `<div id="resolver-${tag}"></div>`;
+      if (!m.enemyNamed) {
+        return resolverHeader(m.resultText) + `
+          <input id="prisoner-m3-name" type="text" placeholder="Enemy name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmPrisonerMishap3Enemy()">Confirm</button>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function prisonerMishap3GiveUp() {
+      await saveStep5State({ benefitRolls: 0 });
+      const resultText = 'Did not fight back — lost all Benefit rolls from this career.';
+      await saveMechanic('mishap', { choice: 'giveup', resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Prisoner Mishap 3: ${resultText}`);
+      renderStep();
+    }
+
+    async function prisonerMishap3Fight() {
+      await saveMechanic('mishap', { choice: 'fight' });
+      renderStep();
+    }
+
+    async function rollPrisonerMishap3() {
+      const key = skillKey('Melee', 'Unarmed');
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      const resultText = success
+        ? `Rolled ${total} on Melee (Unarmed) (need 8+) — you held your own.`
+        : `Rolled ${total} on Melee (Unarmed) (need 8+) — you took a beating. Roll on the Injury table twice and keep the lower (more severe) result.`;
+      await saveMechanic('mishap', { rolled: true, success, resultText });
+      if (success) await adjustParoleThreshold(1);
+      await logCreation(`Prisoner Mishap 3: ${resultText}`);
+      renderStep();
+      if (!success) rollPrisonerMishap3InjuryTwice();
+    }
+
+    function rollPrisonerMishap3InjuryTwice() {
+      const roll1 = rollDie(), roll2 = rollDie();
+      const chosen = Math.min(roll1, roll2);
+      const entry = INJURY_TABLE.find(x => x.roll === chosen);
+      logCreation(`Prisoner Mishap 3: rolled ${roll1} and ${roll2} on the Injury table — kept the lower (more severe) result (${chosen}).`);
+      renderInjuryPicker('mishap', chosen, entry);
+    }
+
+    async function confirmPrisonerMishap3Enemy() {
+      const name = (document.getElementById('prisoner-m3-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('enemy', name, 'A member of the prison gang that targeted you.');
+      const resultText = `Held your own — gained ${name} as an Enemy, raised Parole Threshold by 1.`;
+      await saveMechanic('mishap', { enemyNamed: true, resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Prisoner Mishap 3: ${resultText}`);
+      renderStep();
+    }
+
+    // Prisoner event 3 — escape attempt: Stealth 10+ or Deception 10+
+    // leaves the career immediately on success; failure raises Parole
+    // Threshold by 2.
+    function renderPrisonerEvent3(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.choice) {
+        return resolverHeader('Attempt the escape?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="prisonerEvent3Choose('stealth')">Stealth — Roll 10+</button>
+            <button class="btn-outline" onclick="prisonerEvent3Choose('deception')">Deception — Roll 10+</button>
+            <button class="btn-outline" onclick="markMechanicResolved('event')">Don't Attempt It</button>
+          </div>
+        `;
+      }
+      if (!m.rolled) {
+        const skillName = m.choice === 'stealth' ? 'Stealth' : 'Deception';
+        return resolverHeader(`Roll ${skillName} 10+:`) + `<button class="btn-outline" onclick="rollPrisonerEvent3()">Roll</button>`;
+      }
+      if (m.success) {
+        return resolverHeader(m.resultText) + `<button class="btn-outline" onclick="prisonerEscape()">Leave the Career — You Escaped</button>`;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function prisonerEvent3Choose(choice) {
+      await saveMechanic('event', { choice });
+      renderStep();
+    }
+
+    async function rollPrisonerEvent3() {
+      const m = mechanicState('event');
+      const skillName = m.choice === 'stealth' ? 'Stealth' : 'Deception';
+      const key = skillKey(skillName, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 10;
+      let resultText;
+      if (success) {
+        resultText = `Rolled ${total} on ${skillName} (need 10+) — you slip away unseen.`;
+      } else {
+        const newThreshold = await adjustParoleThreshold(2);
+        resultText = `Rolled ${total} on ${skillName} (need 10+) — caught. Parole Threshold raised by 2 (now ${newThreshold}).`;
+      }
+      await saveMechanic('event', { rolled: true, success, resultText, resolved: !success });
+      if (!success) await resolveMechanic('event');
+      await logCreation(`Prisoner Event 3: ${resultText}`);
+      renderStep();
+    }
+
+    async function prisonerEscape() {
+      await recordCareerHistory(true);
+      const s = step5State();
+      const newTerms = s.terms + 1;
+      await supabaseClient.from('characters').update({ age: 18 + 4 * newTerms }).eq('id', draft.id);
+      draft.age = 18 + 4 * newTerms;
+      await saveStep5State({ terms: newTerms, paroleThreshold: null });
+      await logCreation('Prisoner — escaped successfully.');
+      await goToAgeingOrPhase('mustering');
+    }
+
+    // Prisoner event 4 — backbreaking labour: END 8+, failure raises
+    // Parole Threshold by 1, success lowers it by 1 and grants a skill choice.
+    function renderPrisonerEvent4(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.rolled) {
+        return resolverHeader('Roll END 8+:') + `<button class="btn-outline" onclick="rollPrisonerEvent4()">Roll</button>`;
+      }
+      if (m.success && !m.skillChosen) {
+        return resolverHeader(m.resultText) + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="confirmPrisonerEvent4Skill('Athletics')">Athletics</button>
+            <button class="btn-outline" onclick="confirmPrisonerEvent4Skill('Mechanic')">Mechanic</button>
+            <button class="btn-outline" onclick="confirmPrisonerEvent4Skill('Melee')">Melee (Unarmed)</button>
+          </div>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollPrisonerEvent4() {
+      const total = roll2d6() + dmNum(draft.end_stat);
+      const success = total >= 8;
+      let resultText;
+      if (success) {
+        const newThreshold = await adjustParoleThreshold(-1);
+        resultText = `Rolled ${total} on END (need 8+) — success! Parole Threshold lowered by 1 (now ${newThreshold}). Choose a skill to gain:`;
+      } else {
+        const newThreshold = await adjustParoleThreshold(1);
+        resultText = `Rolled ${total} on END (need 8+) — failed. Parole Threshold raised by 1 (now ${newThreshold}).`;
+      }
+      await saveMechanic('event', { rolled: true, success, resultText, resolved: !success });
+      if (!success) await resolveMechanic('event');
+      await logCreation(`Prisoner Event 4: ${resultText}`);
+      renderStep();
+    }
+
+    async function confirmPrisonerEvent4Skill(skillName) {
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, skillName, skillName === 'Melee' ? 'Unarmed' : null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const resultText = `Gained ${skillName}${skillName === 'Melee' ? ' (Unarmed)' : ''} 1.`;
+      await saveMechanic('event', { skillChosen: skillName, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Prisoner Event 4: ${resultText}`);
+      renderStep();
+    }
+
+    // Prisoner event 5 — join a gang: Persuade or Melee 8+, failure gains
+    // an Enemy, success raises Parole Threshold by 1 but grants a
+    // PERSISTENT DM+1 to all future Survival rolls this career plus a skill choice.
+    function renderPrisonerEvent5(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.choice) {
+        return resolverHeader('Choose which skill to roll (need 8+) to join the gang:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="rollPrisonerEvent5('Persuade')">Persuade</button>
+            <button class="btn-outline" onclick="rollPrisonerEvent5('Melee')">Melee</button>
+          </div>
+        `;
+      }
+      if (!m.success && !m.enemyNamed) {
+        return resolverHeader(m.resultText) + `
+          <input id="prisoner-e5-name" type="text" placeholder="Enemy name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmPrisonerEvent5Enemy()">Confirm</button>
+        `;
+      }
+      if (m.success && !m.skillChosen) {
+        return resolverHeader(m.resultText) + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="confirmPrisonerEvent5Skill('Deception')">Deception</button>
+            <button class="btn-outline" onclick="confirmPrisonerEvent5Skill('Persuade')">Persuade</button>
+            <button class="btn-outline" onclick="confirmPrisonerEvent5Skill('Melee')">Melee (Unarmed)</button>
+            <button class="btn-outline" onclick="confirmPrisonerEvent5Skill('Stealth')">Stealth</button>
+          </div>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollPrisonerEvent5(skillName) {
+      const key = skillKey(skillName, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      let resultText;
+      if (success) {
+        const newThreshold = await adjustParoleThreshold(1);
+        const s = step5State();
+        await saveStep5State({ survivalDMBonus: (s.survivalDMBonus || 0) + 1 });
+        resultText = `Rolled ${total} on ${skillName} (need 8+) — joined the gang. Parole Threshold raised by 1 (now ${newThreshold}), but you now have DM+1 to all Survival rolls for the rest of this career. Choose a skill to gain:`;
+      } else {
+        resultText = `Rolled ${total} on ${skillName} (need 8+) — refused entry. Name the Enemy you gained:`;
+      }
+      await saveMechanic('event', { choice: skillName, success, resultText });
+      await logCreation(`Prisoner Event 5: rolled ${total} on ${skillName} — ${success ? 'joined the gang.' : 'failed.'}`);
+      renderStep();
+    }
+
+    async function confirmPrisonerEvent5Enemy() {
+      const name = (document.getElementById('prisoner-e5-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('enemy', name, 'Rejected you from their prison gang.');
+      const resultText = `Gained ${name} as an Enemy.`;
+      await saveMechanic('event', { enemyNamed: true, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Prisoner Event 5: ${resultText}`);
+      renderStep();
+    }
+
+    async function confirmPrisonerEvent5Skill(skillName) {
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, skillName, skillName === 'Melee' ? 'Unarmed' : null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const resultText = `Gained ${skillName}${skillName === 'Melee' ? ' (Unarmed)' : ''} 1.`;
+      await saveMechanic('event', { skillChosen: skillName, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Prisoner Event 5: ${resultText}`);
+      renderStep();
+    }
+
+    // Prisoner event 7 — Prison Event sub-table (Core p.57), its own 1D table.
+    const PRISON_EVENT_TABLE = {
+      1: 'Riot. A riot engulfs the prison.',
+      2: 'New Contact. You make friends with another inmate.',
+      3: 'New Rival. You gain a new Rival among the inmates or guards.',
+      4: 'Transferred. You are moved to a different prison — re-roll your Parole Threshold.',
+      5: 'Good Behaviour. Reduce your Parole Threshold by 2.',
+      6: 'Attacked. You are attacked by another prisoner.'
+    };
+
+    function renderPrisonerEvent7(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.subRoll) {
+        return resolverHeader('Roll 1D on the Prison Event sub-table.') + `<button class="btn-outline" onclick="rollPrisonerEvent7()">Roll 1D</button>`;
+      }
+      const header = resolverHeader(`Rolled ${m.subRoll} — ${PRISON_EVENT_TABLE[m.subRoll]}`);
+      if (m.subRoll === 1) {
+        if (!m.riotRolled) return header + `<button class="btn-outline" onclick="rollPrisonerEvent7Riot()">Roll 1D</button>`;
+        if (m.riotInjury) return header + resolverHeader(m.resultText) + renderGenericResolver('event', ['injury'], true);
+        return header + resolverHeader(m.resultText);
+      }
+      if (m.subRoll === 2 && !m.contactNamed) {
+        return header + `
+          <input id="prisoner-e7-name" type="text" placeholder="Contact name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmPrisonerEvent7Associate('contact')">Confirm</button>
+        `;
+      }
+      if (m.subRoll === 3 && !m.rivalNamed) {
+        return header + `
+          <input id="prisoner-e7-name" type="text" placeholder="Rival name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmPrisonerEvent7Associate('rival')">Confirm</button>
+        `;
+      }
+      if (m.subRoll === 6) {
+        if (!m.rolled) return header + `<button class="btn-outline" onclick="rollPrisonerEvent7Attack()">Roll Melee (Unarmed) 8+</button>`;
+        if (!m.success) return header + resolverHeader(m.resultText) + renderGenericResolver('event', ['injury'], true);
+        return header + resolverHeader(m.resultText);
+      }
+      return header + resolverHeader(m.resultText || 'Resolved.');
+    }
+
+    async function rollPrisonerEvent7() {
+      const roll = rollDie();
+      await saveMechanic('event', { subRoll: roll });
+      await logCreation(`Prisoner Event 7 — Prison Event: rolled ${roll} — ${PRISON_EVENT_TABLE[roll]}`);
+      if (roll === 4) {
+        const newThreshold = await rerollParoleThreshold();
+        await saveMechanic('event', { resolved: true, resultText: `Transferred — Parole Threshold re-rolled (now ${newThreshold}).` });
+        await resolveMechanic('event');
+        await logCreation(`Prisoner Event 7: Parole Threshold re-rolled to ${newThreshold}.`);
+      } else if (roll === 5) {
+        const newThreshold = await adjustParoleThreshold(-2);
+        await saveMechanic('event', { resolved: true, resultText: `Good Behaviour — Parole Threshold reduced by 2 (now ${newThreshold}).` });
+        await resolveMechanic('event');
+        await logCreation(`Prisoner Event 7: Parole Threshold reduced to ${newThreshold}.`);
+      }
+      renderStep();
+    }
+
+    async function rollPrisonerEvent7Riot() {
+      const roll = rollDie();
+      let resultText;
+      const riotInjury = roll <= 2;
+      if (riotInjury) {
+        resultText = `Rolled ${roll} — injured in the riot. Roll on the Injury table.`;
+      } else if (roll >= 5) {
+        const s = step5State();
+        await saveStep5State({ benefitRolls: (s.benefitRolls || 0) + 1 });
+        resultText = `Rolled ${roll} — looted something useful, gained an extra Benefit roll.`;
+      } else {
+        resultText = `Rolled ${roll} — you keep your head down. Nothing else happens.`;
+      }
+      await saveMechanic('event', { riotRolled: true, riotInjury, resultText, resolved: !riotInjury });
+      if (!riotInjury) await resolveMechanic('event');
+      await logCreation(`Prisoner Event 7 (Riot): ${resultText}`);
+      renderStep();
+    }
+
+    async function confirmPrisonerEvent7Associate(type) {
+      const name = (document.getElementById('prisoner-e7-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate(type, name, type === 'contact' ? 'Another inmate you befriended.' : 'A rival among the inmates or guards.');
+      const resultText = `Gained ${name} as ${type === 'contact' ? 'a Contact' : 'a Rival'}.`;
+      await saveMechanic('event', { [type === 'contact' ? 'contactNamed' : 'rivalNamed']: true, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Prisoner Event 7: ${resultText}`);
+      renderStep();
+    }
+
+    async function rollPrisonerEvent7Attack() {
+      const key = skillKey('Melee', 'Unarmed');
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      const resultText = success
+        ? `Rolled ${total} on Melee (Unarmed) (need 8+) — you fought them off.`
+        : `Rolled ${total} on Melee (Unarmed) (need 8+) — injured. Roll on the Injury table.`;
+      await saveMechanic('event', { rolled: true, success, resultText, resolved: success });
+      if (success) await resolveMechanic('event');
+      await logCreation(`Prisoner Event 7 (Attacked): ${resultText}`);
+      renderStep();
+    }
+
+    // Prisoner event 9 — hire a lawyer: choose their Advocate skill level,
+    // roll 2D + that level vs 8+ to reduce Parole Threshold by 1D.
+    function renderPrisonerEvent9(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.lawyerLevel) {
+        return resolverHeader("Choose your lawyer's Advocate skill level:") + `
+          <input id="prisoner-e9-level" type="number" min="0" max="4" value="1" style="width:60px; margin-right:8px;" />
+          <button class="btn-outline" onclick="confirmPrisonerEvent9Level()">Confirm</button>
+        `;
+      }
+      if (!m.rolled) {
+        return resolverHeader(`Roll 2D + Advocate ${m.lawyerLevel} (need 8+):`) + `<button class="btn-outline" onclick="rollPrisonerEvent9()">Roll</button>`;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function confirmPrisonerEvent9Level() {
+      const level = Math.max(0, Math.min(4, parseInt(document.getElementById('prisoner-e9-level').value, 10) || 0));
+      await saveMechanic('event', { lawyerLevel: level });
+      renderStep();
+    }
+
+    async function rollPrisonerEvent9() {
+      const m = mechanicState('event');
+      const total = roll2d6() + m.lawyerLevel;
+      const success = total >= 8;
+      let resultText;
+      if (success) {
+        const reduction = rollDie();
+        const newThreshold = await adjustParoleThreshold(-reduction);
+        resultText = `Rolled ${total} on 2D+Advocate ${m.lawyerLevel} (need 8+) — success! Parole Threshold reduced by ${reduction} (now ${newThreshold}).`;
+      } else {
+        resultText = `Rolled ${total} on 2D+Advocate ${m.lawyerLevel} (need 8+) — no change to your Parole Threshold.`;
+      }
+      await saveMechanic('event', { rolled: true, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Prisoner Event 9: ${resultText}`);
+      renderStep();
+    }
+
+    // Prisoner event 12 — heroism: take the risk (2D roll, 7 or less
+    // injures, 8+ gains an Ally and reduces Parole Threshold by 2) or decline.
+    function renderPrisonerEvent12(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.choice) {
+        return resolverHeader('Take the risk to save the guard or officer?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="prisonerEvent12TakeRisk()">Take the Risk — Roll 2D</button>
+            <button class="btn-outline" onclick="markMechanicResolved('event')">Decline</button>
+          </div>
+        `;
+      }
+      if (!m.rolled) {
+        return resolverHeader('Roll 2D:') + `<button class="btn-outline" onclick="rollPrisonerEvent12()">Roll</button>`;
+      }
+      if (m.success && !m.allyNamed) {
+        return resolverHeader(m.resultText) + `
+          <input id="prisoner-e12-name" type="text" placeholder="Ally name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmPrisonerEvent12Ally()">Confirm</button>
+        `;
+      }
+      if (!m.success) return resolverHeader(m.resultText) + renderGenericResolver('event', ['injury'], true);
+      return resolverHeader(m.resultText);
+    }
+
+    async function prisonerEvent12TakeRisk() {
+      await saveMechanic('event', { choice: 'risk' });
+      renderStep();
+    }
+
+    async function rollPrisonerEvent12() {
+      const total = roll2d6();
+      const success = total >= 8;
+      const resultText = success
+        ? `Rolled ${total} — you save them! Name the Ally you gained:`
+        : `Rolled ${total} (7 or less) — you're hurt in the attempt. Roll on the Injury table.`;
+      await saveMechanic('event', { rolled: true, success, resultText });
+      if (success) await adjustParoleThreshold(-2);
+      await logCreation(`Prisoner Event 12: ${resultText}`);
+      renderStep();
+    }
+
+    async function confirmPrisonerEvent12Ally() {
+      const name = (document.getElementById('prisoner-e12-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('ally', name, 'A guard or prison officer you saved.');
+      const resultText = `Saved them — gained ${name} as an Ally, Parole Threshold reduced by 2.`;
+      await saveMechanic('event', { allyNamed: true, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Prisoner Event 12: ${resultText}`);
+      renderStep();
+    }
+
     function renderInlineMishapNotEjected(tag, careerId, m) {
       const c = careerData(careerId);
       if (!m.rolled) {
@@ -6254,7 +6820,8 @@
           <div class="wizard-card-sub">
             ${r.rankBonus === 'automatic' ? 'Automatic promotion applied.' : `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}${r.bonusDM ? ' + ' + r.bonusDM + ' banked bonus' : ''}), needed ${a.advancement.target}+.`}
             ${r.success ? `Promoted to rank ${s.rank}${r.rankBonus && r.rankBonus !== 'automatic' ? ' — ' + r.rankBonus : ''}.` : 'No promotion this term.'}
-            ${r.mustLeave ? ' This roll was at or below your terms in this career — you must leave after this term (unless overridden by a natural 12).' : ''}
+            ${r.mustLeave && c.id !== 'prisoner' ? ' This roll was at or below your terms in this career — you must leave after this term (unless overridden by a natural 12).' : ''}
+            ${c.id === 'prisoner' ? ` This roll (${r.total}) will also be checked against your Parole Threshold (${s.paroleThreshold}) at the end of this term.` : ''}
           </div>
           <div class="wizard-actions">
             <button class="btn-outline" onclick="goCareerSkillTraining()">Continue to Skill Training</button>
@@ -6425,6 +6992,31 @@
       const s = step5State();
       const c = careerData(s.careerId);
       const a = currentAssignment(s, c);
+
+      // Prisoner replaces the normal voluntary-leave/forced-leave choice
+      // entirely: you may never choose to stay or leave. The SAME
+      // advancement roll total used for rank promotion is also checked
+      // against the Parole Threshold — beat it and you're released,
+      // otherwise you serve another term with no say in the matter.
+      if (c.id === 'prisoner') {
+        const total = s.advancementResult ? s.advancementResult.total : 0;
+        const paroled = total > (s.paroleThreshold || 0);
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} (${a.label}) — Term ${s.termInCareer + 1} Complete</div>
+            <div class="wizard-card-sub">Rank ${s.rank}. Benefit rolls banked: ${s.benefitRolls}. Parole Threshold: ${s.paroleThreshold}. Your advancement roll this term was ${total}.</div>
+            <p style="${paroled ? 'color:#00ffaa;' : 'color:#ff5a4a;'} font-size:0.85rem; margin-bottom:10px;">
+              ${paroled ? 'Your roll beat your Parole Threshold — your sentence is over.' : 'Your roll did not beat your Parole Threshold — you must serve another term. This is not a choice.'}
+            </p>
+            <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
+              ${paroled
+                ? '<button class="btn-outline" onclick="prisonerParoled()">Leave Career — Paroled</button>'
+                : '<button class="btn-outline" onclick="continueCareerTerm()">Serve Another Term</button>'}
+            </div>
+          </div>
+        `;
+      }
+
       const forcedLeave = s.advancementResult && s.advancementResult.mustLeave;
 
       return `
@@ -6438,6 +7030,17 @@
           </div>
         </div>
       `;
+    }
+
+    async function prisonerParoled() {
+      await recordCareerHistory(true);
+      const s = step5State();
+      const newTerms = s.terms + 1;
+      await supabaseClient.from('characters').update({ age: 18 + 4 * newTerms }).eq('id', draft.id);
+      draft.age = 18 + 4 * newTerms;
+      await saveStep5State({ terms: newTerms, paroleThreshold: null });
+      await logCreation('Prisoner — paroled. Sentence served.');
+      await goToAgeingOrPhase('mustering');
     }
 
     async function continueCareerTerm() {
