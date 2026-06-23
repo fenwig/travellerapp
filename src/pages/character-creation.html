@@ -2446,7 +2446,7 @@
           { roll: 3, text: 'You are invited to take part in a controversial event or exhibition. Roll Art or Investigate 8+: success gains one SOC, failure loses one SOC.', tools: [] },
           { roll: 4, text: "You are part of your homeworld's celebrity circles. Gain one of Carouse 1, Persuade 1, Steward 1, or a Contact.", tools: ['skill', 'associate'], skillOptions: [{ name: 'Carouse', level: 1 }, { name: 'Persuade', level: 1 }, { name: 'Steward', level: 1 }], associateTypes: ['contact'] },
           { roll: 5, text: 'One of your works is especially well received, making you a minor celebrity. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
-          { roll: 6, text: 'You gain a patron in the arts. Gain DM+2 to your next advancement roll and an Ally.', tools: ['associate'], autoDM: { key: 'advancementDM', amount: 2 } },
+          { roll: 6, text: 'You gain a patron in the arts. Gain DM+2 to your next advancement roll and an Ally.', tools: ['associate'], associateTypes: ['ally'], autoDM: { key: 'advancementDM', amount: 2 } },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
           { roll: 8, text: 'You can criticise or even bring down a questionable political leader on your homeworld. Refuse and support the leader: gain nothing. Accept: gain an Enemy and roll Art or Persuade 8+ — success gains a level in any skill you already have, failure still gains the level but also rolls on the Mishap table.', tools: [] },
           { roll: 9, text: 'You go on a tour of the sector, visiting several worlds. Gain D3 Contacts.', tools: [] },
@@ -5665,7 +5665,6 @@
     // also routes to the real Mishap phase).
     function renderEntertainerEvent8(tag, m) {
       if (m.resolved) return resolverHeader(m.resultText);
-      if (m.specialtyGateFor) return renderSpecialtyGate(tag, m.specialtyGateFor);
       if (!m.accepted) {
         return resolverHeader('Bring down the political leader, or refuse and support them?') + `
           <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
@@ -5689,8 +5688,13 @@
         `;
       }
       if (!m.skillChosen) {
+        const owned = Object.keys(draft.skills || {}).map(k => draft.skills[k]);
+        if (!owned.length) {
+          return resolverHeader(`${m.resultText} You have no skills yet to improve — nothing to choose.`) +
+            `<button class="btn-outline" onclick="finishEntertainerEvent8Skill(null)">Continue</button>`;
+        }
         return resolverHeader(m.resultText) + `
-          <select id="ent-e8-skill">${SKILLS.map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
+          <select id="ent-e8-skill">${owned.map(o => `<option value="${skillKey(o.name, o.specialty)}">${o.name}${o.specialty ? ' (' + o.specialty + ')' : ''} ${o.level}</option>`).join('')}</select>
           <button class="btn-outline" onclick="chooseEntertainerEvent8Skill()">Increase This Skill</button>
         `;
       }
@@ -5732,22 +5736,27 @@
     }
 
     async function chooseEntertainerEvent8Skill() {
-      const skillName = document.getElementById('ent-e8-skill').value;
-      await gateSpecialty('event', skillName, (specialty) => finishEntertainerEvent8Skill(skillName, specialty));
+      const chosenKey = document.getElementById('ent-e8-skill').value;
+      await finishEntertainerEvent8Skill(chosenKey);
     }
 
-    async function finishEntertainerEvent8Skill(skillName, specialty) {
+    async function finishEntertainerEvent8Skill(chosenKey) {
       const m = mechanicState('event');
-      const skills = Object.assign({}, draft.skills || {});
-      if (specialty) bumpSpecialtySkill(skills, skillName, specialty, 1);
-      else bumpSkill(skills, skillName, null, 1);
-      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
-      draft.skills = skills;
-      const skillLabel = specialty ? `${skillName} (${specialty})` : skillName;
-      const resultText = m.success
-        ? `Increased ${skillLabel} by one level.`
-        : `Increased ${skillLabel} by one level, but must now roll on the Mishap table.`;
-      await saveMechanic('event', { skillChosen: skillName, resolved: m.success, resultText });
+      let resultText;
+      if (chosenKey) {
+        const skills = Object.assign({}, draft.skills || {});
+        const owned = skills[chosenKey];
+        bumpSkill(skills, owned.name, owned.specialty, 1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        const skillLabel = owned.specialty ? `${owned.name} (${owned.specialty})` : owned.name;
+        resultText = m.success
+          ? `Increased ${skillLabel} by one level.`
+          : `Increased ${skillLabel} by one level, but must now roll on the Mishap table.`;
+      } else {
+        resultText = m.success ? 'No skills to improve.' : 'No skills to improve, but must now roll on the Mishap table.';
+      }
+      await saveMechanic('event', { skillChosen: chosenKey || 'none', resolved: m.success, resultText });
       if (m.success) await resolveMechanic('event');
       await logCreation(`Entertainer Event 8: ${resultText}`);
       renderStep();
