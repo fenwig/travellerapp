@@ -554,8 +554,8 @@
         benefits: [
           { id: 'bump_chosen', text: 'Increase both skills chosen at entry by one level.', type: 'bumpEntrySkills', amount: 1 },
           { id: 'edu1', text: 'Increase EDU by an additional +1.', type: 'stat', key: 'edu', amount: 1 },
-          { id: 'qual_dm', text: 'DM+1 to qualify for Agent, Army, Citizen (corporate), Entertainer (journalist), Marines, Navy, Scholar, Scouts.', type: 'pendingMod', key: 'qualificationDM', amount: 1 },
-          { id: 'qual_dm_honours', text: 'Honours graduates get an additional DM+1 to that same qualification roll (DM+2 total).', type: 'pendingMod', key: 'qualificationDM', amount: 1, honoursOnly: true },
+          { id: 'qual_dm', text: 'DM+1 to qualify for Agent, Army, Citizen (corporate), Entertainer (journalist), Marines, Navy, Scholar, Scouts.', type: 'academyBonus', amount: 1, careers: ['agent', 'army', 'citizen', 'entertainer', 'marine', 'navy', 'scholar', 'scout'], rollTypes: ['qualification'] },
+          { id: 'qual_dm_honours', text: 'Honours graduates get an additional DM+1 to that same qualification roll (DM+2 total).', type: 'academyBonus', amount: 1, careers: ['agent', 'army', 'citizen', 'entertainer', 'marine', 'navy', 'scholar', 'scout'], rollTypes: ['qualification'], honoursOnly: true },
           { id: 'commission_preroll', text: 'May attempt a commission roll before the first term of a military career, if it is the first career chosen after university (officer rank 1 on success; DM+2 to this roll if honours).', type: 'commissionPreroll' }
         ]
       },
@@ -616,10 +616,11 @@
         }),
         graduation: (d) => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: (d.edu >= 8 ? 1 : 0) + (d.soc >= 8 ? 1 : 0), dmLabel: 'DM+1 if EDU 8+, DM+1 if SOC 8+' }),
         benefits: [
-          { id: 'bump_one', text: 'Increase one skill already gained from the Broker/Merchant Marine table to level 1.', type: 'flag' },
+          { id: 'bump_one', text: 'Increase one skill already gained from the Broker/Merchant Marine table to level 1.', type: 'chooseN', n: 1, level: 1, pool: (s) => (s.curriculum === 'Business' ? CAREERS_DATA.merchant.assignments.find(a => a.key === 'broker') : CAREERS_DATA.merchant.assignments.find(a => a.key === 'merchantMarine')).specialistSkills },
           { id: 'edu1', text: 'Increase EDU by +1.', type: 'stat', key: 'edu', amount: 1 },
           { id: 'auto_entry', text: 'Automatic entry into Merchant or Citizen career at rank 1 (rank 2 with honours), if first career after the academy.', type: 'flag' },
-          { id: 'adv_dm', text: 'DM+1 (DM+2 honours) on advancement checks in the Merchant or Citizen careers.', type: 'flag' }
+          { id: 'adv_dm', text: 'DM+1 on advancement checks in the Merchant or Citizen careers.', type: 'academyBonus', amount: 1, careers: ['merchant', 'citizen'], rollTypes: ['advancement'] },
+          { id: 'adv_dm_honours', text: 'Honours graduates get an additional DM+1 to that same advancement bonus (DM+2 total).', type: 'academyBonus', amount: 1, careers: ['merchant', 'citizen'], rollTypes: ['advancement'], honoursOnly: true }
         ]
       },
       {
@@ -647,7 +648,7 @@
           { id: 'carouse_honours', text: 'Honours graduates gain Carouse 1.', type: 'fixedSkill', name: 'Carouse', level: 1, honoursOnly: true },
           { id: 'carouse_honours_pick', text: 'Honours graduates may also increase any other level-0 skill to level 1.', type: 'chooseN', n: 1, level: 1, pool: () => HARDKNOCKS_SKILLS, honoursOnly: true },
           { id: 'soc_down', text: 'Decrease SOC by 1.', type: 'stat', key: 'soc', amount: -1 },
-          { id: 'promo_dm', text: 'DM-2 on promotion/commission checks in your first career (unless you left it by choice).', type: 'flag' }
+          { id: 'promo_dm', text: 'DM-2 on promotion/commission checks in your first career (unless you left it by choice — not tracked, applied for the whole first career as a simplification).', type: 'academyBonus', amount: -2, firstCareerOnly: true, rollTypes: ['advancement', 'commission'] }
         ]
       },
       {
@@ -662,7 +663,7 @@
           { id: 'pilot0', text: 'Gain Pilot 0.', type: 'fixedSkill', name: 'Pilot', level: 0 },
           { id: 'jot_honours', text: 'Honours graduates gain Jack-of-all-Trades 1.', type: 'fixedSkill', name: 'Jack-of-all-Trades', level: 1, honoursOnly: true },
           { id: 'dex1_soc2', text: 'Increase DEX by +1, decrease SOC by 2.', type: 'multiStat', changes: { dex: 1, soc: -2 } },
-          { id: 'merch_dm', text: 'DM+1 to enlist, gain commission, or gain promotion in the Merchant (free trader) career.', type: 'flag' }
+          { id: 'merch_dm', text: 'DM+1 to enlist, gain commission, or gain promotion in the Merchant (free trader) career.', type: 'academyBonus', amount: 1, careers: ['merchant'], rollTypes: ['qualification', 'commission', 'advancement'] }
         ]
       }
     ];
@@ -815,6 +816,7 @@
         case 'entry':        return renderPreEdEntry();
         case 'entryResult':  return renderPreEdEntryResult();
         case 'entrySkills':  return renderPreEdEntrySkills();
+        case 'entryAutoSpecialty': return renderPreEdEntryAutoSpecialty();
         case 'events':       return renderPreEdEvents();
         case 'graduation':   return renderPreEdGraduation();
         case 'benefits':     return renderPreEdBenefits();
@@ -1168,10 +1170,28 @@
       const s = step4State();
       const opt = findOption(s.optionId);
       const grant = resolveEntryGrant(opt, s);
-      const skills = Object.assign({}, draft.skills || {});
 
+      // Backstop: entryGrant.auto skills are granted with no player choice
+      // involved, but if one is ever defined at level 1+ with specialties
+      // (none currently are — Streetwise/Vacc Suit have none, all others
+      // are level 0), it still needs a specialty pick rather than going in
+      // untyped. Pause here and ask, same pattern as skill training's
+      // pendingSpecialty.
+      const needsSpecialty = (grant.auto || []).filter(sk => (sk.level || 0) >= 1 && !sk.specialty && skillSpecialtiesFor(sk.name).length);
+      if (needsSpecialty.length && !s.autoSpecialtyChoices) {
+        await saveStep4State({ phase: 'entryAutoSpecialty' });
+        renderStep();
+        return;
+      }
+
+      const skills = Object.assign({}, draft.skills || {});
+      const autoChoices = s.autoSpecialtyChoices || {};
       if (grant.auto) {
-        grant.auto.forEach(sk => grantSkillMin(skills, sk.name, null, sk.level || 0));
+        grant.auto.forEach(sk => {
+          const specialty = sk.specialty || autoChoices[sk.name] || null;
+          if (specialty) grantSpecialtySkillMin(skills, sk.name, specialty, sk.level || 0);
+          else grantSkillMin(skills, sk.name, null, sk.level || 0);
+        });
       }
       const chooser = s.entrySkillChooser || {};
       if (grant.chooseN) {
@@ -1195,6 +1215,40 @@
       await logCreation(`${opt.name} — entry skills: ${gainedNames.join(', ') || (grant.deferred ? 'deferred (see Background Notes)' : 'none')}.`);
 
       await saveStep4State({ phase: 'events' });
+      renderStep();
+    }
+
+    function renderPreEdEntryAutoSpecialty() {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const grant = resolveEntryGrant(opt, s);
+      const needsSpecialty = (grant.auto || []).filter(sk => (sk.level || 0) >= 1 && !sk.specialty && skillSpecialtiesFor(sk.name).length);
+      const choices = s.autoSpecialtyChoices || {};
+      const ready = needsSpecialty.every(sk => choices[sk.name]);
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">${opt.name} — Choose Specialties</div>
+          <div class="wizard-card-sub">These skills need a specialty chosen before they can be granted:</div>
+          ${needsSpecialty.map(sk => `
+            <div class="wizard-field">
+              <label>${sk.name}</label>
+              <select onchange="setAutoSpecialtyChoice('${sk.name}', this.value)">
+                <option value="">— specialty —</option>
+                ${skillSpecialtiesFor(sk.name).map(sp => `<option value="${sp.name}" ${choices[sk.name] === sp.name ? 'selected' : ''}>${sp.name}</option>`).join('')}
+              </select>
+            </div>
+          `).join('')}
+          <div class="wizard-actions" style="justify-content:flex-start;">
+            <button class="btn-outline" onclick="goEntryEvents()" ${ready ? '' : 'disabled'}>Confirm</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function setAutoSpecialtyChoice(name, specialty) {
+      const s = step4State();
+      const choices = Object.assign({}, s.autoSpecialtyChoices, { [name]: specialty || null });
+      await saveStep4State({ autoSpecialtyChoices: choices });
       renderStep();
     }
 
@@ -1761,7 +1815,7 @@
 
       const applicable = opt.benefits.filter(b => !b.honoursOnly || s.gradRoll.honours);
       const applied = s.benefitsApplied || {};
-      const actionableTypes = ['stat', 'multiStat', 'fixedSkill', 'bumpEntrySkills', 'pendingMod', 'rollMultiStat'];
+      const actionableTypes = ['stat', 'multiStat', 'fixedSkill', 'bumpEntrySkills', 'pendingMod', 'rollMultiStat', 'academyBonus'];
 
       const rows = applicable.map(b => {
         const done = applied[b.id];
@@ -1966,6 +2020,9 @@
       } else if (b.type === 'pendingMod') {
         await addPendingMod(b.key, b.amount);
         appliedText = `${b.text} (banked).`;
+      } else if (b.type === 'academyBonus') {
+        await addAcademyBonus(b.id, { amount: b.amount, careers: b.careers || null, firstCareerOnly: !!b.firstCareerOnly, rollTypes: b.rollTypes, label: b.text });
+        appliedText = `${b.text} (standing bonus — applies automatically).`;
       } else if (b.type === 'rollMultiStat') {
         const rolled = {};
         Object.keys(b.fixed || {}).forEach(k => { update[k] = (draft[k] || 0) + b.fixed[k]; });
@@ -2918,6 +2975,42 @@
       return v;
     }
 
+    // ── Academy/background standing bonuses ───────────────────────────
+    // Unlike pendingMods (one-shot, consumed on first use), these are
+    // permanent traits from pre-career education — e.g. University's
+    // DM+1 to qualify for certain careers, or Merchant Academy's DM+1 on
+    // advancement checks in Merchant/Citizen. They never get consumed;
+    // every matching roll just adds them in. `careers` (optional) limits
+    // to specific career ids; `firstCareerOnly` limits to the player's
+    // first career (no prior careerHistory); `rollTypes` is one or more
+    // of 'qualification' | 'advancement' | 'commission'.
+    function academyBonuses() {
+      return (draft.creation_data && draft.creation_data.academyBonuses) || {};
+    }
+
+    async function addAcademyBonus(id, bonus) {
+      const data = draft.creation_data || {};
+      const b = Object.assign({}, data.academyBonuses);
+      b[id] = bonus;
+      data.academyBonuses = b;
+      draft.creation_data = data;
+      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+    }
+
+    function academyBonusDM(rollType, careerId, isFirstCareer) {
+      const bonuses = academyBonuses();
+      let total = 0;
+      const labels = [];
+      Object.values(bonuses).forEach(entry => {
+        if (!entry.rollTypes.includes(rollType)) return;
+        if (entry.careers && !entry.careers.includes(careerId)) return;
+        if (entry.firstCareerOnly && !isFirstCareer) return;
+        total += entry.amount;
+        labels.push(entry.label);
+      });
+      return { total, labels };
+    }
+
     function gainSkillStep(skills, name, specialty) {
       const key = skillKey(name, specialty);
       const existing = skills[key];
@@ -3296,8 +3389,9 @@
           ? Math.max(...c.qualification.statOptions.map(k => dmNum(draft[k])))
           : dmNum(draft[c.qualification.stat]);
         const bonusDM = await consumePendingMod('qualificationDM');
-        const total = d1 + d2 + statDM - previousCount + agePenalty + bonusDM;
-        result = { dice: [d1, d2], statDM, previousCount, agePenalty, bonusDM, total, target: c.qualification.target, success: total >= c.qualification.target };
+        const academyDM = academyBonusDM('qualification', c.id, previousCount === 0);
+        const total = d1 + d2 + statDM - previousCount + agePenalty + bonusDM + academyDM.total;
+        result = { dice: [d1, d2], statDM, previousCount, agePenalty, bonusDM, academyDM: academyDM.total, academyLabels: academyDM.labels, total, target: c.qualification.target, success: total >= c.qualification.target };
       }
 
       await saveStep5State({ phase: 'qualifyResult', qualResult: result });
@@ -3314,7 +3408,7 @@
         return `
           <div class="rule-card wizard-card">
             <div class="wizard-card-title">${c.name} — Qualified!</div>
-            <div class="wizard-card-sub">${r.dice ? `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM} stat DM − ${r.previousCount} previous careers${r.agePenalty ? ' + ' + r.agePenalty + ' age' : ''}${r.bonusDM ? ' + ' + r.bonusDM + ' from a prior bonus' : ''}), needed ${r.target}+.` : 'Entry was automatic.'}</div>
+            <div class="wizard-card-sub">${r.dice ? `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM} stat DM − ${r.previousCount} previous careers${r.agePenalty ? ' + ' + r.agePenalty + ' age' : ''}${r.bonusDM ? ' + ' + r.bonusDM + ' from a prior bonus' : ''}${r.academyDM ? ' + ' + r.academyDM + ' from ' + r.academyLabels.join(', ') : ''}), needed ${r.target}+.` : 'Entry was automatic.'}</div>
             <div class="wizard-actions">
               <button class="btn-outline" onclick="goCareerAssignment()">Continue</button>
             </div>
@@ -3324,7 +3418,7 @@
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Qualification Failed</div>
-          <div class="wizard-card-sub">${r.forcedByAgeingCrisis ? 'An Ageing Crisis means you automatically fail all qualification rolls from now on.' : `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM} − ${r.previousCount}${r.agePenalty ? ' + ' + r.agePenalty : ''}${r.bonusDM ? ' + ' + r.bonusDM + ' from a prior bonus' : ''}), needed ${r.target}+.`}</div>
+          <div class="wizard-card-sub">${r.forcedByAgeingCrisis ? 'An Ageing Crisis means you automatically fail all qualification rolls from now on.' : `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM} − ${r.previousCount}${r.agePenalty ? ' + ' + r.agePenalty : ''}${r.bonusDM ? ' + ' + r.bonusDM + ' from a prior bonus' : ''}${r.academyDM ? ' + ' + r.academyDM + ' from ' + r.academyLabels.join(', ') : ''}), needed ${r.target}+.`}</div>
           <div class="wizard-card-sub">You must either submit to the Draft (if you haven't already in this lifetime) or spend this term as a Drifter.</div>
           <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
             <button class="btn-outline" onclick="saveStep5State({phase:'draftOrDrifter'}).then(renderStep)">Continue</button>
@@ -7186,7 +7280,7 @@
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Commission ${r.success ? 'Granted' : 'Failed'}</div>
-          <div class="wizard-card-sub">Rolled ${r.total} (need ${c.commission.target}+)${r.bonusDM ? `, incl. ${r.bonusDM > 0 ? '+' : ''}${r.bonusDM} banked bonus` : ''}.${r.success ? ' You are now a rank 1 officer.' : ' You may still attempt Advancement this term.'}</div>
+          <div class="wizard-card-sub">Rolled ${r.total} (need ${c.commission.target}+)${r.bonusDM ? `, incl. ${r.bonusDM > 0 ? '+' : ''}${r.bonusDM} banked bonus` : ''}${r.academyDM ? `, incl. ${r.academyDM > 0 ? '+' : ''}${r.academyDM} from ${r.academyLabels.join(', ')}` : ''}.${r.success ? ' You are now a rank 1 officer.' : ' You may still attempt Advancement this term.'}</div>
           <div class="wizard-actions">
             <button class="btn-outline" onclick="afterCommission()">Continue</button>
           </div>
@@ -7200,10 +7294,11 @@
       const d1 = rollDie(), d2 = rollDie();
       const dmLate = s.termInCareer > 0 ? -1 * s.termInCareer : 0;
       const bonusDM = await consumePendingMod('commissionDM');
-      const total = d1 + d2 + dmNum(draft.soc) + dmLate + bonusDM;
+      const academyDM = academyBonusDM('commission', c.id, (s.careerHistory || []).length === 0);
+      const total = d1 + d2 + dmNum(draft.soc) + dmLate + bonusDM + academyDM.total;
       const success = total >= c.commission.target;
-      await saveStep5State({ commissionResult: { dice: [d1, d2], total, bonusDM, success } });
-      await logCreation(`${c.name} — Commission roll: ${total} (need ${c.commission.target}+)${bonusDM ? ` incl. ${bonusDM > 0 ? '+' : ''}${bonusDM} from a prior bonus` : ''} — ${success ? 'granted.' : 'failed.'}`);
+      await saveStep5State({ commissionResult: { dice: [d1, d2], total, bonusDM, academyDM: academyDM.total, academyLabels: academyDM.labels, success } });
+      await logCreation(`${c.name} — Commission roll: ${total} (need ${c.commission.target}+)${bonusDM ? ` incl. ${bonusDM > 0 ? '+' : ''}${bonusDM} from a prior bonus` : ''}${academyDM.total ? ` incl. ${academyDM.total > 0 ? '+' : ''}${academyDM.total} from ${academyDM.labels.join(', ')}` : ''} — ${success ? 'granted.' : 'failed.'}`);
       renderStep();
     }
 
@@ -7240,10 +7335,11 @@
       const pm = pendingMods();
       if (!r) {
         const statLabel = (CHARS.find(x => x.key === a.advancement.stat) || {}).label || a.advancement.stat.toUpperCase();
+        const previewAcademyDM = academyBonusDM('advancement', c.id, (s.careerHistory || []).length === 0);
         return `
           <div class="rule-card wizard-card">
             <div class="wizard-card-title">${c.name} — Advancement</div>
-            <div class="wizard-card-sub">Roll 2D + ${statLabel} DM (need ${a.advancement.target}+)${pm.advancementDM ? `, plus DM${pm.advancementDM > 0 ? '+' : ''}${pm.advancementDM} banked from a prior bonus` : ''}. You may only attempt this once per term.</div>
+            <div class="wizard-card-sub">Roll 2D + ${statLabel} DM (need ${a.advancement.target}+)${pm.advancementDM ? `, plus DM${pm.advancementDM > 0 ? '+' : ''}${pm.advancementDM} banked from a prior bonus` : ''}${previewAcademyDM.total ? `, plus DM${previewAcademyDM.total > 0 ? '+' : ''}${previewAcademyDM.total} from ${previewAcademyDM.labels.join(', ')}` : ''}. You may only attempt this once per term.</div>
             <div class="wizard-actions" style="justify-content:flex-start; gap:12px; flex-wrap:wrap;">
               <button class="btn-outline" onclick="rollAdvancement()">Roll Advancement</button>
               ${pm.autoPromote ? '<button class="btn-outline" onclick="applyAutoPromote()">Apply Automatic Promotion (banked)</button>' : ''}
@@ -7255,7 +7351,7 @@
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Advancement</div>
           <div class="wizard-card-sub">
-            ${r.rankBonus === 'automatic' ? 'Automatic promotion applied.' : `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}${r.bonusDM ? ' + ' + r.bonusDM + ' banked bonus' : ''}), needed ${a.advancement.target}+.`}
+            ${r.rankBonus === 'automatic' ? 'Automatic promotion applied.' : `Rolled ${r.total} (${r.dice.join(' + ')} + ${r.statDM}${r.bonusDM ? ' + ' + r.bonusDM + ' banked bonus' : ''}${r.academyDM ? ' + ' + r.academyDM + ' from ' + r.academyLabels.join(', ') : ''}), needed ${a.advancement.target}+.`}
             ${r.success ? `Promoted to rank ${s.rank}${r.rankBonus && r.rankBonus !== 'automatic' ? ' — ' + r.rankBonus : ''}.` : 'No promotion this term.'}
             ${r.mustLeave && c.id !== 'prisoner' ? ' This roll was at or below your terms in this career — you must leave after this term (unless overridden by a natural 12).' : ''}
             ${c.id === 'prisoner' ? ` This roll (${r.total}) will also be checked against your Parole Threshold (${s.paroleThreshold}) at the end of this term.` : ''}
@@ -7280,7 +7376,8 @@
       const natural = d1 + d2;
       const statDM = dmNum(draft[a.advancement.stat]);
       const bonusDM = await consumePendingMod('advancementDM');
-      const total = natural + statDM + bonusDM;
+      const academyDM = academyBonusDM('advancement', c.id, (s.careerHistory || []).length === 0);
+      const total = natural + statDM + bonusDM + academyDM.total;
       const success = total >= a.advancement.target;
       const mustLeave = success && total <= s.termInCareer && natural !== 12;
 
@@ -7315,10 +7412,10 @@
 
       await saveStep5State({
         rank: newRank,
-        advancementResult: { dice: [d1, d2], statDM, bonusDM, total, success, mustLeave, rankBonus },
+        advancementResult: { dice: [d1, d2], statDM, bonusDM, academyDM: academyDM.total, academyLabels: academyDM.labels, total, success, mustLeave, rankBonus },
         skillRollsRemaining: 1 + (success ? 1 : 0)
       });
-      await logCreation(`${c.name} — Advancement: rolled ${total} (need ${a.advancement.target}+) — ${success ? `promoted to rank ${newRank}${rankBonus ? ' (' + rankBonus + ')' : ''}.` : 'no promotion.'}`);
+      await logCreation(`${c.name} — Advancement: rolled ${total} (need ${a.advancement.target}+)${academyDM.total ? ` incl. ${academyDM.total > 0 ? '+' : ''}${academyDM.total} from ${academyDM.labels.join(', ')}` : ''} — ${success ? `promoted to rank ${newRank}${rankBonus ? ' (' + rankBonus + ')' : ''}.` : 'no promotion.'}`);
       renderStep();
     }
 
