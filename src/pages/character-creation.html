@@ -2492,7 +2492,7 @@
         musteringBenefits: ['Armour', 'INT +1', 'EDU +1', 'Weapon', 'TAS Membership', 'Armour or END +1', 'SOC +2'],
         mishaps: [
           { roll: 1, text: 'Severely injured in action (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
-          { roll: 2, text: 'A mission goes wrong; you and several others are captured and mistreated by the enemy. Discharged early due to your injuries. Gain your jailer as an Enemy and reduce STR and DEX by one.', tools: ['associate'], autoStats: [{ key: 'str', amount: -1 }, { key: 'dex', amount: -1 }] },
+          { roll: 2, text: 'A mission goes wrong; you and several others are captured and mistreated by the enemy. Discharged early due to your injuries. Gain your jailer as an Enemy and reduce STR and DEX by one.', tools: ['associate'], associateTypes: ['enemy'], autoStats: [{ key: 'str', amount: -1 }, { key: 'dex', amount: -1 }] },
           { roll: 3, text: "A mission goes wrong and you are stranded behind enemy lines. Increase Stealth or Survival by one level, but you are ejected from the service due to the mission's failure.", tools: ['skill'], skillOptions: [{ name: 'Stealth', level: 1 }, { name: 'Survival', level: 1 }] },
           { roll: 4, text: 'Ordered to take part in a black ops mission against your conscience. Refuse and you are ejected from the service. Accept and stay with the Marines, but gain the lone survivor as an Enemy.', tools: [] },
           { roll: 5, text: 'Tormented by or quarrel with an officer or fellow marine — gain them as a Rival, driven out of the service.', tools: ['associate'], associateTypes: ['rival'] },
@@ -2500,12 +2500,12 @@
         ],
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
-          { roll: 3, text: 'Trapped behind enemy lines, you have to survive on your own. Gain one of Survival 1, Stealth 1, Deception 1, or Streetwise 1.', tools: ['skill'] },
-          { roll: 4, text: 'Assigned to the security staff of a space station. Increase Vacc Suit or Athletics (Dexterity) by one level.', tools: ['skill'] },
+          { roll: 3, text: 'Trapped behind enemy lines, you have to survive on your own. Gain one of Survival 1, Stealth 1, Deception 1, or Streetwise 1.', tools: ['skill'], skillOptions: [{ name: 'Survival', level: 1 }, { name: 'Stealth', level: 1 }, { name: 'Deception', level: 1 }, { name: 'Streetwise', level: 1 }] },
+          { roll: 4, text: 'Assigned to the security staff of a space station. Increase Vacc Suit or Athletics (Dexterity) by one level.', tools: ['skill'], skillOptions: [{ name: 'Vacc Suit', level: 1 }, { name: 'Athletics', specialty: 'Dexterity', level: 1 }] },
           { roll: 5, text: 'Given advanced training in a specialist field. Roll EDU 8+ to gain any one skill of your choice at level 1.', tools: [] },
           { roll: 6, text: 'Assigned to an assault on an enemy fortress. Roll Melee or Gun Combat 8+: success gains Tactics (military) or Leadership; failure injures you, losing 1 point from any physical characteristic.', tools: [] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
-          { roll: 8, text: 'On the front lines of a planetary assault and occupation. Gain one of Recon 1, Gun Combat 1, Leadership 1, or Electronics (comms) 1.', tools: ['skill'] },
+          { roll: 8, text: 'On the front lines of a planetary assault and occupation. Gain one of Recon 1, Gun Combat 1, Leadership 1, or Electronics (comms) 1.', tools: ['skill'], skillOptions: [{ name: 'Recon', level: 1 }, { name: 'Gun Combat', level: 1 }, { name: 'Leadership', level: 1 }, { name: 'Electronics', specialty: 'Comms', level: 1 }] },
           { roll: 9, text: "A mission goes disastrously wrong due to your commander's error, but you survive. Report them: gain DM+2 to your next advancement roll and gain them as an Enemy. Say nothing and protect them: gain them as an Ally instead.", tools: [] },
           { roll: 10, text: 'Assigned to a black ops mission. Gain DM+2 to your next advancement roll.', tools: [], autoDM: { key: 'advancementDM', amount: 2 } },
           { roll: 11, text: 'A commanding officer takes an interest in your career. Gain Tactics 1, or DM+4 to your next advancement roll instead.', tools: [] },
@@ -4488,7 +4488,7 @@
         case 'marine:5':     return renderChooseSkillThenRollEdu(tag, m, 8, 'Marine Event 5');
         case 'marine:6':     return renderMarineEvent6(tag, m);
         case 'marine:9':     return renderMarineEvent9(tag, m);
-        case 'marine:11':    return renderChooseSkillOrDM(tag, m, { name: 'Tactics', level: 1 }, 'advancementDM', 4);
+        case 'marine:11':    return renderChooseSkillOrDM(tag, m, { name: 'Tactics', specialty: 'Military', level: 1 }, 'advancementDM', 4);
         case 'marine:12':    return renderBankAutoPromote(tag, m);
         case 'marine:mishap4': return renderMarineMishap4(tag, m);
         case 'merchant:2':    return renderInlineMishapNotEjected(tag, careerId, m);
@@ -5564,6 +5564,9 @@
           </div>
         `;
       }
+      if (m.statChosen && !m.resolved) {
+        return resolverHeader(m.resultText || '') + `<div id="resolver-${tag}"></div>`;
+      }
       return resolverHeader(m.resultText);
     }
 
@@ -5595,10 +5598,10 @@
       await applyStatChange(statKey, -1);
       const label = (CHARS.find(x => x.key === statKey) || {}).label || statKey.toUpperCase();
       const resultText = `Injured — reduced ${label} by 1.`;
-      await saveMechanic('event', { statChosen: statKey, resolved: true, resultText });
-      await resolveMechanic('event');
+      await saveMechanic('event', { statChosen: statKey, resultText });
       await logCreation(`Marine Event 6: ${resultText}`);
       renderStep();
+      offerMedicalCare('event', [{ key: statKey, amount: 1 }]);
     }
 
     // Marine event 9 — report the commander (DM+2 advancement + Enemy) or protect them (Ally).
