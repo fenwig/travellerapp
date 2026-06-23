@@ -3389,13 +3389,20 @@
 
     function renderCareerChoose() {
       const s = step5State();
+      // A forced Draft/Prisoner roll overrides free choice entirely — every
+      // other career is locked out (greyed, button disabled) until the
+      // forced roll/entry is resolved via its own banner button below.
+      const locked = !!(s.forcedDraftNextTerm || s.forcedPrisonerNextTerm);
       const rows = CAREER_LIST.map(c => {
         const built = !!CAREERS_DATA[c.id];
+        const disabled = locked && !(s.forcedPrisonerNextTerm && c.id === 'prisoner');
         return `
-          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid #0a4a60; border-radius:6px; margin-bottom:8px;">
-            <span style="font-weight:600; ${built ? 'color:#00e5ff;' : 'color:#4a9ab8;'}">${c.name}</span>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid #0a4a60; border-radius:6px; margin-bottom:8px; ${disabled ? 'opacity:0.4;' : ''}">
+            <span style="font-weight:600; ${built && !disabled ? 'color:#00e5ff;' : 'color:#4a9ab8;'}">${c.name}</span>
             ${built
-              ? `<button class="btn-outline" onclick="chooseCareer('${c.id}')">${c.id === 'prisoner' ? 'Confirm Forced Entry' : 'Attempt Qualification'}</button>`
+              ? (disabled
+                  ? `<span style="font-size:0.75rem; color:#4a9ab8;">Locked — resolve the forced entry above</span>`
+                  : `<button class="btn-outline" onclick="chooseCareer('${c.id}')">${c.id === 'prisoner' ? 'Confirm Forced Entry' : 'Attempt Qualification'}</button>`)
               : `<span style="font-size:0.75rem; color:#4a9ab8;">Not yet built</span>`
             }
           </div>
@@ -3411,13 +3418,13 @@
           </div>
           ${s.forcedDraftNextTerm ? `
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
-              A prior event forced a Draft roll this term instead of a free choice.
+              A prior event forced a Draft roll this term instead of a free choice. All other careers are locked until this resolves.
               <button class="btn-outline" style="margin-top:8px;" onclick="rollForcedDraft()">Roll the Draft</button>
             </div>
           ` : ''}
           ${s.forcedPrisonerNextTerm ? `
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
-              A prior event rolled a natural 2 and forces the Prisoner career this term instead of a free choice.
+              A prior event rolled a natural 2 and forces the Prisoner career this term instead of a free choice. All other careers are locked until this resolves.
               <button class="btn-outline" style="margin-top:8px;" onclick="confirmForcedPrisoner()">Confirm Forced Entry — Prisoner</button>
             </div>
           ` : ''}
@@ -4837,13 +4844,20 @@
     async function rollAgentMishap3() {
       const key = skillKey('Advocate', null);
       const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
-      const total = roll2d6() + level;
+      const rawRoll = roll2d6();
+      const total = rawRoll + level;
       const success = total >= 8;
+      let resultText;
       if (success) {
         const s = step5State();
         await saveStep5State({ benefitRolls: (s.benefitRolls || 0) + 1 });
+        resultText = `Rolled ${total} on Advocate (need 8+) — kept this term's Benefit roll.`;
+      } else if (rawRoll === 2) {
+        await saveStep5State({ forcedPrisonerNextTerm: true });
+        resultText = `Rolled ${total} on Advocate (need 8+, natural 2) — lost the Benefit roll, and forced into the Prisoner career next term.`;
+      } else {
+        resultText = `Rolled ${total} on Advocate (need 8+) — lost this term's Benefit roll as normal.`;
       }
-      const resultText = `Rolled ${total} on Advocate (need 8+) — ${success ? 'kept this term\'s Benefit roll.' : 'lost it as normal (a natural 2 would also force the Prisoner career next term — choose Prisoner at the next Career screen and confirm forced entry if that applies).'}`;
       await saveMechanic('mishap', { rolled: true, resultText });
       await resolveMechanic('mishap');
       await logCreation(`Agent Mishap 3: ${resultText}`);
