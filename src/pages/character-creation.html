@@ -1332,6 +1332,11 @@
       await supabaseClient.from('character_associates').insert({ character_id: draft.id, type, name, description: description || null });
     }
 
+    async function hasAssociateOfType(type) {
+      const { data } = await supabaseClient.from('character_associates').select('id').eq('character_id', draft.id).eq('type', type).limit(1);
+      return !!(data && data.length);
+    }
+
     function renderEventMechanic(total) {
       const s = step4State();
       const m = s.eventMechanic || {};
@@ -2321,7 +2326,7 @@
           { roll: 5, text: 'You manage to scavenge something of use. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
           { roll: 6, text: 'You encounter something unusual. Go directly to the Life Events table and have an Unusual Event.', tools: [] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
-          { roll: 8, text: 'You are attacked by enemies. Gain an Enemy if you do not have one already, and roll Melee 8+, Gun Combat 8+ or Stealth 8+ to avoid a roll on the Injury table.', tools: ['associate', 'injury'] },
+          { roll: 8, text: 'You are attacked by enemies. Gain an Enemy if you do not have one already, and roll Melee 8+, Gun Combat 8+ or Stealth 8+ to avoid a roll on the Injury table.', tools: ['associate', 'injury'], associateTypes: ['enemy'] },
           { roll: 9, text: 'Offered a risky but rewarding adventure. 1D: 1-2 injured/arrested, 3-4 survive with nothing, 5-6 succeed for DM+4 to one Benefit roll.', tools: [] },
           { roll: 10, text: 'Life on the edge hones your abilities. Increase any skill you already have by one level.', tools: ['skill'] },
           { roll: 11, text: 'You are forcibly drafted. Roll for the Draft next term.', tools: [] },
@@ -4440,7 +4445,9 @@
         case 'navy:11':     return renderChooseSkillOrDM(tag, m, { name: 'Tactics', specialty: 'Naval', level: 1 }, 'advancementDM', 4);
         case 'navy:12':     return renderBankAutoPromote(tag, m);
         case 'drifter:3':   return renderAcceptRefuse(tag, m, 'Accept the job — DM+4 to your next qualification roll (you owe a favour)', 'Decline', () => addPendingMod('qualificationDM', 4), () => Promise.resolve());
+        case 'drifter:8':   return renderDrifterEvent8(tag, m);
         case 'drifter:9':   return renderDrifterAdventureRoll(tag, m);
+        case 'drifter:10':  return renderDrifterEvent10(tag, m);
         case 'drifter:11':  return renderForcedDraftNextTerm(tag, m);
         case 'drifter:12':  return renderBankAutoPromote(tag, m);
         case 'navy:mishap3': return renderNavyMishap3(tag, m);
@@ -4773,7 +4780,10 @@
       renderStep();
     }
 
-    // Drifter event 9 — 1D sub-table.
+    // Drifter event 9 — 1D sub-table. Rolling 1-2 ("injured or arrested")
+    // presents a real choice: roll on the Injury Table, or take the
+    // Prisoner career next term instead (forcedPrisonerNextTerm, same
+    // mechanism as Agent Mishap 3's natural-2 case).
     function renderDrifterAdventureRoll(tag, m) {
       if (!m.rolled) {
         return resolverHeader('Accept the risky adventure?') + `
@@ -4783,15 +4793,29 @@
           </div>
         `;
       }
+      if (m.lowRoll && !m.resolved) {
+        return resolverHeader(m.resultText) + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="drifterAdventureTakeInjury('${tag}')">Roll on the Injury Table</button>
+            <button class="btn-outline" onclick="drifterAdventureTakePrisoner('${tag}')">Take Prisoner Career Next Term</button>
+          </div>
+          <div id="resolver-${tag}"></div>
+        `;
+      }
       return resolverHeader(m.resultText);
     }
 
     async function rollDrifterAdventure(tag) {
       const roll = rollDie();
-      let resultText;
       if (roll <= 2) {
-        resultText = `Rolled ${roll} — injured or arrested. Resolve manually: roll on the Injury table yourself, or choose Prisoner at the next Career screen and confirm forced entry.`;
-      } else if (roll <= 4) {
+        const resultText = `Rolled ${roll} — injured or arrested.`;
+        await saveMechanic(tag, { rolled: true, lowRoll: true, resultText });
+        await logCreation(`Drifter adventure roll: ${roll} — ${resultText}`);
+        renderStep();
+        return;
+      }
+      let resultText;
+      if (roll <= 4) {
         resultText = `Rolled ${roll} — you survive, but gain nothing.`;
       } else {
         await addPendingMod('benefitRollDM', 4);
@@ -4800,6 +4824,90 @@
       await saveMechanic(tag, { rolled: true, resultText });
       await resolveMechanic(tag);
       await logCreation(`Drifter adventure roll: ${roll} — ${resultText}`);
+      renderStep();
+    }
+
+    async function drifterAdventureTakeInjury(tag) {
+      await logCreation('Drifter Event 9 — chose to roll on the Injury Table.');
+      rollInjuryTable(tag);
+    }
+
+    async function drifterAdventureTakePrisoner(tag) {
+      await saveStep5State({ forcedPrisonerNextTerm: true });
+      const resultText = `${mechanicState(tag).resultText} Chose the Prisoner career next term instead of the Injury Table.`;
+      await saveMechanic(tag, { resolved: true, resultText });
+      await resolveMechanic(tag);
+      await logCreation('Drifter Event 9 — chose the Prisoner career next term instead of an injury.');
+      renderStep();
+    }
+
+    // Drifter event 8 — choose a skill, roll 8+ to avoid the Injury
+    // Table; the Enemy is only granted if the player doesn't already
+    // have one (per the entry's own text).
+    function renderDrifterEvent8(tag, m) {
+      if (!m.rolled) {
+        return resolverHeader('Choose which skill to roll (need 8+) to avoid a roll on the Injury Table:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="rollDrifterEvent8('Melee')">Melee</button>
+            <button class="btn-outline" onclick="rollDrifterEvent8('Gun Combat')">Gun Combat</button>
+            <button class="btn-outline" onclick="rollDrifterEvent8('Stealth')">Stealth</button>
+          </div>
+        `;
+      }
+      if (m.success) return resolverHeader(m.resultText);
+      return resolverHeader(m.resultText) + renderGenericResolver('event', ['injury'], true);
+    }
+
+    async function rollDrifterEvent8(skillName) {
+      const key = skillKey(skillName, null);
+      const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
+      const total = roll2d6() + level;
+      const success = total >= 8;
+      const hasEnemy = await hasAssociateOfType('enemy');
+      let enemyNote;
+      if (!hasEnemy) {
+        await addAssociate('enemy', 'Unnamed Attacker', 'Attacked you during a dangerous encounter.');
+        enemyNote = 'Gained an Enemy (you had none).';
+      } else {
+        enemyNote = 'You already have an Enemy — no new one gained.';
+      }
+      const resultText = `Rolled ${total} on ${skillName} (need 8+) — ${success ? 'avoided injury.' : 'failed — roll on the Injury table.'} ${enemyNote}`;
+      await saveMechanic('event', { rolled: true, success, resultText });
+      if (success) await resolveMechanic('event');
+      await logCreation(`Drifter Event 8: ${resultText}`);
+      renderStep();
+    }
+
+    // Drifter event 10 — "increase any skill you already have", with no
+    // attached roll, so it can't reuse renderRollSkillToGainLevel as-is.
+    function renderDrifterEvent10(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      const owned = Object.keys(draft.skills || {}).map(k => draft.skills[k]);
+      if (!owned.length) {
+        return resolverHeader('You have no skills yet to improve — nothing to choose.') +
+          `<button class="btn-outline" onclick="finishDrifterEvent10(null)">Continue</button>`;
+      }
+      return resolverHeader('Choose a skill you already have to increase by one level:') + `
+        <select id="drifter-e10-skill">${owned.map(o => `<option value="${skillKey(o.name, o.specialty)}">${o.name}${o.specialty ? ' (' + o.specialty + ')' : ''} ${o.level}</option>`).join('')}</select>
+        <button class="btn-outline" onclick="finishDrifterEvent10(document.getElementById('drifter-e10-skill').value)">Confirm</button>
+      `;
+    }
+
+    async function finishDrifterEvent10(chosenKey) {
+      let resultText;
+      if (chosenKey) {
+        const skills = Object.assign({}, draft.skills || {});
+        const owned = skills[chosenKey];
+        bumpSkill(skills, owned.name, owned.specialty, 1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        resultText = `Increased ${owned.name}${owned.specialty ? ' (' + owned.specialty + ')' : ''} by one level.`;
+      } else {
+        resultText = 'No skills to improve.';
+      }
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Drifter Event 10: ${resultText}`);
       renderStep();
     }
 
