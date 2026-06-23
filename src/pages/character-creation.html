@@ -2136,7 +2136,7 @@
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
           { roll: 2, text: 'A target of your investigation offers you a deal. Accept and leave the career cleanly (losing this term\'s Benefit roll as normal). Refuse and suffer a worse injury, but gain an Enemy and a level in a skill of your choice.', tools: [] },
           { roll: 3, text: 'An investigation goes critically wrong. Roll Advocate 8+ to keep this term\'s Benefit roll; a natural 2 also forces the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry if this applies — not automated here).', tools: [] },
-          { roll: 4, text: 'You learn something dangerous. Gain an Enemy and Deception 1.', tools: ['associate'], autoSkill: { name: 'Deception', level: 1 } },
+          { roll: 4, text: 'You learn something dangerous. Gain an Enemy and Deception 1.', tools: ['associate'], associateTypes: ['enemy'], autoSkill: { name: 'Deception', level: 1 } },
           { roll: 5, text: 'Your work follows you home and a Contact, Ally, or family member is hurt — roll on the Injury table for them (effects applied to your own characteristics as a stand-in, since associates aren\'t tracked separately).', tools: ['injury'] },
           { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
         ],
@@ -3774,7 +3774,7 @@
       const genericBody = (bespoke !== null) ? bespoke
         : (s.mishapResolved
           ? `<div class="wizard-card-sub" style="color:#00ffaa;">${s.mishapResolvedText || 'Resolved.'}</div>`
-          : renderGenericResolver('mishap', m.tools, false, { skillOptions: m.skillOptions, associateTypes: m.associateTypes }));
+          : (s.mishapRoll === 1 ? renderMishapRoll1Choice('mishap') : renderGenericResolver('mishap', m.tools, false, { skillOptions: m.skillOptions, associateTypes: m.associateTypes })));
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Mishap ${s.mishapRoll}</div>
@@ -4249,6 +4249,35 @@
       await finishInjury(tag, `${mc.desc} (partially restored — see Creation Log)`, resultText);
     }
 
+    // ── Mishap roll 1 — universal across all 13 careers' mishap tables
+    // ("Severely injured — same as Injury table result 2, or roll twice
+    // and take the lower"). Previously had no mechanic at all (tools:[]
+    // and no bespoke handler in any career), so it silently fell through
+    // to the empty generic resolver. Reuses the existing Injury Table UI
+    // (renderInjuryPicker) directly, same pattern as Scholar mishap 2's
+    // "roll twice, pick one" shape.
+    function renderMishapRoll1Choice(tag) {
+      return `
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+          <button class="btn-outline" onclick="acceptMishapRoll1Injury('${tag}')">Accept Injury Result 2</button>
+          <button class="btn-outline" onclick="rerollMishapRoll1Injury('${tag}')">Roll Twice, Take the Lower</button>
+        </div>
+        <div id="resolver-${tag}"></div>
+      `;
+    }
+
+    async function acceptMishapRoll1Injury(tag) {
+      await logCreation('Mishap roll 1 — accepted Injury Table result 2 (fixed severity).');
+      renderInjuryPicker(tag, 2, INJURY_TABLE.find(x => x.roll === 2));
+    }
+
+    async function rerollMishapRoll1Injury(tag) {
+      const r1 = rollDie(), r2 = rollDie();
+      const roll = Math.min(r1, r2);
+      await logCreation(`Mishap roll 1 — rolled twice (${r1}, ${r2}), took the lower: Injury Table result ${roll}.`);
+      renderInjuryPicker(tag, roll, INJURY_TABLE.find(x => x.roll === roll));
+    }
+
     async function finishInjury(tag, desc, medicalResultText) {
       const summary = `Injury sustained${desc ? ': ' + desc : ' — no permanent effect'}.${medicalResultText ? ' ' + medicalResultText : ''}`;
       document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">${summary}</p>`;
@@ -4311,7 +4340,10 @@
     function bespokeKey(careerId, roll) { return careerId + ':' + roll; }
 
     function mechanicTagKey(tag) {
-      return tag === 'mishap' ? 'mishapMechanic' : tag === 'mustering' ? 'musteringMechanic' : 'eventMechanic';
+      if (tag === 'mishap') return 'mishapMechanic';
+      if (tag === 'mustering') return 'musteringMechanic';
+      if (tag === 'advancement') return 'advancementMechanic';
+      return 'eventMechanic';
     }
 
     function mechanicState(tag) {
@@ -7482,6 +7514,10 @@
       const r = s.advancementResult;
       const pm = pendingMods();
       if (!r) {
+        const am = mechanicState('advancement');
+        if (am.specialtyGateFor) {
+          return `<div class="rule-card wizard-card"><div class="wizard-card-title">${c.name} — Advancement</div>${renderSpecialtyGate('advancement', am.specialtyGateFor)}</div>`;
+        }
         const statLabel = (CHARS.find(x => x.key === a.advancement.stat) || {}).label || a.advancement.stat.toUpperCase();
         const previewAcademyDM = academyBonusDM('advancement', c.id, (s.careerHistory || []).length === 0);
         return `
@@ -7529,41 +7565,67 @@
       const success = total >= a.advancement.target;
       const mustLeave = success && total <= s.termInCareer && natural !== 12;
 
-      let newRank = s.rank;
-      let rankBonus = '';
-      if (success) {
-        newRank = s.rank + 1;
-        const table = rankTableFor(s, c, a);
-        const entry = table.find(x => x.rank === newRank);
-        if (entry) {
-          const parts = [];
-          if (entry.title && entry.title !== '—') parts.push(entry.title);
-          if (entry.skill) {
-            const skills = Object.assign({}, draft.skills || {});
-            grantSkillMin(skills, entry.skill.name, entry.skill.specialty, entry.skill.level);
-            await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
-            draft.skills = skills;
-            parts.push(`${entry.skill.name}${entry.skill.specialty ? ' (' + entry.skill.specialty + ')' : ''} ${entry.skill.level}`);
-          }
-          if (entry.stat) {
-            if (entry.stat.min !== undefined) {
-              if ((draft[entry.stat.key] || 0) < entry.stat.min) await applyStatChange(entry.stat.key, entry.stat.min - (draft[entry.stat.key] || 0));
-              else await applyStatChange(entry.stat.key, 1);
-            } else {
-              await applyStatChange(entry.stat.key, entry.stat.amount);
-            }
-            parts.push(`${entry.stat.key} adjusted`);
-          }
-          rankBonus = parts.join(', ');
-        }
+      const base = { dice: [d1, d2], statDM, bonusDM, academyDM: academyDM.total, academyLabels: academyDM.labels, total, success, mustLeave };
+
+      if (!success) {
+        await finishAdvancement(s.rank, base, '');
+        return;
       }
 
+      const newRank = s.rank + 1;
+      const table = rankTableFor(s, c, a);
+      const entry = table.find(x => x.rank === newRank);
+
+      // Rank-table skill grants can name a specialty-bearing skill with no
+      // specialty pinned (e.g. Agent's "Special Agent" rank grants Gun
+      // Combat 1 with no specialty) — gate it the same way every other
+      // skill grant in the wizard does, instead of silently creating an
+      // untyped entry.
+      if (entry && entry.skill && !entry.skill.specialty && skillSpecialtiesFor(entry.skill.name).length) {
+        await saveStep5State({ advancementPending: { newRank, entry, base } });
+        await gateSpecialty('advancement', entry.skill.name, (specialty) => finishAdvancementRank(specialty));
+        return;
+      }
+
+      await finishAdvancementRank(entry && entry.skill ? entry.skill.specialty : null);
+    }
+
+    async function finishAdvancementRank(specialty) {
+      const s = step5State();
+      const { newRank, entry, base } = s.advancementPending;
+      const parts = [];
+      if (entry.title && entry.title !== '—') parts.push(entry.title);
+      if (entry.skill) {
+        const skills = Object.assign({}, draft.skills || {});
+        if (specialty) grantSpecialtySkillMin(skills, entry.skill.name, specialty, entry.skill.level);
+        else grantSkillMin(skills, entry.skill.name, null, entry.skill.level);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        parts.push(`${entry.skill.name}${specialty ? ' (' + specialty + ')' : ''} ${entry.skill.level}`);
+      }
+      if (entry.stat) {
+        if (entry.stat.min !== undefined) {
+          if ((draft[entry.stat.key] || 0) < entry.stat.min) await applyStatChange(entry.stat.key, entry.stat.min - (draft[entry.stat.key] || 0));
+          else await applyStatChange(entry.stat.key, 1);
+        } else {
+          await applyStatChange(entry.stat.key, entry.stat.amount);
+        }
+        parts.push(`${entry.stat.key} adjusted`);
+      }
+      await saveStep5State({ advancementPending: null });
+      await finishAdvancement(newRank, base, parts.join(', '));
+    }
+
+    async function finishAdvancement(newRank, base, rankBonus) {
+      const s = step5State();
+      const c = careerData(s.careerId);
       await saveStep5State({
         rank: newRank,
-        advancementResult: { dice: [d1, d2], statDM, bonusDM, academyDM: academyDM.total, academyLabels: academyDM.labels, total, success, mustLeave, rankBonus },
-        skillRollsRemaining: 1 + (success ? 1 : 0)
+        advancementResult: Object.assign({}, base, { rankBonus }),
+        skillRollsRemaining: 1 + (base.success ? 1 : 0)
       });
-      await logCreation(`${c.name} — Advancement: rolled ${total} (need ${a.advancement.target}+)${academyDM.total ? ` incl. ${academyDM.total > 0 ? '+' : ''}${academyDM.total} from ${academyDM.labels.join(', ')}` : ''} — ${success ? `promoted to rank ${newRank}${rankBonus ? ' (' + rankBonus + ')' : ''}.` : 'no promotion.'}`);
+      const a = currentAssignment(step5State(), c);
+      await logCreation(`${c.name} — Advancement: rolled ${base.total} (need ${a.advancement.target}+)${base.academyDM ? ` incl. ${base.academyDM > 0 ? '+' : ''}${base.academyDM} from ${base.academyLabels.join(', ')}` : ''} — ${base.success ? `promoted to rank ${newRank}${rankBonus ? ' (' + rankBonus + ')' : ''}.` : 'no promotion.'}`);
       renderStep();
     }
 
