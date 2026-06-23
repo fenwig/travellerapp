@@ -2961,6 +2961,136 @@
       return v;
     }
 
+    // ── Mustering-Out Benefit effects ─────────────────────────
+    // Every distinct benefit string across all 13 careers' musteringBenefits
+    // arrays is keyed here to a real mechanical effect, instead of being
+    // logged as narrative text only. 'choice'/'skillChoice'/'associate'
+    // effects need a player decision and pause on `musteringPending`
+    // (see renderCareerMustering/rollMustering); everything else applies
+    // immediately via applyMusteringEffect(). Ship Shares and TAS Membership
+    // need `ship_shares`/`tas_member` columns — see mustering-benefits-schema.sql
+    // (repo root), not yet run in Supabase as of writing.
+    const MUSTERING_BENEFIT_EFFECTS = {
+      'Scientific Equipment': { type: 'item', kind: 'equipment', label: 'Scientific Equipment' },
+      'INT +1': { type: 'stat', key: 'int_stat', amount: 1 },
+      'EDU +1': { type: 'stat', key: 'edu', amount: 1 },
+      'SOC +1': { type: 'stat', key: 'soc', amount: 1 },
+      'SOC +2': { type: 'stat', key: 'soc', amount: 2 },
+      'DEX +1': { type: 'stat', key: 'dex', amount: 1 },
+      'STR +1 or END +1': { type: 'choice', options: [
+        { label: 'STR +1', effect: { type: 'stat', key: 'str', amount: 1 } },
+        { label: 'END +1', effect: { type: 'stat', key: 'end_stat', amount: 1 } }
+      ] },
+      'Ship Share': { type: 'shipShare', amount: 1 },
+      'Two Ship Shares': { type: 'shipShare', amount: 2 },
+      '1D Ship Shares': { type: 'shipShare', dice: 1 },
+      '2D Ship Shares': { type: 'shipShare', dice: 2 },
+      'Weapon': { type: 'item', kind: 'weapon', label: 'Weapon' },
+      'Gun': { type: 'item', kind: 'weapon', label: 'Gun' },
+      'Blade': { type: 'item', kind: 'weapon', label: 'Blade' },
+      'Armour': { type: 'item', kind: 'armour', label: 'Armour' },
+      'Cybernetic Implant': { type: 'item', kind: 'augment', label: 'Cybernetic Implant' },
+      "Ship's Boat": { type: 'item', kind: 'equipment', label: "Ship's Boat" },
+      'Personal Vehicle': { type: 'item', kind: 'equipment', label: 'Personal Vehicle' },
+      'Free Trader': { type: 'item', kind: 'equipment', label: 'Free Trader (Ship) — set up properly in Spacecraft Record' },
+      'Yacht': { type: 'item', kind: 'equipment', label: 'Yacht (Ship) — set up properly in Spacecraft Record' },
+      'Scout Ship': { type: 'item', kind: 'equipment', label: 'Scout Ship — set up properly in Spacecraft Record' },
+      'Lab Ship': { type: 'item', kind: 'equipment', label: 'Lab Ship — set up properly in Spacecraft Record' },
+      'TAS Membership': { type: 'tas' },
+      'Contact': { type: 'associate', kind: 'contact' },
+      'Ally': { type: 'associate', kind: 'ally' },
+      'SOC +1 or Cybernetic Implant': { type: 'choice', options: [
+        { label: 'SOC +1', effect: { type: 'stat', key: 'soc', amount: 1 } },
+        { label: 'Cybernetic Implant', effect: { type: 'item', kind: 'augment', label: 'Cybernetic Implant' } }
+      ] },
+      'END +1 or Cybernetic Implant': { type: 'choice', options: [
+        { label: 'END +1', effect: { type: 'stat', key: 'end_stat', amount: 1 } },
+        { label: 'Cybernetic Implant', effect: { type: 'item', kind: 'augment', label: 'Cybernetic Implant' } }
+      ] },
+      'Personal Vehicle or Ship Share': { type: 'choice', options: [
+        { label: 'Personal Vehicle', effect: { type: 'item', kind: 'equipment', label: 'Personal Vehicle' } },
+        { label: 'Ship Share', effect: { type: 'shipShare', amount: 1 } }
+      ] },
+      'EDU +1 or two Ship Shares': { type: 'choice', options: [
+        { label: 'EDU +1', effect: { type: 'stat', key: 'edu', amount: 1 } },
+        { label: 'Two Ship Shares', effect: { type: 'shipShare', amount: 2 } }
+      ] },
+      "Ship's Boat or two Ship Shares": { type: 'choice', options: [
+        { label: "Ship's Boat", effect: { type: 'item', kind: 'equipment', label: "Ship's Boat" } },
+        { label: 'Two Ship Shares', effect: { type: 'shipShare', amount: 2 } }
+      ] },
+      'Armour or END +1': { type: 'choice', options: [
+        { label: 'Armour', effect: { type: 'item', kind: 'armour', label: 'Armour' } },
+        { label: 'END +1', effect: { type: 'stat', key: 'end_stat', amount: 1 } }
+      ] },
+      'SOC +1 and EDU +1': { type: 'all', items: [
+        { type: 'stat', key: 'soc', amount: 1 }, { type: 'stat', key: 'edu', amount: 1 }
+      ] },
+      'SOC +1 and Yacht': { type: 'all', items: [
+        { type: 'stat', key: 'soc', amount: 1 }, { type: 'item', kind: 'equipment', label: 'Yacht (Ship) — set up properly in Spacecraft Record' }
+      ] },
+      'Deception, Persuade, or Stealth': { type: 'skillChoice', skills: ['Deception', 'Persuade', 'Stealth'], level: 1 },
+      'Melee, Recon, or Streetwise': { type: 'skillChoice', skills: ['Melee', 'Recon', 'Streetwise'], level: 1 },
+      'Deception, Persuade, and Stealth': { type: 'skillAll', skills: ['Deception', 'Persuade', 'Stealth'], level: 1 }
+    };
+
+    const MUSTERING_STAT_LABELS = { str: 'STR', dex: 'DEX', end_stat: 'END', int_stat: 'INT', edu: 'EDU', soc: 'SOC' };
+
+    // Applies any non-choice mustering effect and returns a description of
+    // what actually happened, for the on-screen "what was applied" line.
+    async function applyMusteringEffect(effect) {
+      if (effect.type === 'stat') {
+        await applyStatChange(effect.key, effect.amount);
+        return `${MUSTERING_STAT_LABELS[effect.key]} ${effect.amount > 0 ? '+' : ''}${effect.amount} (now ${draft[effect.key]})`;
+      }
+      if (effect.type === 'all') {
+        const parts = [];
+        for (const item of effect.items) parts.push(await applyMusteringEffect(item));
+        return parts.join(', ');
+      }
+      if (effect.type === 'shipShare') {
+        let amount = effect.amount || 0;
+        if (effect.dice) { for (let i = 0; i < effect.dice; i++) amount += rollDie(); }
+        await applyStatChange('ship_shares', amount);
+        return `${amount} Ship Share${amount === 1 ? '' : 's'} (total ${draft.ship_shares || 0})`;
+      }
+      if (effect.type === 'tas') {
+        await supabaseClient.from('characters').update({ tas_member: true }).eq('id', draft.id);
+        draft.tas_member = true;
+        return 'TAS Membership granted';
+      }
+      if (effect.type === 'item') {
+        if (effect.kind === 'weapon') {
+          await supabaseClient.from('character_weapons').insert({ character_id: draft.id, name: effect.label, traits: 'Granted as a mustering-out benefit — fill in details in Character Record.' });
+        } else if (effect.kind === 'armour') {
+          await supabaseClient.from('character_armour').insert({ character_id: draft.id, type: effect.label, options: 'Granted as a mustering-out benefit — fill in details in Character Record.' });
+        } else if (effect.kind === 'augment') {
+          await supabaseClient.from('character_augments').insert({ character_id: draft.id, type: effect.label, improvement: 'Granted as a mustering-out benefit.' });
+        } else {
+          await supabaseClient.from('character_equipment').insert({ character_id: draft.id, type: effect.label });
+        }
+        return `${effect.label} added to your ${effect.kind === 'weapon' ? 'Weapons' : effect.kind === 'armour' ? 'Armour' : effect.kind === 'augment' ? 'Augments' : 'Equipment'} tab — fill in details there`;
+      }
+      if (effect.type === 'skillAll') {
+        const skills = Object.assign({}, draft.skills || {});
+        const labels = [];
+        for (const name of effect.skills) {
+          const specialties = skillSpecialtiesFor(name);
+          if (specialties.length) {
+            grantSpecialtySkillMin(skills, name, null, effect.level);
+            labels.push(`${name} (choose specialty later) ${effect.level}`);
+          } else {
+            grantSkillMin(skills, name, null, effect.level);
+            labels.push(`${name} ${effect.level}`);
+          }
+        }
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        return labels.join(', ');
+      }
+      return 'Applied';
+    }
+
     async function consumePendingFlag(key) {
       const m = pendingMods();
       const v = !!m[key];
@@ -4173,13 +4303,17 @@
     // existing Continue/Leave gating keeps working unchanged.
     function bespokeKey(careerId, roll) { return careerId + ':' + roll; }
 
+    function mechanicTagKey(tag) {
+      return tag === 'mishap' ? 'mishapMechanic' : tag === 'mustering' ? 'musteringMechanic' : 'eventMechanic';
+    }
+
     function mechanicState(tag) {
       const s = step5State();
-      return (tag === 'mishap' ? s.mishapMechanic : s.eventMechanic) || {};
+      return s[mechanicTagKey(tag)] || {};
     }
 
     async function saveMechanic(tag, patch) {
-      const key = tag === 'mishap' ? 'mishapMechanic' : 'eventMechanic';
+      const key = mechanicTagKey(tag);
       const merged = Object.assign({}, mechanicState(tag), patch);
       await saveStep5State({ [key]: merged });
     }
@@ -7710,10 +7844,27 @@
         `;
       }
 
+      const pending = s.musteringPending;
+      const bankedDM = pendingMods().benefitRollDM;
+      const bankedNote = bankedDM
+        ? `<div style="margin-bottom:10px; font-size:0.8rem; color:#ffaa00;">Banked modifier active: DM${bankedDM > 0 ? '+' : ''}${bankedDM} to your next Benefit roll.</div>`
+        : '';
+
+      if (pending) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Mustering Out</div>
+            <div class="wizard-card-sub">Benefit roll ${pending.idx + 1}: ${pending.text}</div>
+            ${renderMusteringPending(pending)}
+          </div>
+        `;
+      }
+
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Mustering Out (${remaining} Benefit roll${remaining > 1 ? 's' : ''} remaining)</div>
           <div class="wizard-card-sub">For each roll, choose the Cash table or the Benefits table, then roll 1D (capped at 7).</div>
+          ${bankedNote}
           <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
             <button class="btn-outline" onclick="rollMustering('cash')">Roll Cash</button>
             <button class="btn-outline" onclick="rollMustering('benefits')">Roll Benefits</button>
@@ -7723,24 +7874,113 @@
       `;
     }
 
+    // Renders whatever follow-up decision a pending Benefit roll needs
+    // before it can be marked resolved — a choice between two effects, a
+    // skill choice, an associate name, or (mid-flow) a specialty gate.
+    function renderMusteringPending(pending) {
+      const mm = mechanicState('mustering');
+      if (mm.specialtyGateFor) return renderSpecialtyGate('mustering', mm.specialtyGateFor);
+      const effect = pending.effect;
+      if (effect.type === 'choice') {
+        return `<div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          ${effect.options.map((opt, i) => `<button class="btn-outline" onclick="resolveMusteringChoice(${i})">${opt.label}</button>`).join('')}
+        </div>`;
+      }
+      if (effect.type === 'skillChoice') {
+        return `<div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          ${effect.skills.map(name => `<button class="btn-outline" onclick="resolveMusteringSkillChoice('${name}')">${name} ${effect.level}</button>`).join('')}
+        </div>`;
+      }
+      if (effect.type === 'associate') {
+        return `
+          <input id="mustering-assoc-name" type="text" placeholder="${effect.kind === 'ally' ? 'Ally' : 'Contact'} name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="resolveMusteringAssociate()">Confirm</button>
+        `;
+      }
+      return '';
+    }
+
     async function rollMustering(table) {
       const s = step5State();
       const c = careerData(s.careerId);
       const bonusDM = await consumePendingMod('benefitRollDM');
       const idx = Math.max(0, Math.min(6, rollDie() - 1 + bonusDM));
-      let line;
       if (table === 'cash') {
         const amount = c.musteringCash[idx];
         await applyStatChange('cash_on_hand', amount);
-        line = `Cash roll ${idx + 1}: Cr${amount}${bonusDM ? ` (incl. ${bonusDM > 0 ? '+' : ''}${bonusDM} banked bonus)` : ''}`;
-      } else {
-        const text = c.musteringBenefits[idx];
-        line = `Benefit roll ${idx + 1}: ${text}${bonusDM ? ` (incl. ${bonusDM > 0 ? '+' : ''}${bonusDM} banked bonus)` : ''}`;
+        const line = `Cash roll ${idx + 1}: Cr${amount}${bonusDM ? ` (incl. ${bonusDM > 0 ? '+' : ''}${bonusDM} banked bonus)` : ''}`;
+        const done = (s.musteringResolved || []).concat([line]);
+        await saveStep5State({ musteringResolved: done });
+        await logCreation(`Mustering Out — ${line}.`);
+        renderStep();
+        return;
       }
+      const text = c.musteringBenefits[idx];
+      const effect = MUSTERING_BENEFIT_EFFECTS[text];
+      const dmNote = bonusDM ? ` (incl. ${bonusDM > 0 ? '+' : ''}${bonusDM} banked bonus)` : '';
+      if (!effect) {
+        // Safety net for any benefit string not yet in the dictionary —
+        // should not happen, but never silently drop the roll.
+        const line = `Benefit roll ${idx + 1}: ${text}${dmNote} (not yet mechanically tracked)`;
+        const done = (s.musteringResolved || []).concat([line]);
+        await saveStep5State({ musteringResolved: done });
+        await logCreation(`Mustering Out — ${line}.`);
+        renderStep();
+        return;
+      }
+      if (effect.type === 'choice' || effect.type === 'skillChoice' || effect.type === 'associate') {
+        await saveStep5State({ musteringPending: { idx, text, effect, dmNote } });
+        renderStep();
+        return;
+      }
+      const appliedDesc = await applyMusteringEffect(effect);
+      const line = `Benefit roll ${idx + 1}: ${text}${dmNote} — ${appliedDesc}`;
       const done = (s.musteringResolved || []).concat([line]);
       await saveStep5State({ musteringResolved: done });
       await logCreation(`Mustering Out — ${line}.`);
       renderStep();
+    }
+
+    async function finishMusteringPending(appliedDesc) {
+      const s = step5State();
+      const p = s.musteringPending;
+      const line = `Benefit roll ${p.idx + 1}: ${p.text}${p.dmNote || ''} — ${appliedDesc}`;
+      const done = (s.musteringResolved || []).concat([line]);
+      await saveStep5State({ musteringResolved: done, musteringPending: null });
+      await logCreation(`Mustering Out — ${line}.`);
+      renderStep();
+    }
+
+    async function resolveMusteringChoice(optionIdx) {
+      const s = step5State();
+      const opt = s.musteringPending.effect.options[optionIdx];
+      const appliedDesc = await applyMusteringEffect(opt.effect);
+      await finishMusteringPending(appliedDesc);
+    }
+
+    async function resolveMusteringSkillChoice(skillName) {
+      await gateSpecialty('mustering', skillName, (specialty) => finishMusteringSkillChoice(skillName, specialty));
+    }
+
+    async function finishMusteringSkillChoice(skillName, specialty) {
+      const s = step5State();
+      const level = s.musteringPending.effect.level;
+      const skills = Object.assign({}, draft.skills || {});
+      if (specialty) grantSpecialtySkillMin(skills, skillName, specialty, level);
+      else grantSkillMin(skills, skillName, null, level);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const label = specialty ? `${skillName} (${specialty})` : skillName;
+      await finishMusteringPending(`${label} ${level}`);
+    }
+
+    async function resolveMusteringAssociate() {
+      const s = step5State();
+      const effect = s.musteringPending.effect;
+      const name = (document.getElementById('mustering-assoc-name') || {}).value.trim();
+      if (!name) return;
+      await addAssociate(effect.kind, name, 'Gained as a mustering-out benefit.');
+      await finishMusteringPending(`Gained ${name} as ${effect.kind === 'ally' ? 'an Ally' : 'a Contact'}`);
     }
 
     function renderCareerMusteringDone() {
