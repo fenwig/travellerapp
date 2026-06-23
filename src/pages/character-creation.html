@@ -2202,10 +2202,10 @@
         musteringBenefits: ['Cybernetic Implant', 'INT +1', 'EDU +1', 'Weapon', 'Armour', 'END +1 or Cybernetic Implant', 'SOC +1'],
         mishaps: [
           { roll: 1, text: 'Severely injured in action (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
-          { roll: 2, text: 'Your unit is slaughtered in a disastrous battle, which you blame on your commander. Gain them as an Enemy — they have you removed from the service.', tools: ['associate'] },
+          { roll: 2, text: 'Your unit is slaughtered in a disastrous battle, which you blame on your commander. Gain them as an Enemy — they have you removed from the service.', tools: ['associate'], associateTypes: ['enemy'] },
           { roll: 3, text: 'Sent to a hostile region to fight guerrillas; discharged due to stress, injury, or a government cover-up. Increase Recon or Survival by one level, but gain the rebels as an Enemy.', tools: [] },
           { roll: 4, text: "You discover your commanding officer is running an illegal operation. Join their ring (gain them as an Ally) before the investigation discharges you, or cooperate with the military police (discharged anyway, but you keep this term's Benefit roll).", tools: [] },
-          { roll: 5, text: 'Tormented by or quarrel with an officer or fellow soldier — gain them as a Rival, driven out of the service.', tools: ['associate'] },
+          { roll: 5, text: 'Tormented by or quarrel with an officer or fellow soldier — gain them as a Rival, driven out of the service.', tools: ['associate'], associateTypes: ['rival'] },
           { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
         ],
         events: [
@@ -2260,7 +2260,7 @@
           { roll: 1, text: 'Severely injured in action (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
           { roll: 2, text: 'Placed in frozen watch and revived improperly. Reduce STR, DEX or END by 1 (muscle wastage). You are not ejected from this career.', noEject: true, tools: ['stat'] },
           { roll: 3, text: "Battle's outcome depends on your actions — make an 8+ skill roll (Electronics/Gunner if Line, Mechanic/Vacc Suit if Engineer/Gunner, Pilot/Tactics if Flight). Fail: ship suffers severe damage, you're court-martialled and discharged. Succeed: honourably discharged, you may keep this term's Benefit roll.", tools: [] },
-          { roll: 4, text: 'Blamed for an accident causing crew deaths. If responsible: gain one free Skills & Training roll before ejection. If not: gain the blaming officer as an Enemy but keep this term\'s Benefit roll.', tools: ['associate'] },
+          { roll: 4, text: 'Blamed for an accident causing crew deaths. If responsible: gain one free Skills & Training roll before ejection. If not: gain the blaming officer as an Enemy but keep this term\'s Benefit roll.', tools: ['associate'], associateTypes: ['enemy'] },
           { roll: 5, text: 'Tormented by or quarrel with an officer or crewman — gain them as a Rival, forced out of the Navy.', tools: ['associate'], associateTypes: ['rival'] },
           { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
         ],
@@ -2272,7 +2272,7 @@
           { roll: 6, text: 'Your vessel takes part in a notable military engagement. Gain one of Electronics 1, Engineer 1, Gunner 1 or Pilot 1.', tools: ['skill'], skillOptions: [{ name: 'Electronics', level: 1 }, { name: 'Engineer', level: 1 }, { name: 'Gunner', level: 1 }, { name: 'Pilot', level: 1 }] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
           { roll: 8, text: 'Your vessel takes part in a diplomatic mission. Gain one of Recon 1, Diplomat 1, Steward 1, or a Contact.', tools: ['skill', 'associate'], skillOptions: [{ name: 'Recon', level: 1 }, { name: 'Diplomat', level: 1 }, { name: 'Steward', level: 1 }], associateTypes: ['contact'] },
-          { roll: 9, text: 'You foil an attempted crime aboard. Gain an Enemy, but DM+2 to your next advancement roll in the Navy.', tools: ['associate'] },
+          { roll: 9, text: 'You foil an attempted crime aboard. Gain an Enemy, but DM+2 to your next advancement roll in the Navy.', tools: ['associate'], associateTypes: ['enemy'], autoDM: { key: 'advancementDM', amount: 2 } },
           { roll: 10, text: 'Opportunity to abuse your position for profit. Accept: extra Benefit roll this term. Refuse: DM+2 to next advancement roll.', tools: [] },
           { roll: 11, text: 'Your commanding officer takes an interest in your career. Gain Tactics (naval) 1, or DM+4 to your next advancement roll.', tools: ['skill'] },
           { roll: 12, text: 'You display heroism in battle, saving the ship. Automatically pass your next promotion or commission roll.', tools: [] }
@@ -2309,9 +2309,9 @@
         mishaps: [
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
           { roll: 2, text: 'Injured. Roll on the Injury table.', tools: ['injury'] },
-          { roll: 3, text: 'You run afoul of a criminal gang, corrupt bureaucrat or other foe. Gain an Enemy.', tools: ['associate'] },
+          { roll: 3, text: 'You run afoul of a criminal gang, corrupt bureaucrat or other foe. Gain an Enemy.', tools: ['associate'], associateTypes: ['enemy'] },
           { roll: 4, text: 'You suffer from a life-threatening illness. Reduce your END by 1.', tools: [], autoStat: { key: 'end_stat', amount: -1 } },
-          { roll: 5, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have none, gain a Rival or Enemy anyway.', tools: ['associate'] },
+          { roll: 5, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have none, gain a Rival or Enemy anyway.', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
           { roll: 6, text: 'You do not know what happened to you. There is a gap in your memory.', tools: [] }
         ],
         events: [
@@ -2376,7 +2376,7 @@
         musteringBenefits: ['Ship Share', 'Ally', 'INT +1', 'Gun', 'EDU +1', 'Two Ship Shares', 'TAS Membership'],
         mishaps: [
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
-          { roll: 2, text: 'Harassed and your life ruined by a criminal gang. Gain the gang as an Enemy.', tools: ['associate'] },
+          { roll: 2, text: 'Harassed and your life ruined by a criminal gang. Gain the gang as an Enemy.', tools: ['associate'], associateTypes: ['enemy'] },
           { roll: 3, text: 'Hard times from a lack of interstellar trade cost you your job. Lose one SOC.', tools: [], autoStat: { key: 'soc', amount: -1 } },
           { roll: 4, text: 'Your business is investigated by the planetary authorities (or your colony suffers offworld interference). Co-operate and the business or colony is shut down, but gain DM+2 to your next qualification roll as a reward. Refuse and gain an Ally instead.', tools: [] },
           { roll: 5, text: 'A revolution, attack, or other unusual event forces you to leave the planet. Roll Streetwise 8+ — success increases any skill you have by one level.', tools: [] },
@@ -2432,7 +2432,7 @@
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
           { roll: 2, text: 'You expose, or are involved in, a scandal of some sort.', tools: [] },
           { roll: 3, text: 'Public opinion turns on you. Reduce your SOC by 1.', tools: [], autoStat: { key: 'soc', amount: -1 } },
-          { roll: 4, text: 'Betrayed by a peer. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have neither, gain a Rival or Enemy anyway.', tools: ['associate'] },
+          { roll: 4, text: 'Betrayed by a peer. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have neither, gain a Rival or Enemy anyway.', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
           { roll: 5, text: 'An investigation, tour, project, or expedition goes wrong, stranding you far from home. Gain one of Survival 1, Pilot 1, Persuade 1, or Streetwise 1.', tools: ['skill'], skillOptions: [{ name: 'Survival', level: 1 }, { name: 'Pilot', level: 1 }, { name: 'Persuade', level: 1 }, { name: 'Streetwise', level: 1 }] },
           { roll: 6, text: 'You are forced out because of censorship or controversy. Gain DM+2 to the qualification roll for your next career.', tools: [], autoDM: { key: 'qualificationDM', amount: 2 } }
         ],
@@ -2490,7 +2490,7 @@
           { roll: 2, text: 'A mission goes wrong; you and several others are captured and mistreated by the enemy. Discharged early due to your injuries. Gain your jailer as an Enemy and reduce STR and DEX by one.', tools: ['associate'], autoStats: [{ key: 'str', amount: -1 }, { key: 'dex', amount: -1 }] },
           { roll: 3, text: "A mission goes wrong and you are stranded behind enemy lines. Increase Stealth or Survival by one level, but you are ejected from the service due to the mission's failure.", tools: ['skill'], skillOptions: [{ name: 'Stealth', level: 1 }, { name: 'Survival', level: 1 }] },
           { roll: 4, text: 'Ordered to take part in a black ops mission against your conscience. Refuse and you are ejected from the service. Accept and stay with the Marines, but gain the lone survivor as an Enemy.', tools: [] },
-          { roll: 5, text: 'Tormented by or quarrel with an officer or fellow marine — gain them as a Rival, driven out of the service.', tools: ['associate'] },
+          { roll: 5, text: 'Tormented by or quarrel with an officer or fellow marine — gain them as a Rival, driven out of the service.', tools: ['associate'], associateTypes: ['rival'] },
           { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
         ],
         events: [
@@ -2548,7 +2548,7 @@
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
           { roll: 2, text: 'You are bankrupted by a rival. You lose all Benefits from this career and gain the other trader as a Rival.', tools: [] },
           { roll: 3, text: 'A sudden war destroys your trade routes and contacts, forcing you to flee that region of space. Gain Gun Combat 1 or Pilot 1.', tools: ['skill'], skillOptions: [{ name: 'Gun Combat', level: 1 }, { name: 'Pilot', level: 1 }] },
-          { roll: 4, text: 'Your ship or starport is destroyed by criminals. Gain them as an Enemy.', tools: ['associate'] },
+          { roll: 4, text: 'Your ship or starport is destroyed by criminals. Gain them as an Enemy.', tools: ['associate'], associateTypes: ['enemy'] },
           { roll: 5, text: 'Imperial trade restrictions force you out of business. You may take the Rogue career for your next term without needing to roll for qualification (choose Rogue at the next Career screen and skip its qualification roll — this app does not yet auto-skip that roll for you, so just confirm entry manually when you get there).', tools: [] },
           { roll: 6, text: 'A series of bad deals and decisions force you into bankruptcy. You salvage what you can — you may take a Benefit roll for this term as well as any others you are entitled to.', tools: [] }
         ],
@@ -2557,7 +2557,7 @@
           { roll: 3, text: 'You are offered the opportunity to smuggle illegal items onto a planet. Accept and roll Deception 8+ or Persuade 8+ to gain Streetwise 1 and an extra Benefit roll. Refuse and gain an Enemy in the criminal sphere.', tools: [] },
           { roll: 4, text: 'Gain any one of these skills, reflecting your time spent dealing with suppliers and spacers: Profession 1, Electronics 1, Engineer 1, Animals 1, or Science 1.', tools: ['skill'], skillOptions: [{ name: 'Profession', level: 1 }, { name: 'Electronics', level: 1 }, { name: 'Engineer', level: 1 }, { name: 'Animals', level: 1 }, { name: 'Science', level: 1 }] },
           { roll: 5, text: 'You have a chance to risk your fortune on a possibly lucrative deal. Gamble a number of Benefit rolls and roll Gambler 8+ or Broker 8+: success gains half as many Benefit rolls as risked (rounding up); failure loses all the rolls risked. Either way, gain one level in whichever skill you used.', tools: [] },
-          { roll: 6, text: 'You make an unexpected connection outside your normal circles. Gain a Contact.', tools: ['associate'] },
+          { roll: 6, text: 'You make an unexpected connection outside your normal circles. Gain a Contact.', tools: ['associate'], associateTypes: ['contact'] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
           { roll: 8, text: 'You are embroiled in legal trouble. Gain one of Advocate 1, Admin 1, Diplomat 1, or Investigate 1 — then roll 2D: a natural 2 forces the Prisoner career next term (automated).', tools: ['skill'], skillOptions: [{ name: 'Advocate', level: 1 }, { name: 'Admin', level: 1 }, { name: 'Diplomat', level: 1 }, { name: 'Investigate', level: 1 }] },
           { roll: 9, text: 'Given advanced training in a specialist field. Roll EDU 8+ to increase any one skill you already have by one level.', tools: [] },
@@ -2677,9 +2677,9 @@
         mishaps: [
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
           { roll: 2, text: 'Arrested. You must take the Prisoner career for your next term — choose Prisoner at the next Career screen and confirm forced entry.', tools: [] },
-          { roll: 3, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have neither, gain a Rival or Enemy anyway. On a rare natural 2 on a further 2D roll (not automated here), you would also be forced into the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry).', tools: ['associate'] },
+          { roll: 3, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have neither, gain a Rival or Enemy anyway. On a rare natural 2 on a further 2D roll (not automated here), you would also be forced into the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry).', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
           { roll: 4, text: 'A job goes wrong, forcing you to flee off-planet. Gain one of Deception 1, Pilot 1, Athletics 1, or Gunner 1.', tools: ['skill'], skillOptions: [{ name: 'Deception', level: 1 }, { name: 'Pilot', level: 1 }, { name: 'Athletics', level: 1 }, { name: 'Gunner', level: 1 }] },
-          { roll: 5, text: 'A police detective or rival criminal forces you to flee and vows to hunt you down. Gain them as an Enemy.', tools: ['associate'] },
+          { roll: 5, text: 'A police detective or rival criminal forces you to flee and vows to hunt you down. Gain them as an Enemy.', tools: ['associate'], associateTypes: ['enemy'] },
           { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
         ],
         events: [
@@ -3186,11 +3186,11 @@
     const LIFE_EVENTS_TABLE = [
       { roll: 2, text: 'Sickness or Injury — roll on the Injury table.', injury: true, tools: [] },
       { roll: 3, text: 'Birth or Death — someone close to you dies or gives birth, and you are involved in some way.', tools: [] },
-      { roll: 4, text: 'Ending of a Relationship — a romantic relationship of yours ends badly. Gain a Rival or Enemy.', tools: ['associate'] },
-      { roll: 5, text: 'Improved Relationship — a relationship deepens. Gain an Ally.', tools: ['associate'] },
-      { roll: 6, text: 'New Relationship — you become romantically involved with someone. Gain an Ally.', tools: ['associate'] },
-      { roll: 7, text: 'New Contact — you gain a new Contact.', tools: ['associate'] },
-      { roll: 8, text: 'Betrayal — a friend betrays you. Convert an existing Contact or Ally into a Rival or Enemy, or gain a fresh Rival/Enemy if you have neither.', tools: ['associate'] },
+      { roll: 4, text: 'Ending of a Relationship — a romantic relationship of yours ends badly. Gain a Rival or Enemy.', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
+      { roll: 5, text: 'Improved Relationship — a relationship deepens. Gain an Ally.', tools: ['associate'], associateTypes: ['ally'] },
+      { roll: 6, text: 'New Relationship — you become romantically involved with someone. Gain an Ally.', tools: ['associate'], associateTypes: ['ally'] },
+      { roll: 7, text: 'New Contact — you gain a new Contact.', tools: ['associate'], associateTypes: ['contact'] },
+      { roll: 8, text: 'Betrayal — a friend betrays you. Convert an existing Contact or Ally into a Rival or Enemy, or gain a fresh Rival/Enemy if you have neither.', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
       { roll: 9, text: 'Travel — you move to another world. Gain DM+2 to your next qualification roll.', tools: [], autoDM: { key: 'qualificationDM', amount: 2 } },
       { roll: 10, text: 'Good Fortune — something good happens to you. Gain DM+2 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 2 } },
       { roll: 11, text: "Crime — you commit, suffer, or are accused of a crime. Lose one Benefit roll, or take the Prisoner career next term instead (choose Prisoner at the next Career screen and confirm forced entry).", tools: [], autoDM: { key: 'extraBenefitRolls', amount: -1 } },
@@ -3372,6 +3372,7 @@
         case 'draftOrDrifter':  return renderDraftOrDrifter();
         case 'draftResult':     return renderDraftResult();
         case 'assignment':      return renderCareerAssignment();
+        case 'startRankGate':   return renderStartRankGate();
         case 'commission':      return renderCareerCommission();
         case 'survival':        return renderCareerSurvival();
         case 'mishap':          return renderCareerMishap();
@@ -3663,12 +3664,75 @@
       const academyNote = merchantBonus ? ` Merchant Academy auto-entry: starting at rank ${startRank}.`
         : militaryBonus ? ' Military Academy auto-entry: starting as an officer at rank 1.' : '';
 
-      await saveStep5State(Object.assign({
+      const basePatch = Object.assign({
         assignmentKey: key, rank: startRank, isOfficer: startOfficer, termInCareer: 0,
         basicTrainingDone: isFirstCareer, benefitRolls: 0,
         phase: 'survival', basicTrainingGrant
-      }, extraPatch));
-      await logCreation(`${c.name} — chose ${assignment.label} assignment.${academyNote}${basicTrainingGrant ? ` Basic Training: gained ${basicTrainingGrant}.` : ''}`);
+      }, extraPatch);
+
+      // The rank table's entry for whatever rank you START at (rank 0 for
+      // a normal entry, or rank 1/2 via an Academy auto-entry) has its own
+      // skill/stat reward, same shape as a promotion's reward — but
+      // nothing granted it until now, since only rollAdvancement() ever
+      // read the rank table. Found via Army's rank-0 "Private" (Gun
+      // Combat 1) silently never being applied; also affects Marine and
+      // Prisoner's rank-0 entries.
+      const table = (startOfficer ? c.ranksOfficer : null) || c.ranksEnlisted || assignment.ranks || [];
+      const startEntry = table.find(x => x.rank === startRank);
+      if (startEntry && startEntry.skill && !startEntry.skill.specialty && skillSpecialtiesFor(startEntry.skill.name).length) {
+        await saveStep5State(Object.assign({}, basePatch, { phase: 'startRankGate', startRankPending: { entry: startEntry, basePatch, academyNote, basicTrainingGrant } }));
+        await gateSpecialty('startRank', startEntry.skill.name, (specialty) => finishStartRankGrant(specialty));
+        return;
+      }
+
+      let rankNote = '';
+      if (startEntry && startEntry.skill) {
+        rankNote = await grantStartRankSkill(startEntry.skill, startEntry.skill.specialty || null);
+      }
+      if (startEntry && startEntry.stat) {
+        rankNote += (rankNote ? ', ' : '') + await grantStartRankStat(startEntry.stat);
+      }
+
+      await saveStep5State(basePatch);
+      await logCreation(`${c.name} — chose ${assignment.label} assignment.${academyNote}${basicTrainingGrant ? ` Basic Training: gained ${basicTrainingGrant}.` : ''}${rankNote ? ` Starting rank reward: ${rankNote}.` : ''}`);
+      renderStep();
+    }
+
+    async function grantStartRankSkill(skillEntry, specialty) {
+      const skills = Object.assign({}, draft.skills || {});
+      if (specialty) grantSpecialtySkillMin(skills, skillEntry.name, specialty, skillEntry.level);
+      else grantSkillMin(skills, skillEntry.name, null, skillEntry.level);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      return `${skillEntry.name}${specialty ? ' (' + specialty + ')' : ''} ${skillEntry.level}`;
+    }
+
+    async function grantStartRankStat(statEntry) {
+      if (statEntry.min !== undefined) {
+        if ((draft[statEntry.key] || 0) < statEntry.min) await applyStatChange(statEntry.key, statEntry.min - (draft[statEntry.key] || 0));
+        else await applyStatChange(statEntry.key, 1);
+      } else {
+        await applyStatChange(statEntry.key, statEntry.amount);
+      }
+      return `${statEntry.key} adjusted`;
+    }
+
+    function renderStartRankGate() {
+      const s = step5State();
+      const sm = mechanicState('startRank');
+      const c = careerData(s.careerId);
+      return `<div class="rule-card wizard-card"><div class="wizard-card-title">${c.name} — Starting Rank</div>${renderSpecialtyGate('startRank', sm.specialtyGateFor)}</div>`;
+    }
+
+    async function finishStartRankGrant(specialty) {
+      const s = step5State();
+      const { entry, basePatch, academyNote, basicTrainingGrant } = s.startRankPending;
+      const c = careerData(s.careerId);
+      const assignment = currentAssignment(Object.assign({}, s, basePatch), c);
+      let rankNote = await grantStartRankSkill(entry.skill, specialty);
+      if (entry.stat) rankNote += ', ' + await grantStartRankStat(entry.stat);
+      await saveStep5State(Object.assign({}, basePatch, { startRankPending: null }));
+      await logCreation(`${c.name} — chose ${assignment.label} assignment.${academyNote}${basicTrainingGrant ? ` Basic Training: gained ${basicTrainingGrant}.` : ''} Starting rank reward: ${rankNote}.`);
       renderStep();
     }
 
@@ -4343,6 +4407,7 @@
       if (tag === 'mishap') return 'mishapMechanic';
       if (tag === 'mustering') return 'musteringMechanic';
       if (tag === 'advancement') return 'advancementMechanic';
+      if (tag === 'startRank') return 'startRankMechanic';
       return 'eventMechanic';
     }
 
