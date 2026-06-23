@@ -24,4 +24,12 @@ async function editDisplayName(user, el) {
   }
   el.textContent = trimmed;
   user.user_metadata = data.user.user_metadata;
+
+  const { error: charError } = await supabaseClient
+    .from('characters')
+    .update({ player_name: trimmed })
+    .eq('user_id', user.id);
+  if (charError) {
+    alert('Display name updated, but could not update it on your existing characters: ' + charError.message);
+  }
 }

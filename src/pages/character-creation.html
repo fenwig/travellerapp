@@ -2056,7 +2056,7 @@
       },
       army: {
         id: 'army', name: 'Army', source: 'Core Rulebook pp.24-25', military: true,
-        qualification: { stat: 'end_stat', target: 5, agePenalty: { minAge: 30, dm: -2 } },
+        qualification: { stat: 'end_stat', target: 5, agePenalty: { minAge: 30, dm: -2 }, autoIf: () => !!militaryAcademyAutoEntry('army'), autoIfLabel: 'Automatic qualification — Military Academy (Army) graduate entering their first career.' },
         commission: { stat: 'soc', target: 8 },
         serviceSkills: [{ name: 'Drive' }, { name: 'Athletics' }, { name: 'Gun Combat' }, { name: 'Recon' }, { name: 'Melee' }, { name: 'Heavy Weapons' }],
         assignments: [
@@ -2124,7 +2124,7 @@
       },
       navy: {
         id: 'navy', name: 'Navy', source: 'Core Rulebook pp.35-37', military: true,
-        qualification: { stat: 'int_stat', target: 6, agePenalty: { minAge: 34, dm: -2 } },
+        qualification: { stat: 'int_stat', target: 6, agePenalty: { minAge: 34, dm: -2 }, autoIf: () => !!militaryAcademyAutoEntry('navy'), autoIfLabel: 'Automatic qualification — Military Academy (Navy) graduate entering their first career.' },
         commission: { stat: 'soc', target: 8 },
         assignments: [
           { key: 'line', label: 'Line/Crew', survival: { stat: 'int_stat', target: 5 }, advancement: { stat: 'edu', target: 7 },
@@ -2230,7 +2230,7 @@
       },
       citizen: {
         id: 'citizen', name: 'Citizen', source: 'Core Rulebook pp.26-28', military: false,
-        qualification: { stat: 'edu', target: 5 },
+        qualification: { stat: 'edu', target: 5, autoIf: () => !!merchantAcademyAutoEntry(), autoIfLabel: 'Automatic qualification — Merchant Academy graduate entering their first career.' },
         // Citizen has no shared career-level Service Skills table — each
         // assignment's own skill table doubles as both basic training and
         // the "Service Skills" roll during Skill Training (Core p.26 note:
@@ -2352,7 +2352,7 @@
       },
       marine: {
         id: 'marine', name: 'Marine', source: 'Core Rulebook pp.31-33', military: true,
-        qualification: { stat: 'end_stat', target: 6, agePenalty: { minAge: 30, dm: -2 } },
+        qualification: { stat: 'end_stat', target: 6, agePenalty: { minAge: 30, dm: -2 }, autoIf: () => !!militaryAcademyAutoEntry('marine'), autoIfLabel: 'Automatic qualification — Military Academy (Marines) graduate entering their first career.' },
         commission: { stat: 'soc', target: 8 },
         serviceSkills: [{ name: 'Athletics' }, { name: 'Vacc Suit' }, { name: 'Tactics' }, { name: 'Heavy Weapons' }, { name: 'Gun Combat' }, { name: 'Melee', specialty: 'Blade' }],
         assignments: [
@@ -2409,7 +2409,7 @@
       },
       merchant: {
         id: 'merchant', name: 'Merchant', source: 'Core Rulebook pp.33-36', military: false,
-        qualification: { stat: 'int_stat', target: 4 },
+        qualification: { stat: 'int_stat', target: 4, autoIf: () => !!merchantAcademyAutoEntry(), autoIfLabel: 'Automatic qualification — Merchant Academy graduate entering their first career.' },
         serviceSkills: [{ name: 'Drive' }, { name: 'Vacc Suit' }, { name: 'Broker' }, { name: 'Steward' }, { name: 'Electronics' }, { name: 'Persuade' }],
         assignments: [
           { key: 'merchantMarine', label: 'Merchant Marine', survival: { stat: 'edu', target: 5 }, advancement: { stat: 'int_stat', target: 7 },
@@ -2455,11 +2455,11 @@
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
           { roll: 3, text: 'You are offered the opportunity to smuggle illegal items onto a planet. Accept and roll Deception 8+ or Persuade 8+ to gain Streetwise 1 and an extra Benefit roll. Refuse and gain an Enemy in the criminal sphere.', tools: [] },
-          { roll: 4, text: 'Gain any one of these skills, reflecting your time spent dealing with suppliers and spacers: Profession 1, Electronics 1, Engineer 1, Animals 1, or Science 1.', tools: ['skill'] },
+          { roll: 4, text: 'Gain any one of these skills, reflecting your time spent dealing with suppliers and spacers: Profession 1, Electronics 1, Engineer 1, Animals 1, or Science 1.', tools: ['skill'], skillOptions: [{ name: 'Profession', level: 1 }, { name: 'Electronics', level: 1 }, { name: 'Engineer', level: 1 }, { name: 'Animals', level: 1 }, { name: 'Science', level: 1 }] },
           { roll: 5, text: 'You have a chance to risk your fortune on a possibly lucrative deal. Gamble a number of Benefit rolls and roll Gambler 8+ or Broker 8+: success gains half as many Benefit rolls as risked (rounding up); failure loses all the rolls risked. Either way, gain one level in whichever skill you used.', tools: [] },
           { roll: 6, text: 'You make an unexpected connection outside your normal circles. Gain a Contact.', tools: ['associate'] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
-          { roll: 8, text: 'You are embroiled in legal trouble. Gain one of Advocate 1, Admin 1, Diplomat 1, or Investigate 1 — then, on a rare natural 2 on 2D (not automated here), you would be forced to take the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry).', tools: ['skill'] },
+          { roll: 8, text: 'You are embroiled in legal trouble. Gain one of Advocate 1, Admin 1, Diplomat 1, or Investigate 1 — then roll 2D: a natural 2 forces the Prisoner career next term (automated).', tools: ['skill'], skillOptions: [{ name: 'Advocate', level: 1 }, { name: 'Admin', level: 1 }, { name: 'Diplomat', level: 1 }, { name: 'Investigate', level: 1 }] },
           { roll: 9, text: 'Given advanced training in a specialist field. Roll EDU 8+ to increase any one skill you already have by one level.', tools: [] },
           { roll: 10, text: 'A good deal ensures you are living the high life for a few years. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
           { roll: 11, text: 'You befriend a useful ally in one sphere. Gain an Ally, and either gain a level in Carouse or DM+4 to your next advancement roll thanks to their aid.', tools: [] },
@@ -2787,6 +2787,30 @@
 
     function step5State() {
       return (draft.creation_data && draft.creation_data.step5) || { phase: 'choose', terms: 0, careerHistory: [], draftUsed: false };
+    }
+
+    // Merchant Academy (Traveller Companion p.32) grants automatic entry
+    // into Merchant or Citizen at rank 1 (rank 2 with honours), but only
+    // for the first career taken right after the academy.
+    function merchantAcademyAutoEntry() {
+      const s4 = step4State();
+      if (s4.optionId !== 'merchant' || !s4.gradRoll || !s4.gradRoll.success) return null;
+      const s5 = step5State();
+      if ((s5.careerHistory || []).length > 0) return null;
+      return { honours: !!s4.gradRoll.honours };
+    }
+
+    // Military Academy (Core Rulebook p.16-17) grants automatic entry,
+    // as an officer at rank 1, into whichever branch was studied — but
+    // only for the first career taken right after the academy.
+    const MILITARY_ACADEMY_BRANCH_CAREER = { Army: 'army', Marines: 'marine', Navy: 'navy' };
+    function militaryAcademyAutoEntry(careerId) {
+      const s4 = step4State();
+      if (s4.optionId !== 'military' || !s4.gradRoll || !s4.gradRoll.success) return null;
+      if (MILITARY_ACADEMY_BRANCH_CAREER[s4.branch] !== careerId) return null;
+      const s5 = step5State();
+      if ((s5.careerHistory || []).length > 0) return null;
+      return { honours: !!s4.gradRoll.honours };
     }
 
     async function saveStep5State(patch) {
@@ -3125,6 +3149,12 @@
               <button class="btn-outline" style="margin-top:8px;" onclick="rollForcedDraft()">Roll the Draft</button>
             </div>
           ` : ''}
+          ${s.forcedPrisonerNextTerm ? `
+            <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
+              A prior event rolled a natural 2 and forces the Prisoner career this term instead of a free choice.
+              <button class="btn-outline" style="margin-top:8px;" onclick="confirmForcedPrisoner()">Confirm Forced Entry — Prisoner</button>
+            </div>
+          ` : ''}
           ${rows}
           <div class="wizard-actions">
             <button class="btn-outline" onclick="goStep(4)">Back</button>
@@ -3136,6 +3166,11 @@
     async function rollForcedDraft() {
       await saveStep5State({ forcedDraftNextTerm: false });
       await rollDraft();
+    }
+
+    async function confirmForcedPrisoner() {
+      await saveStep5State({ forcedPrisonerNextTerm: false });
+      await chooseCareer('prisoner');
     }
 
     async function chooseCareer(id) {
@@ -3347,12 +3382,19 @@
         await logCreation(`Prisoner — initial Parole Threshold set to ${threshold} (1D+2).`);
       }
 
+      const merchantBonus = (c.id === 'merchant' || c.id === 'citizen') ? merchantAcademyAutoEntry() : null;
+      const militaryBonus = c.military ? militaryAcademyAutoEntry(c.id) : null;
+      const startRank = merchantBonus ? (merchantBonus.honours ? 2 : 1) : (militaryBonus ? 1 : 0);
+      const startOfficer = !!militaryBonus;
+      const academyNote = merchantBonus ? ` Merchant Academy auto-entry: starting at rank ${startRank}.`
+        : militaryBonus ? ' Military Academy auto-entry: starting as an officer at rank 1.' : '';
+
       await saveStep5State(Object.assign({
-        assignmentKey: key, rank: 0, isOfficer: false, termInCareer: 0,
+        assignmentKey: key, rank: startRank, isOfficer: startOfficer, termInCareer: 0,
         basicTrainingDone: isFirstCareer, benefitRolls: 0,
         phase: 'survival', basicTrainingGrant
       }, extraPatch));
-      await logCreation(`${c.name} — chose ${assignment.label} assignment.${basicTrainingGrant ? ` Basic Training: gained ${basicTrainingGrant}.` : ''}`);
+      await logCreation(`${c.name} — chose ${assignment.label} assignment.${academyNote}${basicTrainingGrant ? ` Basic Training: gained ${basicTrainingGrant}.` : ''}`);
       renderStep();
     }
 
@@ -4070,6 +4112,7 @@
         case 'merchant:2':    return renderInlineMishapNotEjected(tag, careerId, m);
         case 'merchant:3':    return renderMerchantEvent3(tag, m);
         case 'merchant:5':    return renderMerchantEvent5(tag, m);
+        case 'merchant:8':    return renderMerchantEvent8(tag, m);
         case 'merchant:9':    return renderRollSkillToGainLevel(tag, m, 'edu', 8);
         case 'merchant:11':   return renderGainAllyThenChooseSkillOrDM(tag, m, 'Carouse', 4, 'A useful ally you befriended in business.', 'Merchant Event 11');
         case 'merchant:12':   return renderBankAutoPromote(tag, m);
@@ -5362,6 +5405,52 @@
       await saveMechanic('event', { rolled: true, resultText });
       await resolveMechanic('event');
       await logCreation(`Merchant Event 5: ${resultText}`);
+      renderStep();
+    }
+
+    // Merchant Event 8 — legal trouble: gain one of four skills, then a
+    // 2D roll where a natural 2 forces the Prisoner career next term.
+    // Banked via forcedPrisonerNextTerm, same pattern as forcedDraftNextTerm.
+    function renderMerchantEvent8(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.skill) {
+        return resolverHeader('Choose the skill you gained from the legal trouble:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="merchantEvent8ChooseSkill('Advocate')">Advocate 1</button>
+            <button class="btn-outline" onclick="merchantEvent8ChooseSkill('Admin')">Admin 1</button>
+            <button class="btn-outline" onclick="merchantEvent8ChooseSkill('Diplomat')">Diplomat 1</button>
+            <button class="btn-outline" onclick="merchantEvent8ChooseSkill('Investigate')">Investigate 1</button>
+          </div>
+        `;
+      }
+      return resolverHeader(`Gained ${m.skill} 1. Rolling 2D to see whether the trouble escalates (a natural 2 forces the Prisoner career next term):`) +
+        `<button class="btn-outline" onclick="rollMerchantEvent8()">Roll 2D</button>`;
+    }
+
+    async function merchantEvent8ChooseSkill(skillName) {
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, skillName, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await saveMechanic('event', { skill: skillName });
+      await logCreation(`Merchant Event 8: gained ${skillName} 1.`);
+      renderStep();
+    }
+
+    async function rollMerchantEvent8() {
+      const m = mechanicState('event');
+      const d1 = rollDie(), d2 = rollDie();
+      const natural2 = d1 === 1 && d2 === 1;
+      let resultText = `Gained ${m.skill} 1. Rolled ${d1 + d2} (${d1} + ${d2})`;
+      if (natural2) {
+        await saveStep5State({ forcedPrisonerNextTerm: true });
+        resultText += ' — a natural 2! Forced into the Prisoner career next term.';
+      } else {
+        resultText += ' — no further trouble.';
+      }
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Merchant Event 8: ${resultText}`);
       renderStep();
     }
 

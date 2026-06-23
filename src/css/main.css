@@ -78,7 +78,9 @@ header h1 {
 /* Inputs */
 input[type="email"],
 input[type="password"],
-input[type="text"] {
+input[type="text"],
+input[type="number"],
+select {
   width: 100%;
   padding: 12px 14px;
   margin-bottom: 14px;
@@ -89,6 +91,11 @@ input[type="text"] {
   font-size: 0.95rem;
   outline: none;
   transition: border-color 0.2s;
+}
+
+select option {
+  background: #0d1520;
+  color: #b0d8e8;
 }
 
 input:focus {
