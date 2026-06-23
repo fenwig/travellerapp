@@ -7582,6 +7582,7 @@
         const { data, error } = await supabaseClient.from('characters')
           .insert({
             user_id: currentUser.id,
+            player_name: currentUser.user_metadata?.display_name || currentUser.email,
             name: 'New Traveller',
             species: 'Human',
             status: 'draft',
