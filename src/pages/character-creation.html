@@ -2870,11 +2870,10 @@
         id: 'truther', name: 'Truther', source: 'Traveller Companion pp.35-36', military: false,
         qualification: { auto: true },
         // Truthers have no conventional rank system — instead they track a
-        // Following (FOL) characteristic (Core Rulebook-style mechanic
-        // unique to this career, see `following` column + adjustFollowing()
-        // and FOLLOWING_DM below). No ranksEnlisted/ranksOfficer at all;
-        // the engine already tolerates a missing rank table (rankTableFor
-        // falls back to []).
+        // Following (FOL) characteristic, stored on the `following` column
+        // and adjusted via the existing generic applyStatChange('following', amount).
+        // No ranksEnlisted/ranksOfficer at all; the engine already tolerates
+        // a missing rank table (rankTableFor falls back to []).
         serviceSkills: [{ name: 'Investigate' }, { name: 'Art', specialty: 'Writing' }, { name: 'Language' }, { name: 'Electronics', specialty: 'Computers' }, { name: 'Diplomat' }, { name: 'Persuade' }],
         assignments: [
           // Survival uses FOL directly as the roll modifier (not the
@@ -2894,7 +2893,7 @@
           { roll: 3, text: 'You are discredited, rightly or wrongly. Lose SOC -2 and FOL -D3, but you are not ejected from this career.', tools: [], noEject: true },
           { roll: 4, text: 'You discover that at least some of your work is based on erroneous thinking. Lose one skill level from any Science skill, but you do not have to leave this career.', tools: [], noEject: true },
           { roll: 5, text: 'Your Truth is misused or misrepresented and you get the blame. Lose all Benefit rolls gained thus far in this career, but you do not have to leave this career.', tools: [], noEject: true },
-          { roll: 6, text: 'Your Truthing alienates former colleagues and contacts, who are determined to bring you down. Gain D3 Rivals.', tools: ['associate'] }
+          { roll: 6, text: 'Your Truthing alienates former colleagues and contacts, who are determined to bring you down. Gain D3 Rivals.', tools: [] }
         ],
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
@@ -2965,7 +2964,7 @@
           { roll: 3, text: 'You are caught on the periphery of a scandal. Lose one rank and one Benefit roll, but you are not ejected from this career.', tools: [], noEject: true },
           { roll: 4, text: 'You have been following false teachings! Lose one skill level from either Profession (Religion) or Science (Belief). You do not have to leave this career.', tools: [], noEject: true },
           { roll: 5, text: 'Your faith is shaken (or you develop a conscience about your false religion). Lose all Benefit rolls gained thus far in this career, but you do not have to leave this career.', tools: [], noEject: true },
-          { roll: 6, text: 'You come into conflict with a splinter group of your own religion, which maintains your version is the wrong one. Gain D3 Rivals.', tools: ['associate'] }
+          { roll: 6, text: 'You come into conflict with a splinter group of your own religion, which maintains your version is the wrong one. Gain D3 Rivals.', tools: [] }
         ],
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
@@ -8009,8 +8008,8 @@
           </div>
         `;
       }
-      if (m.choice === 'takeAdvantage' && m.reward && !m.enemiesResolved) {
-        return resolverHeader(m.resultText) + renderGainDiceAssociates(tag, Object.assign({}, m, { resolved: false }), 'enemy', 3);
+      if (m.choice === 'takeAdvantage' && m.reward) {
+        return resolverHeader(m.resultText) + renderGainDiceAssociates(tag, m, 'enemy', 3);
       }
       return resolverHeader(m.resultText);
     }
