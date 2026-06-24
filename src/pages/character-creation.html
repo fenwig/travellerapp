@@ -588,7 +588,7 @@
         graduation: (d) => ({ stat: 'int_stat', target: 8, honours: 12, extraDM: d.end_stat >= 8 ? 1 : 0, dmLabel: 'DM+1 if END 8+' }),
         benefits: [
           { id: 'bump_one_entry', text: 'Increase one skill already gained at level 0 to level 1.', type: 'chooseN', n: 1, level: 1, pool: () => COLONIAL_SKILLS },
-          { id: 'two_more', text: 'Gain any two other skills from the list above at level 1 (simplified — the rulebook also allows bumping one already-possessed skill instead).', type: 'chooseN', n: 2, level: 1, pool: () => COLONIAL_SKILLS },
+          { id: 'two_more', text: 'Gain any two other skills from the list below at level 1. Or increase a skill you have by 1.', type: 'chooseN', n: 2, level: 1, pool: () => COLONIAL_SKILLS },
           { id: 'jot1', text: 'Gain Jack-of-all-Trades at level 1.', type: 'fixedSkill', name: 'Jack-of-all-Trades', level: 1 },
           { id: 'honours_extra', text: 'Honours graduates gain Leadership 1.', type: 'fixedSkill', name: 'Leadership', level: 1, honoursOnly: true },
           { id: 'honours_extra_pick', text: 'Honours graduates may also increase any other level-0 skill to level 1.', type: 'chooseN', n: 1, level: 1, pool: () => COLONIAL_SKILLS, honoursOnly: true },
@@ -706,8 +706,15 @@
       await logCreation(cleaned);
     }
 
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
     // ── Creation Log — running record of decisions/rolls, shown on the
-    // Character Record's "Creation Log" tab.
+    // Character Record's "Creation Log" tab. Every entry also appears in
+    // the "Recent Activity" panel (see renderRecentActivity) so the player
+    // sees it immediately in the wizard, not just later on the Character
+    // Record — without every screen having to remember to surface it itself.
     async function logCreation(text) {
       const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const line = `[${stamp}] ${text}`;
@@ -1468,6 +1475,7 @@
       const outcome = total >= 8 ? 'rival' : 'enemy';
       const natural2 = (d1 + d2) === 2;
       await saveEventMechanic({ rolled: true, total, outcome, natural2, gradForcedFail: natural2 || undefined });
+      if (natural2) await saveStep5State({ forcedPrisonerNextTerm: true });
       renderStep();
     }
 
@@ -1883,14 +1891,16 @@
       const applied = s.benefitsApplied || {};
       const actionableTypes = ['stat', 'multiStat', 'fixedSkill', 'bumpEntrySkills', 'pendingMod', 'rollMultiStat', 'academyBonus'];
 
+      const appliedDetails = s.benefitsAppliedDetails || {};
       const rows = applicable.map(b => {
         const done = applied[b.id];
         if (b.type === 'chooseN') return renderChooseNBenefit(b, s, done);
         if (b.type === 'commissionPreroll') return renderCommissionPrerollBenefit(b, s, done);
         const isAuto = actionableTypes.includes(b.type);
+        const detailText = done && appliedDetails[b.id] ? appliedDetails[b.id] : b.text;
         return `
           <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
-            <div style="font-size:0.85rem;">${b.text}</div>
+            <div style="font-size:0.85rem;">${detailText}</div>
             ${isAuto
               ? `<button class="btn-outline" onclick="applyPreEdBenefit('${b.id}')" ${done ? 'disabled' : ''} style="flex-shrink:0;">${done ? 'Applied' : 'Apply'}</button>`
               : `<span style="font-size:0.75rem; color:#4a9ab8; flex-shrink:0;">Recorded as a note</span>`
@@ -2105,7 +2115,8 @@
       Object.assign(draft, update);
 
       const applied = Object.assign({}, s.benefitsApplied, { [benefitId]: true });
-      await saveStep4State({ benefitsApplied: applied });
+      const appliedDetails = Object.assign({}, s.benefitsAppliedDetails, { [benefitId]: appliedText });
+      await saveStep4State({ benefitsApplied: applied, benefitsAppliedDetails: appliedDetails });
       await logCreation(`Applied Graduation Benefit: ${appliedText}`);
       renderStep();
     }
@@ -4167,7 +4178,7 @@
 
     function renderGenericResolver(tag, tools, hideMarkButton, restrict) {
       tools = tools || [];
-      window.__resolverRestrict[tag] = restrict || {};
+      window.__resolverRestrict[tag] = Object.assign({}, restrict, { __soleTool: tools.length === 1 ? tools[0] : null });
       const toolButtons = {
         skill: `<button class="btn-outline" onclick="openResolver('${tag}','skill')">Grant Skill</button>`,
         stat: `<button class="btn-outline" onclick="openResolver('${tag}','stat')">Adjust Characteristic</button>`,
@@ -4268,6 +4279,10 @@
       draft.skills = skills;
       const desc = `Granted ${name}${specialty ? ' (' + specialty + ')' : ''} ${level}.`;
       await logCreation(`Resolved outcome — ${desc}`);
+      if ((window.__resolverRestrict[tag] || {}).__soleTool === 'skill') {
+        markResolverDone(tag, desc);
+        return;
+      }
       document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
       await persistResolverNote(tag, desc);
     }
@@ -4286,6 +4301,10 @@
         offerMedicalCare(tag, [{ key, amount: -amount }]);
         return;
       }
+      if ((window.__resolverRestrict[tag] || {}).__soleTool === 'stat') {
+        markResolverDone(tag, desc);
+        return;
+      }
       document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
       await persistResolverNote(tag, desc);
     }
@@ -4297,6 +4316,10 @@
       await addAssociate(type, name, 'Gained during a career term.');
       const desc = `Gained ${name} as a ${type}.`;
       await logCreation(`Resolved outcome — ${desc}`);
+      if ((window.__resolverRestrict[tag] || {}).__soleTool === 'associate') {
+        markResolverDone(tag, desc);
+        return;
+      }
       document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
       await persistResolverNote(tag, desc);
     }
@@ -9525,6 +9548,21 @@
       `;
     }
 
+    // Shows the most recent Creation Log entries at the top of every step,
+    // so a logCreation() call always reaches the player immediately — even
+    // from a screen that doesn't render its own bespoke result text.
+    function renderRecentActivity() {
+      const log = draft.creation_log || '';
+      const lines = log.split('\n').filter(Boolean).slice(-5).reverse();
+      if (!lines.length) return '';
+      return `
+        <div class="rule-card" style="margin-bottom:16px; border-color:#0a4a60;">
+          <div style="color:#00e5ff; font-size:0.8rem; font-weight:600; margin-bottom:6px;">Recent Activity</div>
+          ${lines.map(l => `<div style="font-size:0.8rem; color:#b0d8e8; margin-bottom:2px;">${escapeHtml(l)}</div>`).join('')}
+        </div>
+      `;
+    }
+
     function renderStep() {
       const shell = document.getElementById('wizard-shell');
       const step = draft.creation_step || 1;
@@ -9554,7 +9592,7 @@
         `;
       }
 
-      shell.innerHTML = renderSteps() + body;
+      shell.innerHTML = renderSteps() + renderRecentActivity() + body;
       if (step === 1) renderSpeciesPreview();
       if (step === 4 && !(draft.creation_data && draft.creation_data.seenConnectionsModal)) {
         showConnectionsModal();
