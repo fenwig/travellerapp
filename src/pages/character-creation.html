@@ -9257,22 +9257,31 @@
     }
 
     function renderConnectionSkillPick() {
-      const remaining = pendingConnectionSkillCount();
       const data = draft.creation_data || {};
       const showSkills = !!data.viewSkillsOpen;
       const skills = Object.values(draft.skills || {}).sort((a, b) => a.name.localeCompare(b.name));
       const skillsText = skills.length
         ? skills.map(sk => `${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''} ${sk.level}`).join(', ')
         : 'None';
+      const viewSkillsBlock = `
+        <button class="btn-outline" style="margin-bottom:12px;" onclick="toggleViewSkills()">${showSkills ? 'Hide' : 'View'} My Skills</button>
+        ${showSkills ? `<div class="wizard-card-sub" style="margin-bottom:12px;">${skillsText}</div>` : ''}
+      `;
+      // While a specialty gate is pending, replace the skill picker
+      // entirely (rather than appending the gate below it) so there's
+      // no stray "Choose" button left active for a different skill.
+      const body = data.connectionSkillGateFor
+        ? connectionSkillSpecialtyGateHtml()
+        : `
+          <select id="connection-skill-pick">${SKILLS.filter(sk => sk.name !== 'Jack-of-all-Trades').map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
+          <button class="btn-outline" onclick="chooseConnectionSkill()">Choose</button>
+        `;
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">Connection Skill — Pick ${(data.connectionsSkillsGranted || 0) + 1} of ${data.connectionsUsed}</div>
           <div class="wizard-card-sub">Choose a skill known by one of your connections: increase it by one level if you already have it (to a maximum of level 3), or gain it at level 1 if you don't. Jack-of-all-Trades can't be chosen this way.</div>
-          <button class="btn-outline" style="margin-bottom:12px;" onclick="toggleViewSkills()">${showSkills ? 'Hide' : 'View'} My Skills</button>
-          ${showSkills ? `<div class="wizard-card-sub" style="margin-bottom:12px;">${skillsText}</div>` : ''}
-          <select id="connection-skill-pick">${SKILLS.filter(sk => sk.name !== 'Jack-of-all-Trades').map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
-          <button class="btn-outline" onclick="chooseConnectionSkill()">Choose</button>
-          ${connectionSkillSpecialtyGateHtml()}
+          ${viewSkillsBlock}
+          ${body}
         </div>
       `;
     }
