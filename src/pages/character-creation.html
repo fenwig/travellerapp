@@ -2554,7 +2554,7 @@
           { roll: 2, text: 'You are bankrupted by a rival. You lose all Benefits from this career and gain the other trader as a Rival.', tools: [] },
           { roll: 3, text: 'A sudden war destroys your trade routes and contacts, forcing you to flee that region of space. Gain Gun Combat 1 or Pilot 1.', tools: ['skill'], skillOptions: [{ name: 'Gun Combat', level: 1 }, { name: 'Pilot', level: 1 }] },
           { roll: 4, text: 'Your ship or starport is destroyed by criminals. Gain them as an Enemy.', tools: ['associate'], associateTypes: ['enemy'] },
-          { roll: 5, text: 'Imperial trade restrictions force you out of business. You may take the Rogue career for your next term without needing to roll for qualification (choose Rogue at the next Career screen and skip its qualification roll — this app does not yet auto-skip that roll for you, so just confirm entry manually when you get there).', tools: [] },
+          { roll: 5, text: 'Imperial trade restrictions force you out of business. You may take the Rogue career for your next term without needing to roll for qualification.', tools: [] },
           { roll: 6, text: 'A series of bad deals and decisions force you into bankruptcy. You salvage what you can — you may take a Benefit roll for this term as well as any others you are entitled to.', tools: [] }
         ],
         events: [
@@ -2637,7 +2637,7 @@
       },
       rogue: {
         id: 'rogue', name: 'Rogue', source: 'Core Rulebook pp.39-41', military: false,
-        qualification: { stat: 'dex', target: 6 },
+        qualification: { stat: 'dex', target: 6, autoIf: () => !!step5State().meritRogueQualNextTerm, autoIfLabel: 'Automatic qualification — Merchant Mishap 5 forced you out of business and waived this roll.' },
         serviceSkills: [{ name: 'Deception' }, { name: 'Recon' }, { name: 'Athletics' }, { name: 'Gun Combat' }, { name: 'Stealth' }, { name: 'Streetwise' }],
         assignments: [
           { key: 'thief', label: 'Thief', survival: { stat: 'int_stat', target: 6 }, advancement: { stat: 'dex', target: 6 },
@@ -3537,7 +3537,9 @@
         result = { dice: [d1, d2], statDM, previousCount, agePenalty, bonusDM, academyDM: academyDM.total, academyLabels: academyDM.labels, total, target: c.qualification.target, success: total >= c.qualification.target };
       }
 
-      await saveStep5State({ phase: 'qualifyResult', qualResult: result });
+      const patch = { phase: 'qualifyResult', qualResult: result };
+      if (c.id === 'rogue' && s.meritRogueQualNextTerm) patch.meritRogueQualNextTerm = false;
+      await saveStep5State(patch);
       await logCreation(`${c.name} — Qualification ${result.success ? 'succeeded' : 'failed'}${result.total !== undefined ? ` (rolled ${result.total} vs ${result.target}+)` : ' (automatic)'}.`);
       renderStep();
     }
@@ -4499,6 +4501,7 @@
         case 'merchant:11':   return renderGainAllyThenChooseSkillOrDM(tag, m, 'Carouse', 4, 'A useful ally you befriended in business.', 'Merchant Event 11');
         case 'merchant:12':   return renderBankAutoPromote(tag, m);
         case 'merchant:mishap2': return renderMerchantMishap2(tag, m);
+        case 'merchant:mishap5': return renderMerchantMishap5(tag, m);
         case 'merchant:mishap6': return renderMerchantMishap6(tag, m);
         case 'noble:2':       return renderInlineMishapNotEjected(tag, careerId, m);
         case 'noble:3':       return renderNobleEvent3(tag, m);
@@ -5805,6 +5808,24 @@
       await saveMechanic('mishap', { resolved: true, resultText });
       await resolveMechanic('mishap');
       await logCreation(`Merchant Mishap 2: ${resultText}`);
+      renderStep();
+    }
+
+    // Merchant mishap 5 — banks a one-shot flag that skips Rogue's
+    // qualification roll if chosen as the very next career, same
+    // mechanism as Academy auto-entry (qualification.autoIf), consumed
+    // in doCareerQualify the moment it's used.
+    function renderMerchantMishap5(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return `<button class="btn-outline" onclick="confirmMerchantMishap5()">Confirm — Take Rogue Next Term (Skips Qualification)</button>`;
+    }
+
+    async function confirmMerchantMishap5() {
+      await saveStep5State({ meritRogueQualNextTerm: true });
+      const resultText = 'Forced out of business — you may take the Rogue career next term with automatic qualification.';
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Merchant Mishap 5: ${resultText}`);
       renderStep();
     }
 
