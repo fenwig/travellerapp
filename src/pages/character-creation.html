@@ -1366,7 +1366,22 @@
       if (m.resolved) return header + `<div class="wizard-card-sub" style="color:#00ffaa;">Resolved.</div>`;
       if (entry.unusual) {
         if (!m.unusualRoll) return header + `<button class="btn-outline" onclick="rollEvent7Unusual()">Roll 1D for the Unusual Event</button>`;
+        if (m.unusualRoll === 2 && !m.resolved) {
+          return header + `
+            <select id="preed7-science-specialty">${(SKILLS.find(sk => sk.name === 'Science') || { specialties: [] }).specialties.map(sp => `<option value="${sp.name}">${sp.name}</option>`).join('')}</select>
+            <input id="preed7-contact-name" type="text" placeholder="Contact's name" style="margin:4px;" />
+            <button class="btn-outline" onclick="confirmEvent7UnusualAliens()">Confirm</button>
+          `;
+        }
         return header + `<div class="wizard-card-sub" style="color:#00ffaa;">${LIFE_EVENTS_UNUSUAL[m.unusualRoll]}</div>`;
+      }
+      if (entry.crimeChoice && !m.resolved) {
+        return header + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="event7CrimeChoice('loseBenefit')">Lose One Benefit Roll</button>
+            <button class="btn-outline" onclick="event7CrimeChoice('prisoner')">Take Prisoner Career Next Term</button>
+          </div>
+        `;
       }
       const tools = entry.injury ? ['injury'] : (entry.tools || []);
       return header + renderGenericResolver('preed7', tools, true) +
@@ -1384,8 +1399,33 @@
 
     async function rollEvent7Unusual() {
       const roll = rollDie();
-      await saveEventMechanic({ unusualRoll: roll, resolved: true });
+      await saveEventMechanic({ unusualRoll: roll, resolved: roll !== 2 });
       await logCreation(`Pre-Career Life Event — Unusual Event roll ${roll}: ${LIFE_EVENTS_UNUSUAL[roll]}`);
+      renderStep();
+    }
+
+    async function confirmEvent7UnusualAliens() {
+      const specialty = document.getElementById('preed7-science-specialty').value;
+      const name = (document.getElementById('preed7-contact-name') || {}).value.trim() || 'Unnamed';
+      const skills = Object.assign({}, draft.skills || {});
+      grantSpecialtySkillMin(skills, 'Science', specialty, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await addAssociate('contact', name, 'An alien species you spent time among.');
+      await saveEventMechanic({ resolved: true });
+      await logCreation(`Pre-Career Life Event — Aliens: gained Science (${specialty}) 1 and ${name} as a Contact.`);
+      renderStep();
+    }
+
+    async function event7CrimeChoice(choice) {
+      if (choice === 'loseBenefit') {
+        await addPendingMod('extraBenefitRolls', -1);
+        await logCreation('Pre-Career Life Event (Crime) — lost one Benefit roll.');
+      } else {
+        await saveStep5State({ forcedPrisonerNextTerm: true });
+        await logCreation('Pre-Career Life Event (Crime) — forced into the Prisoner career next term.');
+      }
+      await saveEventMechanic({ resolved: true });
       renderStep();
     }
 
@@ -3338,7 +3378,7 @@
       { roll: 8, text: 'Betrayal — a friend betrays you. Convert an existing Contact or Ally into a Rival or Enemy, or gain a fresh Rival/Enemy if you have neither.', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
       { roll: 9, text: 'Travel — you move to another world. Gain DM+2 to your next qualification roll.', tools: [], autoDM: { key: 'qualificationDM', amount: 2 } },
       { roll: 10, text: 'Good Fortune — something good happens to you. Gain DM+2 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 2 } },
-      { roll: 11, text: "Crime — you commit, suffer, or are accused of a crime. Lose one Benefit roll, or take the Prisoner career next term instead (choose Prisoner at the next Career screen and confirm forced entry).", tools: [], autoDM: { key: 'extraBenefitRolls', amount: -1 } },
+      { roll: 11, text: "Crime — you commit, suffer, or are accused of a crime. Lose one Benefit roll, or take the Prisoner career next term instead.", tools: [], crimeChoice: true },
       { roll: 12, text: 'Unusual Event — roll 1D for what happens.', unusual: true, tools: [] }
     ];
 
@@ -4535,6 +4575,13 @@
         body += `<button class="btn-outline" onclick="openInjuryResolver('${tag}')">Roll on the Injury Table</button>`;
       } else if (entry.unusual) {
         body += `<button class="btn-outline" onclick="rollLifeEventUnusual('${tag}')">Roll 1D for the Unusual Event</button>`;
+      } else if (entry.crimeChoice) {
+        body += `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="lifeEventCrimeChoice('${tag}','loseBenefit')">Lose One Benefit Roll</button>
+            <button class="btn-outline" onclick="lifeEventCrimeChoice('${tag}','prisoner')">Take Prisoner Career Next Term</button>
+          </div>
+        `;
       } else {
         body += renderGenericResolver(tag + 'Life', entry.tools, true) +
           `<button class="btn-outline" onclick="finishLifeEvent('${tag}')">Mark Resolved</button>`;
@@ -4546,12 +4593,54 @@
       }
     }
 
+    async function lifeEventCrimeChoice(tag, choice) {
+      let resultText;
+      if (choice === 'loseBenefit') {
+        await addPendingMod('extraBenefitRolls', -1);
+        resultText = 'Life Event (Crime) — lost one Benefit roll.';
+      } else {
+        await saveStep5State({ forcedPrisonerNextTerm: true });
+        resultText = 'Life Event (Crime) — forced into the Prisoner career next term.';
+      }
+      await logCreation(resultText);
+      markResolverDone(tag, resultText);
+    }
+
     function rollLifeEventUnusual(tag) {
       const roll = rollDie();
+      if (roll === 2) {
+        renderLifeEventUnusualAliens(tag);
+        return;
+      }
       document.getElementById('resolver-' + tag).innerHTML =
         `<p style="color:#00ffaa; font-size:0.85rem;">${LIFE_EVENTS_UNUSUAL[roll]}</p>`;
       logCreation(`Life Event — Unusual Event roll ${roll}: ${LIFE_EVENTS_UNUSUAL[roll]}`);
       markResolverDone(tag, `Life Event — ${LIFE_EVENTS_UNUSUAL[roll]}`);
+    }
+
+    // Unusual Event roll 2 ("Aliens") explicitly grants Science 1 and a
+    // Contact — was display-only text before, like the other 5 rolls
+    // (which genuinely have no grant in their own text and stay as-is).
+    function renderLifeEventUnusualAliens(tag) {
+      document.getElementById('resolver-' + tag).innerHTML = `
+        <p style="margin-bottom:8px;">${LIFE_EVENTS_UNUSUAL[2]}</p>
+        <select id="${tag}-unusual-science-specialty">${(SKILLS.find(sk => sk.name === 'Science') || { specialties: [] }).specialties.map(sp => `<option value="${sp.name}">${sp.name}</option>`).join('')}</select>
+        <input id="${tag}-unusual-contact-name" type="text" placeholder="Contact's name" style="margin:4px;" />
+        <button class="btn-outline" onclick="confirmLifeEventUnusualAliens('${tag}')">Confirm</button>
+      `;
+    }
+
+    async function confirmLifeEventUnusualAliens(tag) {
+      const specialty = document.getElementById(`${tag}-unusual-science-specialty`).value;
+      const name = (document.getElementById(`${tag}-unusual-contact-name`) || {}).value.trim() || 'Unnamed';
+      const skills = Object.assign({}, draft.skills || {});
+      grantSpecialtySkillMin(skills, 'Science', specialty, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await addAssociate('contact', name, 'An alien species you spent time among.');
+      const resultText = `Life Event — Aliens: gained Science (${specialty}) 1 and ${name} as a Contact.`;
+      await logCreation(resultText);
+      markResolverDone(tag, resultText);
     }
 
     function finishLifeEvent(tag) {
