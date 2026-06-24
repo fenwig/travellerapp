@@ -9445,6 +9445,10 @@
         ? `=== Mustering-Out Benefits Summary ===\n${benefitLines.map(l => `- ${l}`).join('\n')}`
         : '=== Mustering-Out Benefits Summary ===\nNo benefits gained.';
       await logCreation(summary);
+      // Only one active character per player — archive any other active
+      // characters this user owns before activating this one.
+      await supabaseClient.from('characters').update({ status: 'archived', onboard: false })
+        .eq('user_id', draft.user_id || currentUser.id).eq('status', 'active').neq('id', draft.id);
       await supabaseClient.from('characters').update({ status: 'active' }).eq('id', draft.id);
       await logCreation('Character creation complete — activated.');
       window.location.href = 'character-record.html?id=' + draft.id;

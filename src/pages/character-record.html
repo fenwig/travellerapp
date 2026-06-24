@@ -237,7 +237,8 @@
             <div class="char-name" id="disp-name">—</div>
             <div class="char-meta">
               <div><span>Species</span><span id="disp-species">—</span></div>
-              <div><span>Homeworld</span><span id="disp-homeworld">—</span></div>
+              <div class="view-only"><span>Homeworld</span><span id="disp-homeworld">—</span></div>
+              <div class="edit-only"><span>Homeworld</span><input class="role-input" id="edit-homeworld" placeholder="Homeworld" /></div>
               <div><span>Age</span><span id="disp-age">—</span></div>
               <div class="view-only"><span>Primary Role</span><span id="disp-primary">—</span></div>
               <div class="view-only" id="disp-secondary-wrap" style="display:none"><span>Secondary Role</span><span id="disp-secondary"></span></div>
@@ -622,6 +623,7 @@ function renderHeader() {
   document.getElementById('disp-name').textContent      = character.name || '—';
   document.getElementById('disp-species').textContent   = character.species || '—';
   document.getElementById('disp-homeworld').textContent = character.homeworld || '—';
+  document.getElementById('edit-homeworld').value        = character.homeworld || '';
   document.getElementById('disp-age').textContent       = character.age || '—';
   document.getElementById('disp-primary').textContent   = character.primary_role || '—';
   document.getElementById('edit-primary').value          = character.primary_role || '';
@@ -1524,6 +1526,7 @@ async function saveAll() {
     });
     update.primary_role              = document.getElementById('edit-primary').value.trim()   || null;
     update.secondary_role            = document.getElementById('edit-secondary').value.trim() || null;
+    update.homeworld                 = document.getElementById('edit-homeworld').value.trim() || null;
     update.cash_on_hand              = parseInt(document.getElementById('edit-cash').value)      || 0;
     update.pension                   = parseInt(document.getElementById('edit-pension').value)    || 0;
     update.debt                      = parseInt(document.getElementById('edit-debt').value)       || 0;

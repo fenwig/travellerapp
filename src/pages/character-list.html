@@ -157,7 +157,8 @@
           <td onclick="openCharacter('${c.id}', '${c.status}')">${c.primary_role || '—'}</td>
           <td onclick="openCharacter('${c.id}', '${c.status}')">${c.secondary_role || '—'}</td>
           <td onclick="openCharacter('${c.id}', '${c.status}')"><span class="status-badge status-${c.status||'active'}">${statusLabel(c.status)}</span></td>
-          <td><input type="checkbox" class="onboard-check" ${c.onboard ? 'checked' : ''} ${canManage ? '' : 'disabled'}
+          <td><input type="checkbox" class="onboard-check" ${c.onboard ? 'checked' : ''} ${canManage && (c.status || 'active') === 'active' ? '' : 'disabled'}
+                title="${(c.status || 'active') === 'active' ? '' : 'Only the active character can be marked onboard'}"
                 onclick="event.stopPropagation()" onchange="toggleOnboard('${c.id}', this.checked)" /></td>
           <td onclick="event.stopPropagation()">
             <span class="delete-cell" data-id="${c.id}">
@@ -208,6 +209,10 @@
     }
 
     async function createCharacter() {
+      // Only one active character per player — archive any other active
+      // characters this user owns before this new one becomes active.
+      await supabaseClient.from('characters').update({ status: 'archived', onboard: false })
+        .eq('user_id', currentUser.id).eq('status', 'active');
       const { data, error } = await supabaseClient.from('characters')
         .insert({
           user_id: currentUser.id,
