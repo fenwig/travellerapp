@@ -30,6 +30,7 @@
     .status-reserve   { background: rgba(74,154,184,0.12); color: #4a9ab8; border: 1px solid #4a9ab844; }
     .status-sold      { background: rgba(176,216,232,0.10); color: #b0d8e8; border: 1px solid #b0d8e844; }
     .status-destroyed { background: rgba(255,90,74,0.12);  color: #ff5a4a; border: 1px solid #ff5a4a44; }
+    .status-stolen    { background: rgba(255,90,74,0.12);  color: #ff5a4a; border: 1px solid #ff5a4a44; }
     .onboard-check { width: 18px; height: 18px; accent-color: #00e5ff; cursor: pointer; }
     .status-select {
       border: none; cursor: pointer; font-family: inherit;
@@ -123,6 +124,7 @@
   <script>
     let currentUser = null;
     const STATUS_OPTIONS = ['active', 'reserve', 'archived', 'deceased', 'other'];
+    const SPACECRAFT_STATUS_OPTIONS = ['active', 'reserve', 'destroyed', 'sold', 'stolen', 'other'];
 
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -200,6 +202,11 @@
       await loadCharacters();
     }
 
+    async function changeSpacecraftStatus(id, newStatus) {
+      await supabaseClient.from('spacecraft').update({ status: newStatus }).eq('id', id);
+      await loadSpacecraft();
+    }
+
     async function deleteSpacecraft(id) {
       const { error } = await supabaseClient.from('spacecraft').delete().eq('id', id);
       if (error) { alert('Error: ' + error.message); return; }
@@ -268,7 +275,11 @@
         <tr data-id="${s.id}">
           <td onclick="openSpacecraft('${s.id}')">${s.name || '—'}</td>
           <td onclick="openSpacecraft('${s.id}')">${s.ship_class || '—'}</td>
-          <td onclick="openSpacecraft('${s.id}')"><span class="status-badge status-${s.status||'active'}">${statusLabel(s.status)}</span></td>
+          <td onclick="event.stopPropagation()">
+            <select class="status-select status-badge status-${s.status||'active'}" onchange="changeSpacecraftStatus('${s.id}', this.value)">
+              ${SPACECRAFT_STATUS_OPTIONS.map(opt => `<option value="${opt}" ${(s.status||'active') === opt ? 'selected' : ''}>${statusLabel(opt)}</option>`).join('')}
+            </select>
+          </td>
           <td onclick="event.stopPropagation()">
             <span class="delete-cell" data-id="${s.id}">
               <button class="btn-outline-danger" onclick="confirmDelete(this, 'ship')">Delete</button>
