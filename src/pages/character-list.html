@@ -31,6 +31,11 @@
     .status-sold      { background: rgba(176,216,232,0.10); color: #b0d8e8; border: 1px solid #b0d8e844; }
     .status-destroyed { background: rgba(255,90,74,0.12);  color: #ff5a4a; border: 1px solid #ff5a4a44; }
     .onboard-check { width: 18px; height: 18px; accent-color: #00e5ff; cursor: pointer; }
+    .status-select {
+      border: none; cursor: pointer; font-family: inherit;
+      -webkit-appearance: none; -moz-appearance: none; appearance: none;
+    }
+    .status-select option { background: #0a1a22; color: #b0d8e8; }
     .roster-empty td { color: #4a9ab8; font-size: 0.85rem; }
   </style>
 </head>
@@ -117,6 +122,7 @@
   <script src="../js/sidebar.js"></script>
   <script>
     let currentUser = null;
+    const STATUS_OPTIONS = ['active', 'reserve', 'archived', 'deceased', 'other'];
 
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -156,7 +162,11 @@
           <td onclick="openCharacter('${c.id}', '${c.status}')">${c.species || '—'}</td>
           <td onclick="openCharacter('${c.id}', '${c.status}')">${c.primary_role || '—'}</td>
           <td onclick="openCharacter('${c.id}', '${c.status}')">${c.secondary_role || '—'}</td>
-          <td onclick="openCharacter('${c.id}', '${c.status}')"><span class="status-badge status-${c.status||'active'}">${statusLabel(c.status)}</span></td>
+          <td onclick="event.stopPropagation()">${canManage && c.status !== 'draft'
+            ? `<select class="status-select status-badge status-${c.status||'active'}" onchange="changeStatus('${c.id}', this.value)">
+                ${STATUS_OPTIONS.map(s => `<option value="${s}" ${(c.status||'active') === s ? 'selected' : ''}>${statusLabel(s)}</option>`).join('')}
+              </select>`
+            : `<span class="status-badge status-${c.status||'active'}" onclick="openCharacter('${c.id}', '${c.status}')">${statusLabel(c.status)}</span>`}</td>
           <td><input type="checkbox" class="onboard-check" ${c.onboard ? 'checked' : ''} ${canManage && (c.status || 'active') === 'active' ? '' : 'disabled'}
                 title="${(c.status || 'active') === 'active' ? '' : 'Only the active character can be marked onboard'}"
                 onclick="event.stopPropagation()" onchange="toggleOnboard('${c.id}', this.checked)" /></td>
@@ -206,6 +216,22 @@
 
     async function toggleOnboard(id, val) {
       await supabaseClient.from('characters').update({ onboard: val }).eq('id', id);
+    }
+
+    async function changeStatus(id, newStatus) {
+      if (newStatus === 'active') {
+        // Only one active character per player — archive this player's
+        // other active character(s) first.
+        const { data: row } = await supabaseClient.from('characters').select('user_id').eq('id', id).single();
+        if (row) {
+          await supabaseClient.from('characters').update({ status: 'archived', onboard: false })
+            .eq('user_id', row.user_id).eq('status', 'active').neq('id', id);
+        }
+        await supabaseClient.from('characters').update({ status: 'active' }).eq('id', id);
+      } else {
+        await supabaseClient.from('characters').update({ status: newStatus, onboard: false }).eq('id', id);
+      }
+      await loadCharacters();
     }
 
     async function createCharacter() {
