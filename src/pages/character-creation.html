@@ -1773,9 +1773,16 @@
       // the connection actually means. The free skill choice this grants
       // is deferred to Finalize (renderConnectionSkillPick), not applied
       // here — same Connections Rule, just resolved at the end instead of
-      // mid-creation.
+      // mid-creation. Written on BOTH characters' sheets — a connection
+      // is two-sided — so the other player sees it too (needs the
+      // insert policy from player-connections-insert-fix-schema.sql,
+      // since this second insert is onto a character this user doesn't own).
       await supabaseClient.from('character_connections').insert({
         character_id: draft.id, other_character_id: targetId, other_name: targetName,
+        description: 'Connection formed during character creation.'
+      });
+      await supabaseClient.from('character_connections').insert({
+        character_id: targetId, other_character_id: draft.id, other_name: draft.name,
         description: 'Connection formed during character creation.'
       });
       await logCreation(`Formed a connection with ${targetName} — gained one free skill choice (resolved at Finalize).`);
