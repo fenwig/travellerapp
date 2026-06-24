@@ -288,8 +288,7 @@
                 </div>
                 <div class="finance-box">
                   <div class="finance-label">Pension</div>
-                  <div class="view-only finance-value" id="disp-pension">0</div>
-                  <input class="finance-input edit-only" type="number" id="edit-pension" value="0" />
+                  <div class="finance-value" id="disp-pension">0</div>
                 </div>
                 <div class="finance-box">
                   <div class="finance-label">Debt</div>
@@ -886,10 +885,11 @@ function renderTraining() {
 function renderFinances() {
   const set = (id, val, suffix) => {
     document.getElementById('disp-' + id).textContent = (val || 0).toLocaleString() + (suffix || '');
-    document.getElementById('edit-' + id).value       = val || 0;
+    const editEl = document.getElementById('edit-' + id);
+    if (editEl) editEl.value = val || 0;
   };
   set('cash',     character.cash_on_hand);
-  set('pension',  character.pension);
+  set('pension',  character.pension); // view-only — no edit-pension input
   set('debt',     character.debt);
   set('living',   character.living_costs, ' Cr/mo');
   set('ship-pay', character.ship_payment, ' Cr/mo');
@@ -1528,7 +1528,9 @@ async function saveAll() {
     update.secondary_role            = document.getElementById('edit-secondary').value.trim() || null;
     update.homeworld                 = document.getElementById('edit-homeworld').value.trim() || null;
     update.cash_on_hand              = parseInt(document.getElementById('edit-cash').value)      || 0;
-    update.pension                   = parseInt(document.getElementById('edit-pension').value)    || 0;
+    // Pension is no longer player-editable here — it's set automatically
+    // by the Character Creation wizard (career pensions) and shouldn't be
+    // hand-edited on the record afterward.
     update.debt                      = parseInt(document.getElementById('edit-debt').value)       || 0;
     update.living_costs              = parseInt(document.getElementById('edit-living').value)     || 0;
     update.ship_payment              = parseInt(document.getElementById('edit-ship-pay').value)   || 0;
