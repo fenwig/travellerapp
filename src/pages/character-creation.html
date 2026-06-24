@@ -2690,11 +2690,11 @@
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
           { roll: 3, text: 'You are arrested and charged. Defend yourself and roll Advocate 8+: success drops the charges, failure gains an Enemy and forces the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry). Hire a lawyer instead: gain them as a Contact, but lose a Benefit roll.', tools: [] },
-          { roll: 4, text: 'You are involved in the planning of an impressive heist. Gain Electronics 1 or Mechanic 1.', tools: ['skill'] },
-          { roll: 5, text: 'One of your crimes pays off. Gain DM+2 to any one Benefit roll, and gain your victim as an Enemy.', tools: ['associate'], autoDM: { key: 'benefitRollDM', amount: 2 } },
+          { roll: 4, text: 'You are involved in the planning of an impressive heist. Gain Electronics 1 or Mechanic 1.', tools: ['skill'], skillOptions: [{ name: 'Electronics', level: 1 }, { name: 'Mechanic', level: 1 }] },
+          { roll: 5, text: 'One of your crimes pays off. Gain DM+2 to any one Benefit roll, and gain your victim as an Enemy.', tools: ['associate'], associateTypes: ['enemy'], autoDM: { key: 'benefitRollDM', amount: 2 } },
           { roll: 6, text: 'You have the opportunity to backstab a fellow rogue for personal gain. Do so and gain DM+4 to your next advancement roll. Refuse and gain them as an Ally instead.', tools: [] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
-          { roll: 8, text: 'You spend months in the dangerous criminal underworld. Gain one of Streetwise 1, Stealth 1, Melee 1, or Gun Combat 1.', tools: ['skill'] },
+          { roll: 8, text: 'You spend months in the dangerous criminal underworld. Gain one of Streetwise 1, Stealth 1, Melee 1, or Gun Combat 1.', tools: ['skill'], skillOptions: [{ name: 'Streetwise', level: 1 }, { name: 'Stealth', level: 1 }, { name: 'Melee', level: 1 }, { name: 'Gun Combat', level: 1 }] },
           { roll: 9, text: 'You become involved in a feud with a rival criminal organisation. Roll Stealth or Gun Combat 8+: failure rolls on the Injury table, success gains an extra Benefit roll.', tools: [] },
           { roll: 10, text: 'You are involved in a gambling ring. Gain Gambler 1, then wager any number of Benefit rolls and roll Gambler 8+: failure loses all wagered, success gains half as many Benefit rolls as wagered (rounding up).', tools: [] },
           { roll: 11, text: 'A crime lord considers you their protégé. Gain Tactics (military) 1, or DM+4 to your next advancement roll instead.', tools: [] },
@@ -4522,6 +4522,7 @@
         case 'noble:mishap5': return renderNobleMishap5(tag, m);
         case 'rogue:2':       return renderInlineMishapNotEjected(tag, careerId, m);
         case 'rogue:3':       return renderRogueEvent3(tag, m);
+        case 'rogue:mishap2': return renderRogueMishap2(tag, m);
         case 'rogue:6':       return renderRogueEvent6(tag, m);
         case 'rogue:9':       return renderRogueEvent9(tag, m);
         case 'rogue:10':      return renderRogueEvent10(tag, m);
@@ -6363,6 +6364,23 @@
       renderStep();
     }
 
+    // Rogue mishap 2 — unconditional (not a chance-based trigger like
+    // most other careers' forced-Prisoner cases), so just confirm and
+    // set the flag directly.
+    function renderRogueMishap2(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return `<button class="btn-outline" onclick="confirmRogueMishap2()">Confirm — Arrested, Forced Into the Prisoner Career Next Term</button>`;
+    }
+
+    async function confirmRogueMishap2() {
+      await saveStep5State({ forcedPrisonerNextTerm: true });
+      const resultText = 'Arrested — forced into the Prisoner career next term.';
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Rogue Mishap 2: ${resultText}`);
+      renderStep();
+    }
+
     // Rogue event 3 — defend yourself (Advocate 8+: success drops charges,
     // failure gains an Enemy + Prisoner note) or hire a lawyer (Contact,
     // lose a Benefit roll).
@@ -6417,10 +6435,13 @@
       const success = total >= 8;
       const resultText = success
         ? `Rolled ${total} on Advocate (need 8+) — the charges are dropped.`
-        : `Rolled ${total} on Advocate (need 8+) — convicted. Gained an Enemy, and forced into the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry).`;
+        : `Rolled ${total} on Advocate (need 8+) — convicted. Gained an Enemy, and forced into the Prisoner career next term.`;
       await saveMechanic('event', { rolled: true, resolved: true, resultText });
       await resolveMechanic('event');
-      if (!success) await addAssociate('enemy', 'The prosecutor', 'Convicted you in court.');
+      if (!success) {
+        await addAssociate('enemy', 'The prosecutor', 'Convicted you in court.');
+        await saveStep5State({ forcedPrisonerNextTerm: true });
+      }
       await logCreation(`Rogue Event 3: ${resultText}`);
       renderStep();
     }
