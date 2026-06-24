@@ -2748,20 +2748,20 @@
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
           { roll: 2, text: 'A disaster leaves several injured and others blame you, forcing you to leave your career. Roll on the Injury table twice, taking the higher (less severe) result, and gain a Rival.', tools: [] },
           { roll: 3, text: 'The planetary government interferes with your research for political or religious reasons. Continue openly: increase Science by one level and gain an Enemy. Continue secretly: increase Science by one level and reduce your SOC by 2. Either way, you do not leave this career.', tools: [], noEject: true },
-          { roll: 4, text: 'An expedition or voyage goes wrong, leaving you stranded in the wilderness. Gain Survival 1 or Athletics 1. By the time you find your way home, your job is gone.', tools: ['skill'] },
+          { roll: 4, text: 'An expedition or voyage goes wrong, leaving you stranded in the wilderness. Gain Survival 1 or Athletics 1. By the time you find your way home, your job is gone.', tools: ['skill'], skillOptions: [{ name: 'Survival', level: 1 }, { name: 'Athletics', level: 1 }] },
           { roll: 5, text: 'Your work is sabotaged by unknown parties. Salvage what you can and give up (leave the career but keep this term\'s Benefit roll), or start again from scratch (lose all Benefit rolls from this career, but you do not have to leave).', tools: [] },
-          { roll: 6, text: 'A rival researcher blackens your name or steals your research. Gain them as a Rival, but you do not have to leave this career.', tools: ['associate'], noEject: true }
+          { roll: 6, text: 'A rival researcher blackens your name or steals your research. Gain them as a Rival, but you do not have to leave this career.', tools: ['associate'], associateTypes: ['rival'], noEject: true }
         ],
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
           { roll: 3, text: 'You are called upon to perform research that goes against your conscience. Refuse and gain nothing. Accept and gain an extra Benefit roll, a level in each of any two Science specialties, and D3 Enemies.', tools: [] },
-          { roll: 4, text: 'You are assigned to a secret project for a patron or organisation. Gain one of Medic 1, Science 1, Engineer 1, Electronics 1, or Investigate 1.', tools: ['skill'] },
+          { roll: 4, text: 'You are assigned to a secret project for a patron or organisation. Gain one of Medic 1, Science 1, Engineer 1, Electronics 1, or Investigate 1.', tools: ['skill'], skillOptions: [{ name: 'Medic', level: 1 }, { name: 'Science', level: 1 }, { name: 'Engineer', level: 1 }, { name: 'Electronics', level: 1 }, { name: 'Investigate', level: 1 }] },
           { roll: 5, text: 'You win a prestigious prize for your work, garnering both praise and envy. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
           { roll: 6, text: 'Given advanced training in a specialist field. Roll EDU 8+ to gain any one skill of your choice at level 1.', tools: [] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
           { roll: 8, text: 'You have the opportunity to cheat in some fashion — stealing another\'s work, using an alien device, taking a shortcut. Refuse and gain nothing. Accept and roll Deception 8+ or Admin 8+: success gains DM+2 to any one Benefit roll and lets you increase any skill by one level, but also gains an Enemy; failure gains an Enemy and loses one Benefit roll from this career.', tools: [] },
           { roll: 9, text: 'You make a breakthrough in your field. Gain DM+2 to your next advancement roll.', tools: [], autoDM: { key: 'advancementDM', amount: 2 } },
-          { roll: 10, text: 'You become entangled in a bureaucratic or legal morass that distracts you from your work. Gain one of Admin 1, Advocate 1, Persuade 1, or Diplomat 1.', tools: ['skill'] },
+          { roll: 10, text: 'You become entangled in a bureaucratic or legal morass that distracts you from your work. Gain one of Admin 1, Advocate 1, Persuade 1, or Diplomat 1.', tools: ['skill'], skillOptions: [{ name: 'Admin', level: 1 }, { name: 'Advocate', level: 1 }, { name: 'Persuade', level: 1 }, { name: 'Diplomat', level: 1 }] },
           { roll: 11, text: 'You work for an eccentric but brilliant mentor, who becomes an Ally. Either increase Science by one level or DM+4 to your next advancement roll thanks to their aid.', tools: [] },
           { roll: 12, text: 'Your work leads to a considerable breakthrough. You are automatically promoted.', tools: [] }
         ]
