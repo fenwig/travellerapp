@@ -2092,7 +2092,8 @@
       { id: 'drifter', name: 'Drifter' }, { id: 'entertainer', name: 'Entertainer' }, { id: 'marine', name: 'Marine' },
       { id: 'merchant', name: 'Merchant' }, { id: 'navy', name: 'Navy' }, { id: 'noble', name: 'Noble' },
       { id: 'rogue', name: 'Rogue' }, { id: 'scholar', name: 'Scholar' }, { id: 'scout', name: 'Scout' },
-      { id: 'prisoner', name: 'Prisoner' }, { id: 'psion', name: 'Psion' }
+      { id: 'prisoner', name: 'Prisoner' }, { id: 'truther', name: 'Truther' }, { id: 'believer', name: 'Believer' },
+      { id: 'psion', name: 'Psion' }
     ];
 
     const CAREERS_DATA = {
@@ -2864,6 +2865,121 @@
           { roll: 11, text: 'The warden takes an interest in your case. Reduce your Parole Threshold by 2.', tools: [], autoParole: { amount: -2 } },
           { roll: 12, text: 'Heroism. You have the opportunity to save a guard or prison officer. If you take the risk, roll 2D: 7 or less rolls on the Injury table; 8+ gains an Ally and reduces your Parole Threshold by 2.', tools: [] }
         ]
+      },
+      truther: {
+        id: 'truther', name: 'Truther', source: 'Traveller Companion pp.35-36', military: false,
+        qualification: { auto: true },
+        // Truthers have no conventional rank system — instead they track a
+        // Following (FOL) characteristic (Core Rulebook-style mechanic
+        // unique to this career, see `following` column + adjustFollowing()
+        // and FOLLOWING_DM below). No ranksEnlisted/ranksOfficer at all;
+        // the engine already tolerates a missing rank table (rankTableFor
+        // falls back to []).
+        serviceSkills: [{ name: 'Investigate' }, { name: 'Art', specialty: 'Writing' }, { name: 'Language' }, { name: 'Electronics', specialty: 'Computers' }, { name: 'Diplomat' }, { name: 'Persuade' }],
+        assignments: [
+          // Survival uses FOL directly as the roll modifier (not the
+          // normal characteristic-DM curve) — see the `following` special
+          // case in rollCareerSurvival(). Advancement is N/A per the book
+          // (no rank ladder), so the engine skips that phase entirely for
+          // this career — see the truther special case in goCareerAfterEvents().
+          { key: 'truther', label: 'Truther', survival: { stat: 'following', target: 4 }, advancement: { stat: 'following', target: 999 },
+            specialistSkills: [{ name: 'Profession' }, { name: 'Science' }, { name: 'Science' }, { name: 'Investigate' }, { name: 'Science' }, { name: 'Science' }] }
+        ],
+        personalDevelopment: [{ stat: 'int_stat' }, { stat: 'edu' }, { stat: 'following' }, { name: 'Admin' }, { name: 'Carouse' }, { name: 'Persuade' }],
+        musteringCash: [1000, 2000, 5000, 10000, 25000, 50000, 100000],
+        musteringBenefits: ['INT +1', 'Minor Following', 'Patronage', 'SOC +1', 'Major Following', 'TAS Membership', '3 Ship Shares'],
+        mishaps: [
+          { roll: 1, text: 'Injured in a misadventure or attacked by a deranged objector to your work. Roll on the Injury table and leave this career.', tools: ['injury'] },
+          { roll: 2, text: 'Someone affected by the Truth you seek or reveal bears a grudge and swears to kill you. Gain an Enemy.', tools: ['associate'], associateTypes: ['enemy'] },
+          { roll: 3, text: 'You are discredited, rightly or wrongly. Lose SOC -2 and FOL -D3, but you are not ejected from this career.', tools: [], noEject: true },
+          { roll: 4, text: 'You discover that at least some of your work is based on erroneous thinking. Lose one skill level from any Science skill, but you do not have to leave this career.', tools: [], noEject: true },
+          { roll: 5, text: 'Your Truth is misused or misrepresented and you get the blame. Lose all Benefit rolls gained thus far in this career, but you do not have to leave this career.', tools: [], noEject: true },
+          { roll: 6, text: 'Your Truthing alienates former colleagues and contacts, who are determined to bring you down. Gain D3 Rivals.', tools: ['associate'] }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 3, text: 'A corporate or government body wants to use your knowledge in a way you find questionable. If you agree, gain an extra Benefit roll and one level in any Science skill, but also D3 Enemies.', tools: [] },
+          { roll: 4, text: 'You are called upon as a consultant for a secret research project. Gain one Contact and DM+1 on one Benefit roll.', tools: ['associate'], associateTypes: ['contact'], autoDM: { key: 'benefitRollDM', amount: 1 } },
+          { roll: 5, text: 'Understanding some new revelation requires a crash course in a field you lacked knowledge of. Gain one level in any Electronics or Science skill you previously did not already possess.', tools: [] },
+          { roll: 6, text: 'Your search for Truth takes you out onto the frontiers. Gain one level of Survival or Recon.', tools: ['skill'], skillOptions: [{ name: 'Survival', level: 1 }, { name: 'Recon', level: 1 }] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
+          { roll: 8, text: 'You make a series of high-profile appearances on entertainment/topical news shows. Gain one level of Carouse or Persuade, and gain FOL +1.', tools: [] },
+          { roll: 9, text: "A golden opportunity lands in your lap but taking advantage of it will harm someone else's career. If you decide to go ahead, gain FOL +D3, OR SOC +1, OR two levels in one of Science, Medic, or Electronics — either way this also gains you D3 Enemies. Deciding not to take advantage gains you an Ally instead.", tools: [] },
+          { roll: 10, text: 'You come into contact with a mysterious group who are interested in your Truth. Gain one level of Streetwise, Recon, or Carouse, and D3 Contacts.', tools: [] },
+          { roll: 11, text: 'A very public disagreement with another truther or a disbeliever goes in your favour and you become something of a celebrity. Gain SOC +1, but also a Rival.', tools: ['associate'], associateTypes: ['rival'], autoStat: { key: 'soc', amount: 1 } },
+          { roll: 12, text: 'Your previously obscure work becomes a lot more mainstream after a new scientific or academic breakthrough. Gain FOL +D3.', tools: [] }
+        ]
+      },
+      believer: {
+        id: 'believer', name: 'Believer', source: 'Traveller Companion pp.37-39', military: false,
+        qualification: { auto: true },
+        // Each assignment is also its own basic-training/specialist table
+        // (per the book's own note — "use the table for the Traveller's
+        // specialism rather than service skills"), same shape as
+        // Citizen/Drifter; the shared serviceSkills below is used for the
+        // per-term Skill Training "Service Skills" roll only.
+        serviceSkills: [{ name: 'Profession', specialty: 'Religion' }, { name: 'Science', specialty: 'Belief' }, { name: 'Admin' }, { name: 'Electronics', specialty: 'Computers' }, { name: 'Diplomat' }, { name: 'Persuade' }],
+        assignments: [
+          { key: 'mainstream', label: 'Mainstream Believer', survival: { stat: 'soc', target: 3 }, advancement: { stat: 'soc', target: 8 },
+            serviceSkills: [{ name: 'Profession' }, { name: 'Profession', specialty: 'Religion' }, { name: 'Science', specialty: 'Belief' }, { name: 'Drive' }, { name: 'Persuade' }, { name: 'Admin' }],
+            ranks: [
+              { rank: 0, title: 'Lay Person' },
+              { rank: 1, title: 'Initiate', skill: { name: 'Science', specialty: 'Belief', level: 1 } },
+              { rank: 2, title: 'Lay Preacher', skill: { name: 'Persuade', level: 1 } },
+              { rank: 3, title: 'Priest' },
+              { rank: 4, title: 'Senior Priest', stat: { key: 'soc', amount: 1 } },
+              { rank: 5, title: 'Bishop' },
+              { rank: 6, title: 'Archbishop', stat: { key: 'soc', amount: 1 } }
+            ] },
+          { key: 'missionary', label: 'Missionary/Humanitarian', survival: { stat: 'int_stat', target: 6 }, advancement: { stat: 'soc', target: 7 },
+            serviceSkills: [{ name: 'Jack-of-all-Trades' }, { name: 'Medic' }, { name: 'Persuade' }, { name: 'Diplomat' }, { name: 'Carouse' }, { name: 'Leadership' }],
+            ranks: [
+              { rank: 0, title: 'Junior Project Worker' },
+              { rank: 1, title: 'Project Worker', skill: { name: 'Jack-of-all-Trades', level: 1 } },
+              { rank: 2, title: 'Team Leader', skill: { name: 'Leadership', level: 1 } },
+              { rank: 3, title: 'Project Leader' },
+              { rank: 4, title: 'Project Coordinator', skill: { name: 'Admin', level: 1 } },
+              { rank: 5, title: 'Department Director' },
+              { rank: 6, title: 'Director', stat: { key: 'soc', amount: 1 } }
+            ] },
+          { key: 'holyWarrior', label: 'Holy Warrior', survival: { stat: 'int_stat', target: 8 }, advancement: { stat: 'int_stat', target: 5 },
+            serviceSkills: [{ name: 'Gun Combat' }, { name: 'Melee' }, { name: 'Explosives' }, { name: 'Heavy Weapons' }, { name: 'Tactics', specialty: 'Military' }, { name: 'Athletics' }],
+            ranks: [
+              { rank: 0, title: 'Hopeful' },
+              { rank: 1, title: 'Fighter', skill: { name: 'Gun Combat', level: 1 } },
+              { rank: 2, title: 'Combat Leader', skill: { name: 'Leadership', level: 1 } },
+              { rank: 3, title: 'Force Commander' },
+              { rank: 4, title: 'Area Commander', skill: { name: 'Tactics', specialty: 'Military', level: 1 } },
+              { rank: 5, title: 'Movement Sub-Leader' },
+              { rank: 6, title: 'Movement Leader' }
+            ] }
+        ],
+        personalDevelopment: [{ stat: 'int_stat' }, { stat: 'edu' }, { stat: 'soc' }, { name: 'Science', specialty: 'Belief' }, { name: 'Profession', specialty: 'Religion' }, { name: 'Persuade' }],
+        advancedEducation: [{ name: 'Profession', specialty: 'Religion' }, { name: 'Science' }, { name: 'Medic' }, { name: 'Investigate' }, { name: 'Electronics', specialty: 'Computers' }, { name: 'Advocate' }],
+        advancedEducationMin: 8,
+        musteringCash: [0, 1000, 2500, 5000, 10000, 25000, 50000],
+        musteringBenefits: ['The knowledge that your soul is saved', 'You will be rewarded in the next life', 'INT +1', 'SOC +1', 'A prominent statue and SOC +1', '3 Ship Shares', 'Sainthood candidacy'],
+        mishaps: [
+          { roll: 1, text: 'You are ambushed by opponents of your belief system. Roll on the Injury table and leave this career.', tools: ['injury'] },
+          { roll: 2, text: 'You direct someone to the True Path but this angers a friend or relative of theirs. Gain an Enemy.', tools: ['associate'], associateTypes: ['enemy'] },
+          { roll: 3, text: 'You are caught on the periphery of a scandal. Lose one rank and one Benefit roll, but you are not ejected from this career.', tools: [], noEject: true },
+          { roll: 4, text: 'You have been following false teachings! Lose one skill level from either Profession (Religion) or Science (Belief). You do not have to leave this career.', tools: [], noEject: true },
+          { roll: 5, text: 'Your faith is shaken (or you develop a conscience about your false religion). Lose all Benefit rolls gained thus far in this career, but you do not have to leave this career.', tools: [], noEject: true },
+          { roll: 6, text: 'You come into conflict with a splinter group of your own religion, which maintains your version is the wrong one. Gain D3 Rivals.', tools: ['associate'] }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 3, text: 'You are involved in good works in the community, gaining the respect of a large segment of society. Gain SOC +1 and an Ally.', tools: ['associate'], associateTypes: ['ally'], autoStat: { key: 'soc', amount: 1 } },
+          { roll: 4, text: 'A notable academic consults with you about a publication or documentary he is working on. Gain a Contact in academia.', tools: ['associate'], associateTypes: ['contact'] },
+          { roll: 5, text: 'You are sent to a new community or parish to preach The Word among the poor. Gain one level of Streetwise or Persuade.', tools: ['skill'], skillOptions: [{ name: 'Streetwise', level: 1 }, { name: 'Persuade', level: 1 }] },
+          { roll: 6, text: 'You retreat from the mundane world for a time in the hope of a revelation, although this affects your work and relationships. Lose SOC -D3, but gain D3 Benefit rolls and DM+1 on these and all future Benefit rolls.', tools: [] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
+          { roll: 8, text: 'You are chosen to represent your faith in a vid show or other highly public forum. Gain one level of Carouse or Persuade.', tools: ['skill'], skillOptions: [{ name: 'Carouse', level: 1 }, { name: 'Persuade', level: 1 }] },
+          { roll: 9, text: 'You are offered inducements to betray your faith. If you do so, you must leave this career and lose all Benefit rolls, but gain Cr20000 per Benefit roll you lose. If you choose not to sell out, gain 1D Enemies.', tools: [] },
+          { roll: 10, text: 'You are asked to secretly provide religious rites for a dying leader or noble, although they do not share your faith. If you agree, you gain an Ally in their household but also a Rival in your own faith, who does not agree with your choice.', tools: [] },
+          { roll: 11, text: 'Someone more charismatic but less devout than you becomes your superior. All future advancement rolls are subject to DM-2.', tools: [] },
+          { roll: 12, text: 'Your faith enjoys an explosion of popularity, largely thanks to your efforts. You are immediately promoted one grade and gain DM+1 on all future advancement checks.', tools: [] }
+        ]
       }
     };
 
@@ -3036,7 +3152,25 @@
       ] },
       'Deception, Persuade, or Stealth': { type: 'skillChoice', skills: ['Deception', 'Persuade', 'Stealth'], level: 1 },
       'Melee, Recon, or Streetwise': { type: 'skillChoice', skills: ['Melee', 'Recon', 'Streetwise'], level: 1 },
-      'Deception, Persuade, and Stealth': { type: 'skillAll', skills: ['Deception', 'Persuade', 'Stealth'], level: 1 }
+      'Deception, Persuade, and Stealth': { type: 'skillAll', skills: ['Deception', 'Persuade', 'Stealth'], level: 1 },
+      // Truther (Companion p.35) — Minor/Major Following grant an
+      // associate AND raise FOL in one benefit; needs its own pending
+      // type since neither 'associate' nor 'all' covers "name an
+      // associate, then add dice to a stat" in one go.
+      'Minor Following': { type: 'followingAssociate', kind: 'contact', folDice: 1, folPlus: 0 },
+      'Major Following': { type: 'followingAssociate', kind: 'ally', folDice: 1, folPlus: 1 },
+      'Patronage': { type: 'pension', amount: 10000 },
+      // Believer (Companion p.37) — the book's own mechanical payoff for
+      // these three is genuinely just flavour/prestige text with no
+      // further effect (Sainthood candidacy's living-saint mechanic is a
+      // Referee-adjudicated ongoing thing, not a one-time chargen grant)
+      // — logged as-is rather than invented.
+      'The knowledge that your soul is saved': { type: 'flavor', label: 'The knowledge that your soul is saved' },
+      'You will be rewarded in the next life': { type: 'flavor', label: 'You will be rewarded in the next life' },
+      'A prominent statue and SOC +1': { type: 'all', items: [
+        { type: 'flavor', label: 'A prominent statue erected in your honour' }, { type: 'stat', key: 'soc', amount: 1 }
+      ] },
+      'Sainthood candidacy': { type: 'flavor', label: 'Sainthood candidacy (DM+2 on interactions with your belief system; ask your GM about pursuing living-saint status)' }
     };
 
     const MUSTERING_STAT_LABELS = { str: 'STR', dex: 'DEX', end_stat: 'END', int_stat: 'INT', edu: 'EDU', soc: 'SOC' };
@@ -3063,6 +3197,13 @@
         await supabaseClient.from('characters').update({ tas_member: true }).eq('id', draft.id);
         draft.tas_member = true;
         return 'TAS Membership granted';
+      }
+      if (effect.type === 'flavor') {
+        return effect.label;
+      }
+      if (effect.type === 'pension') {
+        await applyStatChange('pension', effect.amount);
+        return `Cr${effect.amount}/year added to pension (now Cr${draft.pension || 0}/year)`;
       }
       if (effect.type === 'item') {
         if (effect.kind === 'weapon') {
@@ -3420,7 +3561,7 @@
           <div class="wizard-card-title">Choose a Career</div>
           <div class="wizard-card-sub">
             ${s.terms ? `Age ${currentAge()}, ${s.terms} term${s.terms === 1 ? '' : 's'} served so far.` : 'Pick a career to attempt qualification for.'}
-            All careers are built: Navy, Drifter, Agent, Army, Citizen, Entertainer, Marine, Merchant, Noble, Rogue, Scholar, Scout and Prisoner. Only Psion remains unavailable (no PSI characteristic tracked). Note: Prisoner can't be entered voluntarily per the rules — only attempt qualification here if another career's mishap/event forced you into it. (Core Rulebook pp.17-57)
+            All careers are built: Navy, Drifter, Agent, Army, Citizen, Entertainer, Marine, Merchant, Noble, Rogue, Scholar, Scout, Prisoner, Truther and Believer. Only Psion remains unavailable (no PSI characteristic tracked). Note: Prisoner can't be entered voluntarily per the rules — only attempt qualification here if another career's mishap/event forced you into it. (Core Rulebook pp.17-57, Traveller Companion pp.35-39)
           </div>
           ${s.forcedDraftNextTerm ? `
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
@@ -3792,7 +3933,10 @@
       const c = careerData(s.careerId);
       const a = currentAssignment(s, c);
       const d1 = rollDie(), d2 = rollDie();
-      const statDM = dmNum(draft[a.survival.stat]);
+      // Truther's Survival target is keyed off Following directly (the
+      // raw value, not the normal characteristic-DM curve) — FOL isn't a
+      // characteristic, it's a standing reputation score (Companion p.35).
+      const statDM = a.survival.stat === 'following' ? (draft.following || 0) : dmNum(draft[a.survival.stat]);
       const bonusDM = await consumePendingMod('survivalDM');
       // Unlike bonusDM (a one-shot pending modifier, consumed the instant
       // it's used), survivalDMBonus is a PERSISTENT buff for the rest of
@@ -3845,7 +3989,7 @@
       const genericBody = (bespoke !== null) ? bespoke
         : (s.mishapResolved
           ? `<div class="wizard-card-sub" style="color:#00ffaa;">${s.mishapResolvedText || 'Resolved.'}</div>`
-          : (s.mishapRoll === 1 ? renderMishapRoll1Choice('mishap') : renderGenericResolver('mishap', m.tools, false, { skillOptions: m.skillOptions, associateTypes: m.associateTypes, statOptions: m.statOptions, statAmount: m.statAmount })));
+          : (s.mishapRoll === 1 && !m.tools.length ? renderMishapRoll1Choice('mishap') : renderGenericResolver('mishap', m.tools, false, { skillOptions: m.skillOptions, associateTypes: m.associateTypes, statOptions: m.statOptions, statAmount: m.statAmount })));
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Mishap ${s.mishapRoll}</div>
@@ -3906,6 +4050,11 @@
       await saveStep5State({ paroleThreshold: newThreshold });
       return newThreshold;
     }
+
+    // Truther's Following (FOL, Companion p.35) is a persistent
+    // characteristic, not career-scoped state — `applyStatChange('following', amount)`
+    // already handles it generically (needs truther-believer-schema.sql
+    // run in Supabase). No floor/cap on FOL per the book.
 
     async function rerollParoleThreshold() {
       const newThreshold = rollDie() + 2;
@@ -4185,8 +4334,8 @@
     // per the user's call. No cap — debt can go as high as it needs to.
     const MEDICAL_BILLS_TIER = {
       army: 'A', navy: 'A', marine: 'A',
-      agent: 'B', noble: 'B', scholar: 'B', entertainer: 'B', merchant: 'B', citizen: 'B',
-      scout: 'C', rogue: 'C', drifter: 'C'
+      agent: 'B', noble: 'B', scholar: 'B', entertainer: 'B', merchant: 'B', citizen: 'B', believer: 'B',
+      scout: 'C', rogue: 'C', drifter: 'C', truther: 'C'
     };
 
     function medicalBillsCoverage(careerId, roll) {
@@ -4554,6 +4703,27 @@
         case 'prisoner:9':    return renderPrisonerEvent9(tag, m);
         case 'prisoner:12':   return renderPrisonerEvent12(tag, m);
         case 'prisoner:mishap3': return renderPrisonerMishap3(tag, m);
+        case 'truther:2':       return renderInlineMishapNotEjected(tag, careerId, m);
+        case 'truther:3':       return renderTrutherEvent3(tag, m);
+        case 'truther:5':       return renderTrutherEvent5(tag, m);
+        case 'truther:8':       return renderTrutherEvent8(tag, m);
+        case 'truther:9':       return renderTrutherEvent9(tag, m);
+        case 'truther:10':      return renderTrutherEvent10(tag, m);
+        case 'truther:12':      return renderTrutherEvent12(tag, m);
+        case 'truther:mishap3': return renderTrutherMishap3(tag, m);
+        case 'truther:mishap4': return renderTrutherMishap4(tag, m);
+        case 'truther:mishap5': return renderLoseAllBenefitRolls(tag, m, 'Truther Mishap 5');
+        case 'truther:mishap6': return renderGainDiceAssociates(tag, m, 'rival', 3);
+        case 'believer:2':      return renderInlineMishapNotEjected(tag, careerId, m);
+        case 'believer:6':      return renderBelieverEvent6(tag, m);
+        case 'believer:9':      return renderBelieverEvent9(tag, m);
+        case 'believer:10':     return renderBelieverEvent10(tag, m);
+        case 'believer:11':     return renderBelieverEvent11(tag, m);
+        case 'believer:12':     return renderBelieverEvent12(tag, m);
+        case 'believer:mishap3': return renderBelieverMishap3(tag, m);
+        case 'believer:mishap4': return renderBelieverMishap4(tag, m);
+        case 'believer:mishap5': return renderLoseAllBenefitRolls(tag, m, 'Believer Mishap 5');
+        case 'believer:mishap6': return renderGainDiceAssociates(tag, m, 'rival', 3);
         default: return null;
       }
     }
@@ -7621,6 +7791,552 @@
       renderStep();
     }
 
+    // Generic "lose all Benefit rolls gained so far, not ejected" — used
+    // identically by Truther Mishap 5 and Believer Mishap 5.
+    function renderLoseAllBenefitRolls(tag, m, label) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return `<button class="btn-outline" onclick="confirmLoseAllBenefitRolls('${tag}','${label}')">Confirm — Lose All Benefit Rolls From This Career</button>`;
+    }
+
+    async function confirmLoseAllBenefitRolls(tag, label) {
+      await saveStep5State({ benefitRolls: 0 });
+      const resultText = 'Lost all Benefit rolls gained so far in this career.';
+      await saveMechanic(tag, { resolved: true, resultText });
+      await resolveMechanic(tag);
+      await logCreation(`${label}: ${resultText}`);
+      renderStep();
+    }
+
+    // Truther mishap 3 — discredited: lose SOC -2 (auto) and FOL -D3
+    // (rolled here since it's a dice amount, not a fixed one).
+    function renderTrutherMishap3(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return `<button class="btn-outline" onclick="confirmTrutherMishap3()">Confirm — Discredited</button>`;
+    }
+
+    async function confirmTrutherMishap3() {
+      await applyStatChange('soc', -2);
+      const folLoss = rollDie();
+      await applyStatChange('following', -folLoss);
+      const resultText = `Discredited — lost 2 SOC and ${folLoss} FOL (now ${draft.following}).`;
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Truther Mishap 3: ${resultText}`);
+      renderStep();
+    }
+
+    // Truther mishap 4 — lose one level from any Science skill the
+    // Traveller already has (picks among owned Science specialties).
+    function renderTrutherMishap4(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      const owned = Object.values(draft.skills || {}).filter(sk => sk.name === 'Science');
+      if (!owned.length) {
+        return resolverHeader('You have no Science skill to lose a level from — no effect.') +
+          `<button class="btn-outline" onclick="confirmTrutherMishap4(null)">Continue</button>`;
+      }
+      return resolverHeader('Choose which Science specialty loses a level:') + `
+        <select id="truther-m4-skill">${owned.map(sk => `<option value="${skillKey(sk.name, sk.specialty)}">Science${sk.specialty ? ' (' + sk.specialty + ')' : ''} ${sk.level}</option>`).join('')}</select>
+        <button class="btn-outline" onclick="confirmTrutherMishap4(document.getElementById('truther-m4-skill').value)">Confirm</button>
+      `;
+    }
+
+    async function confirmTrutherMishap4(chosenKey) {
+      let resultText;
+      if (chosenKey) {
+        const skills = Object.assign({}, draft.skills || {});
+        const owned = skills[chosenKey];
+        bumpSkill(skills, owned.name, owned.specialty, -1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        resultText = `Lost a level of Science${owned.specialty ? ' (' + owned.specialty + ')' : ''}.`;
+      } else {
+        resultText = 'No Science skill to lose a level from.';
+      }
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Truther Mishap 4: ${resultText}`);
+      renderStep();
+    }
+
+    // Truther event 3 — accept (extra Benefit roll, a Science skill
+    // level, D3 Enemies) or refuse (nothing).
+    function renderTrutherEvent3(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (m.specialtyGateFor) return renderSpecialtyGate(tag, m.specialtyGateFor);
+      if (!m.choice) {
+        return resolverHeader('Use your knowledge in a way you find questionable?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="trutherEvent3Accept()">Accept</button>
+            <button class="btn-outline" onclick="trutherEvent3Refuse()">Refuse</button>
+          </div>
+        `;
+      }
+      if (!m.skillGranted) {
+        return resolverHeader('Gained an extra Benefit roll. Choose a Science specialty to increase:') + `
+          <select id="truther-e3-skill">${SCIENCE_SPECIALTIES.map(sp => `<option value="${sp}">${sp}</option>`).join('')}</select>
+          <button class="btn-outline" onclick="confirmTrutherEvent3Skill()">Confirm</button>
+        `;
+      }
+      return resolverHeader(m.resultText) + renderGainDiceAssociates(tag, m, 'enemy', 3);
+    }
+
+    async function trutherEvent3Refuse() {
+      const resultText = 'Refused — gained nothing.';
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Truther Event 3: ${resultText}`);
+      renderStep();
+    }
+
+    async function trutherEvent3Accept() {
+      await addPendingMod('extraBenefitRolls', 1);
+      await saveMechanic('event', { choice: 'accept' });
+      await logCreation('Truther Event 3: accepted — banked an extra Benefit roll.');
+      renderStep();
+    }
+
+    async function confirmTrutherEvent3Skill() {
+      const specialty = document.getElementById('truther-e3-skill').value;
+      const skills = Object.assign({}, draft.skills || {});
+      grantSpecialtySkillMin(skills, 'Science', specialty, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const resultText = `Increased Science (${specialty}) by one level. Now roll for your D3 Enemies:`;
+      await saveMechanic('event', { skillGranted: true, resultText });
+      await logCreation(`Truther Event 3: increased Science (${specialty}) by one level.`);
+      renderStep();
+    }
+
+    // Truther event 5 — gain a level in Electronics or Science, but only
+    // a specialty the Traveller does not already possess.
+    function renderTrutherEvent5(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (m.specialtyGateFor) return renderSpecialtyGate(tag, m.specialtyGateFor);
+      if (!m.skillChosen) {
+        return resolverHeader('Choose Electronics or Science:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="trutherEvent5Choose('Electronics')">Electronics</button>
+            <button class="btn-outline" onclick="trutherEvent5Choose('Science')">Science</button>
+          </div>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function trutherEvent5Choose(skillName) {
+      await gateSpecialty('event', skillName, (specialty) => finishTrutherEvent5(skillName, specialty));
+    }
+
+    async function finishTrutherEvent5(skillName, specialty) {
+      const key = skillKey(skillName, specialty);
+      const alreadyOwned = !!(draft.skills || {})[key];
+      let resultText;
+      if (alreadyOwned) {
+        resultText = `You already possess ${skillName}${specialty ? ' (' + specialty + ')' : ''} — no effect.`;
+      } else {
+        const skills = Object.assign({}, draft.skills || {});
+        if (specialty) grantSpecialtySkillMin(skills, skillName, specialty, 1);
+        else grantSkillMin(skills, skillName, null, 1);
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+        draft.skills = skills;
+        resultText = `Gained ${skillName}${specialty ? ' (' + specialty + ')' : ''} 1.`;
+      }
+      await saveMechanic('event', { skillChosen: skillName, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Truther Event 5: ${resultText}`);
+      renderStep();
+    }
+
+    // Truther event 8 — gain Carouse or Persuade, plus FOL +1.
+    function renderTrutherEvent8(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return resolverHeader('Choose a skill to gain:') + `
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          <button class="btn-outline" onclick="confirmTrutherEvent8('Carouse')">Carouse</button>
+          <button class="btn-outline" onclick="confirmTrutherEvent8('Persuade')">Persuade</button>
+        </div>
+      `;
+    }
+
+    async function confirmTrutherEvent8(skillName) {
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, skillName, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await applyStatChange('following', 1);
+      const resultText = `Gained ${skillName} 1 and FOL +1 (now ${draft.following}).`;
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Truther Event 8: ${resultText}`);
+      renderStep();
+    }
+
+    // Truther event 9 — take advantage (FOL+D3 OR SOC+1 OR two levels in
+    // one of Science/Medic/Electronics, plus D3 Enemies either way) or
+    // decline (an Ally instead).
+    function renderTrutherEvent9(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (m.specialtyGateFor) return renderSpecialtyGate(tag, m.specialtyGateFor);
+      if (!m.choice) {
+        return resolverHeader('Take advantage of the opportunity, even though it harms someone else\'s career?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="trutherEvent9Choose('decline')">Decline — Gain an Ally</button>
+            <button class="btn-outline" onclick="trutherEvent9Choose('takeAdvantage')">Take Advantage</button>
+          </div>
+        `;
+      }
+      if (m.choice === 'decline' && !m.allyNamed) {
+        return resolverHeader('Name the Ally you gained:') + `
+          <input id="truther-e9-name" type="text" placeholder="Name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmTrutherEvent9Ally()">Confirm</button>
+        `;
+      }
+      if (m.choice === 'takeAdvantage' && !m.reward) {
+        return resolverHeader('Choose your reward:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="trutherEvent9Reward('fol')">FOL +D3</button>
+            <button class="btn-outline" onclick="trutherEvent9Reward('soc')">SOC +1</button>
+            <button class="btn-outline" onclick="trutherEvent9Reward('skill')">Two Levels in Science, Medic, or Electronics</button>
+          </div>
+        `;
+      }
+      if (m.choice === 'takeAdvantage' && m.reward === 'skill' && !m.skillChosen) {
+        return resolverHeader('Choose which skill gains two levels:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="trutherEvent9ChooseSkill('Science')">Science</button>
+            <button class="btn-outline" onclick="trutherEvent9ChooseSkill('Medic')">Medic</button>
+            <button class="btn-outline" onclick="trutherEvent9ChooseSkill('Electronics')">Electronics</button>
+          </div>
+        `;
+      }
+      if (m.choice === 'takeAdvantage' && m.reward && !m.enemiesResolved) {
+        return resolverHeader(m.resultText) + renderGainDiceAssociates(tag, Object.assign({}, m, { resolved: false }), 'enemy', 3);
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function trutherEvent9Choose(choice) {
+      await saveMechanic('event', { choice });
+      renderStep();
+    }
+
+    async function confirmTrutherEvent9Ally() {
+      const name = (document.getElementById('truther-e9-name') || {}).value.trim() || 'Unnamed';
+      await addAssociate('ally', name, 'You declined to take advantage at someone else\'s expense.');
+      const resultText = `Declined — gained ${name} as an Ally.`;
+      await saveMechanic('event', { allyNamed: true, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Truther Event 9: ${resultText}`);
+      renderStep();
+    }
+
+    async function trutherEvent9Reward(reward) {
+      if (reward === 'fol') {
+        const gain = rollDie();
+        await applyStatChange('following', gain);
+        await saveMechanic('event', { reward, resultText: `Took advantage — FOL +${gain} (now ${draft.following}). Now roll for your D3 Enemies:` });
+      } else if (reward === 'soc') {
+        await applyStatChange('soc', 1);
+        await saveMechanic('event', { reward, resultText: 'Took advantage — SOC +1. Now roll for your D3 Enemies:' });
+      } else {
+        await saveMechanic('event', { reward });
+        renderStep();
+        return;
+      }
+      await logCreation('Truther Event 9: took advantage.');
+      renderStep();
+    }
+
+    async function trutherEvent9ChooseSkill(skillName) {
+      await gateSpecialty('event', skillName, (specialty) => finishTrutherEvent9Skill(skillName, specialty));
+    }
+
+    async function finishTrutherEvent9Skill(skillName, specialty) {
+      const skills = Object.assign({}, draft.skills || {});
+      if (specialty) bumpSpecialtySkill(skills, skillName, specialty, 2);
+      else bumpSkill(skills, skillName, null, 2);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const label = specialty ? `${skillName} (${specialty})` : skillName;
+      const resultText = `Took advantage — increased ${label} by two levels. Now roll for your D3 Enemies:`;
+      await saveMechanic('event', { skillChosen: skillName, resultText });
+      await logCreation(`Truther Event 9: increased ${label} by two levels.`);
+      renderStep();
+    }
+
+    // Truther event 10 — gain Streetwise, Recon, or Carouse, plus D3 Contacts.
+    function renderTrutherEvent10(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.skillChosen) {
+        return resolverHeader('Choose a skill to gain:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="confirmTrutherEvent10Skill('Streetwise')">Streetwise</button>
+            <button class="btn-outline" onclick="confirmTrutherEvent10Skill('Recon')">Recon</button>
+            <button class="btn-outline" onclick="confirmTrutherEvent10Skill('Carouse')">Carouse</button>
+          </div>
+        `;
+      }
+      return resolverHeader(m.resultText) + renderGainDiceAssociates(tag, m, 'contact', 3);
+    }
+
+    async function confirmTrutherEvent10Skill(skillName) {
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, skillName, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const resultText = `Gained ${skillName} 1. Now roll for your D3 Contacts:`;
+      await saveMechanic('event', { skillChosen: skillName, resultText });
+      await logCreation(`Truther Event 10: gained ${skillName} 1.`);
+      renderStep();
+    }
+
+    // Truther event 12 — FOL +D3, no choice involved.
+    function renderTrutherEvent12(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return `<button class="btn-outline" onclick="confirmTrutherEvent12()">Roll D3</button>`;
+    }
+
+    async function confirmTrutherEvent12() {
+      const gain = rollDie();
+      await applyStatChange('following', gain);
+      const resultText = `Your work goes mainstream — FOL +${gain} (now ${draft.following}).`;
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Truther Event 12: ${resultText}`);
+      renderStep();
+    }
+
+    const SCIENCE_SPECIALTIES = (SKILLS.find(sk => sk.name === 'Science') || {}).specialties
+      ? SKILLS.find(sk => sk.name === 'Science').specialties.map(sp => sp.name) : [];
+
+    // Believer mishap 3 — lose one rank and one Benefit roll, not ejected.
+    function renderBelieverMishap3(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return `<button class="btn-outline" onclick="confirmBelieverMishap3()">Confirm — Caught Up in Scandal</button>`;
+    }
+
+    async function confirmBelieverMishap3() {
+      const s = step5State();
+      const newRank = Math.max(0, s.rank - 1);
+      await saveStep5State({ rank: newRank, benefitRolls: Math.max(0, (s.benefitRolls || 0) - 1) });
+      const resultText = `Lost one rank (now ${newRank}) and one Benefit roll.`;
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Believer Mishap 3: ${resultText}`);
+      renderStep();
+    }
+
+    // Believer mishap 4 — lose one level from Profession (Religion) or
+    // Science (Belief), not ejected.
+    function renderBelieverMishap4(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return resolverHeader('Which false teaching cost you a skill level?') + `
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          <button class="btn-outline" onclick="confirmBelieverMishap4('Profession')">Profession (Religion)</button>
+          <button class="btn-outline" onclick="confirmBelieverMishap4('Science')">Science (Belief)</button>
+        </div>
+      `;
+    }
+
+    async function confirmBelieverMishap4(skillName) {
+      const specialty = skillName === 'Profession' ? 'Religion' : 'Belief';
+      const skills = Object.assign({}, draft.skills || {});
+      bumpSkill(skills, skillName, specialty, -1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      const resultText = `Lost a level of ${skillName} (${specialty}).`;
+      await saveMechanic('mishap', { resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Believer Mishap 4: ${resultText}`);
+      renderStep();
+    }
+
+    // Believer event 6 — retreat from the world: lose SOC -D3, gain D3
+    // Benefit rolls plus a PERSISTENT DM+1 to all future Benefit rolls
+    // this career (benefitRollDMBonus, same shape as survivalDMBonus).
+    function renderBelieverEvent6(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return `<button class="btn-outline" onclick="confirmBelieverEvent6()">Retreat From the World</button>`;
+    }
+
+    async function confirmBelieverEvent6() {
+      const socLoss = rollDie();
+      await applyStatChange('soc', -socLoss);
+      const benefitGain = rollDie();
+      const s = step5State();
+      await saveStep5State({ benefitRolls: (s.benefitRolls || 0) + benefitGain, benefitRollDMBonus: (s.benefitRollDMBonus || 0) + 1 });
+      const resultText = `Retreated from the world — lost ${socLoss} SOC, gained ${benefitGain} Benefit roll(s), and DM+1 to all Benefit rolls for the rest of this career.`;
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Believer Event 6: ${resultText}`);
+      renderStep();
+    }
+
+    // Believer event 9 — betray your faith (leave the career immediately,
+    // lose all Benefit rolls, gain cash per roll lost — simplified to a
+    // flat Cr20000/roll rather than the book's Cr2D x 10000, documented in
+    // the data text) or refuse (gain 1D Enemies).
+    function renderBelieverEvent9(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.choice) {
+        return resolverHeader('Betray your faith for a price?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="believerEvent9Betray()">Betray Your Faith — Leave This Career</button>
+            <button class="btn-outline" onclick="believerEvent9Refuse()">Refuse</button>
+          </div>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function believerEvent9Refuse() {
+      const count = rollDie();
+      const names = [];
+      for (let i = 0; i < count; i++) { const name = `Unnamed Enemy ${i + 1}`; await addAssociate('enemy', name, 'Angered by your refusal to betray your faith.'); names.push(name); }
+      const resultText = `Refused — gained ${count} Enemy/Enemies.`;
+      await saveMechanic('event', { choice: 'refuse', resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Believer Event 9: ${resultText}`);
+      renderStep();
+    }
+
+    async function believerEvent9Betray() {
+      const s = step5State();
+      const rollsLost = s.benefitRolls || 0;
+      const cash = rollsLost * 20000;
+      if (cash) await applyStatChange('cash_on_hand', cash);
+      await saveStep5State({ benefitRolls: 0 });
+      const resultText = `Betrayed your faith — lost ${rollsLost} Benefit roll(s), gained Cr${cash}. Leaving this career.`;
+      await saveMechanic('event', { choice: 'betray', resolved: true, resultText });
+      await logCreation(`Believer Event 9: ${resultText}`);
+      await recordCareerHistory(true);
+      const newTerms = s.terms + 1;
+      await supabaseClient.from('characters').update({ age: 18 + 4 * newTerms }).eq('id', draft.id);
+      draft.age = 18 + 4 * newTerms;
+      await saveStep5State({ terms: newTerms });
+      await goToAgeingOrPhase('mustering');
+    }
+
+    // Believer event 10 — secretly provide religious rites: accept (Ally
+    // in their household, but also a Rival in your own faith) or refuse
+    // (nothing, per the text only describing the "if you agree" branch).
+    function renderBelieverEvent10(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.choice) {
+        return resolverHeader('Secretly provide the rites?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="believerEvent10Choose('accept')">Agree</button>
+            <button class="btn-outline" onclick="believerEvent10Choose('refuse')">Refuse</button>
+          </div>
+        `;
+      }
+      if (m.choice === 'refuse') return resolverHeader(m.resultText);
+      if (!m.allyNamed) {
+        return resolverHeader('Name the Ally you gained in their household:') + `
+          <input id="believer-e10-ally" type="text" placeholder="Name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmBelieverEvent10Ally()">Confirm</button>
+        `;
+      }
+      if (!m.rivalNamed) {
+        return resolverHeader(`${m.resultText} Name the Rival you gained in your own faith:`) + `
+          <input id="believer-e10-rival" type="text" placeholder="Name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmBelieverEvent10Rival()">Confirm</button>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function believerEvent10Choose(choice) {
+      if (choice === 'refuse') {
+        const resultText = 'Refused — gained nothing.';
+        await saveMechanic('event', { choice, resolved: true, resultText });
+        await resolveMechanic('event');
+        await logCreation(`Believer Event 10: ${resultText}`);
+      } else {
+        await saveMechanic('event', { choice });
+      }
+      renderStep();
+    }
+
+    async function confirmBelieverEvent10Ally() {
+      const name = (document.getElementById('believer-e10-ally') || {}).value.trim() || 'Unnamed';
+      await addAssociate('ally', name, "Asked you to secretly perform rites for them, against your own faith's wishes.");
+      const resultText = `Gained ${name} as an Ally.`;
+      await saveMechanic('event', { allyNamed: true, resultText });
+      await logCreation(`Believer Event 10: gained ${name} as an Ally.`);
+      renderStep();
+    }
+
+    async function confirmBelieverEvent10Rival() {
+      const name = (document.getElementById('believer-e10-rival') || {}).value.trim() || 'Unnamed';
+      await addAssociate('rival', name, 'Disagreed with your choice to secretly perform rites outside your faith.');
+      const resultText = `${mechanicState('event').resultText} Gained ${name} as a Rival.`;
+      await saveMechanic('event', { rivalNamed: true, resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Believer Event 10: gained ${name} as a Rival.`);
+      renderStep();
+    }
+
+    // Believer event 11 — a less devout superior: PERSISTENT DM-2 to all
+    // future advancement rolls this career, no choice involved.
+    function renderBelieverEvent11(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      return `<button class="btn-outline" onclick="confirmBelieverEvent11()">Acknowledge Your New Superior</button>`;
+    }
+
+    async function confirmBelieverEvent11() {
+      const s = step5State();
+      await saveStep5State({ advancementDMBonus: (s.advancementDMBonus || 0) - 2 });
+      const resultText = 'A less devout superior is promoted above you — DM-2 to all future advancement rolls for the rest of this career.';
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Believer Event 11: ${resultText}`);
+      renderStep();
+    }
+
+    // Believer event 12 — immediately promoted one grade (reusing the
+    // same starting-rank grant helpers as a real promotion), plus a
+    // PERSISTENT DM+1 to all future advancement rolls this career.
+    function renderBelieverEvent12(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (m.specialtyGateFor) return renderSpecialtyGate(tag, m.specialtyGateFor);
+      return `<button class="btn-outline" onclick="confirmBelieverEvent12()">Confirm — Promoted for Your Faith's Popularity</button>`;
+    }
+
+    async function confirmBelieverEvent12() {
+      const s = step5State();
+      const c = careerData(s.careerId);
+      const a = currentAssignment(s, c);
+      const newRank = s.rank + 1;
+      const table = rankTableFor(s, c, a);
+      const entry = table.find(x => x.rank === newRank);
+      if (entry && entry.skill && !entry.skill.specialty && skillSpecialtiesFor(entry.skill.name).length) {
+        await saveStep5State({ event12Pending: { newRank, entry } });
+        await gateSpecialty('event', entry.skill.name, (specialty) => finishBelieverEvent12(specialty));
+        return;
+      }
+      await finishBelieverEvent12(entry && entry.skill ? entry.skill.specialty : null, newRank, entry);
+    }
+
+    async function finishBelieverEvent12(specialty, newRankArg, entryArg) {
+      const s = step5State();
+      const newRank = newRankArg !== undefined ? newRankArg : s.event12Pending.newRank;
+      const entry = entryArg !== undefined ? entryArg : s.event12Pending.entry;
+      const parts = [];
+      if (entry && entry.skill) {
+        parts.push(await grantStartRankSkill(entry.skill, specialty));
+      }
+      if (entry && entry.stat) {
+        parts.push(await grantStartRankStat(entry.stat));
+      }
+      await saveStep5State({ rank: newRank, advancementDMBonus: (s.advancementDMBonus || 0) + 1, event12Pending: null, skillRollsRemaining: 2 });
+      const resultText = `Promoted to rank ${newRank}${parts.length ? ' (' + parts.join(', ') + ')' : ''}, and DM+1 to all future advancement rolls for the rest of this career.`;
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Believer Event 12: ${resultText}`);
+      renderStep();
+    }
+
     function renderInlineMishapNotEjected(tag, careerId, m) {
       const c = careerData(careerId);
       if (!m.rolled) {
@@ -7728,7 +8444,13 @@
       const s = step5State();
       const c = careerData(s.careerId);
       const firstTermNoBasic = !s.basicTrainingDone;
-      if (c.military && s.rank === 0 && !s.isOfficer) {
+      // Truther has no rank ladder at all ("ADVANCEMENT: N/A", Companion
+      // p.35) — skip straight to the flat 1-roll Skill Training every
+      // career gets, instead of an Advancement roll that has nothing to
+      // promote into.
+      if (c.id === 'truther') {
+        await saveStep5State({ phase: 'skillTraining', skillRollsRemaining: 1 });
+      } else if (c.military && s.rank === 0 && !s.isOfficer) {
         await saveStep5State({ phase: 'commission' });
       } else {
         await saveStep5State({ phase: 'advancement' });
@@ -7831,7 +8553,7 @@
         return `
           <div class="rule-card wizard-card">
             <div class="wizard-card-title">${c.name} — Advancement</div>
-            <div class="wizard-card-sub">Roll 2D + ${statLabel} DM (need ${a.advancement.target}+)${pm.advancementDM ? `, plus DM${pm.advancementDM > 0 ? '+' : ''}${pm.advancementDM} banked from a prior bonus` : ''}${previewAcademyDM.total ? `, plus DM${previewAcademyDM.total > 0 ? '+' : ''}${previewAcademyDM.total} from ${previewAcademyDM.labels.join(', ')}` : ''}. You may only attempt this once per term.</div>
+            <div class="wizard-card-sub">Roll 2D + ${statLabel} DM (need ${a.advancement.target}+)${pm.advancementDM ? `, plus DM${pm.advancementDM > 0 ? '+' : ''}${pm.advancementDM} banked from a prior bonus` : ''}${previewAcademyDM.total ? `, plus DM${previewAcademyDM.total > 0 ? '+' : ''}${previewAcademyDM.total} from ${previewAcademyDM.labels.join(', ')}` : ''}${s.advancementDMBonus ? `, plus DM${s.advancementDMBonus > 0 ? '+' : ''}${s.advancementDMBonus} persistent for the rest of this career` : ''}. You may only attempt this once per term.</div>
             <div class="wizard-actions" style="justify-content:flex-start; gap:12px; flex-wrap:wrap;">
               <button class="btn-outline" onclick="rollAdvancement()">Roll Advancement</button>
               ${pm.autoPromote ? '<button class="btn-outline" onclick="applyAutoPromote()">Apply Automatic Promotion (banked)</button>' : ''}
@@ -7869,11 +8591,17 @@
       const statDM = dmNum(draft[a.advancement.stat]);
       const bonusDM = await consumePendingMod('advancementDM');
       const academyDM = academyBonusDM('advancement', c.id, (s.careerHistory || []).length === 0);
-      const total = natural + statDM + bonusDM + academyDM.total;
+      // Persistent (never consumed) advancement DM for the rest of this
+      // career — distinct from bonusDM's one-shot pendingMod. Believer
+      // Event 11 (DM-2, a less devout superior) and Event 12 (DM+1,
+      // promoted for popularity) are the first entries needing this;
+      // same shape as survivalDMBonus/Prisoner's gang-membership bonus.
+      const persistentDM = s.advancementDMBonus || 0;
+      const total = natural + statDM + bonusDM + academyDM.total + persistentDM;
       const success = total >= a.advancement.target;
       const mustLeave = success && total <= s.termInCareer && natural !== 12;
 
-      const base = { dice: [d1, d2], statDM, bonusDM, academyDM: academyDM.total, academyLabels: academyDM.labels, total, success, mustLeave };
+      const base = { dice: [d1, d2], statDM, bonusDM, academyDM: academyDM.total, academyLabels: academyDM.labels, persistentDM, total, success, mustLeave };
 
       if (!success) {
         await finishAdvancement(s.rank, base, '');
@@ -8229,9 +8957,9 @@
       }
 
       const pending = s.musteringPending;
-      const bankedDM = pendingMods().benefitRollDM;
+      const bankedDM = (pendingMods().benefitRollDM || 0) + (s.benefitRollDMBonus || 0);
       const bankedNote = bankedDM
-        ? `<div style="margin-bottom:10px; font-size:0.8rem; color:#ffaa00;">Banked modifier active: DM${bankedDM > 0 ? '+' : ''}${bankedDM} to your next Benefit roll.</div>`
+        ? `<div style="margin-bottom:10px; font-size:0.8rem; color:#ffaa00;">Banked modifier active: DM${bankedDM > 0 ? '+' : ''}${bankedDM} to your next Benefit roll${s.benefitRollDMBonus ? ' (includes a persistent bonus for the rest of this career)' : ''}.</div>`
         : '';
 
       if (pending) {
@@ -8281,13 +9009,22 @@
           <button class="btn-outline" onclick="resolveMusteringAssociate()">Confirm</button>
         `;
       }
+      if (effect.type === 'followingAssociate') {
+        return `
+          <input id="mustering-assoc-name" type="text" placeholder="${effect.kind === 'ally' ? 'Ally' : 'Contact'} name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="resolveMusteringFollowingAssociate()">Confirm</button>
+        `;
+      }
       return '';
     }
 
     async function rollMustering(table) {
       const s = step5State();
       const c = careerData(s.careerId);
-      const bonusDM = await consumePendingMod('benefitRollDM');
+      // Truther's own footnote: FOL 10+ gives DM+1 to Benefit rolls (both
+      // tables), distinct from the generic banked/persistent bonuses.
+      const folBonus = (c.id === 'truther' && (draft.following || 0) >= 10) ? 1 : 0;
+      const bonusDM = (await consumePendingMod('benefitRollDM')) + (s.benefitRollDMBonus || 0) + folBonus;
       const idx = Math.max(0, Math.min(6, rollDie() - 1 + bonusDM));
       if (table === 'cash') {
         const amount = c.musteringCash[idx];
@@ -8312,7 +9049,7 @@
         renderStep();
         return;
       }
-      if (effect.type === 'choice' || effect.type === 'skillChoice' || effect.type === 'associate') {
+      if (effect.type === 'choice' || effect.type === 'skillChoice' || effect.type === 'associate' || effect.type === 'followingAssociate') {
         await saveStep5State({ musteringPending: { idx, text, effect, dmNote } });
         renderStep();
         return;
@@ -8365,6 +9102,18 @@
       if (!name) return;
       await addAssociate(effect.kind, name, 'Gained as a mustering-out benefit.');
       await finishMusteringPending(`Gained ${name} as ${effect.kind === 'ally' ? 'an Ally' : 'a Contact'}`);
+    }
+
+    async function resolveMusteringFollowingAssociate() {
+      const s = step5State();
+      const effect = s.musteringPending.effect;
+      const name = (document.getElementById('mustering-assoc-name') || {}).value.trim();
+      if (!name) return;
+      await addAssociate(effect.kind, name, 'Gained as a mustering-out benefit.');
+      let folGain = effect.folPlus || 0;
+      for (let i = 0; i < (effect.folDice || 0); i++) folGain += rollDie();
+      await applyStatChange('following', folGain);
+      await finishMusteringPending(`Gained ${name} as ${effect.kind === 'ally' ? 'an Ally' : 'a Contact'}, FOL +${folGain} (now ${draft.following})`);
     }
 
     function renderCareerMusteringDone() {
