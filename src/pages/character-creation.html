@@ -2263,7 +2263,7 @@
         musteringBenefits: ['Personal Vehicle or Ship Share', 'INT +1', 'EDU +1 or two Ship Shares', 'Weapon', 'TAS Membership', "Ship's Boat or two Ship Shares", 'SOC +2'],
         mishaps: [
           { roll: 1, text: 'Severely injured in action (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
-          { roll: 2, text: 'Placed in frozen watch and revived improperly. Reduce STR, DEX or END by 1 (muscle wastage). You are not ejected from this career.', noEject: true, tools: ['stat'] },
+          { roll: 2, text: 'Placed in frozen watch and revived improperly. Reduce STR, DEX or END by 1 (muscle wastage). You are not ejected from this career.', noEject: true, tools: ['stat'], statOptions: ['str', 'dex', 'end_stat'], statAmount: -1 },
           { roll: 3, text: "Battle's outcome depends on your actions — make an 8+ skill roll (Electronics/Gunner if Line, Mechanic/Vacc Suit if Engineer/Gunner, Pilot/Tactics if Flight). Fail: ship suffers severe damage, you're court-martialled and discharged. Succeed: honourably discharged, you may keep this term's Benefit roll.", tools: [] },
           { roll: 4, text: 'Blamed for an accident causing crew deaths. If responsible: gain one free Skills & Training roll before ejection. If not: gain the blaming officer as an Enemy but keep this term\'s Benefit roll.', tools: ['associate'], associateTypes: ['enemy'] },
           { roll: 5, text: 'Tormented by or quarrel with an officer or crewman — gain them as a Rival, forced out of the Navy.', tools: ['associate'], associateTypes: ['rival'] },
@@ -2795,7 +2795,7 @@
         musteringBenefits: ['Ship Share', 'INT +1', 'EDU +1', 'Weapon', 'Weapon', 'Scout Ship', 'Scout Ship'],
         mishaps: [
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
-          { roll: 2, text: 'Psychologically damaged by your time in the Scouts. Reduce your INT or SOC by 1.', tools: ['stat'] },
+          { roll: 2, text: 'Psychologically damaged by your time in the Scouts. Reduce your INT or SOC by 1.', tools: ['stat'], statOptions: ['int_stat', 'soc'], statAmount: -1 },
           { roll: 3, text: 'Your ship is damaged and you have to hitch-hike your way back across the stars to the nearest Scout base. Gain 1D Contacts and D3 Enemies.', tools: [] },
           { roll: 4, text: 'You inadvertently cause a conflict between the Imperium and a minor world or species. Gain a Rival and Diplomat 1.', tools: ['skill', 'associate'], skillOptions: [{ name: 'Diplomat', level: 1 }], associateTypes: ['rival'] },
           { roll: 5, text: 'You have no idea what happened to you — they found your ship drifting on the fringes of friendly space.', tools: [] },
@@ -3845,7 +3845,7 @@
       const genericBody = (bespoke !== null) ? bespoke
         : (s.mishapResolved
           ? `<div class="wizard-card-sub" style="color:#00ffaa;">${s.mishapResolvedText || 'Resolved.'}</div>`
-          : (s.mishapRoll === 1 ? renderMishapRoll1Choice('mishap') : renderGenericResolver('mishap', m.tools, false, { skillOptions: m.skillOptions, associateTypes: m.associateTypes })));
+          : (s.mishapRoll === 1 ? renderMishapRoll1Choice('mishap') : renderGenericResolver('mishap', m.tools, false, { skillOptions: m.skillOptions, associateTypes: m.associateTypes, statOptions: m.statOptions, statAmount: m.statAmount })));
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Mishap ${s.mishapRoll}</div>
@@ -3994,11 +3994,12 @@
           <button class="btn-outline" onclick="applyResolverSkill('${tag}')">Apply</button>
         `;
       } else if (kind === 'stat') {
+        const statChars = restrict.statOptions && restrict.statOptions.length ? CHARS.filter(c => restrict.statOptions.includes(c.key)) : CHARS;
         el.innerHTML = `
           <div class="wizard-field"><label>Characteristic</label>
-            <select id="resolver-${tag}-stat">${CHARS.map(c => `<option value="${c.key}">${c.label}</option>`).join('')}</select>
+            <select id="resolver-${tag}-stat">${statChars.map(c => `<option value="${c.key}">${c.label}</option>`).join('')}</select>
           </div>
-          <div class="wizard-field"><label>Amount (+/-)</label><input id="resolver-${tag}-amount" type="number" value="1" /></div>
+          <div class="wizard-field"><label>Amount (+/-)</label><input id="resolver-${tag}-amount" type="number" value="${restrict.statAmount || 1}" ${restrict.statAmount ? `readonly` : ''} /></div>
           <button class="btn-outline" onclick="applyResolverStat('${tag}')">Apply</button>
         `;
       } else {
@@ -4068,6 +4069,14 @@
       await applyStatChange(key, amount);
       const desc = `${key} ${amount > 0 ? '+' : ''}${amount}.`;
       await logCreation(`Resolved outcome — ${desc}`);
+      // A physical-characteristic reduction via this generic tool is the
+      // same kind of injury the Injury Table/autoStat path already offers
+      // Medical Care for — route it through the same offer instead of
+      // just marking it applied with no recourse.
+      if (AGEING_PHYS.includes(key) && amount < 0) {
+        offerMedicalCare(tag, [{ key, amount: -amount }]);
+        return;
+      }
       document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
       await persistResolverNote(tag, desc);
     }
@@ -4915,12 +4924,16 @@
     }
 
     // Navy mishap 3 — branch determines whether the Benefit roll is kept.
+    // The 8+ roll only ever uses the 2 skills matching the player's
+    // actual assignment, not a free pick across all 6.
+    const NAVY_MISHAP3_SKILLS = { line: ['Electronics', 'Gunner'], engineer: ['Mechanic', 'Vacc Suit'], flight: ['Pilot', 'Tactics'] };
     function renderNavyMishap3(tag, m) {
       if (!m.rolled) {
+        const s = step5State();
+        const options = NAVY_MISHAP3_SKILLS[s.assignmentKey] || ['Electronics', 'Gunner', 'Mechanic', 'Vacc Suit', 'Pilot', 'Tactics'];
         return resolverHeader('Make an 8+ skill roll matching your assignment (Electronics/Gunner if Line, Mechanic/Vacc Suit if Engineer/Gunner, Pilot/Tactics if Flight).') + `
           <select id="navy-m3-skill">
-            <option>Electronics</option><option>Gunner</option><option>Mechanic</option>
-            <option>Vacc Suit</option><option>Pilot</option><option>Tactics</option>
+            ${options.map(name => `<option>${name}</option>`).join('')}
           </select>
           <button class="btn-outline" onclick="rollNavyMishap3()">Roll 8+</button>
         `;
@@ -4949,6 +4962,7 @@
     function renderNavyMishap4(tag, m) {
       if (m.resolved) return resolverHeader(m.resultText);
       return resolverHeader('Were you responsible for the accident?') + `
+        <input id="m4-officer-name" type="text" placeholder="Officer's name (if not responsible)" style="margin-bottom:8px;" />
         <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
           <button class="btn-outline" onclick="navyMishap4Responsible()">Yes — Take a Free Skill Training Roll</button>
           <button class="btn-outline" onclick="navyMishap4NotResponsible()">No — Gain the Officer as an Enemy, Keep Benefit Roll</button>
@@ -4974,7 +4988,7 @@
     }
 
     async function navyMishap4NotResponsible() {
-      const name = (document.getElementById('m4-officer-name') || {}).value || 'A blaming officer';
+      const name = ((document.getElementById('m4-officer-name') || {}).value || '').trim() || 'A blaming officer';
       await addAssociate('enemy', name, 'Blamed you for an accident.');
       const s = step5State();
       await saveStep5State({ benefitRolls: (s.benefitRolls || 0) + 1 });
@@ -7589,7 +7603,7 @@
       const genericBody = (bespoke !== null) ? bespoke
         : (s.eventResolved
           ? `<div class="wizard-card-sub" style="color:#00ffaa;">${s.eventResolvedText || 'Resolved.'}</div>`
-          : renderGenericResolver('event', e.tools, false, { skillOptions: e.skillOptions, associateTypes: e.associateTypes }));
+          : renderGenericResolver('event', e.tools, false, { skillOptions: e.skillOptions, associateTypes: e.associateTypes, statOptions: e.statOptions, statAmount: e.statAmount }));
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Event ${s.eventRoll}</div>
