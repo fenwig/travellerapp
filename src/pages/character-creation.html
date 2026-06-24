@@ -2804,9 +2804,9 @@
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
           { roll: 3, text: 'Your ship is ambushed by enemy vessels. Run and roll Pilot 8+ to escape, or treat with them and roll Persuade 10+ to bargain. Failure destroys your ship and bars you from re-enlisting in the Scouts (not automated — note it yourself). Success means you survive and gain Electronics (sensors) 1. Either way, gain an Enemy.', tools: [] },
-          { roll: 4, text: 'You survey an alien world. Gain one of Animals 1, Survival 1, Recon 1, or Science 1.', tools: ['skill'] },
+          { roll: 4, text: 'You survey an alien world. Gain one of Animals 1, Survival 1, Recon 1, or Science 1.', tools: ['skill'], skillOptions: [{ name: 'Animals', level: 1 }, { name: 'Survival', level: 1 }, { name: 'Recon', level: 1 }, { name: 'Science', level: 1 }] },
           { roll: 5, text: 'You perform an exemplary service for the Scouts. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
-          { roll: 6, text: 'You spend several years jumping from world to world in your scout ship. Gain one of Astrogation 1, Electronics 1, Navigation 1, Pilot 1, or Mechanic 1.', tools: ['skill'] },
+          { roll: 6, text: 'You spend several years jumping from world to world in your scout ship. Gain one of Astrogation 1, Electronics 1, Navigation 1, Pilot 1, or Mechanic 1.', tools: ['skill'], skillOptions: [{ name: 'Astrogation', level: 1 }, { name: 'Electronics', level: 1 }, { name: 'Navigation', level: 1 }, { name: 'Pilot', level: 1 }, { name: 'Mechanic', level: 1 }] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
           { roll: 8, text: 'When dealing with an alien species, you have an opportunity to gather extra intelligence about them. Roll Electronics 8+ or Deception 8+: success gains an Ally in the Imperium and DM+2 to your next advancement roll, failure rolls on the Mishap table but you are not ejected from this career.', tools: [] },
           { roll: 9, text: 'Your scout ship is one of the first on the scene to rescue the survivors of a disaster. Roll Medic 8+ or Engineer 8+: success gains a Contact and DM+2 to your next advancement roll, failure gains an Enemy.', tools: [] },
