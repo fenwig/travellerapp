@@ -2847,7 +2847,7 @@
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
           { roll: 2, text: 'You are accused of assaulting a prison guard. Parole Threshold +2.', tools: [], autoParole: { amount: 2 } },
           { roll: 3, text: 'A prison gang persecutes you. Fight back if you wish, or lose all Benefit rolls from this career. If you fight: roll Melee (unarmed) 8+ — failure rolls on the Injury table twice (take the lower result), success gains an Enemy and raises your Parole Threshold by 1.', tools: [] },
-          { roll: 4, text: 'A guard takes a dislike to you. Gain an Enemy and raise your Parole Threshold by 1.', tools: ['associate'], autoParole: { amount: 1 } },
+          { roll: 4, text: 'A guard takes a dislike to you. Gain an Enemy and raise your Parole Threshold by 1.', tools: ['associate'], associateTypes: ['enemy'], autoParole: { amount: 1 } },
           { roll: 5, text: 'Disgraced. Word of your criminal past reaches your homeworld. Lose 1 SOC.', tools: [], autoStat: { key: 'soc', amount: -1 } },
           { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
         ],
