@@ -695,10 +695,15 @@
       await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
     }
 
+    // Per explicit user direction, chargen narrative no longer writes to
+    // background_notes (the Notes tab's free-text box) — it all belongs
+    // in the Creation Log only. Kept as a thin wrapper (strips the
+    // [TAG]/[/TAG] markup that made sense for a scannable notes block,
+    // not a timestamped log line) so every existing call site needed no
+    // changes.
     async function appendNote(text) {
-      const notes = draft.background_notes ? draft.background_notes + '\n\n' + text : text;
-      await supabaseClient.from('characters').update({ background_notes: notes }).eq('id', draft.id);
-      draft.background_notes = notes;
+      const cleaned = text.replace(/^\[[^\]]+\]\n/, '').replace(/\n\[\/[^\]]+\]$/, '');
+      await logCreation(cleaned);
     }
 
     // ── Creation Log — running record of decisions/rolls, shown on the
@@ -1212,7 +1217,7 @@
         await appendNote(`[PRE-CAREER EDUCATION]\n${opt.name}: ${grant.note}\n[/PRE-CAREER EDUCATION]`);
       }
 
-      await logCreation(`${opt.name} — entry skills: ${gainedNames.join(', ') || (grant.deferred ? 'deferred (see Background Notes)' : 'none')}.`);
+      await logCreation(`${opt.name} — entry skills: ${gainedNames.join(', ') || (grant.deferred ? 'deferred (see entry above)' : 'none')}.`);
 
       await saveStep4State({ phase: 'events' });
       renderStep();
@@ -1763,11 +1768,20 @@
       draft.creation_data = data;
       await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
 
-      await appendNote(`[CONNECTION]\nFormed a connection with ${targetName} — gained one free skill choice (max 2 from connections, can't exceed level 3, no Jack-of-all-Trades).\n[/CONNECTION]`);
-      await logCreation(`Formed a connection with ${targetName} — gained one free skill choice.`);
+      // A real Player Connections entry (Character Record's Career &
+      // Associates tab), editable there so the player can flesh out what
+      // the connection actually means. The free skill choice this grants
+      // is deferred to Finalize (renderConnectionSkillPick), not applied
+      // here — same Connections Rule, just resolved at the end instead of
+      // mid-creation.
+      await supabaseClient.from('character_connections').insert({
+        character_id: draft.id, other_character_id: targetId, other_name: targetName,
+        description: 'Connection formed during character creation.'
+      });
+      await logCreation(`Formed a connection with ${targetName} — gained one free skill choice (resolved at Finalize).`);
 
       document.getElementById('connection-picker-' + tag).innerHTML =
-        `<p style="color:#00ffaa; font-size:0.85rem;">Connection recorded with ${targetName}. Add the skill bump on ${targetName}'s sheet directly, and remember to add one on yours too.</p>`;
+        `<p style="color:#00ffaa; font-size:0.85rem;">Connection recorded with ${targetName}. You'll choose the free skill it grants at Finalize, and the connection itself is editable on your Character Record's Career &amp; Associates tab once activated.</p>`;
       renderStep();
     }
 
@@ -9232,10 +9246,110 @@
       renderStep();
     }
 
+    // Connections Rule (Core p.19) free skill choice is resolved here, as
+    // the final step, instead of the moment the connection is formed.
+    // connectionsUsed (set in confirmConnection) is the count owed;
+    // connectionsSkillsGranted tracks how many have actually been
+    // resolved. Gates the rest of Finalize until caught up.
+    function pendingConnectionSkillCount() {
+      const data = draft.creation_data || {};
+      return Math.max(0, (data.connectionsUsed || 0) - (data.connectionsSkillsGranted || 0));
+    }
+
+    function renderConnectionSkillPick() {
+      const remaining = pendingConnectionSkillCount();
+      const data = draft.creation_data || {};
+      const showSkills = !!data.viewSkillsOpen;
+      const skills = Object.values(draft.skills || {}).sort((a, b) => a.name.localeCompare(b.name));
+      const skillsText = skills.length
+        ? skills.map(sk => `${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''} ${sk.level}`).join(', ')
+        : 'None';
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">Connection Skill — Pick ${(data.connectionsSkillsGranted || 0) + 1} of ${data.connectionsUsed}</div>
+          <div class="wizard-card-sub">Choose a skill known by one of your connections: increase it by one level if you already have it (to a maximum of level 3), or gain it at level 1 if you don't. Jack-of-all-Trades can't be chosen this way.</div>
+          <button class="btn-outline" style="margin-bottom:12px;" onclick="toggleViewSkills()">${showSkills ? 'Hide' : 'View'} My Skills</button>
+          ${showSkills ? `<div class="wizard-card-sub" style="margin-bottom:12px;">${skillsText}</div>` : ''}
+          <select id="connection-skill-pick">${SKILLS.filter(sk => sk.name !== 'Jack-of-all-Trades').map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
+          <button class="btn-outline" onclick="chooseConnectionSkill()">Choose</button>
+          ${connectionSkillSpecialtyGateHtml()}
+        </div>
+      `;
+    }
+
+    function connectionSkillSpecialtyGateHtml() {
+      const data = draft.creation_data || {};
+      if (!data.connectionSkillGateFor) return '';
+      const specs = skillSpecialtiesFor(data.connectionSkillGateFor);
+      return `
+        <div style="margin-top:12px;">
+          <div class="wizard-card-sub">Choose a specialty for ${data.connectionSkillGateFor}:</div>
+          <select id="connection-skill-specialty">
+            <option value="">— specialty —</option>
+            ${specs.map(sp => `<option value="${sp.name}">${sp.name}</option>`).join('')}
+          </select>
+          <button class="btn-outline" onclick="confirmConnectionSkill()">Confirm</button>
+        </div>
+      `;
+    }
+
+    async function toggleViewSkills() {
+      const data = draft.creation_data || {};
+      data.viewSkillsOpen = !data.viewSkillsOpen;
+      draft.creation_data = data;
+      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+      renderStep();
+    }
+
+    async function chooseConnectionSkill() {
+      const skillName = document.getElementById('connection-skill-pick').value;
+      if (skillSpecialtiesFor(skillName).length) {
+        const data = draft.creation_data || {};
+        data.connectionSkillGateFor = skillName;
+        draft.creation_data = data;
+        await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+        renderStep();
+        return;
+      }
+      await finishConnectionSkill(skillName, null);
+    }
+
+    async function confirmConnectionSkill() {
+      const data = draft.creation_data || {};
+      const skillName = data.connectionSkillGateFor;
+      const specialty = document.getElementById('connection-skill-specialty').value;
+      if (!specialty) return;
+      await finishConnectionSkill(skillName, specialty);
+    }
+
+    async function finishConnectionSkill(skillName, specialty) {
+      const skills = Object.assign({}, draft.skills || {});
+      const key = skillKey(skillName, specialty);
+      const existing = skills[key];
+      const newLevel = Math.min(3, (existing ? existing.level : 0) + 1);
+      skills[key] = { name: skillName, specialty: specialty || null, level: newLevel };
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+
+      const data = draft.creation_data || {};
+      data.connectionsSkillsGranted = (data.connectionsSkillsGranted || 0) + 1;
+      data.connectionSkillGateFor = null;
+      data.viewSkillsOpen = false;
+      draft.creation_data = data;
+      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
+
+      const label = specialty ? `${skillName} (${specialty})` : skillName;
+      await logCreation(`Connection skill chosen: ${label} ${newLevel}.`);
+      renderStep();
+    }
+
     function renderStepFinalize() {
       if (finalizeCareerHistory === null) {
         loadFinalizeCareerHistory();
         return `<div class="rule-card wizard-card"><p class="placeholder-msg">Loading summary…</p></div>`;
+      }
+      if (pendingConnectionSkillCount() > 0) {
+        return renderConnectionSkillPick();
       }
 
       const skills = Object.values(draft.skills || {}).sort((a, b) => a.name.localeCompare(b.name));

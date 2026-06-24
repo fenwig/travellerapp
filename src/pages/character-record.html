@@ -467,6 +467,20 @@
             </div>
           </div>
 
+          <div class="cr-section">
+            <div class="cr-section-title">Player Connections</div>
+            <div id="connections-list"></div>
+            <div class="edit-only">
+              <button class="add-row-btn" onclick="toggleConnectionForm()">+ Add Connection</button>
+              <div id="connection-form" class="inline-form">
+                <input type="text" id="new-connection-name" placeholder="Other player's character" style="max-width:180px" />
+                <input type="text" id="new-connection-desc" placeholder="What the connection means" />
+                <button class="btn btn-primary btn-sm" onclick="addConnection()">Add</button>
+                <button class="btn btn-ghost btn-sm" onclick="toggleConnectionForm()">Cancel</button>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         <!-- ══════════════════════════════════════
@@ -526,14 +540,17 @@ let currentUser = null;
 let character   = null;
 let isOwner     = false;
 
-let pendingArmour     = [];
-let pendingWeapons    = [];
-let pendingAugments   = [];
-let pendingEquipment  = [];
-let pendingComputers  = [];
-let pendingCareers    = [];
-let pendingWounds     = [];
-let pendingAssociates = [];
+// var, not let — queueDelete() resolves these by name via window[pendingArr],
+// which only works for var/function-declared globals, not let/const.
+var pendingArmour     = [];
+var pendingWeapons    = [];
+var pendingAugments   = [];
+var pendingEquipment  = [];
+var pendingComputers  = [];
+var pendingCareers    = [];
+var pendingWounds     = [];
+var pendingAssociates = [];
+var pendingConnections = [];
 
 const CHARS = [
   { key: 'str',      label: 'STR', injuryLabel: 'Injury' },
@@ -596,6 +613,7 @@ async function loadCharacter() {
   await renderComputers();
   await renderCareers();
   await renderAssociates();
+  await renderConnections();
   await renderWounds();
 }
 
@@ -1366,6 +1384,63 @@ function addAssociate() {
   toggleAssocForm();
 }
 
+// ── Player Connections ───────────────────────────────────────
+// Connections Rule (Core p.19) — formed during character creation
+// (character-creation.html's confirmConnection inserts the initial
+// row); editable here so the player can flesh out what it means.
+async function renderConnections() {
+  const { data } = await supabaseClient
+    .from('character_connections').select('*').eq('character_id', character.id);
+
+  const list = document.getElementById('connections-list');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div style="color:#4a9ab8;font-size:0.85rem;padding:4px 0">None recorded.</div>';
+    return;
+  }
+  list.innerHTML = data.map(r => `
+    <div class="associate-row" data-id="${r.id}">
+      <div class="assoc-row-top">
+        <span class="assoc-name view-only">${escapeHtml(r.other_name)}</span>
+        <input class="assoc-name-input edit-only" type="text" value="${escapeAttr(r.other_name)}" onchange="queueConnectionUpdate('${r.id}','other_name',this.value)" />
+        <span class="assoc-desc view-only">${escapeHtml(r.description) || '<span style="color:#4a9ab8">—</span>'}</span>
+        <button class="skill-remove edit-only" onclick="queueDelete('pendingConnections','${r.id}',this)">✕</button>
+      </div>
+      <input class="assoc-desc-input edit-only" type="text" placeholder="What the connection means" value="${escapeAttr(r.description || '')}" onchange="queueConnectionUpdate('${r.id}','description',this.value)" />
+    </div>`).join('');
+}
+
+function queueConnectionUpdate(id, column, value) {
+  let entry = pendingConnections.find(p => p.action === 'update' && p.id === id);
+  if (!entry) { entry = { action: 'update', id, data: {} }; pendingConnections.push(entry); }
+  entry.data[column] = value;
+}
+
+function toggleConnectionForm() {
+  document.getElementById('connection-form').classList.toggle('open');
+}
+
+function addConnection() {
+  const name = document.getElementById('new-connection-name').value.trim();
+  const desc = document.getElementById('new-connection-desc').value.trim();
+  if (!name) return;
+  pendingConnections.push({ action: 'add', data: { other_name: name, description: desc || null } });
+
+  const list = document.getElementById('connections-list');
+  const empty = list.querySelector('div[style]');
+  if (empty) empty.remove();
+  list.innerHTML += `
+    <div class="associate-row">
+      <div class="assoc-row-top">
+        <span class="assoc-name view-only">${escapeHtml(name)}</span>
+        <span class="assoc-desc view-only">${escapeHtml(desc) || '<span style="color:#4a9ab8">—</span>'}</span>
+        <button class="skill-remove edit-only" onclick="this.closest('.associate-row').remove()">✕</button>
+      </div>
+    </div>`;
+  document.getElementById('new-connection-name').value = '';
+  document.getElementById('new-connection-desc').value = '';
+  toggleConnectionForm();
+}
+
 // ── Wounds ─────────────────────────────────────────────────
 async function renderWounds() {
   const { data } = await supabaseClient
@@ -1433,7 +1508,7 @@ function cancelEdit() {
 
 function clearPending() {
   pendingArmour=[]; pendingWeapons=[]; pendingAugments=[]; pendingComputers=[];
-  pendingEquipment=[]; pendingCareers=[]; pendingWounds=[]; pendingAssociates=[];
+  pendingEquipment=[]; pendingCareers=[]; pendingWounds=[]; pendingAssociates=[]; pendingConnections=[];
 }
 
 // ── Save ───────────────────────────────────────────────────
@@ -1563,6 +1638,13 @@ async function saveAll() {
       if (p.action === 'delete') { await supabaseClient.from('character_associates').delete().eq('id', p.id); }
       else if (p.action === 'update') { await supabaseClient.from('character_associates').update(p.data).eq('id', p.id); }
       else await supabaseClient.from('character_associates').insert({ character_id: character.id, ...p.data });
+    }
+
+    // Player Connections
+    for (const p of pendingConnections) {
+      if (p.action === 'delete') { await supabaseClient.from('character_connections').delete().eq('id', p.id); }
+      else if (p.action === 'update') { await supabaseClient.from('character_connections').update(p.data).eq('id', p.id); }
+      else await supabaseClient.from('character_connections').insert({ character_id: character.id, ...p.data });
     }
 
     msg.textContent = 'Saved!'; msg.className = 'save-msg ok';
