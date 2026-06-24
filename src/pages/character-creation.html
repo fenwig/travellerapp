@@ -2624,13 +2624,13 @@
         events: [
           { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
           { roll: 3, text: 'You are challenged to a duel for your honour and standing. Refuse and lose one SOC. Accept and roll Melee (blade) 8+: success gains one SOC, failure rolls on the Injury table and loses one SOC. Either way, gain one level in Melee (blade), Leadership, Tactics, or Deception.', tools: [] },
-          { roll: 4, text: 'Your time as a ruler or playboy gives you a wide range of experiences. Gain one of Animals (Handling) 1, Art 1, Carouse 1, or Streetwise 1.', tools: ['skill'] },
+          { roll: 4, text: 'Your time as a ruler or playboy gives you a wide range of experiences. Gain one of Animals (Handling) 1, Art 1, Carouse 1, or Streetwise 1.', tools: ['skill'], skillOptions: [{ name: 'Animals', specialty: 'Handling', level: 1 }, { name: 'Art', level: 1 }, { name: 'Carouse', level: 1 }, { name: 'Streetwise', level: 1 }] },
           { roll: 5, text: 'You inherit a gift from a rich relative. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
-          { roll: 6, text: 'You become deeply involved in the political intrigues of your world of residence. Gain one level in Advocate, Admin, Diplomat, or Persuade, but also gain a Rival.', tools: ['skill', 'associate'] },
+          { roll: 6, text: 'You become deeply involved in the political intrigues of your world of residence. Gain one level in Advocate, Admin, Diplomat, or Persuade, but also gain a Rival.', tools: ['skill', 'associate'], skillOptions: [{ name: 'Advocate', level: 1 }, { name: 'Admin', level: 1 }, { name: 'Diplomat', level: 1 }, { name: 'Persuade', level: 1 }], associateTypes: ['rival'] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
           { roll: 8, text: 'A conspiracy of nobles attempts to recruit you. Refuse and gain the conspiracy as an Enemy. Accept and roll Deception 8+ or Persuade 8+: failure rolls on the Mishap table as the conspiracy collapses, success gains one level of Deception, Persuade, Tactics, or Carouse.', tools: [] },
-          { roll: 9, text: 'Your reign is acclaimed as fair and wise — or, as a dilettante, you sponge off your family a while longer. Gain a jealous relative or unhappy subject as an Enemy. Gain DM+2 to your next advancement roll.', tools: ['associate'], autoDM: { key: 'advancementDM', amount: 2 } },
-          { roll: 10, text: 'You manipulate and charm your way through high society. Gain one level of Carouse, Diplomat, Persuade, or Steward, as well as a Rival and an Ally.', tools: ['skill', 'associate'] },
+          { roll: 9, text: 'Your reign is acclaimed as fair and wise — or, as a dilettante, you sponge off your family a while longer. Gain a jealous relative or unhappy subject as an Enemy. Gain DM+2 to your next advancement roll.', tools: ['associate'], associateTypes: ['enemy'], autoDM: { key: 'advancementDM', amount: 2 } },
+          { roll: 10, text: 'You manipulate and charm your way through high society. Gain one level of Carouse, Diplomat, Persuade, or Steward, as well as a Rival and an Ally.', tools: [] },
           { roll: 11, text: 'You make an alliance with a powerful and charismatic noble, who becomes an Ally. Either gain a level of Leadership or DM+4 to your next advancement roll thanks to their aid.', tools: [] },
           { roll: 12, text: 'Your efforts do not go unnoticed by the Imperium. You are automatically promoted.', tools: [] }
         ]
@@ -4515,6 +4515,7 @@
         case 'noble:2':       return renderInlineMishapNotEjected(tag, careerId, m);
         case 'noble:3':       return renderNobleEvent3(tag, m);
         case 'noble:8':       return renderNobleEvent8(tag, m);
+        case 'noble:10':      return renderNobleEvent10(tag, m);
         case 'noble:11':      return renderGainAllyThenChooseSkillOrDM(tag, m, 'Leadership', 4, 'A powerful and charismatic noble who became your ally.', 'Noble Event 11');
         case 'noble:12':      return renderBankAutoPromote(tag, m);
         case 'noble:mishap3': return renderNobleMishap3(tag, m);
@@ -6128,6 +6129,7 @@
     // way, choose a skill to gain a level in.
     function renderNobleEvent3(tag, m) {
       if (m.resolved) return resolverHeader(m.resultText);
+      if (m.specialtyGateFor) return renderSpecialtyGate(tag, m.specialtyGateFor);
       if (!m.choice) {
         return resolverHeader('Accept the duel, or refuse?') + `
           <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
@@ -6191,16 +6193,25 @@
     }
 
     async function confirmNobleEvent3Skill(skillName) {
+      if (skillName === 'Tactics') {
+        await gateSpecialty('event', 'Tactics', (specialty) => finishNobleEvent3Skill('Tactics', specialty));
+        return;
+      }
+      await finishNobleEvent3Skill(skillName, skillName === 'Melee' ? 'Blade' : null);
+    }
+
+    async function finishNobleEvent3Skill(skillName, specialty) {
       const skills = Object.assign({}, draft.skills || {});
-      bumpSkill(skills, skillName, skillName === 'Melee' ? 'Blade' : null, 1);
+      bumpSkill(skills, skillName, specialty, 1);
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
       draft.skills = skills;
       const m = mechanicState('event');
       const needsInjuryRoll = m.choice === 'accept' && !m.success;
-      const resultText = `${m.resultText} Gained ${skillName}${skillName === 'Melee' ? ' (Blade)' : ''} 1.`;
+      const label = specialty ? `${skillName} (${specialty})` : skillName;
+      const resultText = `${m.resultText} Gained ${label} 1.`;
       await saveMechanic('event', { skillChosen: skillName, resolved: !needsInjuryRoll, resultText });
       if (!needsInjuryRoll) await resolveMechanic('event');
-      await logCreation(`Noble Event 3: gained ${skillName} 1.`);
+      await logCreation(`Noble Event 3: gained ${label} 1.`);
       renderStep();
     }
 
@@ -6293,6 +6304,62 @@
       await saveMechanic('event', { skillChosen: skillName, resolved: true, resultText });
       await resolveMechanic('event');
       await logCreation(`Noble Event 8: ${resultText}`);
+      renderStep();
+    }
+
+    // Noble event 10 — skill choice (none of the 4 options have
+    // specialties) plus BOTH a Rival and an Ally, which the generic
+    // single-pick Associate tool can't grant in one go.
+    function renderNobleEvent10(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.skillChosen) {
+        return resolverHeader('Choose a skill to gain:') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="nobleEvent10ChooseSkill('Carouse')">Carouse</button>
+            <button class="btn-outline" onclick="nobleEvent10ChooseSkill('Diplomat')">Diplomat</button>
+            <button class="btn-outline" onclick="nobleEvent10ChooseSkill('Persuade')">Persuade</button>
+            <button class="btn-outline" onclick="nobleEvent10ChooseSkill('Steward')">Steward</button>
+          </div>
+        `;
+      }
+      if (!m.rivalNamed) {
+        return resolverHeader(`Gained ${m.skillChosen} 1. Name the Rival you gained:`) + `
+          <input id="noble-e10-rival" type="text" placeholder="Rival's name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="confirmNobleEvent10Rival()">Confirm</button>
+        `;
+      }
+      return resolverHeader(`${m.resultText} Name the Ally you gained:`) + `
+        <input id="noble-e10-ally" type="text" placeholder="Ally's name" style="margin-bottom:8px;" />
+        <button class="btn-outline" onclick="confirmNobleEvent10Ally()">Confirm</button>
+      `;
+    }
+
+    async function nobleEvent10ChooseSkill(skillName) {
+      const skills = Object.assign({}, draft.skills || {});
+      grantSkillMin(skills, skillName, null, 1);
+      await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      draft.skills = skills;
+      await saveMechanic('event', { skillChosen: skillName, resultText: `Gained ${skillName} 1.` });
+      await logCreation(`Noble Event 10: gained ${skillName} 1.`);
+      renderStep();
+    }
+
+    async function confirmNobleEvent10Rival() {
+      const name = (document.getElementById('noble-e10-rival') || {}).value.trim() || 'Unnamed Rival';
+      await addAssociate('rival', name, 'Gained while charming your way through high society.');
+      const resultText = `${mechanicState('event').resultText} Gained ${name} as a Rival.`;
+      await saveMechanic('event', { rivalNamed: true, resultText });
+      await logCreation(`Noble Event 10: gained ${name} as a Rival.`);
+      renderStep();
+    }
+
+    async function confirmNobleEvent10Ally() {
+      const name = (document.getElementById('noble-e10-ally') || {}).value.trim() || 'Unnamed Ally';
+      await addAssociate('ally', name, 'Gained while charming your way through high society.');
+      const resultText = `${mechanicState('event').resultText} Gained ${name} as an Ally.`;
+      await saveMechanic('event', { resolved: true, resultText });
+      await resolveMechanic('event');
+      await logCreation(`Noble Event 10: gained ${name} as an Ally.`);
       renderStep();
     }
 
