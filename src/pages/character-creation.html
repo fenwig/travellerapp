@@ -1358,6 +1358,15 @@
       await supabaseClient.from('character_associates').insert({ character_id: draft.id, type, name, description: description || null });
     }
 
+    async function listAssociatesOfTypes(types) {
+      const { data } = await supabaseClient.from('character_associates').select('id,name,type').eq('character_id', draft.id).in('type', types);
+      return data || [];
+    }
+
+    async function convertAssociateType(id, type) {
+      await supabaseClient.from('character_associates').update({ type }).eq('id', id);
+    }
+
     async function hasAssociateOfType(type) {
       const { data } = await supabaseClient.from('character_associates').select('id').eq('character_id', draft.id).eq('type', type).limit(1);
       return !!(data && data.length);
@@ -2013,6 +2022,7 @@
             <div style="display:flex; gap:10px;">
               <button class="btn-outline" onclick="chooseCommissionPrerollBranch('navy')">Navy</button>
               <button class="btn-outline" onclick="chooseCommissionPrerollBranch('army')">Army</button>
+              <button class="btn-outline" onclick="chooseCommissionPrerollBranch('marine')">Marine</button>
               <button class="btn-outline" onclick="skipCommissionPreroll('${b.id}')">Skip</button>
             </div>
           </div>
@@ -2234,7 +2244,7 @@
           { roll: 2, text: 'A target of your investigation offers you a deal. Accept and leave the career cleanly (losing this term\'s Benefit roll as normal). Refuse and suffer a worse injury, but gain an Enemy and a level in a skill of your choice.', tools: [] },
           { roll: 3, text: 'An investigation goes critically wrong. Roll Advocate 8+ to keep this term\'s Benefit roll; a natural 2 also forces the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry if this applies — not automated here).', tools: [] },
           { roll: 4, text: 'You learn something dangerous. Gain an Enemy and Deception 1.', tools: ['associate'], associateTypes: ['enemy'], autoSkill: { name: 'Deception', level: 1 } },
-          { roll: 5, text: 'Your work follows you home and a Contact, Ally, or family member is hurt — roll on the Injury table for them (effects applied to your own characteristics as a stand-in, since associates aren\'t tracked separately).', tools: ['injury'] },
+          { roll: 5, text: 'Your work follows you home and a Contact, Ally, or family member is hurt — roll on the Injury table for them. This is flavor for your record only; it has no mechanical effect on your own characteristics.', tools: [] },
           { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
         ],
         events: [
@@ -3433,7 +3443,7 @@
       { roll: 5, text: 'Improved Relationship — a relationship deepens. Gain an Ally.', tools: ['associate'], associateTypes: ['ally'] },
       { roll: 6, text: 'New Relationship — you become romantically involved with someone. Gain an Ally.', tools: ['associate'], associateTypes: ['ally'] },
       { roll: 7, text: 'New Contact — you gain a new Contact.', tools: ['associate'], associateTypes: ['contact'] },
-      { roll: 8, text: 'Betrayal — a friend betrays you. Convert an existing Contact or Ally into a Rival or Enemy, or gain a fresh Rival/Enemy if you have neither.', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
+      { roll: 8, text: 'Betrayal — a friend betrays you. Convert an existing Contact or Ally into a Rival or Enemy, or gain a fresh Rival/Enemy if you have neither.', tools: [], convertOrGain: true, convertFrom: ['contact', 'ally'], convertTo: ['rival', 'enemy'] },
       { roll: 9, text: 'Travel — you move to another world. Gain DM+2 to your next qualification roll.', tools: [], autoDM: { key: 'qualificationDM', amount: 2 } },
       { roll: 10, text: 'Good Fortune — something good happens to you. Gain DM+2 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 2 } },
       { roll: 11, text: "Crime — you commit, suffer, or are accused of a crime. Lose one Benefit roll, or take the Prisoner career next term instead.", tools: [], crimeChoice: true },
@@ -4662,15 +4672,65 @@
             <button class="btn-outline" onclick="lifeEventCrimeChoice('${tag}','prisoner')">Take Prisoner Career Next Term</button>
           </div>
         `;
+      } else if (entry.convertOrGain) {
+        body += `<div id="resolver-${tag}Life">Loading your Contacts and Allies…</div>`;
       } else {
         body += renderGenericResolver(tag + 'Life', entry.tools, true, { skillOptions: entry.skillOptions, associateTypes: entry.associateTypes, statOptions: entry.statOptions, statAmount: entry.statAmount }) +
           `<button class="btn-outline" onclick="finishLifeEvent('${tag}')">Mark Resolved</button>`;
       }
       el.innerHTML = body;
+      if (entry.convertOrGain) loadLifeEventConvert(tag, entry);
       if (entry.autoDM) {
         addPendingMod(entry.autoDM.key, entry.autoDM.amount);
         logCreation(`Life Event — banked DM${entry.autoDM.amount > 0 ? '+' : ''}${entry.autoDM.amount} (${entry.autoDM.key}).`);
       }
+    }
+
+    // Life Event roll 8 (Betrayal) — convert an existing Contact/Ally into
+    // a Rival/Enemy, or gain a fresh Rival/Enemy if there's nothing to
+    // convert. The generic resolver's "Add Associate" tool only ever adds,
+    // so this needs its own list-and-convert UI backed by
+    // listAssociatesOfTypes/convertAssociateType.
+    async function loadLifeEventConvert(tag, entry) {
+      const candidates = await listAssociatesOfTypes(entry.convertFrom);
+      const el = document.getElementById(`resolver-${tag}Life`);
+      if (!el) return;
+      const typeLabels = { ally: 'Ally', contact: 'Contact', rival: 'Rival', enemy: 'Enemy' };
+      el.innerHTML = `
+        ${candidates.length ? `
+          <div style="margin-bottom:8px; font-size:0.82rem; color:#4a9ab8;">Convert an existing associate:</div>
+          ${candidates.map(c => `
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="font-size:0.85rem;">${escapeHtml(c.name)} (${typeLabels[c.type]})</span>
+              ${entry.convertTo.map(t => `<button class="btn-outline" onclick="convertLifeEventAssociate('${tag}','${c.id}','${t}','${escapeAttrJs(c.name)}')">→ ${typeLabels[t]}</button>`).join('')}
+            </div>
+          `).join('')}
+          <div style="margin:10px 0; font-size:0.8rem; color:#4a9ab8;">— or gain a fresh one instead —</div>
+        ` : ''}
+        <input id="resolver-${tag}Life-name" type="text" placeholder="Name" style="margin-bottom:8px;" />
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          ${entry.convertTo.map(t => `<button class="btn-outline" onclick="gainLifeEventAssociate('${tag}','${t}')">Gain as ${typeLabels[t]}</button>`).join('')}
+        </div>
+      `;
+    }
+
+    function escapeAttrJs(s) { return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
+    async function convertLifeEventAssociate(tag, id, type, name) {
+      await convertAssociateType(id, type);
+      const resultText = `Betrayal — converted ${name} into a ${type === 'rival' ? 'Rival' : 'Enemy'}.`;
+      await logCreation(`Life Event — ${resultText}`);
+      await finishLifeEvent(tag, resultText);
+    }
+
+    async function gainLifeEventAssociate(tag, type) {
+      const nameEl = document.getElementById(`resolver-${tag}Life-name`);
+      const name = nameEl ? nameEl.value.trim() : '';
+      if (!name) return;
+      await addAssociate(type, name, 'Gained from a betrayal (Life Event roll 8).');
+      const resultText = `Betrayal — gained ${name} as a ${type === 'rival' ? 'Rival' : 'Enemy'}.`;
+      await logCreation(`Life Event — ${resultText}`);
+      await finishLifeEvent(tag, resultText);
     }
 
     async function lifeEventCrimeChoice(tag, choice) {
@@ -4723,8 +4783,8 @@
       markResolverDone(tag, resultText);
     }
 
-    function finishLifeEvent(tag) {
-      markResolverDone(tag, 'Life Event resolved.');
+    function finishLifeEvent(tag, resultText) {
+      markResolverDone(tag, resultText || 'Life Event resolved.');
     }
 
     // ── Bespoke event/mishap mechanics ────────────────────────
@@ -4792,6 +4852,7 @@
         case 'agent:mishap1': return renderInjuryGuaranteed2OrLower(tag, m);
         case 'agent:mishap2': return renderAgentMishap2(tag, m);
         case 'agent:mishap3': return renderAgentMishap3(tag, m);
+        case 'agent:mishap5': return renderAgentMishap5(tag, m);
         case 'army:2':       return renderInlineMishapNotEjected(tag, careerId, m);
         case 'army:6':       return renderArmyEvent6(tag, m);
         case 'army:8':       return renderRollSkillToGainLevel(tag, m, 'edu', 8);
@@ -5436,6 +5497,30 @@
       await saveMechanic('mishap', { rolled: true, resultText });
       await resolveMechanic('mishap');
       await logCreation(`Agent Mishap 3: ${resultText}`);
+      renderStep();
+    }
+
+    // Agent mishap 5 — a Contact, Ally, or family member is hurt instead of
+    // the player. This is pure flavor for the record: roll the Injury
+    // table for them, but never apply the result to the player's own
+    // characteristics (associates aren't tracked separately, but that's no
+    // reason to injure the player for someone else's bad luck).
+    function renderAgentMishap5(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.rolled) {
+        return resolverHeader('Roll 1D on the Injury table for the affected Contact/Ally/family member — for your record only, no effect on your own characteristics.') +
+          `<button class="btn-outline" onclick="rollAgentMishap5()">Roll 1D</button>`;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollAgentMishap5() {
+      const roll = rollDie();
+      const entry = INJURY_TABLE.find(x => x.roll === roll);
+      const resultText = `Rolled ${roll} on the Injury table for them — ${entry.text} (recorded only; no effect on your own characteristics).`;
+      await saveMechanic('mishap', { rolled: true, resolved: true, resultText });
+      await resolveMechanic('mishap');
+      await logCreation(`Agent Mishap 5: ${resultText}`);
       renderStep();
     }
 
@@ -9379,15 +9464,6 @@
 
     function renderConnectionSkillPick() {
       const data = draft.creation_data || {};
-      const showSkills = !!data.viewSkillsOpen;
-      const skills = Object.values(draft.skills || {}).sort((a, b) => a.name.localeCompare(b.name));
-      const skillsText = skills.length
-        ? skills.map(sk => `${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''} ${sk.level}`).join(', ')
-        : 'None';
-      const viewSkillsBlock = `
-        <button class="btn-outline" style="margin-bottom:12px;" onclick="toggleViewSkills()">${showSkills ? 'Hide' : 'View'} My Skills</button>
-        ${showSkills ? `<div class="wizard-card-sub" style="margin-bottom:12px;">${skillsText}</div>` : ''}
-      `;
       // While a specialty gate is pending, replace the skill picker
       // entirely (rather than appending the gate below it) so there's
       // no stray "Choose" button left active for a different skill.
@@ -9401,7 +9477,6 @@
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">Connection Skill — Pick ${(data.connectionsSkillsGranted || 0) + 1} of ${data.connectionsUsed}</div>
           <div class="wizard-card-sub">Choose a skill known by one of your connections: increase it by one level if you already have it (to a maximum of level 3), or gain it at level 1 if you don't. Jack-of-all-Trades can't be chosen this way.</div>
-          ${viewSkillsBlock}
           ${body}
         </div>
       `;
@@ -9421,14 +9496,6 @@
           <button class="btn-outline" onclick="confirmConnectionSkill()">Confirm</button>
         </div>
       `;
-    }
-
-    async function toggleViewSkills() {
-      const data = draft.creation_data || {};
-      data.viewSkillsOpen = !data.viewSkillsOpen;
-      draft.creation_data = data;
-      await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
-      renderStep();
     }
 
     async function chooseConnectionSkill() {
@@ -9464,7 +9531,6 @@
       const data = draft.creation_data || {};
       data.connectionsSkillsGranted = (data.connectionsSkillsGranted || 0) + 1;
       data.connectionSkillGateFor = null;
-      data.viewSkillsOpen = false;
       draft.creation_data = data;
       await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
 
