@@ -4414,7 +4414,16 @@
     // resolver so it survives the full-card re-render that happens when
     // the player later clicks "Mark Resolved" — without this, the status
     // is wiped and the tool buttons reappear looking unused.
+    // Life Events nest the generic resolver under a compound tag
+    // ('eventLife'/'mishapLife') so its own state doesn't collide with the
+    // parent event/mishap's — but completing that inner resolver should
+    // still close out the OUTER event/mishap, so strip the suffix here.
+    function baseResolverTag(tag) {
+      return tag.endsWith('Life') ? tag.slice(0, -4) : tag;
+    }
+
     async function persistResolverNote(tag, text) {
+      tag = baseResolverTag(tag);
       if (tag === 'mishap') {
         const prev = step5State().mishapResolvedText;
         await saveStep5State({ mishapResolvedText: prev ? `${prev} ${text}` : text });
@@ -4425,6 +4434,7 @@
     }
 
     function markResolverDone(tag, resultText) {
+      tag = baseResolverTag(tag);
       if (tag === 'mishap') {
         const prev = step5State().mishapResolvedText;
         saveStep5State({ mishapResolved: true, mishapResolvedText: resultText || prev || 'Resolved.' }).then(renderStep);
@@ -4715,8 +4725,17 @@
       } else if (entry.convertOrGain) {
         body += `<div id="resolver-${tag}Life">Loading your Contacts and Allies…</div>`;
       } else {
-        body += renderGenericResolver(tag + 'Life', entry.tools, true, { skillOptions: entry.skillOptions, associateTypes: entry.associateTypes, statOptions: entry.statOptions, statAmount: entry.statAmount }) +
-          `<button class="btn-outline" onclick="finishLifeEvent('${tag}')">Mark Resolved</button>`;
+        // A single tool now auto-resolves the parent event/mishap the
+        // moment it's applied (via baseResolverTag), so the explicit Mark
+        // Resolved button below is only needed when there's nothing to
+        // apply (no tools) or multiple tools need manual coordination —
+        // otherwise it lets the player skip past without actually using
+        // the tool (e.g. "Gain an Ally" resolving with no Ally added).
+        const tools = entry.tools || [];
+        body += renderGenericResolver(tag + 'Life', tools, true, { skillOptions: entry.skillOptions, associateTypes: entry.associateTypes, statOptions: entry.statOptions, statAmount: entry.statAmount });
+        if (tools.length !== 1) {
+          body += `<button class="btn-outline" onclick="finishLifeEvent('${tag}')">Mark Resolved</button>`;
+        }
       }
       el.innerHTML = body;
       if (entry.convertOrGain) loadLifeEventConvert(tag, entry);
