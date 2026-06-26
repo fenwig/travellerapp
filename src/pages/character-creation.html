@@ -1418,9 +1418,22 @@
           </div>
         `;
       }
+      if (entry.convertOrGain) {
+        // Populated once by rollEvent7() right after this card first
+        // renders — not fetched here, since this render function re-runs
+        // on every step re-render and would otherwise wipe the in-progress
+        // picker (and refetch needlessly) on unrelated state changes.
+        return header + `<div id="resolver-preed7Life">Loading your Contacts and Allies…</div>`;
+      }
       const tools = entry.injury ? ['injury'] : (entry.tools || []);
-      return header + renderGenericResolver('preed7', tools, true, { skillOptions: entry.skillOptions, associateTypes: entry.associateTypes, statOptions: entry.statOptions, statAmount: entry.statAmount }) +
+      // A single tool now auto-resolves via markResolverDone('preed7', ...)
+      // the moment it's applied — showing Mark Resolved alongside it would
+      // let the player skip past without actually using the tool (e.g.
+      // "Gain an Ally" resolving with no Ally added). Only needed when
+      // there's nothing to apply, or multiple tools need coordinating.
+      const markButton = tools.length === 1 ? '' :
         `<div class="wizard-actions" style="justify-content:flex-start; margin-top:10px;"><button class="btn-outline" onclick="finishEvent7()">Mark Resolved</button></div>`;
+      return header + renderGenericResolver('preed7', tools, true, { skillOptions: entry.skillOptions, associateTypes: entry.associateTypes, statOptions: entry.statOptions, statAmount: entry.statAmount }) + markButton;
     }
 
     async function rollEvent7() {
@@ -1430,6 +1443,7 @@
       await saveEventMechanic({ rolled: total, autoGranted: granted || null });
       await logCreation(`Pre-Career Life Event roll: ${total} — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''}`);
       renderStep();
+      if (entry.convertOrGain) loadLifeEventConvert('preed7', entry);
     }
 
     async function rollEvent7Unusual() {
@@ -4441,6 +4455,11 @@
       } else if (tag === 'event') {
         const prev = step5State().eventResolvedText;
         saveStep5State({ eventResolved: true, eventResolvedText: resultText || prev || 'Resolved.' }).then(renderStep);
+      } else if (tag === 'preed7') {
+        // Pre-career Event 7 ("Life Event") is a separate parallel
+        // implementation keyed off step4's eventMechanic, not step5 —
+        // same single-tool auto-resolve needs its own completion path.
+        saveEventMechanic({ resolved: true }).then(renderStep);
       }
     }
 
