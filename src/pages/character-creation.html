@@ -1908,6 +1908,10 @@
         const done = applied[b.id];
         if (b.type === 'chooseN') return renderChooseNBenefit(b, s, done);
         if (b.type === 'commissionPreroll') return renderCommissionPrerollBenefit(b, s, done);
+        if (b.type === 'bumpEntrySkills' && !done) {
+          const bumpGate = renderBumpEntrySkillsGate(b, s);
+          if (bumpGate) return bumpGate;
+        }
         const isAuto = actionableTypes.includes(b.type);
         const detailText = done && appliedDetails[b.id] ? appliedDetails[b.id] : b.text;
         return `
@@ -1937,6 +1941,38 @@
 
     function benefitPool(b, s) {
       return typeof b.pool === 'function' ? b.pool(s) : b.pool;
+    }
+
+    // bumpEntrySkills bumps the level-0 skill chosen at entry up to level 1
+    // (University's "increase both skills chosen at entry by one level").
+    // A level-0 skill is generic (no specialty needed), but the moment it
+    // reaches level 1 a specialty skill MUST have one — so gate on that
+    // before the Apply button is reachable. Returns null (no gate needed)
+    // if the level-0 skill has no specialties.
+    function renderBumpEntrySkillsGate(b, s) {
+      const ch = s.entrySkillChooser || {};
+      if (!ch.level0Skill || s.bumpChosenSpecialty) return null;
+      const specs = skillSpecialtiesFor(ch.level0Skill);
+      if (!specs.length) return null;
+      return `
+        <div style="margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
+          <div style="font-size:0.85rem; margin-bottom:8px;">${b.text}</div>
+          <div class="wizard-card-sub" style="margin-bottom:8px;">${ch.level0Skill} is reaching level 1 — choose a specialty:</div>
+          <select id="bump-chosen-specialty">
+            <option value="">— specialty —</option>
+            ${specs.map(sp => `<option value="${sp.name}">${sp.name}</option>`).join('')}
+          </select>
+          <button class="btn-outline" onclick="chooseBumpChosenSpecialty()">Confirm</button>
+        </div>
+      `;
+    }
+
+    async function chooseBumpChosenSpecialty() {
+      const sel = document.getElementById('bump-chosen-specialty');
+      const specialty = sel ? sel.value : '';
+      if (!specialty) return;
+      await saveStep4State({ bumpChosenSpecialty: specialty });
+      renderStep();
     }
 
     function renderChooseNBenefit(b, s, done) {
@@ -2094,7 +2130,11 @@
         const ch = s.entrySkillChooser || {};
         const skills = Object.assign({}, draft.skills || {});
         if (ch.level0Skill) {
-          bumpSkill(skills, ch.level0Skill, null, b.amount);
+          if (skillSpecialtiesFor(ch.level0Skill).length && s.bumpChosenSpecialty) {
+            bumpSpecialtySkill(skills, ch.level0Skill, s.bumpChosenSpecialty, b.amount);
+          } else {
+            bumpSkill(skills, ch.level0Skill, null, b.amount);
+          }
           bumpSkill(skills, ch.level1Skill, ch.level1Specialty || null, b.amount);
         } else if (ch.chosen) {
           Object.values(ch.chosen).forEach(c => bumpSkill(skills, c.name, c.specialty, b.amount));
@@ -8919,6 +8959,9 @@
       const newRank = s.rank + 1;
       const table = rankTableFor(s, c, a);
       const entry = table.find(x => x.rank === newRank);
+      // finishAdvancementRank always reads this back from state — must be
+      // set before EITHER branch below calls it, not just the gated one.
+      await saveStep5State({ advancementPending: { newRank, entry, base } });
 
       // Rank-table skill grants can name a specialty-bearing skill with no
       // specialty pinned (e.g. Agent's "Special Agent" rank grants Gun
@@ -8926,7 +8969,6 @@
       // skill grant in the wizard does, instead of silently creating an
       // untyped entry.
       if (entry && entry.skill && !entry.skill.specialty && skillSpecialtiesFor(entry.skill.name).length) {
-        await saveStep5State({ advancementPending: { newRank, entry, base } });
         await gateSpecialty('advancement', entry.skill.name, (specialty) => finishAdvancementRank(specialty));
         return;
       }
