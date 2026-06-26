@@ -496,5 +496,55 @@ const SKILLS = [
       { text: "Performing an EVA (extravehicular activity)", difficulty: "Average (8+)", time: "1D x 10 minutes", char: "DEX" },
       { text: "Repairing a hull breach in a vacc suit", difficulty: "Difficult (10+)", time: "1D x 10 minutes", char: "DEX or INT" }
     ]
+  },
+  {
+    name: "Telepathy",
+    category: "psionic",
+    desc: "Telepathy is the psionic talent of mind-to-mind contact — reading thoughts, sending them, linking minds together or, at its most aggressive, overwhelming another mind's will outright. Every check costs PSI points and uses the Traveller's current PSI as the characteristic DM, so the talent gets harder to use the more it's relied on. All telepaths gain a passive mental shield against unwanted intrusion at no PSI cost.",
+    specialties: [],
+    examples: [
+      { text: "Sensing the presence and rough number of nearby minds", difficulty: "Easy (4+)", time: "1D x 10 seconds", char: "PSI" },
+      { text: "Reading a target's active surface thoughts", difficulty: "Average (8+)", time: "1D x 10 seconds", char: "PSI" }
+    ]
+  },
+  {
+    name: "Clairvoyance",
+    category: "psionic",
+    desc: "Clairvoyance allows a Traveller to perceive a location displaced from their own — seeing, hearing or sensing events at a distance without being physically present, and without the activity being detectable by anyone, even other psions. Higher levels of the talent allow finer detail and awareness of danger that would otherwise need normal senses.",
+    specialties: [],
+    examples: [
+      { text: "Sensing whether a distant room is occupied", difficulty: "Routine (6+)", time: "1D x 10 seconds", char: "PSI" },
+      { text: "Viewing a displaced location in detail", difficulty: "Average (8+)", time: "1D x 10 seconds", char: "PSI" }
+    ]
+  },
+  {
+    name: "Telekinesis",
+    category: "psionic",
+    desc: "Telekinesis is the talent of manipulating objects without touching them — anything from fine manipulation of small mechanisms to hurling a foe across a room. The Traveller can also turn the talent on their own body to fly short distances or strike with telekinetic force, and the more PSI committed to a check, the greater the mass or force involved.",
+    specialties: [],
+    examples: [
+      { text: "Moving a small object at range", difficulty: "Average (8+)", time: "1D seconds", char: "PSI" },
+      { text: "Striking a target with a blast of telekinetic force", difficulty: "Average (8+)", time: "1D seconds", char: "PSI" }
+    ]
+  },
+  {
+    name: "Awareness",
+    category: "psionic",
+    desc: "Awareness is the psionic talent of fine control over one's own body and mind — it has no Reach and can never affect anyone but the Traveller themselves. It covers everything from suspending the body's needs for days at a time to temporarily boosting physical characteristics, hastening healing, or sharpening focus for a single decisive task.",
+    specialties: [],
+    examples: [
+      { text: "Entering a week-long suspended animation state", difficulty: "Average (8+)", time: "1D minutes", char: "PSI" },
+      { text: "Temporarily boosting a physical characteristic", difficulty: "Average (8+)", time: "1D seconds", char: "PSI" }
+    ]
+  },
+  {
+    name: "Teleportation",
+    category: "psionic",
+    desc: "Teleportation allows effectively instantaneous movement from one point to another without crossing the intervening distance, limited to the Traveller's own body and (for the more skilled) whatever they're wearing or carrying. The destination must already be known to the Traveller — by having visited it, by having the image planted telepathically, or by viewing it through clairvoyance — and physics still has a say: large jumps in elevation or across a rotating planet's surface carry real risk of disorientation or injury.",
+    specialties: [],
+    examples: [
+      { text: "Teleporting one's own body to a known location", difficulty: "Average (8+)", time: "1D seconds", char: "PSI" },
+      { text: "Teleporting with worn clothing and a modest load", difficulty: "Difficult (10+)", time: "1D seconds", char: "PSI" }
+    ]
   }
 ];

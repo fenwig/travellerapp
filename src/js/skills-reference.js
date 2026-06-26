@@ -7,7 +7,8 @@ const DOT_CLASS = {
   technical: 'dot-technical',
   spacecraft: 'dot-spacecraft',
   physical: 'dot-physical',
-  knowledge: 'dot-knowledge'
+  knowledge: 'dot-knowledge',
+  psionic: 'dot-psionic'
 };
 
 function buildSkillCard(skill) {

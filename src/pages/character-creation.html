@@ -184,11 +184,36 @@
       await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
     }
 
+    // Optional gate shown on Characteristics, before stats are rolled —
+    // house rule: PSI is only ever tested at initial creation (not
+    // mid-career or later), so this is the deliberate, proactive place to
+    // do it for groups that want psionics from the start. Narrative
+    // discovery moments (Pre-Career Events roll 2, the Psionics Life
+    // Event) still exist separately and use the same approval gate.
+    function renderPsiGateStep2() {
+      if (draft.psi !== null && draft.psi !== undefined) {
+        return `<div class="wizard-card-sub" style="margin-bottom:14px; color:#00ffaa;">Psionic Strength tested: PSI ${draft.psi}.</div>`;
+      }
+      return `
+        <div class="rule-card wizard-card">
+          <div class="wizard-card-title">Roll for Psionics <span style="color:#ff5a4a; font-size:0.75rem;">(Requires GM Approval)</span></div>
+          <div class="wizard-card-sub">Optional, one-time only. House rule: Psionic Strength (PSI) may only be tested during initial character creation, never mid-career or later. Skip this and continue if you don't want to test now — it'll still be available later via a Pre-Career Event or Life Event, also requiring GM approval.</div>
+          ${renderPsiApprovalGate('step2', 'rollPsiStep2')}
+        </div>
+      `;
+    }
+
+    async function rollPsiStep2() {
+      await rollPSI(0);
+      renderStep();
+    }
+
     function renderStepCharacteristics() {
       const s = step2State();
 
       if (!s.method) {
         return `
+          ${renderPsiGateStep2()}
           <div class="rule-card wizard-card">
             <div class="wizard-card-title">Characteristics</div>
             <div class="wizard-card-sub">Roll 2D for each of STR / DEX / END / INT / EDU / SOC, then assign the six results as you wish. (Core Rulebook p.9)</div>
@@ -418,6 +443,7 @@
     BACKGROUND_SKILLS.forEach(s => { BG_BY_NAME[s.name] = s; });
 
     function dmNum(v) {
+      v = v || 0;
       if (v <= 0)   return -3;
       if (v <= 2)   return -2;
       if (v <= 5)   return -1;
@@ -429,6 +455,71 @@
 
     function bgAllowance() {
       return Math.max(0, Math.min(6, dmNum(draft.edu) + 3));
+    }
+
+    // ── Psionics (Core Rulebook p.227-229) ────────────────────
+    // PSI isn't rolled in normal creation — it's tested via a
+    // specific Life Event, the Psionic Community pre-career option,
+    // or referee permission. Learning DMs below are reconstructed
+    // from the book's worked example (the printed table's DM column
+    // is shifted relative to its labels — confirmed against the
+    // example: Telepathy +4, Telekinesis +2). The universal DM-1
+    // per previous attempt is a separate, cumulative penalty.
+    const PSI_TALENTS = [
+      { name: 'Telepathy', dm: 4 },
+      { name: 'Clairvoyance', dm: 3 },
+      { name: 'Telekinesis', dm: 2 },
+      { name: 'Awareness', dm: 1 },
+      { name: 'Teleportation', dm: 0 }
+    ];
+
+    async function rollPSI(termsServed) {
+      const d1 = rollDie(), d2 = rollDie();
+      const total = Math.max(0, d1 + d2 - termsServed);
+      draft.psi = total;
+      await supabaseClient.from('characters').update({ psi: total }).eq('id', draft.id);
+      await logCreation(`Tested Psionic Strength: rolled ${d1}+${d2}−${termsServed} = ${total} (floored at 0).`);
+      return { dice: [d1, d2], termsServed, total };
+    }
+
+    // House rule: testing PSI always requires explicit GM sign-off,
+    // regardless of where the offer comes from (the Characteristics-step
+    // gate, or a narrative discovery moment like Pre-Career Events roll 2
+    // or a Psionics Life Event). This is the shared "tick the box, then
+    // roll" UI for all of them — the GM decides per-instance whether it's
+    // appropriate (e.g. declining a mid/late-career awakening if that's
+    // not how their campaign handles psionics), the app doesn't hardcode
+    // a stage restriction itself. `onRollFnName` must be a zero-arg global
+    // async function (the caller closes over whatever tag/context it needs).
+    function renderPsiApprovalGate(idSuffix, onRollFnName, tag) {
+      return `
+        <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; margin-bottom:8px;">
+          <input type="checkbox" id="psi-approve-${idSuffix}" style="width:18px; height:18px; accent-color:#00e5ff;" />
+          GM has approved testing Psionic Strength (PSI) for this character.
+        </label>
+        <button class="btn-outline" onclick="confirmPsiApprovalGate('${idSuffix}', '${onRollFnName}', '${tag || ''}')">Roll for Psionics</button>
+      `;
+    }
+
+    // `tag` is only used by call sites that need it threaded through to
+    // their roll handler (e.g. the career-level Life Events table, which
+    // is keyed per mishap/event instance); zero-arg handlers just ignore it.
+    async function confirmPsiApprovalGate(idSuffix, onRollFnName, tag) {
+      const cb = document.getElementById(`psi-approve-${idSuffix}`);
+      if (!cb || !cb.checked) { alert('GM approval is required before rolling for Psionics.'); return; }
+      await window[onRollFnName](tag);
+    }
+
+    // One attempt per talent, in any order. Telepathy as the very
+    // first attempt overall is automatic (no roll, per Core p.228).
+    function attemptPsiTalent(name, attemptsSoFar) {
+      const t = PSI_TALENTS.find(x => x.name === name);
+      if (name === 'Telepathy' && attemptsSoFar === 0) {
+        return { auto: true, success: true };
+      }
+      const d1 = rollDie(), d2 = rollDie();
+      const total = d1 + d2 + dmNum(draft.psi) + t.dm - attemptsSoFar;
+      return { dice: [d1, d2], psiDM: dmNum(draft.psi), talentDM: t.dm, penalty: attemptsSoFar, total, target: 8, success: total >= 8 };
     }
 
     function bgState() {
@@ -625,16 +716,16 @@
         ]
       },
       {
-        id: 'psionic', name: 'Psionic Community', source: 'Traveller Companion p.32', unavailable: true,
-        summary: 'Grown up among psions, tested for potential and given training. Requires Psionic Strength (PSI), which this app does not track yet — unavailable until that exists.',
+        id: 'psionic', name: 'Psionic Community', source: 'Traveller Companion p.32',
+        summary: 'Grown up among psions — automatically tested for potential and talents as a child, given at least some training. Requires testing your Psionic Strength (PSI) on entry, then attempting to learn talents (Core p.227-229).',
         entry: (d) => ({ stat: 'psi', target: 8, extraDM: d.int_stat >= 8 ? 1 : 0, dmLabel: 'DM+1 if INT 8+' }),
-        entryGrant: { auto: [{ name: 'Profession' }, { name: 'Science' }, { name: 'Streetwise' }], note: 'Plus level 0 in each psionic talent gained (talents aren\'t tracked).' },
+        entryGrant: { auto: [{ name: 'Profession' }, { name: 'Science' }, { name: 'Streetwise' }], note: 'Plus level 0 in each psionic talent gained during testing.' },
         graduation: (d) => ({ stat: 'psi', target: 6, honours: 12, extraDM: d.int_stat >= 8 ? 1 : 0, dmLabel: 'DM+1 if INT 8+' }),
         benefits: [
-          { id: 'psi1', text: 'Increase PSI by +1 (not tracked).', type: 'flag' },
-          { id: 'talent1', text: 'Skill level 1 in any one talent possessed (not tracked).', type: 'flag' },
+          { id: 'psi1', text: 'Increase PSI by +1.', type: 'stat', key: 'psi', amount: 1 },
+          { id: 'talent1', text: 'Skill level 1 in any one talent possessed.', type: 'chooseN', n: 1, level: 1, pool: () => Object.keys(draft.skills || {}).filter(k => PSI_TALENTS.some(t => t.name === k)).map(k => ({ name: k })) },
           { id: 'sci_psi', text: 'Science (Psionicology) 1.', type: 'fixedSkill', name: 'Science', specialty: 'Psionicology', level: 1 },
-          { id: 'rival', text: 'Gain a Rival (Enemy if honours) unhappy you left the community.', type: 'flag' }
+          { id: 'rival', text: 'Gain a Rival (Enemy if honours) unhappy you left the community.', type: 'associate', associateType: 'rival', honoursType: 'enemy', associateDesc: 'Unhappy you left the psionic community.' }
         ]
       },
       {
@@ -672,7 +763,7 @@
     // Pre-Career Events — Core Rulebook p.17. Rolled once for any term
     // spent in pre-career education, regardless of which option chosen.
     const PRE_ED_EVENTS = {
-      2: 'You are approached by an underground (and highly illegal) psionic group who sense potential in you. You may test your PSI and attempt to enter the Psion career in any subsequent term.',
+      2: 'You are approached by an underground (and highly illegal) psionic group who sense potential in you. Your Psionic Strength (PSI) is tested automatically — you may attempt to enter the Psion career in any subsequent term if it qualifies.',
       3: 'Your time in education is not a happy one and you suffer a deep tragedy. You crash and fail to graduate.',
       4: 'A supposedly harmless prank goes wrong and someone gets hurt. Roll SOC 8+: success gains a Rival, failure gains an Enemy. A roll of 2 means you fail to graduate and must take the Prisoner career next term.',
       5: 'Taking advantage of youth, you party as much as you study. Gain Carouse 1.',
@@ -839,6 +930,7 @@
       const s = step4State();
       switch (s.phase) {
         case 'branch':       return renderPreEdBranch();
+        case 'psiTraining':  return renderPreEdPsiTraining();
         case 'entry':        return renderPreEdEntry();
         case 'entryResult':  return renderPreEdEntryResult();
         case 'entrySkills':  return renderPreEdEntrySkills();
@@ -892,10 +984,74 @@
         await saveStep4State({ phase: 'branch', optionId: id });
       } else if (opt.curriculumChoice) {
         await saveStep4State({ phase: 'branch', optionId: id, isCurriculum: true });
+      } else if (id === 'psionic') {
+        await saveStep4State({ phase: 'psiTraining', optionId: id, psiTrainingState: { attempted: [] } });
       } else {
         await saveStep4State({ phase: 'entry', optionId: id });
       }
       await logCreation(`Selected pre-career education option: ${opt.name}.`);
+      if (id === 'psionic' && (draft.psi === null || draft.psi === undefined)) {
+        await rollPSI(0);
+      }
+      renderStep();
+    }
+
+    // Psionic Community automatically tests a child for potential and
+    // talents (Companion p.32) — runs the standard Core p.228 talent
+    // training procedure before the option's own PSI 8+ entry roll,
+    // since that roll needs draft.psi to already be known.
+    function renderPreEdPsiTraining() {
+      const s = step4State();
+      const ts = s.psiTrainingState || { attempted: [] };
+      const attempted = ts.attempted || [];
+      const rows = PSI_TALENTS.map(t => {
+        const result = ts.results && ts.results[t.name];
+        const done = attempted.includes(t.name);
+        return `
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:8px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
+            <div style="font-size:0.85rem;">
+              ${t.name}
+              ${result ? `<div style="color:${result.success ? '#00ffaa' : '#ff5a4a'}; font-size:0.8rem;">${result.auto ? 'Gained automatically (first attempt).' : `Rolled ${result.total} (${result.dice.join('+')} + PSI ${result.psiDM} + talent DM ${result.talentDM}${result.penalty ? ' − ' + result.penalty : ''}), needed 8+ — ${result.success ? 'gained' : 'failed'}.`}</div>` : ''}
+            </div>
+            <button class="btn-outline" onclick="attemptPsiTalentUI('${t.name}')" ${done ? 'disabled' : ''}>${done ? 'Attempted' : 'Attempt'}</button>
+          </div>
+        `;
+      }).join('');
+      return `
+        <div class="rule-card wizard-card" style="max-width:none;">
+          <div class="wizard-card-title">Psionic Community — Testing</div>
+          <div class="wizard-card-sub">
+            Tested Psionic Strength: PSI ${draft.psi}. Attempt talents in any order — each attempt (after the first) suffers a cumulative DM−1.
+            Choosing Telepathy first gains it automatically with no roll. (Core Rulebook p.227-229)
+          </div>
+          ${rows}
+          <div class="wizard-actions">
+            <button class="btn-outline" onclick="finishPsiTraining()">Continue${attempted.length ? '' : ' (skip remaining)'}</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function attemptPsiTalentUI(name) {
+      const s = step4State();
+      const ts = s.psiTrainingState || { attempted: [] };
+      const attempted = (ts.attempted || []).slice();
+      const result = attemptPsiTalent(name, attempted.length);
+      attempted.push(name);
+      const results = Object.assign({}, ts.results, { [name]: result });
+      await saveStep4State({ psiTrainingState: { attempted, results } });
+      if (result.success) {
+        const skills = Object.assign({}, draft.skills);
+        grantSkillMin(skills, name, null, 0);
+        draft.skills = skills;
+        await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+      }
+      await logCreation(`Psionic talent training — ${name}: ${result.auto ? 'gained automatically.' : `rolled ${result.total} (need 8+) — ${result.success ? 'gained' : 'failed'}.`}`);
+      renderStep();
+    }
+
+    async function finishPsiTraining() {
+      await saveStep4State({ phase: 'entry' });
       renderStep();
     }
 
@@ -1329,7 +1485,13 @@
         mechanic.resolved = true;
       } else if (total === 3) {
         mechanic = { resolved: true, gradForcedFail: true };
-      } else if (total === 2 || total === 7) {
+      } else if (total === 2) {
+        // A random psionic discovery — tests PSI automatically, no GM
+        // approval gate (that's only required at the proactive Step 2
+        // gate, not for a random event the table itself produced).
+        if (draft.psi === null || draft.psi === undefined) await rollPSI(0);
+        mechanic.resolved = true;
+      } else if (total === 7) {
         mechanic.resolved = true;
       }
 
@@ -1376,6 +1538,7 @@
       const s = step4State();
       const m = s.eventMechanic || {};
 
+      if (total === 2) return `<div class="wizard-card-sub" style="color:#00ffaa;">Tested Psionic Strength: PSI ${draft.psi}.</div>`;
       if (total === 4) return renderEvent4(m);
       if (total === 6) return renderEvent6(m);
       if (total === 7) return renderEvent7(m);
@@ -1408,7 +1571,7 @@
             <button class="btn-outline" onclick="confirmEvent7UnusualAliens()">Confirm</button>
           `;
         }
-        return header + `<div class="wizard-card-sub" style="color:#00ffaa;">${LIFE_EVENTS_UNUSUAL[m.unusualRoll]}</div>`;
+        return header + `<div class="wizard-card-sub" style="color:#00ffaa;">${LIFE_EVENTS_UNUSUAL[m.unusualRoll]}${m.unusualRoll === 1 ? ` (PSI ${draft.psi}.)` : ''}</div>`;
       }
       if (entry.crimeChoice && !m.resolved) {
         return header + `
@@ -1448,8 +1611,12 @@
 
     async function rollEvent7Unusual() {
       const roll = rollDie();
+      // Roll 1 (Psionics) genuinely tests PSI now, not just flavor text —
+      // a random discovery, so no GM approval gate (that's only required
+      // at the proactive Step 2 gate). Skip the test if already tested.
+      if (roll === 1 && (draft.psi === null || draft.psi === undefined)) await rollPSI(0);
       await saveEventMechanic({ unusualRoll: roll, resolved: roll !== 2 });
-      await logCreation(`Pre-Career Life Event — Unusual Event roll ${roll}: ${LIFE_EVENTS_UNUSUAL[roll]}`);
+      await logCreation(`Pre-Career Life Event — Unusual Event roll ${roll}: ${LIFE_EVENTS_UNUSUAL[roll]}${roll === 1 ? ` (PSI ${draft.psi}.)` : ''}`);
       renderStep();
     }
 
@@ -1915,13 +2082,14 @@
 
       const applicable = opt.benefits.filter(b => !b.honoursOnly || s.gradRoll.honours);
       const applied = s.benefitsApplied || {};
-      const actionableTypes = ['stat', 'multiStat', 'fixedSkill', 'bumpEntrySkills', 'pendingMod', 'rollMultiStat', 'academyBonus'];
+      const actionableTypes = ['stat', 'multiStat', 'fixedSkill', 'bumpEntrySkills', 'pendingMod', 'rollMultiStat', 'academyBonus', 'associate'];
 
       const appliedDetails = s.benefitsAppliedDetails || {};
       const rows = applicable.map(b => {
         const done = applied[b.id];
         if (b.type === 'chooseN') return renderChooseNBenefit(b, s, done);
         if (b.type === 'commissionPreroll') return renderCommissionPrerollBenefit(b, s, done);
+        if (b.type === 'associate') return renderAssociateBenefit(b, s, done);
         if (b.type === 'bumpEntrySkills' && !done) {
           const bumpGate = renderBumpEntrySkillsGate(b, s);
           if (bumpGate) return bumpGate;
@@ -1939,7 +2107,10 @@
         `;
       }).join('');
 
-      const allDone = applicable.every(b => (actionableTypes.includes(b.type) || b.type === 'chooseN' || b.type === 'commissionPreroll') ? applied[b.id] : true);
+      const allDone = applicable.every(b => {
+        if (b.type === 'chooseN') return applied[b.id] || !(benefitPool(b, s) || []).length;
+        return (actionableTypes.includes(b.type) || b.type === 'commissionPreroll') ? applied[b.id] : true;
+      });
 
       return `
         <div class="rule-card wizard-card">
@@ -1986,6 +2157,49 @@
       const specialty = sel ? sel.value : '';
       if (!specialty) return;
       await saveStep4State({ bumpChosenSpecialty: specialty });
+      renderStep();
+    }
+
+    // A graduation benefit that grants a real associate (e.g. Psionic
+    // Community's "Gain a Rival unhappy you left" — Enemy instead with
+    // honours, via b.honoursType). Needs a name, so it can't use the
+    // generic stat/skill Apply button — same shape as renderBumpEntrySkillsGate's
+    // input gate, but its own apply function instead.
+    function renderAssociateBenefit(b, s, done) {
+      const appliedDetails = s.benefitsAppliedDetails || {};
+      if (done) {
+        return `
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
+            <div style="font-size:0.85rem;">${appliedDetails[b.id] || b.text}</div>
+            <span style="font-size:0.75rem; color:#4a9ab8; flex-shrink:0;">Applied</span>
+          </div>
+        `;
+      }
+      return `
+        <div style="margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
+          <div style="font-size:0.85rem; margin-bottom:8px;">${b.text}</div>
+          <input id="preed-assoc-name-${b.id}" type="text" placeholder="Name" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="applyPreEdAssociateBenefit('${b.id}')">Apply</button>
+        </div>
+      `;
+    }
+
+    async function applyPreEdAssociateBenefit(benefitId) {
+      const s = step4State();
+      const opt = findOption(s.optionId);
+      const b = opt.benefits.find(x => x.id === benefitId);
+      const nameEl = document.getElementById(`preed-assoc-name-${benefitId}`);
+      const name = nameEl ? nameEl.value.trim() : '';
+      if (!name) return;
+      const honours = s.gradRoll && s.gradRoll.honours;
+      const type = (honours && b.honoursType) ? b.honoursType : b.associateType;
+      await addAssociate(type, name, b.associateDesc || 'Gained from pre-career education.');
+      const typeLabel = { ally: 'Ally', contact: 'Contact', rival: 'Rival', enemy: 'Enemy' }[type];
+      const appliedText = `${b.text} — gained ${name} as ${typeLabel}.`;
+      const applied = Object.assign({}, s.benefitsApplied, { [benefitId]: true });
+      const appliedDetails = Object.assign({}, s.benefitsAppliedDetails, { [benefitId]: appliedText });
+      await saveStep4State({ benefitsApplied: applied, benefitsAppliedDetails: appliedDetails });
+      await logCreation(`Applied Graduation Benefit: ${appliedText}`);
       renderStep();
     }
 
@@ -3134,6 +3348,91 @@
           { roll: 11, text: 'Someone more charismatic but less devout than you becomes your superior. All future advancement rolls are subject to DM-2.', tools: [] },
           { roll: 12, text: 'Your faith enjoys an explosion of popularity, largely thanks to your efforts. You are immediately promoted one grade and gain DM+1 on all future advancement checks.', tools: [] }
         ]
+      },
+      psion: {
+        id: 'psion', name: 'Psion', source: 'Core Rulebook pp.234-237', military: false,
+        // Qualification needs PSI already tested (Psionic Community, or a
+        // future Life Event) — the Career-choose screen gates this career
+        // until draft.psi is a real number (see renderCareerChoose).
+        qualification: { stat: 'psi', target: 6 },
+        // Unlike other careers, a Psion takes skills from its assignment's
+        // own Specialist table instead of a shared Service Skills table
+        // during basic training — but the per-term Skill Training roll
+        // still offers a shared "Service Skills" table (the 5 talents plus
+        // any talent), so it's kept at career level like Agent's shape.
+        // The book's "Any Talent" roll-6 entry is simplified to a fixed
+        // Telepathy pick — same established convention as collapsing an
+        // "A or B" skill choice elsewhere in this app (e.g. rank grants).
+        serviceSkills: [{ name: 'Telepathy' }, { name: 'Clairvoyance' }, { name: 'Telekinesis' }, { name: 'Awareness' }, { name: 'Teleportation' }, { name: 'Telepathy' }],
+        // Survival/advancement targets below are reconstructed from the
+        // book's own page-shift artifact (see [[character-creation-wizard]]
+        // memory / sourcebooks note) — the printed value for each
+        // assignment row prints one line above that assignment's own
+        // label. Re-paired accordingly: Wild Talent SOC/INT, Adept EDU/EDU,
+        // Psi-Warrior END/END — each thematically consistent with the
+        // assignment's own flavour text.
+        assignments: [
+          { key: 'wildTalent', label: 'Wild Talent', survival: { stat: 'soc', target: 6 }, advancement: { stat: 'int_stat', target: 8 },
+            specialistSkills: [{ name: 'Telepathy' }, { name: 'Telekinesis' }, { name: 'Deception' }, { name: 'Stealth' }, { name: 'Streetwise' }, { name: 'Melee' }],
+            ranks: [
+              { rank: 0, title: '—' },
+              { rank: 1, title: 'Survivor', skill: { name: 'Survival', level: 1 } },
+              { rank: 2, title: '—' },
+              { rank: 3, title: 'Witch', skill: { name: 'Deception', level: 1 } },
+              { rank: 4, title: '—' }, { rank: 5, title: '—' }, { rank: 6, title: '—' }
+            ] },
+          { key: 'adept', label: 'Adept', survival: { stat: 'edu', target: 4 }, advancement: { stat: 'edu', target: 8 },
+            specialistSkills: [{ name: 'Telepathy' }, { name: 'Clairvoyance' }, { name: 'Awareness' }, { name: 'Medic' }, { name: 'Persuade' }, { name: 'Science' }],
+            advancedEducation: [{ name: 'Language' }, { name: 'Art' }, { name: 'Electronics' }, { name: 'Medic' }, { name: 'Science' }, { name: 'Mechanic' }],
+            ranks: [
+              { rank: 0, title: '—' },
+              { rank: 1, title: 'Initiate', skill: { name: 'Science', specialty: 'Psionicology', level: 1 } },
+              { rank: 2, title: '—', skill: { name: 'Telepathy', level: 1 } },
+              { rank: 3, title: 'Acolyte' },
+              { rank: 4, title: '—', skill: { name: 'Telepathy', level: 1 } },
+              { rank: 5, title: '—' }, { rank: 6, title: 'Master' }
+            ] },
+          { key: 'psiWarrior', label: 'Psi-Warrior', survival: { stat: 'end_stat', target: 6 }, advancement: { stat: 'end_stat', target: 6 },
+            specialistSkills: [{ name: 'Telepathy' }, { name: 'Awareness' }, { name: 'Teleportation' }, { name: 'Gun Combat' }, { name: 'Vacc Suit' }, { name: 'Recon' }],
+            // Per the book's "PSI-WARRIOR — ADVANCED EDUCATION (MIN. EDU 8)"
+            // label, this assignment gets its own combat-flavoured Advanced
+            // Education table instead of the default one above.
+            advancedEducation: [{ name: 'Telepathy' }, { name: 'Awareness' }, { name: 'Teleportation' }, { name: 'Gun Combat' }, { name: 'Vacc Suit' }, { name: 'Recon' }],
+            ranks: [
+              { rank: 0, title: 'Psi-Soldier' },
+              { rank: 1, title: '—', skill: { name: 'Gun Combat', level: 1 } },
+              { rank: 2, title: 'Knight', skill: { name: 'Leadership', level: 1 } },
+              { rank: 3, title: '—' }, { rank: 4, title: '—' },
+              { rank: 5, title: 'Master of Wills', skill: { name: 'Tactics', level: 1 } },
+              { rank: 6, title: '—' }
+            ] }
+        ],
+        personalDevelopment: [{ stat: 'edu' }, { stat: 'int_stat' }, { stat: 'str' }, { stat: 'dex' }, { stat: 'end_stat' }, { stat: 'psi' }],
+        advancedEducation: [{ name: 'Language' }, { name: 'Art' }, { name: 'Electronics' }, { name: 'Medic' }, { name: 'Science' }, { name: 'Mechanic' }],
+        advancedEducationMin: 8,
+        musteringCash: [1000, 2000, 4000, 4000, 8000, 8000, 16000],
+        musteringBenefits: ['Gun', '2 Ship Shares', 'Contact', 'TAS Membership', 'Contact', 'Combat Implant', '10 Ship Shares'],
+        mishaps: [
+          { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
+          { roll: 2, text: 'You telepathically contact something dangerous. Lose one PSI. You also suffer persistent, terrifying nightmares.', tools: [], autoStat: { key: 'psi', amount: -1 } },
+          { roll: 3, text: 'An anti-psi cult or gang attempts to expose or attack you. Roll 1D: on 1-2, injured (roll on the Injury table); on 3-4, lose one SOC; on 5-6, nothing else happens, but you still must leave this career.', tools: [] },
+          { roll: 4, text: 'You are asked to use your psionic powers in an unethical fashion. Accept and you may continue in this career but gain an Enemy. Refuse and you must leave the career.', tools: [] },
+          { roll: 5, text: 'You are experimented on by a corporation, government, or other organisation. You escape, but are forced to leave this career.', tools: [] },
+          { roll: 6, text: 'Your gift causes a former friend to turn on you and betray you. One Ally or Contact becomes an Enemy.', tools: [] }
+        ],
+        events: [
+          { roll: 2, text: 'Disaster! Roll on the Mishap table but you are not ejected from this career.', tools: [] },
+          { roll: 3, text: 'Your psionic abilities make you uncomfortable to be around. One Contact or Ally becomes a Rival.', tools: [] },
+          { roll: 4, text: 'Choose one of these skills, reflecting your time spent mastering mind and body. Gain one of Athletics, Stealth, Survival, or Art.', tools: ['skill'], skillOptions: [{ name: 'Athletics', level: 1 }, { name: 'Stealth', level: 1 }, { name: 'Survival', level: 1 }, { name: 'Art', level: 1 }] },
+          { roll: 5, text: 'You have a chance to use your powers unethically to better your standing. If you accept, roll PSI 8+. Success gains an extra Benefit roll or +1 SOC; failure loses one SOC.', tools: [] },
+          { roll: 6, text: 'You make an unexpected connection outside your normal circles. Gain a Contact.', tools: ['associate'], associateTypes: ['contact'] },
+          { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
+          { roll: 8, text: 'You achieve a new level of psionic strength. Increase your PSI by +1.', tools: [], autoStat: { key: 'psi', amount: 1 } },
+          { roll: 9, text: 'You are given advanced training in a specialist field. Roll EDU 8+ to gain any one skill except Jack-of-all-Trades.', tools: [] },
+          { roll: 10, text: 'You pick up potentially useful information using your psychic powers. Gain DM+1 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 1 } },
+          { roll: 11, text: 'You gain a mentor. Gain an Ally and DM+4 to your next advancement roll (in any career) thanks to their aid.', tools: ['associate'], associateTypes: ['ally'], autoDM: { key: 'advancementDM', amount: 4 } },
+          { roll: 12, text: 'You achieve a new level of discipline in your powers. You are automatically promoted.', tools: [] }
+        ]
       }
     };
 
@@ -3146,6 +3445,11 @@
     // all assignments and instead vary by a separate per-assignment
     // Specialist table. Career-level serviceSkills wins if present.
     function serviceSkillsFor(c, a) { return c.serviceSkills || a.serviceSkills; }
+
+    // Same shape, for the rare career where Advanced Education differs by
+    // assignment (Psion's Psi-Warrior gets a combat-flavoured table instead
+    // of the default Language/Art/Electronics/Medic/Science/Mechanic one).
+    function advancedEducationFor(c, a) { return a.advancedEducation || c.advancedEducation; }
 
     // Union of a military career's Service Skills (career-level if shared,
     // else the union of each assignment's own table), de-duplicated.
@@ -3505,7 +3809,7 @@
     ];
 
     const LIFE_EVENTS_UNUSUAL = {
-      1: 'Psionics — you encounter a Psionic institute and may test your Psionic Strength (not tracked in this app).',
+      1: 'Psionics — you encounter a Psionic institute and have your Psionic Strength tested.',
       2: 'Aliens — you spend time among an alien species. Gain Science 1 and a Contact among that species.',
       3: "Alien Artefact — you come into possession of a strange device not normally available to humans.",
       4: 'Amnesia — something happened to you, but you have no idea what.',
@@ -3701,17 +4005,21 @@
       // other career is locked out (greyed, button disabled) until the
       // forced roll/entry is resolved via its own banner button below.
       const locked = !!(s.forcedDraftNextTerm || s.forcedPrisonerNextTerm);
+      const psiUntested = draft.psi === null || draft.psi === undefined;
       const rows = CAREER_LIST.map(c => {
         const built = !!CAREERS_DATA[c.id];
         const disabled = locked && !(s.forcedPrisonerNextTerm && c.id === 'prisoner');
+        const psiGated = c.id === 'psion' && psiUntested;
         return `
           <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid #0a4a60; border-radius:6px; margin-bottom:8px; ${disabled ? 'opacity:0.4;' : ''}">
             <span style="font-weight:600; ${built && !disabled ? 'color:#00e5ff;' : 'color:#4a9ab8;'}">${c.name}</span>
-            ${built
-              ? (disabled
-                  ? `<span style="font-size:0.75rem; color:#4a9ab8;">Locked — resolve the forced entry above</span>`
-                  : `<button class="btn-outline" onclick="chooseCareer('${c.id}')">${c.id === 'prisoner' ? 'Confirm Forced Entry' : 'Attempt Qualification'}</button>`)
-              : `<span style="font-size:0.75rem; color:#4a9ab8;">Not yet built</span>`
+            ${!built
+              ? `<span style="font-size:0.75rem; color:#4a9ab8;">Not yet built</span>`
+              : psiGated
+                ? `<span style="font-size:0.75rem; color:#4a9ab8;">Requires a tested Psionic Strength (PSI) first — not available this way yet</span>`
+                : (disabled
+                    ? `<span style="font-size:0.75rem; color:#4a9ab8;">Locked — resolve the forced entry above</span>`
+                    : `<button class="btn-outline" onclick="chooseCareer('${c.id}')">${c.id === 'prisoner' ? 'Confirm Forced Entry' : 'Attempt Qualification'}</button>`)
             }
           </div>
         `;
@@ -3722,7 +4030,7 @@
           <div class="wizard-card-title">Choose a Career</div>
           <div class="wizard-card-sub">
             ${s.terms ? `Age ${currentAge()}, ${s.terms} term${s.terms === 1 ? '' : 's'} served so far.` : 'Pick a career to attempt qualification for.'}
-            All careers are built: Navy, Drifter, Agent, Army, Citizen, Entertainer, Marine, Merchant, Noble, Rogue, Scholar, Scout, Prisoner, Truther and Believer. Only Psion remains unavailable (no PSI characteristic tracked). Note: Prisoner can't be entered voluntarily per the rules — only attempt qualification here if another career's mishap/event forced you into it. (Core Rulebook pp.17-57, Traveller Companion pp.35-39)
+            All 16 careers are built: Navy, Drifter, Agent, Army, Citizen, Entertainer, Marine, Merchant, Noble, Rogue, Scholar, Scout, Prisoner, Truther, Believer and Psion. Psion needs a tested Psionic Strength (PSI) first — test it via the Psionic Community pre-career option. Note: Prisoner can't be entered voluntarily per the rules — only attempt qualification here if another career's mishap/event forced you into it. (Core Rulebook pp.17-57, 227-237, Traveller Companion pp.35-39)
           </div>
           ${s.forcedDraftNextTerm ? `
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
@@ -4824,16 +5132,24 @@
       markResolverDone(tag, resultText);
     }
 
-    function rollLifeEventUnusual(tag) {
+    async function rollLifeEventUnusual(tag) {
       const roll = rollDie();
       if (roll === 2) {
         renderLifeEventUnusualAliens(tag);
         return;
       }
+      // Roll 1 (Psionics) genuinely tests PSI now, not just flavor text —
+      // a random discovery, so no GM approval gate (that's only required
+      // at the proactive Step 2 gate). Skip the test if already tested.
+      let text = LIFE_EVENTS_UNUSUAL[roll];
+      if (roll === 1) {
+        if (draft.psi === null || draft.psi === undefined) await rollPSI(0);
+        text += ` (PSI ${draft.psi}.)`;
+      }
       document.getElementById('resolver-' + tag).innerHTML =
-        `<p style="color:#00ffaa; font-size:0.85rem;">${LIFE_EVENTS_UNUSUAL[roll]}</p>`;
-      logCreation(`Life Event — Unusual Event roll ${roll}: ${LIFE_EVENTS_UNUSUAL[roll]}`);
-      markResolverDone(tag, `Life Event — ${LIFE_EVENTS_UNUSUAL[roll]}`);
+        `<p style="color:#00ffaa; font-size:0.85rem;">${text}</p>`;
+      await logCreation(`Life Event — Unusual Event roll ${roll}: ${text}`);
+      markResolverDone(tag, `Life Event — ${text}`);
     }
 
     // Unusual Event roll 2 ("Aliens") explicitly grants Science 1 and a
@@ -5044,12 +5360,226 @@
         case 'believer:mishap4': return renderBelieverMishap4(tag, m);
         case 'believer:mishap5': return renderLoseAllBenefitRolls(tag, m, 'Believer Mishap 5');
         case 'believer:mishap6': return renderGainDiceAssociates(tag, m, 'rival', 3);
+        case 'psion:2':       return renderInlineMishapNotEjected(tag, careerId, m);
+        case 'psion:3':       return renderPsionEvent3(tag, m);
+        case 'psion:5':       return renderPsionEvent5(tag, m);
+        case 'psion:9':       return renderChooseSkillThenRollEdu(tag, m, 8, 'gain it', ['Jack-of-all-Trades']);
+        case 'psion:12':      return renderBankAutoPromote(tag, m);
+        case 'psion:mishap1': return renderInjuryGuaranteed2OrLower(tag, m);
+        case 'psion:mishap3': return renderPsionMishap3(tag, m);
+        case 'psion:mishap4': return renderAcceptRefuse(tag, m, 'Accept — continue in this career, gain an Enemy', 'Refuse — leave this career', () => acceptPsionMishap4(tag), () => Promise.resolve());
+        case 'psion:mishap6': return renderPsionMishap6(tag, m);
         default: return null;
       }
     }
 
     function resolverHeader(text) {
       return `<div class="wizard-card-sub" style="margin-bottom:10px;">${text}</div>`;
+    }
+
+    // Psion Mishap 3: 1D sub-roll — 1-2 injured (real Injury Table roll),
+    // 3-4 lose one SOC (neither branch says you leave, so both override
+    // the default ejection), 5-6 nothing else happens but you still must
+    // leave (the default ejection applies as normal here).
+    function renderPsionMishap3(tag, m) {
+      if (!m.subRoll) {
+        return resolverHeader('Roll 1D to see what happens.') + `
+          <button class="btn-outline" onclick="rollPsionMishap3('${tag}')">Roll</button>
+        `;
+      }
+      if (m.subRoll <= 2) return resolverHeader(m.resultText || 'Injured.') + `<div id="resolver-${tag}"></div>`;
+      return resolverHeader(m.resultText);
+    }
+
+    async function rollPsionMishap3(tag) {
+      const roll = rollDie();
+      let resultText;
+      if (roll <= 2) {
+        resultText = `Rolled ${roll} — injured.`;
+        await saveMechanic(tag, { subRoll: roll, resultText, noEjectOverride: true });
+        await logCreation(`Psion Mishap 3: ${resultText}`);
+        renderStep();
+        const injuryRoll = rollDie();
+        renderInjuryPicker(tag, injuryRoll, INJURY_TABLE.find(x => x.roll === injuryRoll));
+        return;
+      } else if (roll <= 4) {
+        await applyStatChange('soc', -1);
+        resultText = `Rolled ${roll} — lost one SOC.`;
+        await saveMechanic(tag, { subRoll: roll, resolved: true, resultText, noEjectOverride: true });
+        await resolveMechanic(tag);
+        await logCreation(`Psion Mishap 3: ${resultText}`);
+        renderStep();
+        return;
+      } else {
+        resultText = `Rolled ${roll} — nothing else happens, but you still must leave this career.`;
+      }
+      await saveMechanic(tag, { subRoll: roll, resolved: true, resultText });
+      await resolveMechanic(tag);
+      await logCreation(`Psion Mishap 3: ${resultText}`);
+      renderStep();
+    }
+
+    // Psion Mishap 4: Accept = continue in the career but gain an Enemy;
+    // Refuse = leave the career (default eject behaviour, no override).
+    async function acceptPsionMishap4(tag) {
+      await addAssociate('enemy', 'Unnamed Client', 'Asked you to use your psionic powers unethically.');
+      await saveMechanic(tag, { noEjectOverride: true });
+    }
+
+    // Generic "convert an existing associate into another type, or gain a
+    // fresh one if you have none of the right type" — same shape as the
+    // Life Events table's Betrayal entry (which has its own implementation
+    // coupled to the Life Event flow specifically), but reusable directly
+    // from any mishap/event's bespoke case via the switch in
+    // renderBespokeOutcome. First used by Psion Mishap 6 and Event 3 (both
+    // "an existing Contact/Ally becomes a Rival/Enemy") — reuse this for
+    // any future career with the same wording instead of building another
+    // one-off implementation.
+    function renderConvertOrGainAssociate(tag, m, openFnName) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.opened) {
+        return resolverHeader('Choose what happens:') + `<button class="btn-outline" onclick="${openFnName}('${tag}')">Choose</button>`;
+      }
+      return `<div id="resolver-${tag}-convert">Loading your associates…</div>`;
+    }
+
+    async function loadConvertOrGainAssociate(tag, convertFrom, convertTo, label) {
+      const candidates = await listAssociatesOfTypes(convertFrom);
+      const el = document.getElementById(`resolver-${tag}-convert`);
+      if (!el) return;
+      const typeLabels = { ally: 'Ally', contact: 'Contact', rival: 'Rival', enemy: 'Enemy' };
+      el.innerHTML = `
+        ${candidates.length ? `
+          <div style="margin-bottom:8px; font-size:0.82rem; color:#4a9ab8;">Convert an existing associate:</div>
+          ${candidates.map(c => `
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <span style="font-size:0.85rem;">${escapeHtml(c.name)} (${typeLabels[c.type]})</span>
+              ${convertTo.map(t => `<button class="btn-outline" onclick="confirmConvertOrGainAssociate('${tag}','${c.id}','${t}','${escapeAttrJs(c.name)}','${escapeAttrJs(label)}')">→ ${typeLabels[t]}</button>`).join('')}
+            </div>
+          `).join('')}
+          <div style="margin:10px 0; font-size:0.8rem; color:#4a9ab8;">— or gain a fresh one instead —</div>
+        ` : ''}
+        <input id="resolver-${tag}-convert-name" type="text" placeholder="Name" style="margin-bottom:8px;" />
+        <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+          ${convertTo.map(t => `<button class="btn-outline" onclick="confirmGainAssociateFresh('${tag}','${t}','${escapeAttrJs(label)}')">Gain as ${typeLabels[t]}</button>`).join('')}
+        </div>
+      `;
+    }
+
+    async function confirmConvertOrGainAssociate(tag, id, type, name, label) {
+      await convertAssociateType(id, type);
+      const typeLabels = { rival: 'Rival', enemy: 'Enemy' };
+      const resultText = `${label} — converted ${name} into a ${typeLabels[type] || type}.`;
+      await saveMechanic(tag, { resolved: true, resultText });
+      await resolveMechanic(tag);
+      await logCreation(resultText);
+      renderStep();
+    }
+
+    async function confirmGainAssociateFresh(tag, type, label) {
+      const nameEl = document.getElementById(`resolver-${tag}-convert-name`);
+      const name = nameEl ? nameEl.value.trim() : '';
+      if (!name) return;
+      await addAssociate(type, name, `Gained from ${label}.`);
+      const typeLabels = { rival: 'Rival', enemy: 'Enemy' };
+      const resultText = `${label} — gained ${name} as a ${typeLabels[type] || type}.`;
+      await saveMechanic(tag, { resolved: true, resultText });
+      await resolveMechanic(tag);
+      await logCreation(resultText);
+      renderStep();
+    }
+
+    // Psion Mishap 6: "your gift causes a former friend to turn on you —
+    // one Ally or Contact becomes an Enemy."
+    function renderPsionMishap6(tag, m) {
+      return renderConvertOrGainAssociate(tag, m, 'openPsionMishap6');
+    }
+    async function openPsionMishap6(tag) {
+      await saveMechanic(tag, { opened: true });
+      renderStep();
+      await loadConvertOrGainAssociate(tag, ['contact', 'ally'], ['enemy'], 'Psion Mishap 6');
+    }
+
+    // Psion Event 3: "your psionic abilities make you uncomfortable to be
+    // around — one Contact or Ally becomes a Rival."
+    function renderPsionEvent3(tag, m) {
+      return renderConvertOrGainAssociate(tag, m, 'openPsionEvent3');
+    }
+    async function openPsionEvent3(tag) {
+      await saveMechanic(tag, { opened: true });
+      renderStep();
+      await loadConvertOrGainAssociate(tag, ['contact', 'ally'], ['rival'], 'Psion Event 3');
+    }
+
+    // Psion Event 5: optionally use your powers unethically to better your
+    // standing. Accept and roll PSI 8+: success picks an extra Benefit
+    // roll or +1 SOC; failure loses one SOC.
+    function renderPsionEvent5(tag, m) {
+      if (m.resolved) return resolverHeader(m.resultText);
+      if (!m.decided) {
+        return resolverHeader('Use your powers unethically to try to better your standing?') + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="decidePsionEvent5('${tag}', true)">Accept — Roll PSI 8+</button>
+            <button class="btn-outline" onclick="decidePsionEvent5('${tag}', false)">Decline</button>
+          </div>
+        `;
+      }
+      if (!m.rolled) {
+        return resolverHeader('Accepted.') + `<button class="btn-outline" onclick="rollPsionEvent5('${tag}')">Roll PSI 8+</button>`;
+      }
+      if (m.success && !m.choiceMade) {
+        return resolverHeader(m.resultText) + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="choosePsionEvent5Reward('${tag}', 'benefit')">Extra Benefit Roll</button>
+            <button class="btn-outline" onclick="choosePsionEvent5Reward('${tag}', 'soc')">+1 SOC</button>
+          </div>
+        `;
+      }
+      return resolverHeader(m.resultText);
+    }
+
+    async function decidePsionEvent5(tag, accept) {
+      if (!accept) {
+        await saveMechanic(tag, { decided: true, resolved: true, resultText: 'Declined.' });
+        await resolveMechanic(tag);
+        await logCreation('Psion Event 5: declined.');
+        renderStep();
+        return;
+      }
+      await saveMechanic(tag, { decided: true });
+      renderStep();
+    }
+
+    async function rollPsionEvent5(tag) {
+      const d1 = rollDie(), d2 = rollDie();
+      const total = d1 + d2 + dmNum(draft.psi);
+      const success = total >= 8;
+      let resultText = `Rolled ${total} (${d1}+${d2} + PSI DM ${dmNum(draft.psi)}), needed 8+ — ${success ? 'success!' : 'failed.'}`;
+      if (!success) {
+        await applyStatChange('soc', -1);
+        resultText += ' Lost one SOC.';
+        await saveMechanic(tag, { rolled: true, success, resolved: true, resultText });
+        await resolveMechanic(tag);
+      } else {
+        await saveMechanic(tag, { rolled: true, success, resultText });
+      }
+      await logCreation(`Psion Event 5: ${resultText}`);
+      renderStep();
+    }
+
+    async function choosePsionEvent5Reward(tag, choice) {
+      let resultText = mechanicState(tag).resultText;
+      if (choice === 'benefit') {
+        await addPendingMod('extraBenefitRolls', 1);
+        resultText += ' Gained an extra Benefit roll.';
+      } else {
+        await applyStatChange('soc', 1);
+        resultText += ' Gained +1 SOC.';
+      }
+      await saveMechanic(tag, { choiceMade: true, resolved: true, resultText });
+      await resolveMechanic(tag);
+      await logCreation(`Psion Event 5: ${resultText}`);
+      renderStep();
     }
 
     // "Gain SkillA 1 or SkillB 1. You may throw SkillX 8+: success gains an
@@ -5184,7 +5714,7 @@
 
     async function chooseAcceptRefuse(tag, accepted) {
       const handlers = (window.__acceptRefuse || {})[tag];
-      if (handlers) await (accepted ? handlers.onAccept() : handlers.onRefuse())();
+      if (handlers) await (accepted ? handlers.onAccept : handlers.onRefuse)();
       await saveMechanic(tag, { resolved: true, resultText: accepted ? 'Accepted.' : 'Declined.' });
       await resolveMechanic(tag);
       await logCreation(accepted ? 'Accepted the opportunity.' : 'Declined the opportunity.');
@@ -9111,7 +9641,8 @@
       tables.push({ key: 'service', label: 'Service Skills', list: serviceSkillsFor(c, a) });
       if (a.specialistSkills) tables.push({ key: 'specialist', label: `Specialist (${a.label})`, list: a.specialistSkills });
       const advEdMin = c.advancedEducationMin || 8;
-      if (c.advancedEducation && draft.edu >= advEdMin) tables.push({ key: 'advEd', label: `Advanced Education (EDU ${advEdMin}+)`, list: c.advancedEducation });
+      const advEd = advancedEducationFor(c, a);
+      if (advEd && draft.edu >= advEdMin) tables.push({ key: 'advEd', label: `Advanced Education (EDU ${advEdMin}+)`, list: advEd });
       if (c.officerTable && s.isOfficer) tables.push({ key: 'officer', label: 'Officer (commissioned only)', list: c.officerTable });
 
       const entryLabel = e => e.stat ? `${e.stat.toUpperCase()} +1` : `${e.name}${e.specialty ? ' (' + e.specialty + ')' : ''}`;
@@ -9153,7 +9684,7 @@
       const s = step5State();
       const c = careerData(s.careerId);
       const a = currentAssignment(s, c);
-      const tableMap = { personal: c.personalDevelopment, service: serviceSkillsFor(c, a), specialist: a.specialistSkills, advEd: c.advancedEducation, officer: c.officerTable };
+      const tableMap = { personal: c.personalDevelopment, service: serviceSkillsFor(c, a), specialist: a.specialistSkills, advEd: advancedEducationFor(c, a), officer: c.officerTable };
       const list = tableMap[tableKey];
       const idx = rollDie() - 1;
       const entry = list[idx];
