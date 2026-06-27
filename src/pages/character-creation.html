@@ -184,22 +184,20 @@
       await supabaseClient.from('characters').update({ creation_data: data }).eq('id', draft.id);
     }
 
-    // Optional gate shown on Characteristics, before stats are rolled —
-    // house rule: PSI is only ever tested at initial creation (not
-    // mid-career or later), so this is the deliberate, proactive place to
-    // do it for groups that want psionics from the start. Narrative
-    // discovery moments (Pre-Career Events roll 2, the Psionics Life
-    // Event) still exist separately and use the same approval gate.
+    // Compact inline gate shown beside the Characteristics roll-method
+    // buttons — house rule: PSI is only ever tested at initial creation.
     function renderPsiGateStep2() {
       if (draft.psi !== null && draft.psi !== undefined) {
-        return `<div class="wizard-card-sub" style="margin-bottom:14px; color:#00ffaa;">Psionic Strength tested: PSI ${draft.psi}.</div>`;
+        return `<span style="font-size:0.8rem; color:#00ffaa; align-self:center;">PSI ${draft.psi}</span>`;
       }
       return `
-        <div class="rule-card wizard-card">
-          <div class="wizard-card-title">Roll for Psionics <span style="color:#ff5a4a; font-size:0.75rem;">(Requires GM Approval)</span></div>
-          <div class="wizard-card-sub">Optional, one-time only. House rule: Psionic Strength (PSI) may only be tested during initial character creation, never mid-career or later. Skip this and continue if you don't want to test now — it'll still be available later via a Pre-Career Event or Life Event, also requiring GM approval.</div>
-          ${renderPsiApprovalGate('step2', 'rollPsiStep2')}
-        </div>
+        <span style="display:inline-flex; flex-direction:column; align-items:flex-start; gap:4px;">
+          <button class="btn-outline" onclick="confirmPsiApprovalGate('step2', 'rollPsiStep2')">Roll for Psionics</button>
+          <label style="display:flex; align-items:center; gap:4px; font-size:0.7rem; color:#4a9ab8;">
+            <input type="checkbox" id="psi-approve-step2" style="width:14px; height:14px; accent-color:#00e5ff;" />
+            GM has approved
+          </label>
+        </span>
       `;
     }
 
@@ -213,13 +211,13 @@
 
       if (!s.method) {
         return `
-          ${renderPsiGateStep2()}
           <div class="rule-card wizard-card">
             <div class="wizard-card-title">Characteristics</div>
             <div class="wizard-card-sub">Roll 2D for each of STR / DEX / END / INT / EDU / SOC, then assign the six results as you wish. (Core Rulebook p.9)</div>
             <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
               <button class="btn-outline" onclick="chooseStep2Method('auto')">Auto Roll for Me</button>
               <button class="btn-outline" onclick="chooseStep2Method('manual')">I'll Roll My Own Dice</button>
+              ${renderPsiGateStep2()}
             </div>
             <div class="wizard-actions">
               <button class="btn-outline" onclick="goStep(1)">Back</button>
@@ -482,32 +480,13 @@
       return { dice: [d1, d2], termsServed, total };
     }
 
-    // House rule: testing PSI always requires explicit GM sign-off,
-    // regardless of where the offer comes from (the Characteristics-step
-    // gate, or a narrative discovery moment like Pre-Career Events roll 2
-    // or a Psionics Life Event). This is the shared "tick the box, then
-    // roll" UI for all of them — the GM decides per-instance whether it's
-    // appropriate (e.g. declining a mid/late-career awakening if that's
-    // not how their campaign handles psionics), the app doesn't hardcode
-    // a stage restriction itself. `onRollFnName` must be a zero-arg global
-    // async function (the caller closes over whatever tag/context it needs).
-    function renderPsiApprovalGate(idSuffix, onRollFnName, tag) {
-      return `
-        <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; margin-bottom:8px;">
-          <input type="checkbox" id="psi-approve-${idSuffix}" style="width:18px; height:18px; accent-color:#00e5ff;" />
-          GM has approved testing Psionic Strength (PSI) for this character.
-        </label>
-        <button class="btn-outline" onclick="confirmPsiApprovalGate('${idSuffix}', '${onRollFnName}', '${tag || ''}')">Roll for Psionics</button>
-      `;
-    }
-
-    // `tag` is only used by call sites that need it threaded through to
-    // their roll handler (e.g. the career-level Life Events table, which
-    // is keyed per mishap/event instance); zero-arg handlers just ignore it.
-    async function confirmPsiApprovalGate(idSuffix, onRollFnName, tag) {
+    // House rule: testing PSI at the Characteristics-step gate always
+    // requires explicit GM sign-off (random discovery moments elsewhere,
+    // like Pre-Career Events roll 2, don't — they auto-roll).
+    async function confirmPsiApprovalGate(idSuffix, onRollFnName) {
       const cb = document.getElementById(`psi-approve-${idSuffix}`);
       if (!cb || !cb.checked) { alert('GM approval is required before rolling for Psionics.'); return; }
-      await window[onRollFnName](tag);
+      await window[onRollFnName]();
     }
 
     // One attempt per talent, in any order. Telepathy as the very
