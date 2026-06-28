@@ -729,7 +729,7 @@
         entryGrant: { auto: [{ name: 'Vacc Suit', level: 1 }], chooseN: { n: 2, level: 0, from: SPACER_SKILLS.slice(1) } },
         graduation: (d) => ({ stat: 'int_stat', target: 8, honours: 12, extraDM: d.dex >= 6 ? 1 : 0, dmLabel: 'DM+1 if DEX 6+' }),
         benefits: [
-          { id: 'two_more', text: 'Gain any two other skills listed above at level 0.', type: 'chooseN', n: 2, level: 0, pool: () => SPACER_SKILLS },
+          { id: 'two_more', text: 'Gain any two other skills listed above at level 0. (Select skills you do not already have — this only grants at level 0, so it has no effect on a skill you already own.)', type: 'chooseN', n: 2, level: 0, pool: () => SPACER_SKILLS },
           { id: 'one_more_1', text: 'Gain any skill listed above at level 1.', type: 'chooseN', n: 1, level: 1, pool: () => SPACER_SKILLS },
           { id: 'pilot0', text: 'Gain Pilot 0.', type: 'fixedSkill', name: 'Pilot', level: 0 },
           { id: 'jot_honours', text: 'Honours graduates gain Jack-of-all-Trades 1.', type: 'fixedSkill', name: 'Jack-of-all-Trades', level: 1, honoursOnly: true },
@@ -7943,6 +7943,17 @@
           </div>
         `;
       }
+      // Once the nested Injury Table/Medical Care flow finishes, it marks
+      // the OUTER mishap/event resolved and writes the final summary
+      // (including any Medical Care result) into mishapResolvedText/
+      // eventResolvedText — not into m.injuryResultText. Without this
+      // check, the next full re-render would fall through to the stale
+      // injuryResultText and a freshly emptied nested div, silently
+      // erasing the Medical Care outcome the player just saw.
+      const s = step5State();
+      const resolvedKey = tag === 'mishap' ? 'mishapResolved' : 'eventResolved';
+      const resolvedTextKey = tag === 'mishap' ? 'mishapResolvedText' : 'eventResolvedText';
+      if (s[resolvedKey]) return resolverHeader(s[resolvedTextKey] || 'Resolved.');
       return resolverHeader(m.injuryResultText || 'Resolved.') + `<div id="resolver-${tag}"></div>`;
     }
 
