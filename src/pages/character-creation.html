@@ -3208,7 +3208,7 @@
           { roll: 6, text: 'Vocational Training. Roll EDU 8+ to gain any one skill except Jack-of-all-Trades (which can never be trained).', tools: [] },
           { roll: 7, text: 'Prison Event — roll 1D on the Prison Event sub-table.', tools: [] },
           { roll: 8, text: 'Parole hearing. Reduce your Parole Threshold by 1.', tools: [], autoParole: { amount: -1 } },
-          { roll: 9, text: "You have the opportunity to hire a lawyer. Choose their Advocate skill level, then roll 2D plus that level: 8+ reduces your Parole Threshold by 1D (the lawyer's fee isn't deducted from cash on hand — this app doesn't track running cash mid-career).", tools: [] },
+          { roll: 9, text: "You have the opportunity to hire a lawyer. Choose their Advocate skill level (their fee, Cr1000 x level squared, is added to your debt), then roll 2D plus that level: 8+ reduces your Parole Threshold by 1D.", tools: [] },
           { roll: 10, text: 'Special Duty. You are given a special responsibility in the prison. Gain one of Admin 1, Advocate 1, Electronics 1, or Steward 1.', tools: ['skill'], skillOptions: [{ name: 'Admin', level: 1 }, { name: 'Advocate', level: 1 }, { name: 'Electronics', level: 1 }, { name: 'Steward', level: 1 }] },
           { roll: 11, text: 'The warden takes an interest in your case. Reduce your Parole Threshold by 2.', tools: [], autoParole: { amount: -2 } },
           { roll: 12, text: 'Heroism. You have the opportunity to save a guard or prison officer. If you take the risk, roll 2D: 7 or less rolls on the Injury table; 8+ gains an Ally and reduces your Parole Threshold by 2.', tools: [] }
@@ -4817,10 +4817,15 @@
     // portion is free, the rest (and all of it if no career is active)
     // goes straight to debt rather than being deducted from cash on hand,
     // per the user's call. No cap — debt can go as high as it needs to.
+    // Prisoner and Psion aren't in the book's table either (newer/special
+    // careers) — Prisoner gets tier C (no real institutional backing,
+    // same flavour as Scout/Rogue/Drifter), Psion gets tier B (varied,
+    // non-military structure, same as Believer's extension). Judgment
+    // calls, same as Truther/Believer's tiers below.
     const MEDICAL_BILLS_TIER = {
       army: 'A', navy: 'A', marine: 'A',
-      agent: 'B', noble: 'B', scholar: 'B', entertainer: 'B', merchant: 'B', citizen: 'B', believer: 'B',
-      scout: 'C', rogue: 'C', drifter: 'C', truther: 'C'
+      agent: 'B', noble: 'B', scholar: 'B', entertainer: 'B', merchant: 'B', citizen: 'B', believer: 'B', psion: 'B',
+      scout: 'C', rogue: 'C', drifter: 'C', truther: 'C', prisoner: 'C'
     };
 
     function medicalBillsCoverage(careerId, roll) {
@@ -4960,7 +4965,7 @@
 
       const resultText = `Restored ${totalPoints} point(s) for Cr${cost}. ${rollText}${debtAdded > 0 ? ` Cr${debtAdded} added to debt (total debt now Cr${(draft.debt || 0)}).` : ' Fully covered — no debt added.'}`;
       await logCreation(`Medical Care — ${resultText}`);
-      await finishInjury(tag, `${mc.desc} (partially restored — see Creation Log)`, resultText);
+      await finishInjury(tag, mc.desc, resultText);
     }
 
     // ── Mishap roll 1 — universal across all 13 careers' mishap tables
@@ -8594,42 +8599,51 @@
       renderStep();
     }
 
-    // Prisoner event 9 — hire a lawyer: choose their Advocate skill level,
-    // roll 2D + that level vs 8+ to reduce Parole Threshold by 1D.
+    // Prisoner event 9 — hire a lawyer: choose their Advocate skill level
+    // (Cr1000 x level^2, added to debt — settled at Finalize same as
+    // Medical Care debt), then roll 2D + that level vs 8+ to reduce
+    // Parole Threshold by 1D.
+    function lawyerFee(level) { return 1000 * level * level; }
+
     function renderPrisonerEvent9(tag, m) {
       if (m.resolved) return resolverHeader(m.resultText);
       if (!m.lawyerLevel) {
-        return resolverHeader("Choose your lawyer's Advocate skill level:") + `
-          <input id="prisoner-e9-level" type="number" min="0" max="4" value="1" style="width:60px; margin-right:8px;" />
-          <button class="btn-outline" onclick="confirmPrisonerEvent9Level()">Confirm</button>
+        return resolverHeader("Choose your lawyer's Advocate skill level — this determines both their fee (added to debt) and your roll bonus:") + `
+          <select id="prisoner-e9-level">
+            ${[0, 1, 2, 3, 4].map(lvl => `<option value="${lvl}" ${lvl === 1 ? 'selected' : ''}>Advocate ${lvl} — Cr${lawyerFee(lvl)}</option>`).join('')}
+          </select>
+          <button class="btn-outline" onclick="confirmPrisonerEvent9Level('${tag}')">Hire Lawyer</button>
         `;
       }
       if (!m.rolled) {
-        return resolverHeader(`Roll 2D + Advocate ${m.lawyerLevel} (need 8+):`) + `<button class="btn-outline" onclick="rollPrisonerEvent9()">Roll</button>`;
+        return resolverHeader(`Hired a lawyer at Advocate ${m.lawyerLevel} for Cr${m.fee} (added to debt). Roll 2D + Advocate ${m.lawyerLevel} (need 8+):`) + `<button class="btn-outline" onclick="rollPrisonerEvent9('${tag}')">Roll</button>`;
       }
       return resolverHeader(m.resultText);
     }
 
-    async function confirmPrisonerEvent9Level() {
-      const level = Math.max(0, Math.min(4, parseInt(document.getElementById('prisoner-e9-level').value, 10) || 0));
-      await saveMechanic('event', { lawyerLevel: level });
+    async function confirmPrisonerEvent9Level(tag) {
+      const level = parseInt(document.getElementById('prisoner-e9-level').value, 10) || 0;
+      const fee = lawyerFee(level);
+      if (fee > 0) await applyStatChange('debt', fee);
+      await logCreation(`Prisoner Event 9: hired a lawyer at Advocate ${level} for Cr${fee} (added to debt).`);
+      await saveMechanic(tag, { lawyerLevel: level, fee });
       renderStep();
     }
 
-    async function rollPrisonerEvent9() {
-      const m = mechanicState('event');
+    async function rollPrisonerEvent9(tag) {
+      const m = mechanicState(tag);
       const total = roll2d6() + m.lawyerLevel;
       const success = total >= 8;
       let resultText;
       if (success) {
         const reduction = rollDie();
         const newThreshold = await adjustParoleThreshold(-reduction);
-        resultText = `Rolled ${total} on 2D+Advocate ${m.lawyerLevel} (need 8+) — success! Parole Threshold reduced by ${reduction} (now ${newThreshold}).`;
+        resultText = `Rolled ${total} on 2D+Advocate ${m.lawyerLevel} (need 8+) — success! Parole Threshold reduced by ${reduction} (now ${newThreshold}). Lawyer's fee: Cr${m.fee} (added to debt).`;
       } else {
-        resultText = `Rolled ${total} on 2D+Advocate ${m.lawyerLevel} (need 8+) — no change to your Parole Threshold.`;
+        resultText = `Rolled ${total} on 2D+Advocate ${m.lawyerLevel} (need 8+) — no change to your Parole Threshold. Lawyer's fee: Cr${m.fee} (added to debt).`;
       }
-      await saveMechanic('event', { rolled: true, resolved: true, resultText });
-      await resolveMechanic('event');
+      await saveMechanic(tag, { rolled: true, resolved: true, resultText });
+      await resolveMechanic(tag);
       await logCreation(`Prisoner Event 9: ${resultText}`);
       renderStep();
     }
