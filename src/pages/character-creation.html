@@ -4263,7 +4263,9 @@
       const basePatch = Object.assign({
         assignmentKey: key, rank: startRank, isOfficer: startOfficer, termInCareer: 0,
         basicTrainingDone: isFirstCareer, benefitRolls: 0,
-        phase: 'survival', basicTrainingGrant
+        phase: 'survival', basicTrainingGrant,
+        survivalResult: null, eventRoll: null, eventResolved: false,
+        commissionResult: null, advancementResult: null, skillRollsRemaining: 0
       }, extraPatch);
 
       // The rank table's entry for whatever rank you START at (rank 0 for
