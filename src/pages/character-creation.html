@@ -4574,11 +4574,20 @@
       `;
     }
 
-    function openResolver(tag, kind) {
+    async function openResolver(tag, kind) {
       const el = document.getElementById('resolver-' + tag);
       const restrict = window.__resolverRestrict[tag] || {};
       if (kind === 'skill') {
         const options = restrict.skillOptions && restrict.skillOptions.length ? restrict.skillOptions : SKILLS.map(sk => ({ name: sk.name }));
+        // Single option with no specialty decision needed — auto-apply immediately
+        if (options.length === 1) {
+          const only = options[0];
+          const needsSpecialtyChoice = skillSpecialtiesFor(only.name).length > 0 && !only.specialty;
+          if (!needsSpecialtyChoice) {
+            await applyResolverSkill(tag, only.name, only.specialty || null, only.level || 1);
+            return;
+          }
+        }
         el.innerHTML = `
           <div class="wizard-field"><label>Skill</label>
             <select id="resolver-${tag}-skill" onchange="updateResolverSkillSpecialty('${tag}')">
@@ -4638,12 +4647,13 @@
       ` : '';
     }
 
-    async function applyResolverSkill(tag) {
-      const name = document.getElementById(`resolver-${tag}-skill`).value;
-      const level = parseInt(document.getElementById(`resolver-${tag}-level`).value, 10) || 0;
+    async function applyResolverSkill(tag, _name, _specialty, _level) {
+      const nameEl = document.getElementById(`resolver-${tag}-skill`);
+      const name = _name !== undefined ? _name : (nameEl ? nameEl.value : '');
+      const level = _level !== undefined ? _level : (parseInt(document.getElementById(`resolver-${tag}-level`)?.value, 10) || 0);
       if (!name) return;
       const specEl = document.getElementById(`resolver-${tag}-specialty`);
-      const specialty = specEl ? (specEl.value || null) : null;
+      const specialty = _specialty !== undefined ? _specialty : (specEl ? (specEl.value || null) : null);
       if (level >= 1 && skillSpecialtiesFor(name).length && !specialty) {
         alert('Choose a specialty for this skill.');
         return;

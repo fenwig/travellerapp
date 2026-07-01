@@ -114,6 +114,8 @@
     .gear-table td { padding: 6px 8px; color: #b0d8e8; border-bottom: 1px solid rgba(10,74,96,0.3); vertical-align: middle; }
     .gear-table tr:last-child td { border-bottom: none; }
     .gear-table input, .gear-table select { background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; font-size: 0.82rem; width: 100%; outline: none; padding: 1px 2px; }
+    .gear-table .existing-row input, .gear-table .existing-row select { border-bottom-color: transparent; pointer-events: none; }
+    body.editing .gear-table .existing-row input, body.editing .gear-table .existing-row select { border-bottom-color: #0a4a60; pointer-events: auto; }
     .gear-table td.td-actions { width: 30px; text-align: center; }
     .add-row-btn { background: transparent; border: 1px dashed #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 5px 14px; font-size: 0.78rem; cursor: pointer; margin-top: 4px; transition: border-color 0.15s, color 0.15s; }
     .add-row-btn:hover { border-color: #00e5ff; color: #00e5ff; }
@@ -917,9 +919,14 @@ function none(cols) {
 
 function renderArmour(rows) {
   document.getElementById('armour-tbody').innerHTML = rows.length
-    ? rows.map(r => `<tr data-id="${r.id}">
-        <td>${r.type}</td><td>${r.protection}</td><td>${r.conditions || ''}</td>
-        <td>${r.rad}</td><td>${r.tl ?? ''}</td><td>${r.kg}</td><td>${r.options || ''}</td>
+    ? rows.map(r => `<tr data-id="${r.id}" class="existing-row">
+        <td><input value="${escapeHtml(r.type)}" placeholder="Type" /></td>
+        <td><input type="number" value="${r.protection}" placeholder="0" style="width:50px" /></td>
+        <td><input value="${escapeHtml(r.conditions||'')}" placeholder="Conditions" /></td>
+        <td><input type="number" value="${r.rad}" placeholder="0" style="width:50px" /></td>
+        <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
+        <td><input type="number" value="${r.kg}" placeholder="0" step="0.01" style="width:60px" /></td>
+        <td><input value="${escapeHtml(r.options||'')}" placeholder="Options" /></td>
         <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingArmour','${r.id}',this)">✕</button></td>
       </tr>`).join('')
     : none(8);
@@ -945,10 +952,14 @@ function addArmourRow() {
 
 function renderWeapons(rows) {
   document.getElementById('weapons-tbody').innerHTML = rows.length
-    ? rows.map(r => `<tr data-id="${r.id}">
-        <td>${r.name}</td><td>${r.tl ?? ''}</td><td>${r.range || ''}</td>
-        <td>${r.damage || ''}</td><td>${r.kg}</td><td>${r.magazine ?? ''}</td>
-        <td>${r.traits || ''}</td>
+    ? rows.map(r => `<tr data-id="${r.id}" class="existing-row">
+        <td><input value="${escapeHtml(r.name||'')}" placeholder="Name" /></td>
+        <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
+        <td><input value="${escapeHtml(r.range||'')}" placeholder="Range" style="width:80px" /></td>
+        <td><input value="${escapeHtml(r.damage||'')}" placeholder="Damage" style="width:70px" /></td>
+        <td><input type="number" value="${r.kg}" placeholder="0" step="0.01" style="width:55px" /></td>
+        <td><input type="number" value="${r.magazine??''}" placeholder="Mag" style="width:50px" /></td>
+        <td><input value="${escapeHtml(r.traits||'')}" placeholder="Traits" /></td>
         <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingWeapons','${r.id}',this)">✕</button></td>
       </tr>`).join('')
     : none(8);
@@ -981,9 +992,12 @@ function bonusTargetOptions(selected) {
 
 function renderAugments(rows) {
   document.getElementById('augments-tbody').innerHTML = rows.length
-    ? rows.map(r => `<tr data-id="${r.id}">
-        <td>${r.type}</td><td>${r.tl ?? ''}</td><td>${r.improvement || ''}</td>
-        <td>${BONUS_TARGET_LABEL[r.bonus_target || ''] || '—'}</td><td>${r.bonus_value || 0}</td>
+    ? rows.map(r => `<tr data-id="${r.id}" class="existing-row">
+        <td><input value="${escapeHtml(r.type||'')}" placeholder="Type" /></td>
+        <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
+        <td><input value="${escapeHtml(r.improvement||'')}" placeholder="Improvement" /></td>
+        <td><select>${bonusTargetOptions(r.bonus_target||'')}</select></td>
+        <td><input type="number" value="${r.bonus_value||0}" placeholder="0" style="width:45px" /></td>
         <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingAugments','${r.id}',this)">✕</button></td>
       </tr>`).join('')
     : none(6);
@@ -1007,8 +1021,9 @@ function addAugmentRow() {
 
 function renderEquipment(rows) {
   document.getElementById('equipment-tbody').innerHTML = rows.length
-    ? rows.map(r => `<tr data-id="${r.id}">
-        <td>${r.type}</td><td>${r.mass}</td>
+    ? rows.map(r => `<tr data-id="${r.id}" class="existing-row">
+        <td><input value="${escapeHtml(r.type||'')}" placeholder="Type" /></td>
+        <td><input type="number" value="${r.mass}" placeholder="0" step="0.01" style="width:70px" /></td>
         <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingEquipment','${r.id}',this)">✕</button></td>
       </tr>`).join('')
     : none(3);
@@ -1545,7 +1560,16 @@ async function saveAll() {
     const { error } = await supabaseClient.from('characters').update(update).eq('id', character.id);
     if (error) throw error;
 
-    // Armour
+    // Armour — update existing rows, then process adds/deletes
+    for (const tr of document.querySelectorAll('#armour-tbody tr.existing-row')) {
+      const id = tr.dataset.id; if (!id) continue;
+      const i = tr.querySelectorAll('input');
+      await supabaseClient.from('character_armour').update({
+        type: i[0].value, protection: parseInt(i[1].value)||0, conditions: i[2].value||null,
+        rad: parseInt(i[3].value)||0, tl: parseInt(i[4].value)||null,
+        kg: parseFloat(i[5].value)||0, options: i[6].value||null
+      }).eq('id', id);
+    }
     for (const p of pendingArmour) {
       if (p.action === 'delete') { await supabaseClient.from('character_armour').delete().eq('id', p.id); }
       else {
@@ -1559,7 +1583,16 @@ async function saveAll() {
       }
     }
 
-    // Weapons
+    // Weapons — update existing rows, then process adds/deletes
+    for (const tr of document.querySelectorAll('#weapons-tbody tr.existing-row')) {
+      const id = tr.dataset.id; if (!id) continue;
+      const i = tr.querySelectorAll('input');
+      await supabaseClient.from('character_weapons').update({
+        name: i[0].value, tl: parseInt(i[1].value)||null, range: i[2].value||null,
+        damage: i[3].value||null, kg: parseFloat(i[4].value)||0,
+        magazine: parseInt(i[5].value)||null, traits: i[6].value||null
+      }).eq('id', id);
+    }
     for (const p of pendingWeapons) {
       if (p.action === 'delete') { await supabaseClient.from('character_weapons').delete().eq('id', p.id); }
       else {
@@ -1573,7 +1606,16 @@ async function saveAll() {
       }
     }
 
-    // Augments
+    // Augments — update existing rows, then process adds/deletes
+    for (const tr of document.querySelectorAll('#augments-tbody tr.existing-row')) {
+      const id = tr.dataset.id; if (!id) continue;
+      const i = tr.querySelectorAll('input');
+      const sel = tr.querySelector('select');
+      await supabaseClient.from('character_augments').update({
+        type: i[0].value, tl: parseInt(i[1].value)||null, improvement: i[2].value||null,
+        bonus_target: sel.value || null, bonus_value: parseInt(i[3].value)||0
+      }).eq('id', id);
+    }
     for (const p of pendingAugments) {
       if (p.action === 'delete') { await supabaseClient.from('character_augments').delete().eq('id', p.id); }
       else {
@@ -1602,7 +1644,14 @@ async function saveAll() {
       }
     }
 
-    // Equipment
+    // Equipment — update existing rows, then process adds/deletes
+    for (const tr of document.querySelectorAll('#equipment-tbody tr.existing-row')) {
+      const id = tr.dataset.id; if (!id) continue;
+      const i = tr.querySelectorAll('input');
+      await supabaseClient.from('character_equipment').update({
+        type: i[0].value, mass: parseFloat(i[1].value)||0
+      }).eq('id', id);
+    }
     for (const p of pendingEquipment) {
       if (p.action === 'delete') { await supabaseClient.from('character_equipment').delete().eq('id', p.id); }
       else {
