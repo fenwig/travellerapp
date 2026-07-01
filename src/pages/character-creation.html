@@ -9585,7 +9585,8 @@
         skillRollsRemaining: 1 + (base.success ? 1 : 0)
       });
       const a = currentAssignment(step5State(), c);
-      await logCreation(`${c.name} — Advancement: ${d1}+${d2}=${d1+d2}${base.statDM !== 0 ? (base.statDM > 0 ? '+' : '')+base.statDM+' stat' : ''}${base.bonusDM ? (base.bonusDM > 0 ? '+' : '')+base.bonusDM+' banked' : ''}${base.academyDM ? (base.academyDM > 0 ? '+' : '')+base.academyDM+' academy' : ''}${base.persistentDM ? (base.persistentDM > 0 ? '+' : '')+base.persistentDM+' persistent' : ''} = ${base.total} (need ${a.advancement.target}+) — ${base.success ? `promoted to rank ${newRank}${rankBonus ? ' (' + rankBonus + ')' : ''}.` : 'no promotion.'}`);
+      const [bd1, bd2] = base.dice || [0, 0];
+      await logCreation(`${c.name} — Advancement: ${bd1}+${bd2}=${bd1+bd2}${base.statDM !== 0 ? (base.statDM > 0 ? '+' : '')+base.statDM+' stat' : ''}${base.bonusDM ? (base.bonusDM > 0 ? '+' : '')+base.bonusDM+' banked' : ''}${base.academyDM ? (base.academyDM > 0 ? '+' : '')+base.academyDM+' academy' : ''}${base.persistentDM ? (base.persistentDM > 0 ? '+' : '')+base.persistentDM+' persistent' : ''} = ${base.total} (need ${a.advancement.target}+) — ${base.success ? `promoted to rank ${newRank}${rankBonus ? ' (' + rankBonus + ')' : ''}.` : 'no promotion.'}`);
       renderStep();
     }
 
