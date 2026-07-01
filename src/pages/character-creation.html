@@ -4397,7 +4397,7 @@
       const total = d1 + d2 + statDM + bonusDM + persistentDM;
       const success = (d1 + d2) !== 2 && total >= a.survival.target;
       await saveStep5State({ survivalResult: { dice: [d1, d2], statDM, bonusDM, persistentDM, total, success }, basicTrainingGrant: null });
-      await logCreation(`${c.name} (${a.label}) — Survival: rolled ${total} (need ${a.survival.target}+${bonusDM ? ', incl. ' + (bonusDM > 0 ? '+' : '') + bonusDM + ' banked DM' : ''}${persistentDM ? ', incl. ' + (persistentDM > 0 ? '+' : '') + persistentDM + ' persistent DM' : ''}) — ${success ? 'survived.' : 'failed.'}`);
+      await logCreation(`${c.name} (${a.label}) — Survival: rolled ${d1}+${d2}=${d1+d2}${statDM !== 0 ? (statDM > 0 ? '+' : '')+statDM+' stat' : ''}${bonusDM ? (bonusDM > 0 ? '+' : '')+bonusDM+' banked' : ''}${persistentDM ? (persistentDM > 0 ? '+' : '')+persistentDM+' persistent' : ''} = ${total} (need ${a.survival.target}+) — ${success ? 'survived.' : 'failed.'}`);
       renderStep();
     }
 
@@ -9358,7 +9358,7 @@
         medCareReductions: physReductions.length ? physReductions : null,
         medCareResolved: false, medCareResultText: null
       });
-      await logCreation(`${c.name} — Event roll: ${total} — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''}`);
+      await logCreation(`${c.name} — Event roll: ${d1}+${d2}=${total} — ${entry.text}${granted ? ` Applied automatically: ${granted}.` : ''}`);
       renderStep();
     }
 
@@ -9430,7 +9430,7 @@
       const total = d1 + d2 + dmNum(draft.soc) + dmLate + bonusDM + academyDM.total;
       const success = total >= c.commission.target;
       await saveStep5State({ commissionResult: { dice: [d1, d2], total, bonusDM, academyDM: academyDM.total, academyLabels: academyDM.labels, success } });
-      await logCreation(`${c.name} — Commission roll: ${total} (need ${c.commission.target}+)${bonusDM ? ` incl. ${bonusDM > 0 ? '+' : ''}${bonusDM} from a prior bonus` : ''}${academyDM.total ? ` incl. ${academyDM.total > 0 ? '+' : ''}${academyDM.total} from ${academyDM.labels.join(', ')}` : ''} — ${success ? 'granted.' : 'failed.'}`);
+      await logCreation(`${c.name} — Commission roll: ${d1}+${d2}=${d1+d2}${dmNum(draft.soc) !== 0 ? (dmNum(draft.soc) > 0 ? '+' : '')+dmNum(draft.soc)+' SOC' : ''}${dmLate ? dmLate+' late' : ''}${bonusDM ? (bonusDM > 0 ? '+' : '')+bonusDM+' banked' : ''}${academyDM.total ? (academyDM.total > 0 ? '+' : '')+academyDM.total+' academy' : ''} = ${total} (need ${c.commission.target}+) — ${success ? 'granted.' : 'failed.'}`);
       renderStep();
     }
 
@@ -9585,7 +9585,7 @@
         skillRollsRemaining: 1 + (base.success ? 1 : 0)
       });
       const a = currentAssignment(step5State(), c);
-      await logCreation(`${c.name} — Advancement: rolled ${base.total} (need ${a.advancement.target}+)${base.academyDM ? ` incl. ${base.academyDM > 0 ? '+' : ''}${base.academyDM} from ${base.academyLabels.join(', ')}` : ''} — ${base.success ? `promoted to rank ${newRank}${rankBonus ? ' (' + rankBonus + ')' : ''}.` : 'no promotion.'}`);
+      await logCreation(`${c.name} — Advancement: ${d1}+${d2}=${d1+d2}${base.statDM !== 0 ? (base.statDM > 0 ? '+' : '')+base.statDM+' stat' : ''}${base.bonusDM ? (base.bonusDM > 0 ? '+' : '')+base.bonusDM+' banked' : ''}${base.academyDM ? (base.academyDM > 0 ? '+' : '')+base.academyDM+' academy' : ''}${base.persistentDM ? (base.persistentDM > 0 ? '+' : '')+base.persistentDM+' persistent' : ''} = ${base.total} (need ${a.advancement.target}+) — ${base.success ? `promoted to rank ${newRank}${rankBonus ? ' (' + rankBonus + ')' : ''}.` : 'no promotion.'}`);
       renderStep();
     }
 
@@ -9701,7 +9701,7 @@
         desc = `${entry.stat} +1`;
       } else if (!entry.specialty && skillSpecialtiesFor(entry.name).length) {
         await saveStep5State({ pendingSpecialty: { name: entry.name, tableKey, idx } });
-        await logCreation(`${c.name} — Skill Training roll ${idx + 1} on ${tableKey}: ${entry.name} — choosing a specialty.`);
+        await logCreation(`${c.name} — Skill Training: rolled ${idx + 1} on ${tableKey} table → ${entry.name} — choosing a specialty.`);
         renderStep();
         return;
       } else {
@@ -9711,7 +9711,7 @@
         desc = `${entry.name}${entry.specialty ? ' (' + entry.specialty + ')' : ''}`;
       }
       await saveStep5State({ skillRollsRemaining: (s.skillRollsRemaining || 1) - 1, lastSkillResult: desc });
-      await logCreation(`${c.name} — Skill Training roll ${idx + 1} on ${tableKey}: ${desc}.`);
+      await logCreation(`${c.name} — Skill Training: rolled ${idx + 1} on ${tableKey} table → ${desc}.`);
       renderStep();
     }
 
@@ -9728,7 +9728,7 @@
       draft.skills = skills;
       const desc = `${pending.name} (${specialty})`;
       await saveStep5State({ skillRollsRemaining: (s.skillRollsRemaining || 1) - 1, lastSkillResult: desc, pendingSpecialty: null });
-      await logCreation(`${c.name} — Skill Training roll ${pending.idx + 1} on ${pending.tableKey}: ${desc}.`);
+      await logCreation(`${c.name} — Skill Training: rolled ${pending.idx + 1} on ${pending.tableKey} table → ${desc}.`);
       renderStep();
     }
 
