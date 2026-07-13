@@ -6285,15 +6285,18 @@
           </div>
         `;
       }
+      if (!m.success && !m.resolved) {
+        return resolverHeader(m.resultText) + renderGenericResolver('event', ['injury'], true);
+      }
       return resolverHeader(m.resultText);
     }
 
     async function rollArmyEvent6() {
       const total = roll2d6() + dmNum(draft.edu);
       const success = total >= 8;
-      await saveMechanic('event', { rolled: true, total, success, resultText: success ? undefined : `Rolled ${total} (need 8+) — failed to avoid injury (Injury table not tracked in this app).` });
-      if (!success) await resolveMechanic('event');
-      await logCreation(`Army Event 6: rolled ${total} (need 8+) — ${success ? 'avoided injury.' : 'failed.'}`);
+      await saveMechanic('event', { rolled: true, total, success, resultText: success ? undefined : `Rolled ${total} (need 8+) — failed to avoid injury — roll on the Injury table.` });
+      if (success) await logCreation(`Army Event 6: rolled ${total} (need 8+) — avoided injury.`);
+      else await logCreation(`Army Event 6: rolled ${total} (need 8+) — failed, must roll on Injury table.`);
       renderStep();
     }
 
