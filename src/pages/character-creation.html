@@ -4529,13 +4529,19 @@
     }
 
     async function leaveCareerAfterMishap() {
-      await recordCareerHistory(false);
-      const s = step5State();
-      const newTerms = s.terms + 1;
-      await supabaseClient.from('characters').update({ age: ageForTerms(newTerms) }).eq('id', draft.id);
-      draft.age = ageForTerms(newTerms);
-      await saveStep5State({ terms: newTerms });
-      await goToAgeingOrPhase('mustering');
+      try {
+        await recordCareerHistory(false);
+        const s = step5State();
+        const newTerms = s.terms + 1;
+        const { error } = await supabaseClient.from('characters').update({ age: ageForTerms(newTerms) }).eq('id', draft.id);
+        if (error) throw error;
+        draft.age = ageForTerms(newTerms);
+        await saveStep5State({ terms: newTerms });
+        await goToAgeingOrPhase('mustering');
+      } catch (err) {
+        console.error('leaveCareerAfterMishap failed:', err);
+        alert('Error leaving career: ' + (err.message || err));
+      }
     }
 
     async function continueCareerAfterMishap() {
