@@ -2523,7 +2523,7 @@
           { roll: 5, text: 'You establish a network of contacts. Gain D3 Contacts.', tools: [] },
           { roll: 6, text: 'Given advanced training. Roll EDU 8+ to increase one skill you already have by a level.', tools: [] },
           { roll: 7, text: 'Life Event. Roll on the Life Events table.', tools: ['lifeEvent'] },
-          { roll: 8, text: 'You go undercover. Roll Deception 8+: success defers to the Rogue or Citizen Events table (your choice — resolve it manually using that career\'s table, this app does not auto-roll across careers), failure rolls on your own Mishap table.', tools: [] },
+          { roll: 8, text: 'You go undercover. Roll Deception 8+: success lets you roll on the Rogue or Citizen Events table (your choice), failure rolls on your own Mishap table.', tools: [] },
           { roll: 9, text: 'You go above and beyond. Gain DM+2 to your next advancement roll.', tools: [] },
           { roll: 10, text: 'Specialist vehicle training. Gain one of Drive 1, Flyer 1, Pilot 1, or Gunner 1.', tools: ['skill'], skillOptions: [{ name: 'Drive', level: 1 }, { name: 'Flyer', level: 1 }, { name: 'Pilot', level: 1 }, { name: 'Gunner', level: 1 }] },
           { roll: 11, text: 'A senior agent befriends you. Increase Investigate by one level, or DM+4 to an advancement roll instead.', tools: [] },
@@ -6223,16 +6223,43 @@
     // mishap (full bespoke mechanics, leave/continue, the works), not a
     // flattened summary.
     function renderAgentEvent8(tag, m) {
+      const s = step5State();
+      if (s.eventResolved) return resolverHeader(s.eventResolvedText || 'Resolved.');
       const key = skillKey('Deception', null);
       const dm = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
       if (!m.rolled) {
-        return resolverHeader(`Roll Deception (DM${dm >= 0 ? '+' : ''}${dm}) 8+.`) + `<button class="btn-outline" onclick="rollAgentEvent8()">Roll</button>`;
+        return resolverHeader(`Roll Deception (DM${dm >= 0 ? '+' : ''}${dm}) 8+.`) +
+          `<button class="btn-outline" onclick="rollAgentEvent8()">Roll</button>`;
       }
-      if (m.success) {
-        return resolverHeader(`Rolled ${m.total} on Deception (need 8+) — success! Per the rulebook this rolls on the Rogue or Citizen Events table (your choice) plus a Specialist skill table roll for that career. Both careers exist now, but this app doesn't auto-roll across careers — resolve it manually using whichever career's tables you pick.`);
+      if (!m.success) {
+        return resolverHeader(`Rolled ${m.total} on Deception (need 8+) — failed.`) +
+          `<button class="btn-outline" onclick="goCareerMishap()">Roll on the Mishap Table</button>`;
       }
-      return resolverHeader(`Rolled ${m.total} on Deception (need 8+) — failed.`) +
-        `<button class="btn-outline" onclick="goCareerMishap()">Roll on the Mishap Table</button>`;
+      if (!m.crossCareerChosen) {
+        return resolverHeader(`Rolled ${m.total} on Deception (need 8+) — success! Choose which career's Events table to roll on:`) + `
+          <div class="wizard-actions" style="justify-content:flex-start; gap:10px; margin-top:0;">
+            <button class="btn-outline" onclick="chooseAgentEvent8Career('rogue')">Rogue Events</button>
+            <button class="btn-outline" onclick="chooseAgentEvent8Career('citizen')">Citizen Events</button>
+          </div>`;
+      }
+      const crossName = m.crossCareerChosen === 'rogue' ? 'Rogue' : 'Citizen';
+      if (!m.crossCareerRoll) {
+        return resolverHeader(`Going undercover as ${crossName}. Roll 2D on the ${crossName} Events table:`) +
+          `<button class="btn-outline" onclick="rollAgentEvent8Cross()">Roll 2D</button>`;
+      }
+      const crossEvent = CAREERS_DATA[m.crossCareerChosen].events.find(e => e.roll === m.crossCareerRoll);
+      const header = resolverHeader(`Rolled ${m.crossCareerRoll} on ${crossName} Events — ${crossEvent.text}`);
+      const tools = crossEvent.tools || [];
+      if (tools.length > 0) {
+        return header + renderGenericResolver('event', tools, tools.length === 1, {
+          skillOptions: crossEvent.skillOptions,
+          associateTypes: crossEvent.associateTypes,
+          statOptions: crossEvent.statOptions,
+          statAmount: crossEvent.statAmount
+        });
+      }
+      // No tools — auto-grants were applied on roll; show manual resolve button
+      return header + `<button class="btn-outline" onclick="finishAgentEvent8Cross()">Mark Resolved</button>`;
     }
 
     async function rollAgentEvent8() {
@@ -6241,9 +6268,39 @@
       const total = roll2d6() + level;
       const success = total >= 8;
       await saveMechanic('event', { rolled: true, total, success });
-      if (success) await resolveMechanic('event');
       await logCreation(`Agent Event 8: rolled ${total} (need 8+) on Deception — ${success ? 'success.' : 'failed.'}`);
       renderStep();
+    }
+
+    async function chooseAgentEvent8Career(careerId) {
+      await saveMechanic('event', { crossCareerChosen: careerId });
+      renderStep();
+    }
+
+    async function rollAgentEvent8Cross() {
+      const m = mechanicState('event');
+      const d1 = rollDie(), d2 = rollDie();
+      const total = d1 + d2;
+      const crossEvent = CAREERS_DATA[m.crossCareerChosen].events.find(e => e.roll === total);
+      const crossName = m.crossCareerChosen === 'rogue' ? 'Rogue' : 'Citizen';
+      // Apply auto-grants (same as rollCareerEvent does for normal events)
+      const autoNote = await applyAutoGrants(crossEvent);
+      await saveMechanic('event', { crossCareerRoll: total });
+      await logCreation(`Agent Event 8 — undercover as ${crossName}: rolled ${d1}+${d2}=${total} — ${crossEvent.text}${autoNote ? ' Auto-applied: ' + autoNote + '.' : ''}`);
+      // If only auto-grants and no further tools, resolve immediately
+      if ((!crossEvent.tools || crossEvent.tools.length === 0) && autoNote) {
+        const resultText = `Undercover as ${crossName}: rolled ${total} — ${crossEvent.text} Auto-applied: ${autoNote}.`;
+        markResolverDone('event', resultText);
+      } else {
+        renderStep();
+      }
+    }
+
+    async function finishAgentEvent8Cross() {
+      const m = mechanicState('event');
+      const crossName = m.crossCareerChosen === 'rogue' ? 'Rogue' : 'Citizen';
+      const crossEvent = CAREERS_DATA[m.crossCareerChosen].events.find(e => e.roll === m.crossCareerRoll);
+      markResolverDone('event', `Undercover as ${crossName}: rolled ${m.crossCareerRoll} — ${crossEvent.text}`);
     }
 
     // Army mishap 3 — choose which skill absorbs the level-up, plus an
