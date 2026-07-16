@@ -4020,7 +4020,7 @@
                 ? `<span style="font-size:0.75rem; color:#4a9ab8;">Requires a tested Psionic Strength (PSI) first — not available this way yet</span>`
                 : (disabled
                     ? `<span style="font-size:0.75rem; color:#4a9ab8;">Locked — resolve the forced entry above</span>`
-                    : `<button class="btn-outline" onclick="chooseCareer('${c.id}')">${c.id === 'prisoner' ? 'Confirm Forced Entry' : 'Attempt Qualification'}</button>`)
+                    : `<button class="btn-outline" onclick="${s.forcedPrisonerNextTerm && c.id === 'prisoner' ? 'confirmForcedPrisoner()' : `chooseCareer('${c.id}')`}">${c.id === 'prisoner' && s.forcedPrisonerNextTerm ? 'Confirm Forced Entry' : 'Attempt Qualification'}</button>`)
             }
           </div>
         `;
@@ -4041,7 +4041,7 @@
           ` : ''}
           ${s.forcedPrisonerNextTerm ? `
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
-              A prior event rolled a natural 2 and forces the Prisoner career this term instead of a free choice. All other careers are locked until this resolves.
+              A prior event forces the Prisoner career this term instead of a free choice. All other careers are locked until this resolves.
               <button class="btn-outline" style="margin-top:8px;" onclick="confirmForcedPrisoner()">Confirm Forced Entry — Prisoner</button>
             </div>
           ` : ''}
