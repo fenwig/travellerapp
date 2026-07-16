@@ -5765,10 +5765,14 @@
       let resultText;
       if (takeSkill) {
         const skills = Object.assign({}, draft.skills || {});
-        grantSkillMin(skills, name, specialty || null, level);
+        if (skillSpecialtiesFor(name).length && specialty) bumpSpecialtySkill(skills, name, specialty, level);
+        else if (skillSpecialtiesFor(name).length) bumpSkill(skills, name, null, level);
+        else bumpSkill(skills, name, null, level);
         await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
         draft.skills = skills;
-        resultText = `Gained ${name}${specialty ? ' (' + specialty + ')' : ''} ${level}.`;
+        const sk2 = skillKey(name, specialty || null);
+        const resultLevel = skills[sk2] ? skills[sk2].level : level;
+        resultText = `${name}${specialty ? ' (' + specialty + ')' : ''} increased to ${resultLevel}.`;
       } else {
         await addPendingMod(dmKey, amount);
         resultText = `Banked DM${amount > 0 ? '+' : ''}${amount} to your next roll.`;
