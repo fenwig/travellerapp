@@ -4704,7 +4704,11 @@
       }
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
       draft.skills = skills;
-      const desc = `Granted ${name}${specialty ? ' (' + specialty + ')' : ''} ${level}.`;
+      const skillKey2 = skillKey(name, specialty);
+      const resultLevel = skills[skillKey2] ? skills[skillKey2].level : level;
+      const desc = isBump
+        ? `${name}${specialty ? ' (' + specialty + ')' : ''} increased to ${resultLevel}.`
+        : `Granted ${name}${specialty ? ' (' + specialty + ')' : ''} ${level}.`;
       await logCreation(`Resolved outcome — ${desc}`);
       if ((window.__resolverRestrict[tag] || {}).__soleTool === 'skill') {
         markResolverDone(tag, desc);
