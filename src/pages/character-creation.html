@@ -9370,7 +9370,7 @@
       const genericBody = (bespoke !== null) ? bespoke
         : (s.eventResolved
           ? `<div class="wizard-card-sub" style="color:#00ffaa;">${s.eventResolvedText || 'Resolved.'}</div>`
-          : renderGenericResolver('event', e.tools, false, { skillOptions: e.skillOptions, associateTypes: e.associateTypes, statOptions: e.statOptions, statAmount: e.statAmount }));
+          : renderGenericResolver('event', e.tools, e.tools.length === 1, { skillOptions: e.skillOptions, associateTypes: e.associateTypes, statOptions: e.statOptions, statAmount: e.statAmount }));
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} — Event ${s.eventRoll}</div>
