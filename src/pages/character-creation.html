@@ -666,7 +666,7 @@
         entryGrant: (s) => ({ auto: militaryServiceSkillPool(s.branch) }),
         graduation: () => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: 0, dmLabel: '' }),
         benefits: [
-          { id: 'three_service', text: 'If entering the same military career, select any three Service Skills and increase them to level 1.', type: 'chooseN', n: 3, level: 1, pool: (s) => militaryServiceSkillPool(s.branch) },
+          { id: 'three_service', text: 'If entering the same military career, select any three Service Skills and increase them to level 1.', type: 'chooseN', n: 3, level: 1, bump: true, pool: (s) => militaryServiceSkillPool(s.branch) },
           { id: 'edu1', text: 'Increase EDU by +1.', type: 'stat', key: 'edu', amount: 1 },
           { id: 'soc1_honours', text: 'Honours graduates also increase SOC by +1.', type: 'stat', key: 'soc', amount: 1, honoursOnly: true },
           { id: 'auto_entry', text: 'Automatic entry into the tied military career at rank 1 (officer), if it is the first career after the academy.', type: 'flag' }
@@ -679,11 +679,11 @@
         entryGrant: { auto: COLONIAL_SKILLS },
         graduation: (d) => ({ stat: 'int_stat', target: 8, honours: 12, extraDM: d.end_stat >= 8 ? 1 : 0, dmLabel: 'DM+1 if END 8+' }),
         benefits: [
-          { id: 'bump_one_entry', text: 'Increase one skill already gained at level 0 to level 1.', type: 'chooseN', n: 1, level: 1, pool: () => COLONIAL_SKILLS },
-          { id: 'two_more', text: 'Gain any two other skills from the list below at level 1. Or increase a skill you have by 1.', type: 'chooseN', n: 2, level: 1, pool: () => COLONIAL_SKILLS },
+          { id: 'bump_one_entry', text: 'Increase one skill already gained at level 0 to level 1.', type: 'chooseN', n: 1, level: 1, bump: true, pool: () => COLONIAL_SKILLS },
+          { id: 'two_more', text: 'Gain any two other skills from the list below at level 1. Or increase a skill you have by 1.', type: 'chooseN', n: 2, level: 1, bump: true, pool: () => COLONIAL_SKILLS },
           { id: 'jot1', text: 'Gain Jack-of-all-Trades at level 1.', type: 'fixedSkill', name: 'Jack-of-all-Trades', level: 1 },
           { id: 'honours_extra', text: 'Honours graduates gain Leadership 1.', type: 'fixedSkill', name: 'Leadership', level: 1, honoursOnly: true },
-          { id: 'honours_extra_pick', text: 'Honours graduates may also increase any other level-0 skill to level 1.', type: 'chooseN', n: 1, level: 1, pool: () => COLONIAL_SKILLS, honoursOnly: true },
+          { id: 'honours_extra_pick', text: 'Honours graduates may also increase any other level-0 skill to level 1.', type: 'chooseN', n: 1, level: 1, bump: true, pool: () => COLONIAL_SKILLS, honoursOnly: true },
           { id: 'end1_edu_down', text: 'Increase END by +1, decrease EDU by D3.', type: 'rollMultiStat', fixed: { end_stat: 1 }, rolled: { edu: 3 }, rolledSign: { edu: -1 } }
         ],
         ageNote: 'Enters first career aged 22+2D3 (older than the usual 18).',
@@ -709,7 +709,7 @@
         }),
         graduation: (d) => ({ stat: 'int_stat', target: 7, honours: 11, extraDM: (d.edu >= 8 ? 1 : 0) + (d.soc >= 8 ? 1 : 0), dmLabel: 'DM+1 if EDU 8+, DM+1 if SOC 8+' }),
         benefits: [
-          { id: 'bump_one', text: 'Increase one skill already gained from the Broker/Merchant Marine table to level 1.', type: 'chooseN', n: 1, level: 1, pool: (s) => (s.curriculum === 'Business' ? CAREERS_DATA.merchant.assignments.find(a => a.key === 'broker') : CAREERS_DATA.merchant.assignments.find(a => a.key === 'merchantMarine')).specialistSkills },
+          { id: 'bump_one', text: 'Increase one skill already gained from the Broker/Merchant Marine table to level 1.', type: 'chooseN', n: 1, level: 1, bump: true, pool: (s) => (s.curriculum === 'Business' ? CAREERS_DATA.merchant.assignments.find(a => a.key === 'broker') : CAREERS_DATA.merchant.assignments.find(a => a.key === 'merchantMarine')).specialistSkills },
           { id: 'edu1', text: 'Increase EDU by +1.', type: 'stat', key: 'edu', amount: 1 },
           { id: 'auto_entry', text: 'Automatic entry into Merchant or Citizen career at rank 1 (rank 2 with honours), if first career after the academy.', type: 'flag' },
           { id: 'adv_dm', text: 'DM+1 on advancement checks in the Merchant or Citizen careers.', type: 'academyBonus', amount: 1, careers: ['merchant', 'citizen'], rollTypes: ['advancement'] },
@@ -724,7 +724,7 @@
         graduation: (d) => ({ stat: 'psi', target: 6, honours: 12, extraDM: d.int_stat >= 8 ? 1 : 0, dmLabel: 'DM+1 if INT 8+' }),
         benefits: [
           { id: 'psi1', text: 'Increase PSI by +1.', type: 'stat', key: 'psi', amount: 1 },
-          { id: 'talent1', text: 'Skill level 1 in any one talent possessed.', type: 'chooseN', n: 1, level: 1, pool: () => Object.keys(draft.skills || {}).filter(k => PSI_TALENTS.some(t => t.name === k)).map(k => ({ name: k })) },
+          { id: 'talent1', text: 'Skill level 1 in any one talent possessed.', type: 'chooseN', n: 1, level: 1, bump: true, pool: () => Object.keys(draft.skills || {}).filter(k => PSI_TALENTS.some(t => t.name === k)).map(k => ({ name: k })) },
           { id: 'sci_psi', text: 'Science (Psionicology) 1.', type: 'fixedSkill', name: 'Science', specialty: 'Psionicology', level: 1 },
           { id: 'rival', text: 'Gain a Rival (Enemy if honours) unhappy you left the community.', type: 'associate', associateType: 'rival', honoursType: 'enemy', associateDesc: 'Unhappy you left the psionic community.' }
         ]
@@ -739,7 +739,7 @@
           { id: 'three_more', text: 'Gain any three other skills listed above at level 0.', type: 'chooseN', n: 3, level: 0, pool: () => HARDKNOCKS_SKILLS },
           { id: 'gun0', text: 'Gain Gun Combat 0.', type: 'fixedSkill', name: 'Gun Combat', level: 0 },
           { id: 'carouse_honours', text: 'Honours graduates gain Carouse 1.', type: 'fixedSkill', name: 'Carouse', level: 1, honoursOnly: true },
-          { id: 'carouse_honours_pick', text: 'Honours graduates may also increase any other level-0 skill to level 1.', type: 'chooseN', n: 1, level: 1, pool: () => HARDKNOCKS_SKILLS, honoursOnly: true },
+          { id: 'carouse_honours_pick', text: 'Honours graduates may also increase any other level-0 skill to level 1.', type: 'chooseN', n: 1, level: 1, bump: true, pool: () => HARDKNOCKS_SKILLS, honoursOnly: true },
           { id: 'soc_down', text: 'Decrease SOC by 1.', type: 'stat', key: 'soc', amount: -1 },
           { id: 'promo_dm', text: 'DM-2 on promotion/commission checks in your first career (unless you left it by choice — not tracked, applied for the whole first career as a simplification).', type: 'academyBonus', amount: -2, firstCareerOnly: true, rollTypes: ['advancement', 'commission'] }
         ]
@@ -2373,8 +2373,7 @@
         const chosen = (s.benefitChoosers && s.benefitChoosers[b.id]) || [];
         const skills = Object.assign({}, draft.skills || {});
         chosen.forEach(c => {
-          const key = skillKey(c.name, c.specialty || null);
-          if ((draft.skills || {})[key]) {
+          if (b.bump) {
             bumpSpecialtySkill(skills, c.name, c.specialty || null, 1);
           } else {
             grantSpecialtySkillMin(skills, c.name, c.specialty || null, b.level);
