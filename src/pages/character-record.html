@@ -677,9 +677,9 @@ function renderStats() {
     return `
       <div class="stat-box">
         <div class="stat-label">${c.label}</div>
+        <div class="stat-dm" id="dm-${c.key}">${charDM(effectiveStat(c))}</div>
         <div class="stat-value view-only" id="disp-${c.key}">${val}</div>
         <input class="stat-input edit-only" type="number" id="edit-${c.key}" value="${val}" min="0" max="15" />
-        <div class="stat-dm" id="dm-${c.key}">${charDM(effectiveStat(c))}</div>
         <div class="stat-injury-row">
           <div class="stat-injury-label">${c.injuryLabel}</div>
           <div class="stat-injury-ctrl">
