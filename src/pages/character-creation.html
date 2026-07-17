@@ -2372,7 +2372,14 @@
       } else if (b.type === 'chooseN') {
         const chosen = (s.benefitChoosers && s.benefitChoosers[b.id]) || [];
         const skills = Object.assign({}, draft.skills || {});
-        chosen.forEach(c => grantSpecialtySkillMin(skills, c.name, c.specialty || null, b.level));
+        chosen.forEach(c => {
+          const key = skillKey(c.name, c.specialty || null);
+          if ((draft.skills || {})[key]) {
+            bumpSpecialtySkill(skills, c.name, c.specialty || null, 1);
+          } else {
+            grantSpecialtySkillMin(skills, c.name, c.specialty || null, b.level);
+          }
+        });
         update.skills = skills;
         appliedText = `${b.text} — chose ${chosen.map(c => `${c.name}${c.specialty ? ' (' + c.specialty + ')' : ''}`).join(', ') || 'none'}.`;
       } else if (b.type === 'pendingMod') {
