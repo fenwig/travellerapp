@@ -2814,7 +2814,7 @@
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
           { roll: 2, text: 'You expose, or are involved in, a scandal of some sort.', tools: [] },
           { roll: 3, text: 'Public opinion turns on you. Reduce your SOC by 1.', tools: [], autoStat: { key: 'soc', amount: -1 } },
-          { roll: 4, text: 'Betrayed by a peer. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have neither, gain a Rival or Enemy anyway.', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
+          { roll: 4, text: 'Betrayed by a peer. Convert an existing Contact or Ally into a Rival or Enemy, or gain a fresh Rival/Enemy if you have neither.', tools: [], convertOrGain: true, convertFrom: ['contact', 'ally'], convertTo: ['rival', 'enemy'] },
           { roll: 5, text: 'An investigation, tour, project, or expedition goes wrong, stranding you far from home. Gain one of Survival 1, Pilot 1, Persuade 1, or Streetwise 1.', tools: ['skill'], skillOptions: [{ name: 'Survival', level: 1 }, { name: 'Pilot', level: 1 }, { name: 'Persuade', level: 1 }, { name: 'Streetwise', level: 1 }] },
           { roll: 6, text: 'You are forced out because of censorship or controversy. Gain DM+2 to the qualification roll for your next career.', tools: [], autoDM: { key: 'qualificationDM', amount: 2 } }
         ],
