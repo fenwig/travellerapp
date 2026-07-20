@@ -1357,7 +1357,13 @@ async function renderAssociates() {
   list.innerHTML = data.map(r => `
     <div class="associate-row" data-id="${r.id}">
       <div class="assoc-row-top">
-        <span class="assoc-type-badge type-${r.type}">${r.type}</span>
+        <span class="assoc-type-badge type-${r.type} view-only">${r.type}</span>
+        <select class="assoc-type-select edit-only" onchange="queueAssocUpdate('${r.id}','type',this.value)" style="padding:2px 6px;font-size:0.85rem;">
+          <option value="ally" ${r.type === 'ally' ? 'selected' : ''}>Ally</option>
+          <option value="contact" ${r.type === 'contact' ? 'selected' : ''}>Contact</option>
+          <option value="rival" ${r.type === 'rival' ? 'selected' : ''}>Rival</option>
+          <option value="enemy" ${r.type === 'enemy' ? 'selected' : ''}>Enemy</option>
+        </select>
         <span class="assoc-name view-only">${escapeHtml(r.name)}</span>
         <input class="assoc-name-input edit-only" type="text" value="${escapeAttr(r.name)}" onchange="queueAssocUpdate('${r.id}','name',this.value)" />
         <span class="assoc-desc view-only">${escapeHtml(r.description) || '<span style="color:#4a9ab8">—</span>'}</span>
