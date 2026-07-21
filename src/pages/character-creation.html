@@ -9666,8 +9666,8 @@
       const s = step5State();
       const { newRank, entry, base } = s.advancementPending;
       const parts = [];
-      if (entry.title && entry.title !== '—') parts.push(entry.title);
-      if (entry.skill) {
+      if (entry && entry.title && entry.title !== '—') parts.push(entry.title);
+      if (entry && entry.skill) {
         const skills = Object.assign({}, draft.skills || {});
         if (specialty) grantSpecialtySkillMin(skills, entry.skill.name, specialty, entry.skill.level);
         else grantSkillMin(skills, entry.skill.name, null, entry.skill.level);
@@ -9675,7 +9675,7 @@
         draft.skills = skills;
         parts.push(`${entry.skill.name}${specialty ? ' (' + specialty + ')' : ''} ${entry.skill.level}`);
       }
-      if (entry.stat) {
+      if (entry && entry.stat) {
         if (entry.stat.min !== undefined) {
           if ((draft[entry.stat.key] || 0) < entry.stat.min) await applyStatChange(entry.stat.key, entry.stat.min - (draft[entry.stat.key] || 0));
           else await applyStatChange(entry.stat.key, 1);
