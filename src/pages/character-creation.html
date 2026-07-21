@@ -741,7 +741,7 @@
           { id: 'carouse_honours', text: 'Honours graduates gain Carouse 1.', type: 'fixedSkill', name: 'Carouse', level: 1, honoursOnly: true },
           { id: 'carouse_honours_pick', text: 'Honours graduates may also increase any other level-0 skill to level 1.', type: 'chooseN', n: 1, level: 1, bump: true, pool: () => HARDKNOCKS_SKILLS, honoursOnly: true },
           { id: 'soc_down', text: 'Decrease SOC by 1.', type: 'stat', key: 'soc', amount: -1 },
-          { id: 'promo_dm', text: 'DM-2 on promotion/commission checks in your first career (unless you left it by choice — not tracked, applied for the whole first career as a simplification).', type: 'academyBonus', amount: -2, firstCareerOnly: true, rollTypes: ['advancement', 'commission'] }
+          { id: 'promo_dm', text: 'DM-2 on advancement and commission checks in your first career.', type: 'academyBonus', amount: -2, firstCareerOnly: true, rollTypes: ['advancement', 'commission'] }
         ]
       },
       {
