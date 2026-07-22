@@ -9885,14 +9885,16 @@
       }
 
       const forcedLeave = s.advancementResult && s.advancementResult.mustLeave;
+      const mustLeave = forcedLeave || s.forcedPrisonerNextTerm;
 
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">${c.name} (${a.label}) — Term ${s.termInCareer + 1} Complete</div>
           <div class="wizard-card-sub">Rank ${s.rank}${s.isOfficer ? ' (officer)' : ''}. Benefit rolls banked: ${s.benefitRolls}. You'll be age ${currentAge() + 4} next term.</div>
           ${forcedLeave ? '<p style="color:#ff5a4a; font-size:0.85rem; margin-bottom:10px;">Your services are no longer required — you must leave this career.</p>' : ''}
+          ${s.forcedPrisonerNextTerm ? '<p style="color:#ff5a4a; font-size:0.85rem; margin-bottom:10px;">A prior event forces the Prisoner career next term — you must leave this career.</p>' : ''}
           <div class="wizard-actions" style="justify-content:flex-start; gap:12px;">
-            ${forcedLeave ? '' : '<button class="btn-outline" onclick="continueCareerTerm()">Serve Another Term</button>'}
+            ${mustLeave ? '' : '<button class="btn-outline" onclick="continueCareerTerm()">Serve Another Term</button>'}
             <button class="btn-outline" onclick="leaveCareerVoluntary()">Leave Career — Muster Out</button>
           </div>
         </div>
