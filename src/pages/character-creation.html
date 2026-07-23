@@ -1910,6 +1910,10 @@
     }
 
     async function event11Flee() {
+      const s = step4State();
+      const data = s;
+      data.preed_event11_fleeing = true;
+      await saveStep4State({ ...data, preed_event11_fleeing: true });
       await saveEventMechanic({ resolved: true, gradForcedFail: true, outcome: 'You flee and will join the Drifter career next term. You do not graduate this term.' });
       await logCreation('Event 11 outcome: fled — will join the Drifter career next term.');
       renderStep();
@@ -1917,9 +1921,12 @@
 
     async function event11AcceptDraft() {
       const branchRoll = rollDie();
-      const branch = branchRoll <= 3 ? 'Army' : branchRoll <= 5 ? 'Marine' : 'Navy';
-      await saveEventMechanic({ resolved: true, gradForcedFail: true, outcome: `Drafted into the ${branch} — that career begins next term (once Careers is built). You do not graduate this term.` });
-      await logCreation(`Event 11 outcome: drafted into the ${branch}.`);
+      const branchId = branchRoll <= 3 ? 'army' : branchRoll <= 5 ? 'marine' : 'navy';
+      const branchName = branchRoll <= 3 ? 'Army' : branchRoll <= 5 ? 'Marine' : 'Navy';
+      const s = step4State();
+      await saveStep4State({ ...s, preed_event11_draftBranch: branchId });
+      await saveEventMechanic({ resolved: true, gradForcedFail: true, outcome: `Drafted into the ${branchName} — that career begins next term. You do not graduate this term.` });
+      await logCreation(`Event 11 outcome: drafted into the ${branchName}.`);
       renderStep();
     }
 
@@ -3982,6 +3989,23 @@
       renderStep();
     }
 
+    async function initializeStep5FromGraduation() {
+      const s4 = step4State();
+      const s5 = step5State();
+      // Check if graduation benefit 11 forced a military career or drifter
+      if (s5.phase === 'choose' && !s5.gradInitialized) {
+        const updates = { gradInitialized: true };
+        if (s4.preed_event11_draftBranch) {
+          updates.forcedMilitaryBranch = s4.preed_event11_draftBranch;
+        } else if (s4.preed_event11_fleeing) {
+          updates.forcedDrifterNextTerm = true;
+        }
+        if (Object.keys(updates).length > 1) {
+          await saveStep5State(updates);
+        }
+      }
+    }
+
     function renderStepCareer() {
       const s = step5State();
       switch (s.phase) {
@@ -4008,14 +4032,14 @@
 
     function renderCareerChoose() {
       const s = step5State();
-      // A forced Draft/Prisoner roll overrides free choice entirely — every
+      // A forced Draft/Prisoner/Military roll overrides free choice entirely — every
       // other career is locked out (greyed, button disabled) until the
       // forced roll/entry is resolved via its own banner button below.
-      const locked = !!(s.forcedDraftNextTerm || s.forcedPrisonerNextTerm);
+      const locked = !!(s.forcedDraftNextTerm || s.forcedPrisonerNextTerm || s.forcedMilitaryBranch || s.forcedDrifterNextTerm);
       const psiUntested = draft.psi === null || draft.psi === undefined;
       const rows = CAREER_LIST.map(c => {
         const built = !!CAREERS_DATA[c.id];
-        const disabled = locked && !(s.forcedPrisonerNextTerm && c.id === 'prisoner');
+        const disabled = locked && !(s.forcedPrisonerNextTerm && c.id === 'prisoner') && !(s.forcedMilitaryBranch && c.id === s.forcedMilitaryBranch) && !(s.forcedDrifterNextTerm && c.id === 'drifter');
         const psiGated = c.id === 'psion' && psiUntested;
         return `
           <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid #0a4a60; border-radius:6px; margin-bottom:8px; ${disabled ? 'opacity:0.4;' : ''}">
@@ -4026,7 +4050,7 @@
                 ? `<span style="font-size:0.75rem; color:#4a9ab8;">Requires a tested Psionic Strength (PSI) first — not available this way yet</span>`
                 : (disabled
                     ? `<span style="font-size:0.75rem; color:#4a9ab8;">Locked — resolve the forced entry above</span>`
-                    : `<button class="btn-outline" onclick="${s.forcedPrisonerNextTerm && c.id === 'prisoner' ? 'confirmForcedPrisoner()' : `chooseCareer('${c.id}')`}">${c.id === 'prisoner' && s.forcedPrisonerNextTerm ? 'Confirm Forced Entry' : 'Attempt Qualification'}</button>`)
+                    : `<button class="btn-outline" onclick="${s.forcedPrisonerNextTerm && c.id === 'prisoner' ? 'confirmForcedPrisoner()' : s.forcedMilitaryBranch && c.id === s.forcedMilitaryBranch ? 'confirmForcedMilitaryBranch()' : s.forcedDrifterNextTerm && c.id === 'drifter' ? 'confirmForcedDrifter()' : `chooseCareer('${c.id}')`}">${c.id === 'prisoner' && s.forcedPrisonerNextTerm ? 'Confirm Forced Entry' : (s.forcedMilitaryBranch && c.id === s.forcedMilitaryBranch) || (s.forcedDrifterNextTerm && c.id === 'drifter') ? 'Confirm Forced Entry' : 'Attempt Qualification'}</button>`)
             }
           </div>
         `;
@@ -4051,6 +4075,18 @@
               <button class="btn-outline" style="margin-top:8px;" onclick="confirmForcedPrisoner()">Confirm Forced Entry — Prisoner</button>
             </div>
           ` : ''}
+          ${s.forcedMilitaryBranch ? `
+            <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
+              A prior event forced you to be drafted into the ${(CAREER_LIST.find(c => c.id === s.forcedMilitaryBranch) || {}).name} career this term instead of a free choice. All other careers are locked until this resolves.
+              <button class="btn-outline" style="margin-top:8px;" onclick="confirmForcedMilitaryBranch()">Confirm Forced Entry — ${(CAREER_LIST.find(c => c.id === s.forcedMilitaryBranch) || {}).name}</button>
+            </div>
+          ` : ''}
+          ${s.forcedDrifterNextTerm ? `
+            <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
+              A prior event forced you to join the Drifter career this term instead of a free choice. All other careers are locked until this resolves.
+              <button class="btn-outline" style="margin-top:8px;" onclick="confirmForcedDrifter()">Confirm Forced Entry — Drifter</button>
+            </div>
+          ` : ''}
           ${rows}
           <div class="wizard-actions">
             <button class="btn-outline" onclick="goStep(4)">Back</button>
@@ -4067,6 +4103,18 @@
     async function confirmForcedPrisoner() {
       await saveStep5State({ forcedPrisonerNextTerm: false });
       await chooseCareer('prisoner');
+    }
+
+    async function confirmForcedMilitaryBranch() {
+      const s = step5State();
+      const branch = s.forcedMilitaryBranch;
+      await saveStep5State({ forcedMilitaryBranch: null });
+      await chooseCareer(branch);
+    }
+
+    async function confirmForcedDrifter() {
+      await saveStep5State({ forcedDrifterNextTerm: false });
+      await chooseCareer('drifter');
     }
 
     async function chooseCareer(id) {
@@ -10475,7 +10523,7 @@
       `;
     }
 
-    function renderStep() {
+    async function renderStep() {
       const shell = document.getElementById('wizard-shell');
       const step = draft.creation_step || 1;
       let body = '';
@@ -10489,6 +10537,7 @@
       } else if (step === 4) {
         body = renderStepPreEd();
       } else if (step === 5) {
+        await initializeStep5FromGraduation();
         body = renderStepCareer();
       } else if (step === 8) {
         body = renderStepFinalize();
