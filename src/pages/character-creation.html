@@ -4564,7 +4564,7 @@
         const { error } = await supabaseClient.from('characters').update({ age: ageForTerms(newTerms) }).eq('id', draft.id);
         if (error) throw error;
         draft.age = ageForTerms(newTerms);
-        await saveStep5State({ terms: newTerms });
+        await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + 1 });
         await goToAgeingOrPhase('mustering');
       } catch (err) {
         console.error('leaveCareerAfterMishap failed:', err);
@@ -8492,7 +8492,7 @@
       const newTerms = s.terms + 1;
       await supabaseClient.from('characters').update({ age: ageForTerms(newTerms) }).eq('id', draft.id);
       draft.age = ageForTerms(newTerms);
-      await saveStep5State({ terms: newTerms, paroleThreshold: null });
+      await saveStep5State({ terms: newTerms, paroleThreshold: null, benefitRolls: (s.benefitRolls || 0) + 1 });
       await logCreation('Prisoner — escaped successfully.');
       await goToAgeingOrPhase('mustering');
     }
@@ -9903,7 +9903,7 @@
       const newTerms = s.terms + 1;
       await supabaseClient.from('characters').update({ age: ageForTerms(newTerms) }).eq('id', draft.id);
       draft.age = ageForTerms(newTerms);
-      await saveStep5State({ terms: newTerms, paroleThreshold: null });
+      await saveStep5State({ terms: newTerms, paroleThreshold: null, benefitRolls: (s.benefitRolls || 0) + 1 });
       await logCreation('Prisoner — paroled. Sentence served.');
       await goToAgeingOrPhase('mustering');
     }
