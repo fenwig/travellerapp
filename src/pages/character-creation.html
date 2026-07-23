@@ -5715,6 +5715,7 @@
 
     // "Roll STAT 8+ to gain one level in any skill you already have." (Navy event 5)
     function renderRollSkillToGainLevel(tag, m, statKey, target) {
+      if (m.specialtyGateFor) return renderSpecialtyGate(tag, m.specialtyGateFor);
       const owned = Object.keys(draft.skills || {}).map(k => draft.skills[k]);
       if (!owned.length) {
         return resolverHeader('You have no skills yet to improve — nothing to roll for.') +
@@ -5750,9 +5751,32 @@
       if (success) {
         const skills = Object.assign({}, draft.skills || {});
         const owned = skills[m.chosenKey];
+        const newLevel = Math.min(4, (owned ? owned.level : 0) + 1);
         bumpSkill(skills, owned.name, owned.specialty, 1);
         await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
         draft.skills = skills;
+        // If bumping to level 1+ and the skill has specialties, gate the specialty choice
+        if (newLevel >= 1 && !owned.specialty && skillSpecialtiesFor(owned.name).length) {
+          await saveMechanic(tag, { rolled: true, resultText: `Rolled ${total} (need ${target}+) — gained a level.` });
+          await gateSpecialty(tag, owned.name, async (specialty) => {
+            const finalSkills = Object.assign({}, draft.skills || {});
+            if (!specialty) {
+              // Keep generic level 0-1 if no specialty chosen
+              finalSkills[skillKey(owned.name, null)] = { name: owned.name, specialty: null, level: newLevel };
+            } else {
+              // Replace the generic entry with the specialty entry
+              delete finalSkills[skillKey(owned.name, null)];
+              const existing = finalSkills[skillKey(owned.name, specialty)];
+              finalSkills[skillKey(owned.name, specialty)] = { name: owned.name, specialty, level: newLevel };
+            }
+            await supabaseClient.from('characters').update({ skills: finalSkills }).eq('id', draft.id);
+            draft.skills = finalSkills;
+            await resolveMechanic(tag);
+            await logCreation(`Skill-gain roll: ${total} (need ${target}+) on ${owned.name}${specialty ? ' (' + specialty + ')' : ''} — success.`);
+            renderStep();
+          });
+          return;
+        }
       }
       await saveMechanic(tag, { rolled: true, resultText: `Rolled ${total} (need ${target}+) — ${success ? 'gained a level.' : 'no improvement this time.'}` });
       await resolveMechanic(tag);
