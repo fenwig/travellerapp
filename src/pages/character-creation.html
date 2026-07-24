@@ -2700,7 +2700,7 @@
           { roll: 2, text: 'Injured. Roll on the Injury table.', tools: ['injury'] },
           { roll: 3, text: 'You run afoul of a criminal gang, corrupt bureaucrat or other foe. Gain an Enemy.', tools: ['associate'], associateTypes: ['enemy'] },
           { roll: 4, text: 'You suffer from a life-threatening illness. Reduce your END by 1.', tools: [], autoStat: { key: 'end_stat', amount: -1 } },
-          { roll: 5, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have none, gain a Rival or Enemy anyway.', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
+          { roll: 5, text: 'Betrayed by a friend. One of your Contacts or Allies betrays you, ending your career. That Contact or Ally becomes a Rival or Enemy. If you have no Contacts or Allies, then you are betrayed by someone you never saw coming and still gain a Rival or Enemy. In addition, roll 2D. If you roll 2, you must take the Prisoner career in your next term.', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
           { roll: 6, text: 'You do not know what happened to you. There is a gap in your memory.', tools: [] }
         ],
         events: [
@@ -5347,6 +5347,7 @@
         case 'citizen:mishap4': return renderCitizenMishap4(tag, m);
         case 'citizen:mishap5': return renderCitizenMishap5(tag, m);
         case 'drifter:mishap1': return renderInjuryGuaranteed2OrLower(tag, m);
+        case 'drifter:mishap5': return renderDrifterMishap5(tag, m);
         case 'entertainer:2':   return renderInlineMishapNotEjected(tag, careerId, m);
         case 'entertainer:3':   return renderEntertainerEvent3(tag, m);
         case 'entertainer:8':   return renderEntertainerEvent8(tag, m);
@@ -6052,6 +6053,37 @@
       await saveMechanic('event', { resolved: true, resultText });
       await resolveMechanic('event');
       await logCreation(`Drifter Event 10: ${resultText}`);
+      renderStep();
+    }
+
+    // Drifter mishap 5 — betrayal with 2D roll for Prisoner career forcing
+    function renderDrifterMishap5(tag, m) {
+      if (m.rolled) {
+        const prisonerForced = m.roll === 2;
+        const text = `Betrayed by someone. Lost a Contact or Ally, who became a Rival or Enemy. Rolled ${m.roll} — ${prisonerForced ? 'forced into Prisoner career next term.' : 'no forced career.'}`;
+        return resolverHeader(text);
+      }
+      return resolverHeader('A Contact or Ally (or a stranger) betrays you, becoming a Rival or Enemy. Now roll 2D to see if you\'re forced into the Prisoner career next term.') + `
+        <button class="btn-outline" onclick="rollDrifterMishap5('${tag}')">Roll 2D</button>
+      `;
+    }
+
+    async function rollDrifterMishap5(tag) {
+      const roll = roll2d6();
+      const prisonerForced = roll === 2;
+      const m = mechanicState(tag);
+
+      // Save the roll result
+      await saveMechanic(tag, { rolled: true, roll });
+
+      // If natural 2, force Prisoner career next term
+      if (prisonerForced) {
+        const s = step5State();
+        await saveStep5State({ forcedPrisonerNextTerm: true });
+      }
+
+      await logCreation(`Drifter Mishap 5: Rolled ${roll}${prisonerForced ? ' — forced into Prisoner career next term.' : '.'}`);
+      await resolveMechanic(tag);
       renderStep();
     }
 
