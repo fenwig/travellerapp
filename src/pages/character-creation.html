@@ -3858,10 +3858,15 @@
 
     async function goToAgeingOrPhase(resumePhase) {
       const s = step5State();
+      const stateUpdate = { phase: resumePhase };
+      if (resumePhase === 'mustering') {
+        stateUpdate.musteringResolved = [];
+        stateUpdate.musteringPending = null;
+      }
       if (s.terms >= 4) {
         await saveStep5State({ phase: 'ageing', ageingRoll: null, ageingPicks: {}, ageingResumePhase: resumePhase });
       } else {
-        await saveStep5State({ phase: resumePhase });
+        await saveStep5State(stateUpdate);
       }
       renderStep();
     }
