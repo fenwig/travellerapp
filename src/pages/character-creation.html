@@ -4679,10 +4679,14 @@
             </select>
           </div>
           <div id="resolver-${tag}-specialty-wrap"></div>
-          <div class="wizard-field"><label>Level</label>
-            <input id="resolver-${tag}-level" type="number" min="0" max="4" value="${(options[0] && options[0].level) || 1}" ${isBumpEvent ? 'readonly' : ''} />
-          </div>
-          <button class="btn-outline" onclick="applyResolverSkill('${tag}')">Apply</button>
+          ${!isBumpEvent ? `
+            <div class="wizard-field"><label>Level</label>
+              <input id="resolver-${tag}-level" type="number" min="0" max="4" value="${(options[0] && options[0].level) || 1}" />
+            </div>
+          ` : `
+            <input id="resolver-${tag}-level" type="hidden" value="${(options[0] && options[0].level) || 1}" />
+          `}
+          <button class="btn-outline" onclick="applyResolverSkill('${tag}')" id="resolver-${tag}-apply-btn">Apply</button>
         `;
       } else if (kind === 'stat') {
         const statChars = restrict.statOptions && restrict.statOptions.length ? CHARS.filter(c => restrict.statOptions.includes(c.key)) : CHARS;
@@ -4737,6 +4741,10 @@
 
     async function applyResolverSkill(tag, _name, _specialty, _level) {
       const nameEl = document.getElementById(`resolver-${tag}-skill`);
+      const applyBtn = document.getElementById(`resolver-${tag}-apply-btn`);
+      // Prevent double-application
+      if (applyBtn && applyBtn.disabled) return;
+
       const name = _name !== undefined ? _name : (nameEl ? nameEl.value : '');
       const level = _level !== undefined ? _level : (parseInt(document.getElementById(`resolver-${tag}-level`)?.value, 10) || 0);
       if (!name) return;
@@ -4770,6 +4778,14 @@
         ? `${name}${specialty ? ' (' + specialty + ')' : ''} increased to ${resultLevel}.`
         : `Granted ${name}${specialty ? ' (' + specialty + ')' : ''} ${level}.`;
       await logCreation(`Resolved outcome — ${desc}`);
+
+      // Disable the apply button to prevent double-application
+      if (applyBtn) {
+        applyBtn.disabled = true;
+        applyBtn.style.opacity = '0.5';
+        applyBtn.style.cursor = 'not-allowed';
+      }
+
       if ((window.__resolverRestrict[tag] || {}).__soleTool === 'skill') {
         markResolverDone(tag, desc);
         return;
