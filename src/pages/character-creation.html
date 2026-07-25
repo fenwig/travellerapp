@@ -4634,11 +4634,12 @@
       try {
         await recordCareerHistory(false);
         const s = step5State();
+        const termsInCareer = s.termInCareer + 1;
         const newTerms = s.terms + 1;
         const { error } = await supabaseClient.from('characters').update({ age: ageForTerms(newTerms) }).eq('id', draft.id);
         if (error) throw error;
         draft.age = ageForTerms(newTerms);
-        await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + 1 });
+        await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + termsInCareer });
         await goToAgeingOrPhase('mustering');
       } catch (err) {
         console.error('leaveCareerAfterMishap failed:', err);
@@ -8678,10 +8679,11 @@
     async function prisonerEscape() {
       await recordCareerHistory(true);
       const s = step5State();
+      const termsInCareer = s.termInCareer + 1;
       const newTerms = s.terms + 1;
       await supabaseClient.from('characters').update({ age: ageForTerms(newTerms) }).eq('id', draft.id);
       draft.age = ageForTerms(newTerms);
-      await saveStep5State({ terms: newTerms, paroleThreshold: null, benefitRolls: (s.benefitRolls || 0) + 1 });
+      await saveStep5State({ terms: newTerms, paroleThreshold: null, benefitRolls: (s.benefitRolls || 0) + termsInCareer });
       await logCreation('Prisoner — escaped successfully.');
       await goToAgeingOrPhase('mustering');
     }
@@ -10103,10 +10105,11 @@
     async function prisonerParoled() {
       await recordCareerHistory(true);
       const s = step5State();
+      const termsInCareer = s.termInCareer + 1;
       const newTerms = s.terms + 1;
       await supabaseClient.from('characters').update({ age: ageForTerms(newTerms) }).eq('id', draft.id);
       draft.age = ageForTerms(newTerms);
-      await saveStep5State({ terms: newTerms, paroleThreshold: null, benefitRolls: (s.benefitRolls || 0) + 1 });
+      await saveStep5State({ terms: newTerms, paroleThreshold: null, benefitRolls: (s.benefitRolls || 0) + termsInCareer });
       await logCreation('Prisoner — paroled. Sentence served.');
       await goToAgeingOrPhase('mustering');
     }
@@ -10127,10 +10130,11 @@
     async function leaveCareerVoluntary() {
       await recordCareerHistory(true);
       const s = step5State();
+      const termsInCareer = s.termInCareer + 1;
       const newTerms = s.terms + 1;
       await supabaseClient.from('characters').update({ age: ageForTerms(newTerms) }).eq('id', draft.id);
       draft.age = ageForTerms(newTerms);
-      await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + 1 });
+      await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + termsInCareer });
       await goToAgeingOrPhase('mustering');
     }
 
