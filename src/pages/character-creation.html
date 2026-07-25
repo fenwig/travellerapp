@@ -7603,9 +7603,11 @@
     async function rollNobleEvent8(skillName) {
       const key = skillKey(skillName, null);
       const level = draft.skills && draft.skills[key] ? draft.skills[key].level : -3;
-      const total = roll2d6() + level;
+      const diceRoll = roll2d6();
+      const total = diceRoll + level;
       const success = total >= 8;
-      const resultText = `Rolled ${total} on ${skillName} (need 8+) — ${success ? 'success! Choose a skill to gain:' : 'failed — the conspiracy collapses.'}`;
+      const modifierText = level !== 0 ? ` ${level > 0 ? '+' : ''}${level}` : '';
+      const resultText = `Rolled 2D: ${diceRoll}${modifierText} = ${total} on ${skillName} (need 8+) — ${success ? 'success! Choose a skill to gain:' : 'failed — the conspiracy collapses.'}`;
       await saveMechanic('event', { rolled: true, success, resultText });
       await logCreation(`Noble Event 8: ${resultText}`);
       renderStep();
