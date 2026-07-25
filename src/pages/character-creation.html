@@ -2108,7 +2108,7 @@
           <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
             <div style="font-size:0.85rem;">${detailText}</div>
             ${isAuto
-              ? `<button class="btn-outline" onclick="applyPreEdBenefit('${b.id}')" ${done ? 'disabled' : ''} style="flex-shrink:0;">${done ? 'Applied' : 'Apply'}</button>`
+              ? `<button class="btn-outline" id="preed-benefit-${b.id}-apply-btn" onclick="applyPreEdBenefit('${b.id}')" ${done ? 'disabled' : ''} style="flex-shrink:0;">${done ? 'Applied' : 'Apply'}</button>`
               : `<span style="font-size:0.75rem; color:#4a9ab8; flex-shrink:0;">Recorded as a note</span>`
             }
           </div>
@@ -2187,12 +2187,19 @@
         <div style="margin-bottom:10px; padding:10px; border:1px solid #0a4a60; border-radius:6px;">
           <div style="font-size:0.85rem; margin-bottom:8px;">${b.text}</div>
           <input id="preed-assoc-name-${b.id}" type="text" placeholder="Name" style="margin-bottom:8px;" />
-          <button class="btn-outline" onclick="applyPreEdAssociateBenefit('${b.id}')">Apply</button>
+          <button class="btn-outline" id="preed-assoc-${b.id}-apply-btn" onclick="applyPreEdAssociateBenefit('${b.id}')">Apply</button>
         </div>
       `;
     }
 
     async function applyPreEdAssociateBenefit(benefitId) {
+      const btn = document.getElementById(`preed-assoc-${benefitId}-apply-btn`);
+      if (btn && btn.disabled) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      }
       const s = step4State();
       const opt = findOption(s.optionId);
       const b = opt.benefits.find(x => x.id === benefitId);
@@ -2348,6 +2355,13 @@
     }
 
     async function applyPreEdBenefit(benefitId) {
+      const btn = document.getElementById(`preed-benefit-${benefitId}-apply-btn`);
+      if (btn && btn.disabled) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      }
       const s = step4State();
       const opt = findOption(s.optionId);
       const b = opt.benefits.find(x => x.id === benefitId);
@@ -3900,7 +3914,7 @@
             `;
           }).join('')}
           <div class="wizard-actions">
-            <button class="btn-outline" onclick="applyAgeingPicks()" ${allPicked ? '' : 'disabled'}>Apply</button>
+            <button class="btn-outline" id="ageing-picks-apply-btn" onclick="applyAgeingPicks()" ${allPicked ? '' : 'disabled'}>Apply</button>
           </div>
         </div>
       `;
@@ -3924,6 +3938,13 @@
     }
 
     async function applyAgeingPicks() {
+      const btn = document.getElementById('ageing-picks-apply-btn');
+      if (btn && btn.disabled) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      }
       const s = step5State();
       const reqs = s.ageingReqs || [];
       const picks = s.ageingPicks || {};
@@ -4695,7 +4716,7 @@
             <select id="resolver-${tag}-stat">${statChars.map(c => `<option value="${c.key}">${c.label}</option>`).join('')}</select>
           </div>
           <div class="wizard-field"><label>Amount (+/-)</label><input id="resolver-${tag}-amount" type="number" value="${restrict.statAmount || 1}" ${restrict.statAmount ? `readonly` : ''} /></div>
-          <button class="btn-outline" onclick="applyResolverStat('${tag}')">Apply</button>
+          <button class="btn-outline" id="resolver-${tag}-stat-apply-btn" onclick="applyResolverStat('${tag}')">Apply</button>
         `;
       } else {
         const typeLabels = { ally: 'Ally', contact: 'Contact', rival: 'Rival', enemy: 'Enemy' };
@@ -4712,7 +4733,7 @@
             <div class="wizard-card-sub">Type: ${typeLabels[types[0]]}</div>
           `}
           <div class="wizard-field"><label>Name</label><input id="resolver-${tag}-name" type="text" /></div>
-          <button class="btn-outline" onclick="applyResolverAssociate('${tag}')">Apply</button>
+          <button class="btn-outline" id="resolver-${tag}-assoc-apply-btn" onclick="applyResolverAssociate('${tag}')">Apply</button>
         `;
       }
     }
@@ -4795,6 +4816,13 @@
     }
 
     async function applyResolverStat(tag) {
+      const btn = document.getElementById(`resolver-${tag}-stat-apply-btn`);
+      if (btn && btn.disabled) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      }
       const key = document.getElementById(`resolver-${tag}-stat`).value;
       const amount = parseInt(document.getElementById(`resolver-${tag}-amount`).value, 10) || 0;
       await applyStatChange(key, amount);
@@ -4817,6 +4845,13 @@
     }
 
     async function applyResolverAssociate(tag) {
+      const btn = document.getElementById(`resolver-${tag}-assoc-apply-btn`);
+      if (btn && btn.disabled) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      }
       const type = document.getElementById(`resolver-${tag}-type`).value;
       const name = document.getElementById(`resolver-${tag}-name`).value.trim();
       if (!name) return;
@@ -4894,28 +4929,42 @@
         body += `<button class="btn-outline" onclick="finishInjury('${tag}', null)">Continue</button>`;
       } else if (roll === 3) {
         body += `<select id="injury-pick-${tag}"><option value="str">STR</option><option value="dex">DEX</option></select>
-          <button class="btn-outline" onclick="applyInjurySimple('${tag}', 2)">Apply −2</button>`;
+          <button class="btn-outline" id="injury-${tag}-apply-btn" onclick="applyInjurySimple('${tag}', 2)">Apply −2</button>`;
       } else if (roll === 4 || roll === 5) {
         body += `${picker('injury-pick-' + tag)}
-          <button class="btn-outline" onclick="applyInjurySimple('${tag}', ${roll === 4 ? 2 : 1})">Apply −${roll === 4 ? 2 : 1}</button>`;
+          <button class="btn-outline" id="injury-${tag}-apply-btn" onclick="applyInjurySimple('${tag}', ${roll === 4 ? 2 : 1})">Apply −${roll === 4 ? 2 : 1}</button>`;
       } else if (roll === 2) {
         body += `${picker('injury-pick-' + tag)}
-          <button class="btn-outline" onclick="applyInjuryDie('${tag}')">Roll 1D and Apply</button>`;
+          <button class="btn-outline" id="injury-${tag}-apply-btn" onclick="applyInjuryDie('${tag}')">Roll 1D and Apply</button>`;
       } else {
         body += `<div style="margin-bottom:6px; font-size:0.82rem; color:#4a9ab8;">Choose which characteristic takes the 1D hit — the other two automatically take −2 each.</div>
           ${picker('injury-pick-' + tag)}
-          <button class="btn-outline" onclick="applyInjuryNearlyKilled('${tag}')">Roll 1D and Apply</button>`;
+          <button class="btn-outline" id="injury-${tag}-apply-btn" onclick="applyInjuryNearlyKilled('${tag}')">Roll 1D and Apply</button>`;
       }
       el.innerHTML = body;
     }
 
     async function applyInjurySimple(tag, amount) {
+      const btn = document.getElementById(`injury-${tag}-apply-btn`);
+      if (btn && btn.disabled) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      }
       const key = document.getElementById('injury-pick-' + tag).value;
       await applyStatChange(key, -amount);
       offerMedicalCare(tag, [{ key, amount }]);
     }
 
     async function applyInjuryDie(tag) {
+      const btn = document.getElementById(`injury-${tag}-apply-btn`);
+      if (btn && btn.disabled) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      }
       const key = document.getElementById('injury-pick-' + tag).value;
       const amt = rollDie();
       await applyStatChange(key, -amt);
@@ -4923,6 +4972,13 @@
     }
 
     async function applyInjuryNearlyKilled(tag) {
+      const btn = document.getElementById(`injury-${tag}-apply-btn`);
+      if (btn && btn.disabled) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      }
       const key = document.getElementById('injury-pick-' + tag).value;
       const amt = rollDie();
       await applyStatChange(key, -amt);
@@ -9637,7 +9693,7 @@
             <div class="wizard-card-sub">Roll 2D + SOC DM (need ${c.commission.target}+)${dmLate ? `, DM${dmLate} for attempting after the first term` : ''}${pm.commissionDM ? `, plus DM${pm.commissionDM > 0 ? '+' : ''}${pm.commissionDM} banked from a prior bonus` : ''}. Optional — you may also just roll Advancement instead.</div>
             <div class="wizard-actions" style="justify-content:flex-start; gap:12px; flex-wrap:wrap;">
               <button class="btn-outline" onclick="rollCommission()">Attempt Commission</button>
-              ${pm.autoPromote ? '<button class="btn-outline" onclick="applyAutoPromote()">Apply Automatic Promotion/Commission (banked)</button>' : ''}
+              ${pm.autoPromote ? '<button class="btn-outline" id="auto-promote-apply-btn" onclick="applyAutoPromote()">Apply Automatic Promotion/Commission (banked)</button>' : ''}
               <button class="btn-outline" onclick="saveStep5State({phase:'advancement'}).then(renderStep)">Skip — Roll Advancement</button>
             </div>
           </div>
@@ -9669,6 +9725,13 @@
     }
 
     async function applyAutoPromote() {
+      const btn = document.getElementById('auto-promote-apply-btn');
+      if (btn && btn.disabled) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      }
       const s = step5State();
       const c = careerData(s.careerId);
       await consumePendingFlag('autoPromote');
@@ -9712,7 +9775,7 @@
             <div class="wizard-card-sub">Roll 2D + ${statLabel} DM (need ${a.advancement.target}+)${pm.advancementDM ? `, plus DM${pm.advancementDM > 0 ? '+' : ''}${pm.advancementDM} banked from a prior bonus` : ''}${previewAcademyDM.total ? `, plus DM${previewAcademyDM.total > 0 ? '+' : ''}${previewAcademyDM.total} from ${previewAcademyDM.labels.join(', ')}` : ''}${s.advancementDMBonus ? `, plus DM${s.advancementDMBonus > 0 ? '+' : ''}${s.advancementDMBonus} persistent for the rest of this career` : ''}. You may only attempt this once per term.</div>
             <div class="wizard-actions" style="justify-content:flex-start; gap:12px; flex-wrap:wrap;">
               <button class="btn-outline" onclick="rollAdvancement()">Roll Advancement</button>
-              ${pm.autoPromote ? '<button class="btn-outline" onclick="applyAutoPromote()">Apply Automatic Promotion (banked)</button>' : ''}
+              ${pm.autoPromote ? '<button class="btn-outline" id="auto-promote-apply-btn" onclick="applyAutoPromote()">Apply Automatic Promotion (banked)</button>' : ''}
             </div>
           </div>
         `;
@@ -9841,7 +9904,7 @@
             <div class="wizard-card-title">${c.name} — Basic Training</div>
             <div class="wizard-card-sub">Not your first career — choose one Service Skill table entry to gain at level 0.</div>
             <div class="wizard-actions" style="justify-content:flex-start; gap:10px; flex-wrap:wrap;">
-              ${serviceSkillsFor(c, a).map((sk, i) => `<button class="btn-outline" onclick="applyBasicTraining(${i})">${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''}</button>`).join('')}
+              ${serviceSkillsFor(c, a).map((sk, i) => `<button class="btn-outline" id="basic-training-${i}-apply-btn" onclick="applyBasicTraining(${i})">${sk.name}${sk.specialty ? ' (' + sk.specialty + ')' : ''}</button>`).join('')}
             </div>
           </div>
         `;
@@ -9907,6 +9970,13 @@
     }
 
     async function applyBasicTraining(idx) {
+      const btn = document.getElementById(`basic-training-${idx}-apply-btn`);
+      if (btn && btn.disabled) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      }
       const s = step5State();
       const c = careerData(s.careerId);
       const a = currentAssignment(s, c);

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:\\Program Files\\Git\\mingw64\\bin\\pdftotext.exe\" *)",
+      "Bash(pdftotext *)",
+      "Bash(\"/c/Program Files/Git/mingw64/bin/pdftotext.exe\" *)",
+      "Bash(\"C:/Program Files/Git/mingw64/bin/pdftotext.exe\" *)",
+      "mcp__Claude_Preview__preview_console_logs",
+      "mcp__Claude_Preview__preview_screenshot",
+      "mcp__Claude_Preview__preview_snapshot",
+      "mcp__Claude_Preview__preview_list"
+    ]
+  }
+}
