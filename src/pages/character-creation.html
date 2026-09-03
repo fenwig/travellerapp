@@ -7937,7 +7937,8 @@
     // per the injury-ordering rule), then roll the Injury table twice and
     // keep the higher (less severe) of the two results.
     function renderScholarMishap2(tag, m) {
-      if (m.resolved) return resolverHeader(m.resultText);
+      const s = step5State();
+      if (s.mishapResolved) return resolverHeader(s.mishapResolvedText || 'Resolved.');
       if (!m.rivalNamed) {
         return resolverHeader('Name the Rival you gained:') + `
           <input id="scholar-m2-name" type="text" placeholder="Name" style="margin-bottom:8px;" />
