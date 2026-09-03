@@ -4817,6 +4817,12 @@
         markResolverDone(tag, desc);
         return;
       }
+      // Hide the resolver buttons (Grant Skill, Adjust Characteristic, etc.) and show "Applied"
+      const resolverDiv = document.getElementById('resolver-' + tag);
+      if (resolverDiv && resolverDiv.parentElement) {
+        const buttonsDiv = resolverDiv.parentElement.querySelector('div:first-child');
+        if (buttonsDiv) buttonsDiv.style.display = 'none';
+      }
       document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
       await persistResolverNote(tag, desc);
     }
@@ -4846,6 +4852,12 @@
         markResolverDone(tag, desc);
         return;
       }
+      // Hide the resolver buttons and show "Applied"
+      const resolverDiv = document.getElementById('resolver-' + tag);
+      if (resolverDiv && resolverDiv.parentElement) {
+        const buttonsDiv = resolverDiv.parentElement.querySelector('div:first-child');
+        if (buttonsDiv) buttonsDiv.style.display = 'none';
+      }
       document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
       await persistResolverNote(tag, desc);
     }
@@ -4867,6 +4879,12 @@
       if ((window.__resolverRestrict[tag] || {}).__soleTool === 'associate') {
         markResolverDone(tag, desc);
         return;
+      }
+      // Hide the resolver buttons and show "Applied"
+      const resolverDiv = document.getElementById('resolver-' + tag);
+      if (resolverDiv && resolverDiv.parentElement) {
+        const buttonsDiv = resolverDiv.parentElement.querySelector('div:first-child');
+        if (buttonsDiv) buttonsDiv.style.display = 'none';
       }
       document.getElementById('resolver-' + tag).innerHTML = `<p style="color:#00ffaa; font-size:0.85rem;">Applied.</p>`;
       await persistResolverNote(tag, desc);
