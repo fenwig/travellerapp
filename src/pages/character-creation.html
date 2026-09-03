@@ -4708,7 +4708,7 @@
           <div id="resolver-${tag}-specialty-wrap"></div>
           ${!isBumpEvent ? `
             <div class="wizard-field"><label>Level</label>
-              <input id="resolver-${tag}-level" type="number" min="0" max="4" value="${(options[0] && options[0].level) || 1}" />
+              <input id="resolver-${tag}-level" type="number" min="0" max="4" value="${(options[0] && options[0].level) || 1}" readonly />
             </div>
           ` : `
             <input id="resolver-${tag}-level" type="hidden" value="${(options[0] && options[0].level) || 1}" />

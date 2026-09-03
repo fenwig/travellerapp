@@ -106,7 +106,8 @@
       "Bash(git commit -m 'Add 2D roll mechanic to Drifter mishap 5 *)",
       "Bash(git commit -m 'Make skill level field read-only for bump: true events *)",
       "Bash(git commit -m 'Hide level field for bump events and prevent double-application *)",
-      "Bash(git commit -m 'Fix Noble event 10 to increase existing skills *)"
+      "Bash(git commit -m 'Fix Noble event 10 to increase existing skills *)",
+      "Bash(git commit -m 'Make skill level field read-only for fixed-level grants *)"
     ]
   }
 }
