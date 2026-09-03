@@ -7665,11 +7665,14 @@
 
     async function nobleEvent10ChooseSkill(skillName) {
       const skills = Object.assign({}, draft.skills || {});
-      grantSkillMin(skills, skillName, null, 1);
+      const currentLevel = (draft.skills && draft.skills[skillName] && draft.skills[skillName].level) || 0;
+      const newLevel = Math.min(currentLevel + 1, 4);
+      bumpSkill(skills, skillName, null, 1);
       await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
       draft.skills = skills;
-      await saveMechanic('event', { skillChosen: skillName, resultText: `Gained ${skillName} 1.` });
-      await logCreation(`Noble Event 10: gained ${skillName} 1.`);
+      const desc = currentLevel > 0 ? `increased to ${newLevel}` : `gained 1`;
+      await saveMechanic('event', { skillChosen: skillName, resultText: `${skillName} ${desc}.` });
+      await logCreation(`Noble Event 10: ${skillName} ${desc}.`);
       renderStep();
     }
 
