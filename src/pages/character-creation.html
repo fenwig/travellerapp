@@ -4757,8 +4757,9 @@
       const levelEl = document.getElementById(`resolver-${tag}-level`);
       if (opt && opt.dataset.level) {
         levelEl.value = opt.dataset.level;
-        // When bump:true, level is fixed and read-only (represents delta to increase by)
-        levelEl.readOnly = opt.dataset.bump === 'true';
+        // Level is always read-only: when bump:true it represents delta to increase by,
+        // when bump:false it's a fixed grant level that shouldn't be manually changed
+        levelEl.readOnly = true;
       }
       const specs = name ? skillSpecialtiesFor(name) : [];
       wrap.innerHTML = specs.length ? `
