@@ -110,7 +110,8 @@
       "Bash(git commit -m 'Make skill level field read-only for fixed-level grants *)",
       "Bash(git commit -m 'Hide resolver buttons after applying skill/stat/associate *)",
       "Bash(git commit -m 'Prevent Scout re-enlistment if event 3 fails *)",
-      "Bash(git commit -m 'Keep skill level field read-only for all grants *)"
+      "Bash(git commit -m 'Keep skill level field read-only for all grants *)",
+      "Bash(git commit -m 'Replace free text with dropdown for Scholar event 3 specialties *)"
     ]
   }
 }

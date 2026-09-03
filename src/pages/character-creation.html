@@ -8081,9 +8081,20 @@
         `;
       }
       if (!m.specialtiesChosen) {
-        return resolverHeader('Name two Science specialties to gain at level 1:') + `
-          <input id="scholar-e3-sp1" type="text" placeholder="Specialty 1" style="margin-bottom:6px;" /><br/>
-          <input id="scholar-e3-sp2" type="text" placeholder="Specialty 2" style="margin-bottom:8px;" />
+        const specs = skillSpecialtiesFor('Science').sort();
+        return resolverHeader('Choose two Science specialties to gain at level 1:') + `
+          <div class="wizard-field"><label>Specialty 1</label>
+            <select id="scholar-e3-sp1">
+              <option value="">— choose —</option>
+              ${specs.map(sp => `<option value="${sp}">${sp}</option>`).join('')}
+            </select>
+          </div>
+          <div class="wizard-field"><label>Specialty 2</label>
+            <select id="scholar-e3-sp2">
+              <option value="">— choose —</option>
+              ${specs.map(sp => `<option value="${sp}">${sp}</option>`).join('')}
+            </select>
+          </div>
           <button class="btn-outline" onclick="confirmScholarEvent3Specialties()">Confirm</button>
         `;
       }
@@ -8106,8 +8117,16 @@
     }
 
     async function confirmScholarEvent3Specialties() {
-      const sp1 = (document.getElementById('scholar-e3-sp1') || {}).value.trim() || 'Specialty 1';
-      const sp2 = (document.getElementById('scholar-e3-sp2') || {}).value.trim() || 'Specialty 2';
+      const sp1 = (document.getElementById('scholar-e3-sp1') || {}).value.trim();
+      const sp2 = (document.getElementById('scholar-e3-sp2') || {}).value.trim();
+      if (!sp1 || !sp2) {
+        alert('Please select both specialties.');
+        return;
+      }
+      if (sp1 === sp2) {
+        alert('Please choose two different specialties.');
+        return;
+      }
       const skills = Object.assign({}, draft.skills || {});
       grantSkillMin(skills, 'Science', sp1, 1);
       grantSkillMin(skills, 'Science', sp2, 1);
