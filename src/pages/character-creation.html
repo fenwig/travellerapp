@@ -4065,7 +4065,7 @@
       const psiUntested = draft.psi === null || draft.psi === undefined;
       const rows = CAREER_LIST.map(c => {
         const built = !!CAREERS_DATA[c.id];
-        const disabled = locked && !(s.forcedPrisonerNextTerm && c.id === 'prisoner') && !(s.forcedMilitaryBranch && c.id === s.forcedMilitaryBranch) && !(s.forcedDrifterNextTerm && c.id === 'drifter');
+        const disabled = (locked && !(s.forcedPrisonerNextTerm && c.id === 'prisoner') && !(s.forcedMilitaryBranch && c.id === s.forcedMilitaryBranch) && !(s.forcedDrifterNextTerm && c.id === 'drifter')) || (s.preventScoutReenlist && c.id === 'scout');
         const psiGated = c.id === 'psion' && psiUntested;
         return `
           <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid #0a4a60; border-radius:6px; margin-bottom:8px; ${disabled ? 'opacity:0.4;' : ''}">
@@ -4075,7 +4075,7 @@
               : psiGated
                 ? `<span style="font-size:0.75rem; color:#4a9ab8;">Requires a tested Psionic Strength (PSI) first — not available this way yet</span>`
                 : (disabled
-                    ? `<span style="font-size:0.75rem; color:#4a9ab8;">Locked — resolve the forced entry above</span>`
+                    ? `<span style="font-size:0.75rem; color:#4a9ab8;">${s.preventScoutReenlist && c.id === 'scout' ? 'Locked — ship destroyed, cannot re-enlist' : 'Locked — resolve the forced entry above'}</span>`
                     : `<button class="btn-outline" onclick="${s.forcedPrisonerNextTerm && c.id === 'prisoner' ? 'confirmForcedPrisoner()' : s.forcedMilitaryBranch && c.id === s.forcedMilitaryBranch ? 'confirmForcedMilitaryBranch()' : s.forcedDrifterNextTerm && c.id === 'drifter' ? 'confirmForcedDrifter()' : `chooseCareer('${c.id}')`}">${c.id === 'prisoner' && s.forcedPrisonerNextTerm ? 'Confirm Forced Entry' : (s.forcedMilitaryBranch && c.id === s.forcedMilitaryBranch) || (s.forcedDrifterNextTerm && c.id === 'drifter') ? 'Confirm Forced Entry' : 'Attempt Qualification'}</button>`)
             }
           </div>
@@ -4111,6 +4111,11 @@
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
               A prior event forced you to join the Drifter career this term instead of a free choice. All other careers are locked until this resolves.
               <button class="btn-outline" style="margin-top:8px;" onclick="confirmForcedDrifter()">Confirm Forced Entry — Drifter</button>
+            </div>
+          ` : ''}
+          ${s.preventScoutReenlist ? `
+            <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
+              A Scout event destroyed your ship. You may not re-enlist in the Scouts per the Core Rulebook.
             </div>
           ` : ''}
           ${rows}
@@ -8377,7 +8382,8 @@
         draft.skills = skills;
         resultText = `Rolled ${total} on ${skillName} (need ${target}+) — survived and gained Electronics (Sensors) 1. Name the Enemy you gained:`;
       } else {
-        resultText = `Rolled ${total} on ${skillName} (need ${target}+) — your ship is destroyed; you may not re-enlist in the Scouts (note this yourself). Name the Enemy you gained:`;
+        resultText = `Rolled ${total} on ${skillName} (need ${target}+) — your ship is destroyed; you may not re-enlist in the Scouts. Name the Enemy you gained:`;
+        await saveStep5State({ preventScoutReenlist: true });
       }
       await saveMechanic('event', { rolled: true, success, resultText });
       await logCreation(`Scout Event 3: rolled ${total} on ${skillName} (need ${target}+) — ${success ? 'success.' : 'failed.'}`);
