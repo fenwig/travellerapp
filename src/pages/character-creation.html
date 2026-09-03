@@ -7966,8 +7966,8 @@
       const entry = INJURY_TABLE.find(x => x.roll === chosen);
       await saveMechanic('mishap', { rolled: true, resultText: `Rolled ${roll1} and ${roll2} — keeping the higher result, ${chosen}.` });
       await logCreation(`Scholar Mishap 2: rolled ${roll1} and ${roll2} on the Injury table — kept the higher result (${chosen}).`);
-      renderStep();
       renderInjuryPicker('mishap', chosen, entry);
+      renderStep();
     }
 
     // Scholar mishap 3 — continue openly (Science +1, gain an Enemy) or
