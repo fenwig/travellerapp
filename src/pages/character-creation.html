@@ -8051,12 +8051,16 @@
 
     async function scholarMishap5Salvage() {
       const s = step5State();
-      await saveStep5State({ benefitRolls: (s.benefitRolls || 0) + 1 });
-      const resultText = "Salvaged what you could and gave up — kept this term's Benefit roll.";
+      const termsInCareer = s.termInCareer + 1;
+      await recordCareerHistory(false);
+      const newTerms = s.terms + 1;
+      await supabaseClient.from('characters').update({ age: ageForTerms(newTerms) }).eq('id', draft.id);
+      draft.age = ageForTerms(newTerms);
+      await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + 1 });
+      const resultText = "Salvaged what you could and gave up — kept this term's Benefit roll and forced to leave the career.";
       await saveMechanic('mishap', { resolved: true, resultText });
-      await resolveMechanic('mishap');
       await logCreation(`Scholar Mishap 5: ${resultText}`);
-      renderStep();
+      await goToAgeingOrPhase('mustering');
     }
 
     async function scholarMishap5StartAgain() {
