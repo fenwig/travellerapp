@@ -113,7 +113,18 @@
       "Bash(git commit -m 'Keep skill level field read-only for all grants *)",
       "Bash(git commit -m 'Replace free text with dropdown for Scholar event 3 specialties *)",
       "Bash(git commit -m 'Enforce career exit for Scholar mishap 5 salvage option *)",
-      "mcp__claude-in-chrome__tabs_context_mcp"
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "Bash(git commit -m 'Add Rogue mishap 3 mechanic: 2D roll forcing Prisoner career on natural 2 *)",
+      "Bash(git commit -m 'Simplify Drifter event 8: always gain an enemy *)",
+      "Bash(git commit -m 'Fix Psion mishap 1 not advancing after injury applied *)",
+      "Bash(git commit -m 'Fix: do not award benefit roll when survival fails *)",
+      "Bash(git commit -m 'Simplify Life Event 8 \\(Betrayal\\): just add a rival/enemy *)",
+      "Bash(git commit -m 'Remove Believer career from available options *)",
+      "Bash(git commit -m 'Restrict test mode widget to admin users only *)",
+      "Bash(git commit -m 'Add characteristics display panel to character creation *)",
+      "Bash(git commit -m 'Fix: leaveCareerAfterMishap should respect survival outcome *)",
+      "Bash(git commit -m 'Display characteristics on single line in creation tool *)",
+      "Bash(git commit -m 'Fix: leaveCareerVoluntary should not double-count benefit rolls *)"
     ]
   }
 }
