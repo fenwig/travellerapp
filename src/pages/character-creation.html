@@ -3080,7 +3080,7 @@
         mishaps: [
           { roll: 1, text: 'Severely injured (same as Injury table result 2, or roll twice and take the lower).', tools: [] },
           { roll: 2, text: 'Arrested. You must take the Prisoner career for your next term — choose Prisoner at the next Career screen and confirm forced entry.', tools: [] },
-          { roll: 3, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have neither, gain a Rival or Enemy anyway. On a rare natural 2 on a further 2D roll (not automated here), you would also be forced into the Prisoner career next term (choose Prisoner at the next Career screen and confirm forced entry).', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
+          { roll: 3, text: 'Betrayed by a friend. A Contact or Ally betrays you, ending your career, and becomes a Rival or Enemy. If you have neither, gain a Rival or Enemy anyway. Then roll 2D — on a natural 2, you are also forced into the Prisoner career next term.', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
           { roll: 4, text: 'A job goes wrong, forcing you to flee off-planet. Gain one of Deception 1, Pilot 1, Athletics 1, or Gunner 1.', tools: ['skill'], skillOptions: [{ name: 'Deception', level: 1 }, { name: 'Pilot', level: 1 }, { name: 'Athletics', level: 1 }, { name: 'Gunner', level: 1 }] },
           { roll: 5, text: 'A police detective or rival criminal forces you to flee and vows to hunt you down. Gain them as an Enemy.', tools: ['associate'], associateTypes: ['enemy'] },
           { roll: 6, text: 'Injured. Roll on the Injury table.', tools: ['injury'] }
@@ -5495,6 +5495,7 @@
         case 'rogue:3':       return renderRogueEvent3(tag, m);
         case 'rogue:mishap1': return renderInjuryGuaranteed2OrLower(tag, m);
         case 'rogue:mishap2': return renderRogueMishap2(tag, m);
+        case 'rogue:mishap3': return renderRogueMishap3(tag, m);
         case 'rogue:6':       return renderRogueEvent6(tag, m);
         case 'rogue:9':       return renderRogueEvent9(tag, m);
         case 'rogue:10':      return renderRogueEvent10(tag, m);
@@ -7732,6 +7733,36 @@
       await saveMechanic('mishap', { resolved: true, resultText });
       await resolveMechanic('mishap');
       await logCreation(`Rogue Mishap 2: ${resultText}`);
+      renderStep();
+    }
+
+    // Rogue mishap 3 — Betrayed by friend (Contact/Ally becomes Rival/Enemy),
+    // then roll 2D: on natural 2, forced into Prisoner career next term.
+    function renderRogueMishap3(tag, m) {
+      if (m.rolled) {
+        const prisonerForced = m.roll === 2;
+        const text = `Betrayed by a friend. Rolled ${m.roll} — ${prisonerForced ? 'forced into Prisoner career next term.' : 'no forced career.'}`;
+        return resolverHeader(text);
+      }
+      return resolverHeader('Betrayed by a friend (Contact or Ally became a Rival or Enemy). Now roll 2D to see if you\'re forced into the Prisoner career next term.') + `
+        <button class="btn-outline" onclick="rollRogueMishap3('${tag}')">Roll 2D</button>
+      `;
+    }
+
+    async function rollRogueMishap3(tag) {
+      const roll = roll2d6();
+      const prisonerForced = roll === 2;
+
+      // Save the roll result
+      await saveMechanic(tag, { rolled: true, roll });
+
+      // If natural 2, force Prisoner career next term
+      if (prisonerForced) {
+        await saveStep5State({ forcedPrisonerNextTerm: true });
+      }
+
+      await logCreation(`Rogue Mishap 3: Rolled ${roll}${prisonerForced ? ' — forced into Prisoner career next term.' : '.'}`);
+      await resolveMechanic(tag);
       renderStep();
     }
 
