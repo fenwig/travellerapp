@@ -3829,7 +3829,7 @@
       { roll: 5, text: 'Improved Relationship — a relationship deepens. Gain an Ally.', tools: ['associate'], associateTypes: ['ally'] },
       { roll: 6, text: 'New Relationship — you become romantically involved with someone. Gain an Ally.', tools: ['associate'], associateTypes: ['ally'] },
       { roll: 7, text: 'New Contact — you gain a new Contact.', tools: ['associate'], associateTypes: ['contact'] },
-      { roll: 8, text: 'Betrayal — a friend betrays you. Convert an existing Contact or Ally into a Rival or Enemy, or gain a fresh Rival/Enemy if you have neither.', tools: [], convertOrGain: true, convertFrom: ['contact', 'ally'], convertTo: ['rival', 'enemy'] },
+      { roll: 8, text: 'Betrayal — a friend betrays you. Gain a Rival or Enemy.', tools: ['associate'], associateTypes: ['rival', 'enemy'] },
       { roll: 9, text: 'Travel — you move to another world. Gain DM+2 to your next qualification roll.', tools: [], autoDM: { key: 'qualificationDM', amount: 2 } },
       { roll: 10, text: 'Good Fortune — something good happens to you. Gain DM+2 to any one Benefit roll.', tools: [], autoDM: { key: 'benefitRollDM', amount: 2 } },
       { roll: 11, text: "Crime — you commit, suffer, or are accused of a crime. Lose one Benefit roll, or take the Prisoner career next term instead.", tools: [], crimeChoice: true },
