@@ -10750,6 +10750,29 @@
     let skillsPanelOpen = false;
     function toggleSkillsPanel() { skillsPanelOpen = !skillsPanelOpen; renderStep(); }
 
+    // Display current characteristics during character creation
+    function renderCharacteristicsPanel() {
+      const charNames = ['STR', 'DEX', 'END', 'INT', 'EDU', 'SOC'];
+      const charRows = charNames.map(name => {
+        const key = name.toLowerCase() + (name === 'INT' ? '_stat' : name === 'END' ? '_stat' : name === 'EDU' ? '' : '');
+        const finalKey = name === 'STR' ? 'str' : name === 'DEX' ? 'dex' : name === 'END' ? 'end_stat' : name === 'INT' ? 'int_stat' : name === 'EDU' ? 'edu' : 'soc';
+        const value = draft[finalKey] !== undefined ? draft[finalKey] : '—';
+        return `<div style="font-size:0.8rem; color:#b0d8e8;">${name}: <span style="color:#00e5ff; font-weight:600;">${value}</span></div>`;
+      }).join('');
+
+      const psiRow = draft.psi !== undefined ? `<div style="font-size:0.8rem; color:#b0d8e8;">PSI: <span style="color:#00e5ff; font-weight:600;">${draft.psi}</span></div>` : '';
+
+      return `
+        <div class="rule-card" style="margin-bottom:16px; border-color:#0a4a60;">
+          <div style="color:#00e5ff; font-size:0.8rem; font-weight:600; margin-bottom:8px;">Characteristics</div>
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px 12px;">
+            ${charRows}
+            ${psiRow}
+          </div>
+        </div>
+      `;
+    }
+
     // Lets the player see their current skill list while making decisions
     // elsewhere in the wizard, without leaving the creation flow. Collapsed
     // by default to avoid cluttering early steps before any skills exist.
@@ -10802,7 +10825,7 @@
         `;
       }
 
-      shell.innerHTML = renderSteps() + renderSkillsPanel() + renderRecentActivity() + body;
+      shell.innerHTML = renderSteps() + renderCharacteristicsPanel() + renderSkillsPanel() + renderRecentActivity() + body;
       if (step === 1) renderSpeciesPreview();
       if (step === 4 && !(draft.creation_data && draft.creation_data.seenConnectionsModal)) {
         showConnectionsModal();
