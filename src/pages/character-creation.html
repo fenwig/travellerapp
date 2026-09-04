@@ -5186,6 +5186,10 @@
     // (renderInjuryPicker) directly, same pattern as Scholar mishap 2's
     // "roll twice, pick one" shape.
     function renderMishapRoll1Choice(tag) {
+      const s = step5State();
+      if (s.mishapResolved) {
+        return `<div class="wizard-card-sub" style="color:#00ffaa;">${s.mishapResolvedText || 'Resolved.'}</div>`;
+      }
       return `
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
           <button class="btn-outline" onclick="acceptMishapRoll1Injury('${tag}')">Accept Injury Result 2</button>
