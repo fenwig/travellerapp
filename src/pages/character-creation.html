@@ -10132,7 +10132,12 @@
       const s = step5State();
       const c = careerData(s.careerId);
       const extra = await consumePendingMod('extraBenefitRolls');
-      const benefitRolls = Math.max(0, (s.benefitRolls || 0) + 1 + extra);
+      // Benefit rolls are only awarded if survival succeeded. Failed survival
+      // results in a mishap roll; even if the mishap doesn't eject the player,
+      // no benefit roll is earned this term.
+      const survivalSucceeded = s.survivalResult && s.survivalResult.success;
+      const benefitRollsEarned = survivalSucceeded ? 1 : 0;
+      const benefitRolls = Math.max(0, (s.benefitRolls || 0) + benefitRollsEarned + extra);
       await saveStep5State({ benefitRolls, phase: 'termEnd' });
       if (extra) await logCreation(`${c.name} — banked Benefit roll count adjusted by ${extra > 0 ? '+' : ''}${extra} from a prior bonus (now ${benefitRolls}).`);
       renderStep();
