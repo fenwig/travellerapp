@@ -10762,17 +10762,16 @@
         const key = name.toLowerCase() + (name === 'INT' ? '_stat' : name === 'END' ? '_stat' : name === 'EDU' ? '' : '');
         const finalKey = name === 'STR' ? 'str' : name === 'DEX' ? 'dex' : name === 'END' ? 'end_stat' : name === 'INT' ? 'int_stat' : name === 'EDU' ? 'edu' : 'soc';
         const value = draft[finalKey] !== undefined ? draft[finalKey] : '—';
-        return `<div style="font-size:0.8rem; color:#b0d8e8;">${name}: <span style="color:#00e5ff; font-weight:600;">${value}</span></div>`;
+        return `<span style="font-size:0.8rem; color:#b0d8e8; margin-right:16px;">${name}: <span style="color:#00e5ff; font-weight:600;">${value}</span></span>`;
       }).join('');
 
-      const psiRow = draft.psi !== undefined ? `<div style="font-size:0.8rem; color:#b0d8e8;">PSI: <span style="color:#00e5ff; font-weight:600;">${draft.psi}</span></div>` : '';
+      const psiSpan = draft.psi !== undefined ? `<span style="font-size:0.8rem; color:#b0d8e8; margin-right:16px;">PSI: <span style="color:#00e5ff; font-weight:600;">${draft.psi}</span></span>` : '';
 
       return `
         <div class="rule-card" style="margin-bottom:16px; border-color:#0a4a60;">
-          <div style="color:#00e5ff; font-size:0.8rem; font-weight:600; margin-bottom:8px;">Characteristics</div>
-          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px 12px;">
+          <div style="display:flex; align-items:center; flex-wrap:wrap; gap:0;">
             ${charRows}
-            ${psiRow}
+            ${psiSpan}
           </div>
         </div>
       `;
