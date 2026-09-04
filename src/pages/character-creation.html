@@ -5556,7 +5556,7 @@
         case 'psion:5':       return renderPsionEvent5(tag, m);
         case 'psion:9':       return renderChooseSkillThenRollEdu(tag, m, 8, 'gain it', ['Jack-of-all-Trades']);
         case 'psion:12':      return renderBankAutoPromote(tag, m);
-        case 'psion:mishap1': return renderInjuryGuaranteed2OrLower(tag, m);
+        case 'psion:mishap1': return renderMishapRoll1Choice(tag);
         case 'psion:mishap3': return renderPsionMishap3(tag, m);
         case 'psion:mishap4': return renderAcceptRefuse(tag, m, 'Accept — continue in this career, gain an Enemy', 'Refuse — leave this career', () => acceptPsionMishap4(tag), () => Promise.resolve());
         case 'psion:mishap6': return renderPsionMishap6(tag, m);
