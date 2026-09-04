@@ -4643,7 +4643,12 @@
         const { error } = await supabaseClient.from('characters').update({ age: ageForTerms(newTerms) }).eq('id', draft.id);
         if (error) throw error;
         draft.age = ageForTerms(newTerms);
-        await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + 1 });
+        // Benefit roll is only earned if survival succeeded. If survival failed
+        // and a mishap ejects the player, no benefit roll is added (the mishap's
+        // own text may have granted one, but that's already been applied).
+        const survivalSucceeded = s.survivalResult && s.survivalResult.success;
+        const benefitRollsEarned = survivalSucceeded ? 1 : 0;
+        await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + benefitRollsEarned });
         await goToAgeingOrPhase('mustering');
       } catch (err) {
         console.error('leaveCareerAfterMishap failed:', err);
