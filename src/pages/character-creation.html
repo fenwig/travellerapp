@@ -10776,12 +10776,14 @@
       }).join('');
 
       const psiSpan = draft.psi !== undefined ? `<span style="font-size:0.8rem; color:#b0d8e8; margin-right:16px;">PSI: <span style="color:#00e5ff; font-weight:600;">${draft.psi}</span></span>` : '';
+      const ageSpan = draft.age !== undefined ? `<span style="font-size:0.8rem; color:#b0d8e8; margin-right:16px;">Age: <span style="color:#00e5ff; font-weight:600;">${draft.age}</span></span>` : '';
 
       return `
         <div class="rule-card" style="margin-bottom:16px; border-color:#0a4a60;">
           <div style="display:flex; align-items:center; flex-wrap:wrap; gap:0;">
             ${charRows}
             ${psiSpan}
+            ${ageSpan}
           </div>
         </div>
       `;
