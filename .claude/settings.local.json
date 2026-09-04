@@ -124,7 +124,9 @@
       "Bash(git commit -m 'Add characteristics display panel to character creation *)",
       "Bash(git commit -m 'Fix: leaveCareerAfterMishap should respect survival outcome *)",
       "Bash(git commit -m 'Display characteristics on single line in creation tool *)",
-      "Bash(git commit -m 'Fix: leaveCareerVoluntary should not double-count benefit rolls *)"
+      "Bash(git commit -m 'Fix: leaveCareerVoluntary should not double-count benefit rolls *)",
+      "Bash(\"C:\\\\Program Files\\\\Git\\\\mingw64\\\\bin\\\\pdftotext.exe\" -layout -f 8 -l 20 \"C:\\\\Users\\\\mikel\\\\OneDrive\\\\Personal Documents\\\\Claude\\\\Travellerapp\\\\docs\\\\sourcebooks\\\\Traveller 2022 Core Rulebook 20-02-2026.pdf\" -)",
+      "Bash(\"C:\\\\Program Files\\\\Git\\\\mingw64\\\\bin\\\\pdftotext.exe\" -layout -f 14 -l 15 \"C:\\\\Users\\\\mikel\\\\OneDrive\\\\Personal Documents\\\\Claude\\\\Travellerapp\\\\docs\\\\sourcebooks\\\\Traveller 2022 Core Rulebook 20-02-2026.pdf\" -)"
     ]
   }
 }
