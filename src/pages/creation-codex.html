@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creation Codex — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-group-label">Character Resources</div>
+      <a href="character-record.html" class="sidebar-nav-item">Character Record</a>
+      <a href="spacecraft-record.html" class="sidebar-nav-item">Spacecraft Record</a>
+      <a href="character-list.html" class="sidebar-nav-item">Roster</a>
+      <a href="character-creation.html" class="sidebar-nav-item">Character Creation</a>
+      <a href="creation-codex.html" class="sidebar-nav-item active">Creation Codex</a>
+      <div class="sidebar-group-label">Reference</div>
+      <a href="general-rules.html" class="sidebar-nav-item">General Rules</a>
+      <a href="combat.html" class="sidebar-nav-item">Combat</a>
+      <a href="vehicles.html" class="sidebar-nav-item">Vehicles</a>
+      <a href="spacecraft-operations.html" class="sidebar-nav-item">Spacecraft Operations</a>
+      <a href="spacecraft-combat.html" class="sidebar-nav-item">Spacecraft Combat</a>
+      <a href="equipment.html" class="sidebar-nav-item">Equipment</a>
+      <a href="weapons-armor.html" class="sidebar-nav-item">Weapons &amp; Armor</a>
+      <a href="trade.html" class="sidebar-nav-item">Trade</a>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">CREATION CODEX</h1>
+
+      <div class="ref-section">
+        <h2 class="ref-section-title">Overview: Building Your Character</h2>
+        <div class="rule-card">
+          <p class="rule-body">The Character Creation tool walks you through the process of building a Traveller character step by step. You'll roll characteristics, choose careers, face mishaps and events, gain skills and benefits, and ultimately produce a fully realized adventurer ready for play.</p>
+          <p class="rule-body" style="margin-top:12px">This guide explains what to expect at each stage and highlights important things to watch out for.</p>
+        </div>
+      </div>
+
+      <div class="special-divider"><span>The Creation Journey</span></div>
+
+      <div class="ref-section">
+        <h2 class="ref-section-title">Step 1: Basic Information</h2>
+        <div class="rule-card">
+          <p class="rule-body">Enter your character's name, species, and homeworld. These are personal details that set the stage for your character's story.</p>
+          <p class="rule-body" style="margin-top:8px;"><strong>What happens:</strong> You'll also roll your initial characteristics (STR, DEX, END, INT, EDU, SOC) and optionally PSI if your species has it. These six (or seven) numbers are the foundation of your character's abilities.</p>
+        </div>
+      </div>
+
+      <div class="ref-section">
+        <h2 class="ref-section-title">Step 2: Pre-Career Events (Upbringing)</h2>
+        <div class="rule-card">
+          <p class="rule-body">Before you enlist in a career, you'll experience life events that shape you. You might gain allies, rivals, contacts, or skills. You may also face injuries or other setbacks.</p>
+          <p class="rule-body" style="margin-top:8px;"><strong>What happens:</strong> These events might modify your characteristics, add skills, or add allies and enemies to your life story.</p>
+        </div>
+      </div>
+
+      <div class="ref-section">
+        <h2 class="ref-section-title">Step 3: Career Terms (4+ Years Each)</h2>
+        <div class="rule-card">
+          <p class="rule-body">The bulk of character creation involves serving career terms. You can serve multiple terms in the same career, switch careers, or leave to pursue other paths. Each term includes several phases:</p>
+          <div style="margin-top:12px; margin-left:16px; border-left:2px solid #0a4a60; padding-left:12px;">
+            <p style="color:#b0d8e8; font-size:0.85rem;"><strong style="color:#00e5ff;">Qualification:</strong> Roll to qualify for the career. Success lets you join; failure means you either wait a year or try a different career.</p>
+            <p style="color:#b0d8e8; font-size:0.85rem; margin-top:8px;"><strong style="color:#00e5ff;">Assignment:</strong> Choose which role you fill (Army officer vs. enlisted soldier, for example).</p>
+            <p style="color:#b0d8e8; font-size:0.85rem; margin-top:8px;"><strong style="color:#00e5ff;">Survival:</strong> Roll to survive the hazards of your career. You might face injury, ejection, or worse.</p>
+            <p style="color:#b0d8e8; font-size:0.85rem; margin-top:8px;"><strong style="color:#00e5ff;">Events:</strong> Roll on your career's event table. You might gain skills, allies, equipment, or face new challenges.</p>
+            <p style="color:#b0d8e8; font-size:0.85rem; margin-top:8px;"><strong style="color:#00e5ff;">Advancement:</strong> Roll to advance in rank within your career.</p>
+            <p style="color:#b0d8e8; font-size:0.85rem; margin-top:8px;"><strong style="color:#00e5ff;">Skill Training:</strong> Gain new skills based on your rank and specialty.</p>
+            <p style="color:#b0d8e8; font-size:0.85rem; margin-top:8px;"><strong style="color:#00e5ff;">Term End:</strong> Gain benefit rolls and mustering-out cash based on your rank.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ref-section">
+        <h2 class="ref-section-title">Step 4: Post-Career Aging and Life Events</h2>
+        <div class="rule-card">
+          <p class="rule-body">After all your career terms, you'll age and experience final life events that round out your character's story.</p>
+        </div>
+      </div>
+
+      <div class="special-divider"><span>What to Watch For</span></div>
+
+      <div class="ref-section">
+        <h2 class="ref-section-title">Tracking Characteristics and Skills</h2>
+        <div class="rule-card" style="border: 2px solid rgba(255,90,74,0.3);">
+          <p class="rule-body" style="color:#ff5a4a; font-weight:600;">⚠ IMPORTANT: Carefully monitor your characteristics and skills throughout creation!</p>
+          <p class="rule-body" style="margin-top:8px;">Your characteristics (STR, DEX, END, INT, EDU, SOC, and PSI) will increase or decrease based on:</p>
+          <ul style="margin-left:20px; margin-top:8px; color:#b0d8e8;">
+            <li style="margin-bottom:4px;">Career assignments (some roles provide stat increases at higher ranks)</li>
+            <li style="margin-bottom:4px;">Career events (you might gain or lose stats)</li>
+            <li style="margin-bottom:4px;">Injuries (you'll lose points if you're hurt — medical care can restore them)</li>
+            <li style="margin-bottom:4px;">Aging (after your final term, you age and lose points naturally)</li>
+          </ul>
+          <p class="rule-body" style="margin-top:12px;">Similarly, skills are added from:</p>
+          <ul style="margin-left:20px; margin-top:8px; color:#b0d8e8;">
+            <li style="margin-bottom:4px;">Your career's training tables</li>
+            <li style="margin-bottom:4px;">Career events and upbringing</li>
+            <li style="margin-bottom:4px;">Mishaps and other special circumstances</li>
+          </ul>
+          <p class="rule-body" style="margin-top:12px;">The creation tool displays your current stats and skills in the panel at the top of each step. <strong>Check them frequently</strong> to ensure they're changing as expected. If something looks wrong, keep a note of it — you can fix it on the character sheet after creation is complete.</p>
+        </div>
+      </div>
+
+      <div class="ref-section">
+        <h2 class="ref-section-title">Discrepancies? No Problem</h2>
+        <div class="rule-card">
+          <p class="rule-body">If you notice that a characteristic or skill didn't change when you expected it to — or changed by the wrong amount — <strong>don't panic.</strong> You can manually adjust any stat or skill on the Character Record page after creation is complete.</p>
+          <p class="rule-body" style="margin-top:8px;">Simply note what should be corrected, finish creation, then edit the character sheet to fix it. It takes just a moment.</p>
+        </div>
+      </div>
+
+      <div class="ref-section">
+        <h2 class="ref-section-title">Benefit Rolls and Mustering Out</h2>
+        <div class="rule-card">
+          <p class="rule-body">At the end of each career term, you receive benefit rolls — a chance to gain cash, equipment, allies, ranks, or other rewards. The number of rolls depends on your rank and rank achievements.</p>
+          <p class="rule-body" style="margin-top:8px;">These rolls are important: they build your wealth and contacts. The creation tool will prompt you to spend each roll as you reach the end of a term. Pay attention to what you're gaining — you can always review your final character on the Character Record.</p>
+        </div>
+      </div>
+
+      <div class="special-divider"><span>Tips for Success</span></div>
+
+      <div class="ref-section">
+        <div class="rule-card">
+          <ul style="margin-left:20px; color:#b0d8e8; line-height:1.8;">
+            <li><strong style="color:#00e5ff;">Know your career.</strong> Each career has unique events, mishaps, and skill tables. Read the text carefully — it tells you what each roll means.</li>
+            <li style="margin-top:8px;"><strong style="color:#00e5ff;">Injuries are serious.</strong> If you fail a survival roll and get hurt, you'll need medical care. The creation tool will offer it, but it costs money or adds debt.</li>
+            <li style="margin-top:8px;"><strong style="color:#00e5ff;">Terms can end early.</strong> Mishaps or failed survival rolls can force you to leave a career. That's okay — you gain a benefit roll and can enlist elsewhere.</li>
+            <li style="margin-top:8px;"><strong style="color:#00e5ff;">You can switch careers.</strong> If you're not happy with your first career, you can leave and join another. Each career gives you new opportunities and skills.</li>
+            <li style="margin-top:8px;"><strong style="color:#00e5ff;">Watch the log.</strong> The creation log at the bottom-right tracks everything that happens — rolls, events, stat changes, skills gained. If something looks wrong, review the log to see exactly what occurred.</li>
+          </ul>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script>
+    // Load sidebar user info
+    async function loadUser() {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (user) {
+        document.getElementById('sidebar-user').textContent = user.email || '';
+      }
+    }
+    loadUser();
+
+    function doSignOut() {
+      supabaseClient.auth.signOut().then(() => {
+        window.location.href = '/index.html';
+      });
+    }
+
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      const tab = document.getElementById(`tab-${tabName}`);
+      if (tab) tab.style.display = 'block';
+      event.target.classList.add('active');
+    }
+  </script>
+
+</body>
+</html>
