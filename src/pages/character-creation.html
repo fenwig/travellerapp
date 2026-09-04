@@ -10224,7 +10224,13 @@
       const newTerms = s.terms + 1;
       await supabaseClient.from('characters').update({ age: ageForTerms(newTerms) }).eq('id', draft.id);
       draft.age = ageForTerms(newTerms);
-      await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + 1 });
+      // Only add a benefit roll if we haven't already gone through goCareerTermEnd()
+      // (which happens after successful survival). If we're in the 'termEnd' phase,
+      // the benefit roll has already been added. Otherwise (e.g., voluntary mid-term
+      // departure), add one here.
+      const alreadyHasBenefit = s.phase === 'termEnd';
+      const extraBenefit = alreadyHasBenefit ? 0 : 1;
+      await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + extraBenefit });
       await goToAgeingOrPhase('mustering');
     }
 
