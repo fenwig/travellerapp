@@ -10148,10 +10148,16 @@
       // results in a mishap roll; even if the mishap doesn't eject the player,
       // no benefit roll is earned this term.
       const survivalSucceeded = s.survivalResult && s.survivalResult.success;
-      const benefitRollsEarned = survivalSucceeded ? 1 : 0;
-      const benefitRolls = Math.max(0, (s.benefitRolls || 0) + benefitRollsEarned + extra);
+      // Benefit rolls are determined by rank (Core p.17):
+      // Rank 0-2: 1 roll, Rank 3-4: 2 rolls, Rank 5-6: 3 rolls
+      const rankBenefit = !survivalSucceeded ? 0 : (
+        (s.rank || 0) <= 2 ? 1 :
+        (s.rank || 0) <= 4 ? 2 :
+        3
+      );
+      const benefitRolls = Math.max(0, (s.benefitRolls || 0) + rankBenefit + extra);
       await saveStep5State({ benefitRolls, phase: 'termEnd' });
-      if (extra) await logCreation(`${c.name} — banked Benefit roll count adjusted by ${extra > 0 ? '+' : ''}${extra} from a prior bonus (now ${benefitRolls}).`);
+      if (rankBenefit > 0 || extra) await logCreation(`${c.name} — Benefit roll count: +${rankBenefit} from rank ${s.rank}${extra ? ` +${extra} from prior bonus` : ''} (now ${benefitRolls}).`);
       renderStep();
     }
 
