@@ -10157,7 +10157,7 @@
       );
       const benefitRolls = Math.max(0, (s.benefitRolls || 0) + rankBenefit + extra);
       await saveStep5State({ benefitRolls, phase: 'termEnd' });
-      if (rankBenefit > 0 || extra) await logCreation(`${c.name} — Benefit roll count: +${rankBenefit} from rank ${s.rank}${extra ? ` +${extra} from prior bonus` : ''} (now ${benefitRolls}).`);
+      await logCreation(`${c.name} — Term End: survival ${survivalSucceeded ? 'succeeded' : 'failed'}, rank ${s.rank}, benefit rolls earned: ${rankBenefit}${extra ? ` + ${extra} bonus` : ''} (now ${benefitRolls} banked).`);
       renderStep();
     }
 
