@@ -4696,6 +4696,8 @@
     async function openResolver(tag, kind) {
       const el = document.getElementById('resolver-' + tag);
       const restrict = window.__resolverRestrict[tag] || {};
+      // Don't allow re-opening a tool that shows "Applied" status
+      if (el && el.innerHTML.includes('Applied')) return;
       if (kind === 'skill') {
         const options = restrict.skillOptions && restrict.skillOptions.length ? restrict.skillOptions : SKILLS.map(sk => ({ name: sk.name }));
         // Single option with no specialty decision needed — auto-apply immediately
