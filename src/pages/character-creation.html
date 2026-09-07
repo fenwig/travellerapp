@@ -4649,7 +4649,15 @@
         // own text may have granted one, but that's already been applied).
         const survivalSucceeded = s.survivalResult && s.survivalResult.success;
         const benefitRollsEarned = survivalSucceeded ? 1 : 0;
-        await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + benefitRollsEarned });
+        // Apply bonus rolls based on highest rank reached (Core p.46):
+        // Rank 1-2: +1, Rank 3-4: +2, Rank 5-6: +3
+        const highestRank = s.highestRank || 0;
+        const rankBonus = highestRank >= 5 ? 3 : highestRank >= 3 ? 2 : highestRank >= 1 ? 1 : 0;
+        const totalBenefitEarned = benefitRollsEarned + rankBonus;
+        await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + totalBenefitEarned });
+        if (rankBonus > 0) {
+          await logCreation(`Left career (forced) with bonus benefit rolls: +${rankBonus} for reaching rank ${highestRank}.`);
+        }
         await goToAgeingOrPhase('mustering');
       } catch (err) {
         console.error('leaveCareerAfterMishap failed:', err);
@@ -10146,18 +10154,16 @@
       const extra = await consumePendingMod('extraBenefitRolls');
       // Benefit rolls are only awarded if survival succeeded. Failed survival
       // results in a mishap roll; even if the mishap doesn't eject the player,
-      // no benefit roll is earned this term.
+      // no benefit roll is earned this term (Core p.19, p.46).
       const survivalSucceeded = s.survivalResult && s.survivalResult.success;
-      // Benefit rolls are determined by rank (Core p.17):
-      // Rank 0-2: 1 roll, Rank 3-4: 2 rolls, Rank 5-6: 3 rolls
-      const rankBenefit = !survivalSucceeded ? 0 : (
-        (s.rank || 0) <= 2 ? 1 :
-        (s.rank || 0) <= 4 ? 2 :
-        3
-      );
-      const benefitRolls = Math.max(0, (s.benefitRolls || 0) + rankBenefit + extra);
-      await saveStep5State({ benefitRolls, phase: 'termEnd' });
-      await logCreation(`${c.name} — Term End: survival ${survivalSucceeded ? 'succeeded' : 'failed'}, rank ${s.rank}, benefit rolls earned: ${rankBenefit}${extra ? ` + ${extra} bonus` : ''} (now ${benefitRolls} banked).`);
+      // Each term gives 1 benefit roll (if survival succeeded).
+      // Bonus rolls are applied when leaving the career based on highest rank.
+      const termBenefit = survivalSucceeded ? 1 : 0;
+      const benefitRolls = Math.max(0, (s.benefitRolls || 0) + termBenefit + extra);
+      // Track highest rank reached in this career for bonus rolls at career end.
+      const highestRank = Math.max(s.highestRank || 0, s.rank || 0);
+      await saveStep5State({ benefitRolls, highestRank, phase: 'termEnd' });
+      await logCreation(`${c.name} — Term End: survival ${survivalSucceeded ? 'succeeded' : 'failed'}, rank ${s.rank}, benefit rolls earned: ${termBenefit}${extra ? ` + ${extra} bonus` : ''} (now ${benefitRolls} banked).`);
       renderStep();
     }
 
@@ -10243,7 +10249,15 @@
       // departure), add one here.
       const alreadyHasBenefit = s.phase === 'termEnd';
       const extraBenefit = alreadyHasBenefit ? 0 : 1;
-      await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + extraBenefit });
+      // Apply bonus rolls based on highest rank reached (Core p.46):
+      // Rank 1-2: +1, Rank 3-4: +2, Rank 5-6: +3
+      const highestRank = s.highestRank || 0;
+      const rankBonus = highestRank >= 5 ? 3 : highestRank >= 3 ? 2 : highestRank >= 1 ? 1 : 0;
+      const totalBenefit = extraBenefit + rankBonus;
+      await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + totalBenefit });
+      if (rankBonus > 0) {
+        await logCreation(`Left career with bonus benefit rolls: +${rankBonus} for reaching rank ${highestRank}.`);
+      }
       await goToAgeingOrPhase('mustering');
     }
 
