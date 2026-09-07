@@ -4012,7 +4012,52 @@
 
     async function resumeAfterAgeing() {
       const s = step5State();
-      await saveStep5State({ phase: s.ageingResumePhase || 'survival' });
+      // If aging was at term end, resume to term end decision; otherwise resume to queued phase
+      const resumePhase = s.ageingAtTermEnd ? 'termEnd' : (s.ageingResumePhase || 'survival');
+      await saveStep5State({ phase: resumePhase, ageingDecisionShown: true });
+      renderStep();
+    }
+
+    // ── Ageing at Term End ────────────────────────────────────────
+    // When a character reaches 4+ terms, aging is rolled at the END of each
+    // term BEFORE the player decides to continue or leave. This lets them
+    // make an informed decision based on aging effects.
+    async function rollAgeingatTermEnd() {
+      const s = step5State();
+      const d1 = rollDie(), d2 = rollDie();
+      const total = d1 + d2 - s.terms;
+      const reqs = ageingRequirements(total);
+      await saveStep5State({ ageingRoll: { dice: [d1, d2], total }, ageingReqs: reqs, ageingPicks: {}, ageingAtTermEnd: true });
+      await logCreation(`Ageing roll at age ${currentAge()}: ${total} (${d1}+${d2}−${s.terms})${reqs.length ? ' — characteristic reduction required.' : ' — no effect.'}`);
+      renderStep();
+    }
+
+    async function applyAgeingPicksAtTermEnd() {
+      const btn = document.getElementById('ageing-picks-apply-btn');
+      if (btn && btn.disabled) return;
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
+      }
+      const s = step5State();
+      const reqs = s.ageingReqs || [];
+      const picks = s.ageingPicks || {};
+      for (let i = 0; i < reqs.length; i++) {
+        await applyStatChange(picks[i], -reqs[i].amount);
+      }
+      const crisisKey = AGEING_PHYS.concat(AGEING_MENTAL).find(k => (draft[k] || 0) <= 0);
+      await logCreation(`Ageing applied: ${reqs.map((r, i) => `${picks[i]} −${r.amount}`).join(', ')}.`);
+      if (crisisKey) {
+        await saveStep5State({ phase: 'ageingCrisis', ageingCrisisKey: crisisKey, ageingAtTermEnd: true });
+      } else {
+        await saveStep5State({ ageingDecisionShown: true });
+        renderStep();
+      }
+    }
+
+    async function continueToTermEndDecision() {
+      await saveStep5State({ ageingDecisionShown: true });
       renderStep();
     }
 
@@ -10172,6 +10217,61 @@
       const c = careerData(s.careerId);
       const a = currentAssignment(s, c);
 
+      // If character has served 4+ terms and aging hasn't been rolled yet,
+      // roll aging first before showing continue/leave options (Core p.48).
+      // Aging should be resolved before the player decides to continue or leave.
+      if (s.terms >= 4 && !s.ageingAtTermEnd && !s.ageingRoll) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">Ageing — Age ${currentAge()}</div>
+            <div class="wizard-card-sub">You have completed a term and must check for aging effects. Roll 2D, DM−${s.terms} (your total terms served). After aging is resolved, you may choose to continue or leave this career. (Core Rulebook p.48)</div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="rollAgeingatTermEnd()">Roll Ageing</button>
+            </div>
+          </div>
+        `;
+      }
+
+      // After aging is resolved at term end, show the aging results before the choice
+      if (s.ageingAtTermEnd && s.ageingRoll && !s.ageingDecisionShown) {
+        const reqs = s.ageingReqs || [];
+        const picks = s.ageingPicks || {};
+        const allPicked = reqs.every((r, i) => picks[i]);
+
+        if (!reqs.length) {
+          return `
+            <div class="rule-card wizard-card">
+              <div class="wizard-card-title">Ageing — No Effect</div>
+              <div class="wizard-card-sub">Rolled ${s.ageingRoll.total} (${s.ageingRoll.dice.join(' + ')} − ${s.terms}) — no aging effects this term. You may now decide whether to continue or leave this career.</div>
+              <div class="wizard-actions"><button class="btn-outline" onclick="continueToTermEndDecision()">Continue</button></div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">Ageing — Effects (Age ${currentAge()})</div>
+            <div class="wizard-card-sub">Rolled ${s.ageingRoll.total} (${s.ageingRoll.dice.join(' + ')} − ${s.terms}). Choose which characteristics absorb each reduction. After aging is applied, you will decide whether to continue or leave this career.</div>
+            ${reqs.map((r, i) => {
+              const pool = r.type === 'phys' ? AGEING_PHYS : AGEING_MENTAL;
+              const labelMap = { str: 'STR', dex: 'DEX', end_stat: 'END', int_stat: 'INT', edu: 'EDU', soc: 'SOC' };
+              return `
+                <div class="wizard-field">
+                  <label>Reduce a ${r.type === 'phys' ? 'physical' : 'mental'} characteristic by ${r.amount}</label>
+                  <select onchange="pickAgeingTarget(${i}, this.value)">
+                    <option value="">— choose —</option>
+                    ${pool.map(k => `<option value="${k}" ${picks[i] === k ? 'selected' : ''}>${labelMap[k]} (currently ${draft[k]})</option>`).join('')}
+                  </select>
+                </div>
+              `;
+            }).join('')}
+            <div class="wizard-actions">
+              <button class="btn-outline" id="ageing-picks-apply-btn" onclick="applyAgeingPicksAtTermEnd()" ${allPicked ? '' : 'disabled'}>Apply Ageing</button>
+            </div>
+          </div>
+        `;
+      }
+
       // Prisoner replaces the normal voluntary-leave/forced-leave choice
       // entirely: you may never choose to stay or leave. The SAME
       // advancement roll total used for rank promotion is also checked
@@ -10232,9 +10332,16 @@
       await saveStep5State({
         termInCareer: s.termInCareer + 1, terms: newTerms,
         survivalResult: null, eventRoll: null, eventResolved: false,
-        commissionResult: null, advancementResult: null, skillRollsRemaining: 0
+        commissionResult: null, advancementResult: null, skillRollsRemaining: 0,
+        ageingRoll: null, ageingReqs: null, ageingPicks: {}, ageingAtTermEnd: false, ageingDecisionShown: false
       });
-      await goToAgeingOrPhase('survival');
+      // If aging was already rolled at term end, skip the aging phase and go directly to survival
+      if (s.ageingAtTermEnd) {
+        await saveStep5State({ phase: 'survival' });
+      } else {
+        await goToAgeingOrPhase('survival');
+      }
+      renderStep();
     }
 
     async function leaveCareerVoluntary() {
@@ -10254,11 +10361,21 @@
       const highestRank = s.highestRank || 0;
       const rankBonus = highestRank >= 5 ? 3 : highestRank >= 3 ? 2 : highestRank >= 1 ? 1 : 0;
       const totalBenefit = extraBenefit + rankBonus;
-      await saveStep5State({ terms: newTerms, benefitRolls: (s.benefitRolls || 0) + totalBenefit });
+      await saveStep5State({
+        terms: newTerms,
+        benefitRolls: (s.benefitRolls || 0) + totalBenefit,
+        ageingRoll: null, ageingReqs: null, ageingPicks: {}, ageingAtTermEnd: false, ageingDecisionShown: false
+      });
       if (rankBonus > 0) {
         await logCreation(`Left career with bonus benefit rolls: +${rankBonus} for reaching rank ${highestRank}.`);
       }
-      await goToAgeingOrPhase('mustering');
+      // If aging was already rolled at term end, skip the aging phase and go directly to mustering
+      if (s.ageingAtTermEnd) {
+        await saveStep5State({ phase: 'mustering', musteringResolved: [], musteringPending: null });
+        renderStep();
+      } else {
+        await goToAgeingOrPhase('mustering');
+      }
     }
 
     // ── Pension (Core p.48) — leaving a career (other than Scout, Rogue,
