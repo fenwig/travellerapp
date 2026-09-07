@@ -8215,7 +8215,7 @@
       }
       if (m.success && !m.skillChosen) {
         return resolverHeader(m.resultText) + `
-          <select id="scholar-e8-skill">${SKILLS.map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
+          <select id="scholar-e8-skill">${SKILLS.filter(sk => sk.name !== 'Jack-of-all-Trades' && sk.category !== 'psionic').map(sk => `<option value="${sk.name}">${sk.name}</option>`).join('')}</select>
           <button class="btn-outline" onclick="confirmScholarEvent8Skill()">Increase This Skill</button>
         `;
       }
