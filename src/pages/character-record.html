@@ -725,7 +725,12 @@ function renderSkillTotals() {
 function renderSkills() {
   const list   = document.getElementById('skills-list');
   const skills = character.skills || {};
-  const keys   = Object.keys(skills);
+  // Alphabetical by skill name, then by specialty (untyped entry first).
+  const keys   = Object.keys(skills).sort((a, b) => {
+    const sa = skills[a], sb = skills[b];
+    return (sa.name || a).localeCompare(sb.name || b, undefined, { sensitivity: 'base' })
+        || (sa.specialty || '').localeCompare(sb.specialty || '', undefined, { sensitivity: 'base' });
+  });
   renderSkillTotals();
 
   if (keys.length === 0) {
