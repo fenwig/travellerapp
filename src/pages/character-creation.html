@@ -2494,6 +2494,64 @@
       { id: 'psion', name: 'Psion' }
     ];
 
+    // Short player-facing blurbs for the expandable cards on the Choose a
+    // Career screen. Original paraphrases (never rulebook text). The
+    // qualification/assignment/survival details under each blurb are read
+    // live from CAREERS_DATA by careerInfoDetails(), so they can't drift.
+    const CAREER_SUMMARIES = {
+      agent: 'Police detectives, corporate operatives and intelligence agents who dig up secrets and hunt down criminals. Expect investigation, street contacts and the occasional gunfight.',
+      army: 'Soldiers of a planetary or interstellar army, from front-line infantry to armoured cavalry and support troops. Tough training, strong combat skills, and a shot at an officer\'s commission.',
+      citizen: 'Ordinary working life: corporate employees, skilled tradespeople and colonists carving out new settlements. Safer than most careers, with a broad spread of practical skills.',
+      drifter: 'Wanderers with no fixed home, whether barbarians on primitive worlds, travellers between starports, or scavengers picking over wrecks. Anyone can join, but it\'s a hard and risky life.',
+      entertainer: 'Artists, journalists and performers who live on talent and reputation. Great social skills and a chance at fame, but fortunes come and go.',
+      marine: 'Shipboard soldiers trained to fight in vacuum, storm enemy ships and hold starports. One of the toughest combat careers, with a commission track.',
+      merchant: 'Traders, ship crews and brokers who move cargo between the stars, from giant shipping lines to battered free traders. One of the few careers that can end with a ship of your own.',
+      navy: 'Crew of the interstellar fleet, serving on warships as line crew, engineers or flight crew. Excellent shipboard skills and a commission track.',
+      noble: 'Members of the aristocracy: administrators, diplomats and the idle rich. Needs high Social Standing to get in, and rewards influence, money and connections.',
+      rogue: 'Thieves, enforcers and pirates who live outside the law. Lucrative and exciting, with a real risk of ending up in prison.',
+      scholar: 'Researchers, field scientists and physicians devoted to knowledge. Strong technical and academic skills, and access to rare information.',
+      scout: 'Explorers and couriers of the Scout Service who chart new systems and carry messages across the frontier. Superb ship skills, and a chance at a scout ship of your own.',
+      prisoner: 'Nobody chooses this career. You\'re sent here by a mishap or event in another career. Survive inside, earn your parole, and leave with hard-won skills and contacts.',
+      psion: 'People who have trained their psionic powers, whether as wild talents, disciplined adepts or psi-warriors. You need a tested Psionic Strength (PSI) before you can apply.'
+    };
+    const CAREER_INFO_STAT_LABELS = { str: 'STR', dex: 'DEX', end_stat: 'END', int_stat: 'INT', edu: 'EDU', soc: 'SOC', psi: 'PSI', following: 'FOL' };
+
+    function careerInfoCheck(check) {
+      if (!check) return '—';
+      return `${CAREER_INFO_STAT_LABELS[check.stat] || check.stat} ${check.target}+`;
+    }
+
+    function careerInfoDetails(id) {
+      const c = CAREERS_DATA[id];
+      if (!c) return '';
+      const q = c.qualification || {};
+      let qual;
+      if (q.special) qual = 'Forced entry only (cannot be chosen freely)';
+      else if (q.auto) qual = 'Automatic, no roll';
+      else if (q.statOptions) qual = `${q.statOptions.map(k => CAREER_INFO_STAT_LABELS[k] || k).join(' or ')} ${q.target}+`;
+      else qual = careerInfoCheck(q);
+      if (q.agePenalty) qual += ` (DM${q.agePenalty.dm} if age ${q.agePenalty.minAge}+)`;
+      const rows = (c.assignments || []).map(a => `
+        <tr><td>${a.label}</td><td>${careerInfoCheck(a.survival)}</td><td>${a.advancement ? careerInfoCheck(a.advancement) : 'None'}</td></tr>
+      `).join('');
+      return `
+        <div style="font-size:0.82rem; margin-top:8px;"><strong style="color:#00e5ff;">Qualification:</strong> ${qual}${c.commission ? ` &nbsp;·&nbsp; <strong style="color:#00e5ff;">Commission:</strong> ${careerInfoCheck(c.commission)}` : ''}</div>
+        <table class="ref-table" style="margin-top:8px; font-size:0.8rem;">
+          <thead><tr><th>Assignment</th><th>Survival</th><th>Advancement</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    function toggleCareerInfo(id) {
+      const el = document.getElementById(`career-info-${id}`);
+      const arrow = document.getElementById(`career-arrow-${id}`);
+      if (!el) return;
+      const open = el.style.display === 'none';
+      el.style.display = open ? 'block' : 'none';
+      if (arrow) arrow.textContent = open ? '▾' : '▸';
+    }
+
     const CAREERS_DATA = {
       agent: {
         id: 'agent', name: 'Agent', source: 'Core Rulebook pp.22-24', military: false,
@@ -4114,8 +4172,9 @@
         const disabled = (locked && !(s.forcedPrisonerNextTerm && c.id === 'prisoner') && !(s.forcedMilitaryBranch && c.id === s.forcedMilitaryBranch) && !(s.forcedDrifterNextTerm && c.id === 'drifter')) || (s.preventScoutReenlist && c.id === 'scout');
         const psiGated = c.id === 'psion' && psiUntested;
         return `
-          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid #0a4a60; border-radius:6px; margin-bottom:8px; ${disabled ? 'opacity:0.4;' : ''}">
-            <span style="font-weight:600; ${built && !disabled ? 'color:#00e5ff;' : 'color:#4a9ab8;'}">${c.name}</span>
+          <div style="padding:10px 14px; border:1px solid #0a4a60; border-radius:6px; margin-bottom:8px; ${disabled ? 'opacity:0.4;' : ''}">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <span onclick="toggleCareerInfo('${c.id}')" title="Show career summary" style="cursor:pointer; font-weight:600; ${built && !disabled ? 'color:#00e5ff;' : 'color:#4a9ab8;'}"><span id="career-arrow-${c.id}" style="display:inline-block; width:14px;">▸</span>${c.name}</span>
             ${!built
               ? `<span style="font-size:0.75rem; color:#4a9ab8;">Not yet built</span>`
               : psiGated
@@ -4125,6 +4184,11 @@
                     : `<button class="btn-outline" onclick="${s.forcedPrisonerNextTerm && c.id === 'prisoner' ? 'confirmForcedPrisoner()' : s.forcedMilitaryBranch && c.id === s.forcedMilitaryBranch ? 'confirmForcedMilitaryBranch()' : s.forcedDrifterNextTerm && c.id === 'drifter' ? 'confirmForcedDrifter()' : `chooseCareer('${c.id}')`}">${c.id === 'prisoner' && s.forcedPrisonerNextTerm ? 'Confirm Forced Entry' : (s.forcedMilitaryBranch && c.id === s.forcedMilitaryBranch) || (s.forcedDrifterNextTerm && c.id === 'drifter') ? 'Confirm Forced Entry' : 'Attempt Qualification'}</button>`)
             }
           </div>
+          <div id="career-info-${c.id}" style="display:none; margin-top:8px; padding-top:8px; border-top:1px solid #0a4a60;">
+            <div style="font-size:0.85rem; color:#b0d8e8; line-height:1.5;">${CAREER_SUMMARIES[c.id] || ''}</div>
+            ${built ? careerInfoDetails(c.id) : ''}
+          </div>
+          </div>
         `;
       }).join('');
 
@@ -4133,7 +4197,7 @@
           <div class="wizard-card-title">Choose a Career</div>
           <div class="wizard-card-sub">
             ${s.terms ? `Age ${currentAge()}, ${s.terms} term${s.terms === 1 ? '' : 's'} served so far.` : 'Pick a career to attempt qualification for.'}
-            All 15 careers are built: Navy, Drifter, Agent, Army, Citizen, Entertainer, Marine, Merchant, Noble, Rogue, Scholar, Scout, Prisoner, Believer and Psion. Psion needs a tested Psionic Strength (PSI) first — test it via the Psionic Community pre-career option. Note: Prisoner can't be entered voluntarily per the rules — only attempt qualification here if another career's mishap/event forced you into it. (Core Rulebook pp.17-57, 227-237, Traveller Companion pp.35-39)
+            Click a career's name to see a short summary, its qualification roll and its assignments. Psion needs a tested Psionic Strength (PSI) first — test it via the Psionic Community pre-career option. Note: Prisoner can't be entered voluntarily per the rules — only attempt qualification here if another career's mishap/event forced you into it. (Core Rulebook pp.17-57, 227-237, Traveller Companion pp.35-39)
           </div>
           ${s.forcedDraftNextTerm ? `
             <div style="border:1px solid #ff5a4a; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem;">
