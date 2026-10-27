@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sell Cargo — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <link rel="stylesheet" href="../css/calculators.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/nav.js" defer></script>
+</head>
+<body>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">SELL CARGO</h1>
+      <p class="calc-intro">Selling goods (Core Rulebook p.243). Enter the world you are selling on, find a buyer or broker, then see what each good on your active ship would fetch. Sell as much or as little as you like to this buyer; to try a different buyer, search again. Your progress is saved as you go.</p>
+      <div id="form"></div>
+      <div class="calc-actions">
+        <button class="btn-primary" onclick="rollFind()">Search</button>
+        <button class="btn-outline" onclick="TC.reset()">Reset</button>
+      </div>
+      <div id="step1"></div>
+      <div class="calc-block calc-row" id="neg-block">
+        <div class="calc-block-title">Negotiation</div>
+        <div class="calc-fields">
+          <label id="neg-mine">Your Broker skill<input type="number" id="my-broker" min="0" max="6" value="0" /></label>
+          <span id="neg-broker" style="display:none"></span>
+          <label>Buyer's Broker skill<input type="number" id="sup-broker" min="0" max="6" value="2" /></label>
+        </div>
+      </div>
+      <div class="calc-actions">
+        <button class="btn-primary" id="goods-btn" onclick="getOffers()" disabled>Get Offers</button>
+      </div>
+      <div id="step2"></div>
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/trade-calc.js"></script>
+  <script src="../js/trade-goods.js"></script>
+  <script>
+    // Trade codes, Core Rulebook p.260
+    const TRADE_CODES = [
+      ['Ag','Agricultural'], ['As','Asteroids'], ['Ba','Barren'], ['De','Desert'], ['Fl','Fluid Oceans'],
+      ['Ga','Garden'], ['Hi','High Population'], ['Ht','High Tech'], ['Ic','Ice-Capped'], ['In','Industrial'],
+      ['Lo','Low Population'], ['Lt','Low Tech'], ['Na','Non-Agricultural'], ['Ni','Non-Industrial'],
+      ['Po','Poor'], ['Ri','Rich'], ['Va','Vacuum'], ['Wa','Water World']
+    ];
+
+    // Goods that are banned locally at a given Law Level (Core p.243 example + Law Level table p.256):
+    // the Sale DM is the world's Law Level minus the level it is banned at.
+    const LAW_BANNED = { 24: 3 };   // Advanced Weapons = military weapons, banned at Law Level 3
+
+    // What the party can look for (p.241 — same rules as finding a supplier)
+    const FIND_TYPES = [
+      { key: 'buyer',      label: 'Buyer',                    skill: 'Broker',     char: 'EDU or SOC', unit: 'days',  illegal: false, broker: false, online: false },
+      { key: 'broker',     label: 'Broker',                   skill: 'Broker',     char: 'EDU or SOC', unit: 'days',  illegal: false, broker: true,  online: false, fee: 10, brokerSkill: 'Broker' },
+      { key: 'bm-buyer',   label: 'Black Market Buyer',       skill: 'Streetwise', char: 'EDU or SOC', unit: 'days',  illegal: true,  broker: false, online: false },
+      { key: 'bm-broker',  label: 'Broker of Illegal Goods',  skill: 'Streetwise', char: 'EDU or SOC', unit: 'days',  illegal: true,  broker: true,  online: false, fee: 20, brokerSkill: 'Streetwise' },
+      { key: 'on-buyer',   label: 'Online Buyer (TL8+)',      skill: 'Admin',      char: 'EDU',        unit: 'hours', illegal: false, broker: false, online: true },
+      { key: 'on-broker',  label: 'Online Broker (TL8+)',     skill: 'Admin',      char: 'EDU',        unit: 'hours', illegal: false, broker: true,  online: true,  fee: 10, brokerSkill: 'Broker' }
+    ];
+    const STARPORT_FIND_DM = { A: 6, B: 4, C: 2, D: 0, E: 0, X: 0 };
+
+    // Modified Price table, Sale column (p.243): total -> % of base price
+    const SALE_PCT = { '-2':20,'-1':30,'0':40,'1':45,'2':50,'3':55,'4':60,'5':65,'6':70,'7':75,'8':80,'9':85,'10':90,
+      '11':100,'12':105,'13':110,'14':115,'15':120,'16':125,'17':130,'18':140,'19':150,'20':160,'21':175,'22':200,
+      '23':250,'24':300 };
+    function salePct(t) { return t <= -3 ? 10 : t >= 25 ? 400 : SALE_PCT[String(t)]; }
+
+    const codeSelects = Array.from({ length: 5 }, (_, i) =>
+      `<select id="tc-${i}" style="width:165px"><option value="">—</option>${TRADE_CODES.map(c => `<option value="${c[0]}" title="${c[1]}">${c[0]} – ${c[1]}</option>`).join('')}</select>`
+    ).join('');
+
+    document.getElementById('form').innerHTML = `
+      ${TC.worldBlock('dst', 'Selling World', true)}
+      <div class="calc-block calc-row" style="flex-wrap:wrap">
+        <div class="calc-block-title">Trade Codes</div>
+        <div class="calc-fields" style="flex-wrap:wrap">${codeSelects}<label>Law Level<input type="number" id="law" min="0" max="15" value="0" /></label></div>
+      </div>
+      <div class="calc-block calc-row">
+        <div class="calc-block-title">Looking For</div>
+        <div class="calc-fields">
+          <label><select id="find-type" onchange="updateFindLabels()">${FIND_TYPES.map(t => `<option value="${t.key}">${t.label}</option>`).join('')}</select></label>
+          <label><span id="lbl-skill">Broker</span> skill<input type="number" id="find-level" min="-3" max="6" value="0" /></label>
+          <label><span id="lbl-char">EDU or SOC</span> DM<input type="number" id="find-dm" min="-3" max="6" value="0" /></label>
+          <label>Previous attempts this month<input type="number" id="find-prev" min="0" max="30" value="0" /></label>
+        </div>
+      </div>`;
+
+    let sell = { buyer: null, offers: null, msg: '' };   // buyer found in Step 1, offers for the ship's cargo
+
+    function findType() { return FIND_TYPES.find(t => t.key === document.getElementById('find-type').value); }
+
+    function updateFindLabels() {
+      const t = findType();
+      document.getElementById('lbl-skill').textContent = t.skill;
+      document.getElementById('lbl-char').textContent = t.char;
+    }
+
+    // ── Step 1: find a buyer or broker ──
+    function rollFind() {
+      const t = findType();
+      const dst = TC.readWorld('dst');
+      const out = document.getElementById('step1');
+      sell.offers = null; sell.msg = ''; document.getElementById('step2').innerHTML = '';
+
+      if (t.online && dst.tl < 8) {
+        out.innerHTML = '<div class="calc-block"><div class="calc-empty">Online buyers and brokers are only available on worlds of TL8 or higher. Choose another option or change the world.</div></div>';
+        sell.buyer = null; syncOffersButton(); TC.save(); return;
+      }
+
+      const level = TC.num('find-level'), charDM = TC.num('find-dm'), prev = TC.num('find-prev');
+      const portDM = STARPORT_FIND_DM[dst.port] || 0;
+      const rows = [
+        [t.skill + ' skill', level],
+        [t.char + ' characteristic DM', charDM],
+        ['Starport ' + dst.port + ' (buyer/broker bonus)', portDM],
+        ['Previous attempts this month (−1 each)', -prev]
+      ];
+      const dm = TC.sum(rows.map(r => r[1]));
+      const dice = [TC.d6(), TC.d6()], total = TC.sum(dice) + dm;
+      const time = TC.d6();
+      const success = total >= 8;
+
+      let html = '<div class="calc-result-title">FIND A ' + t.label.toUpperCase() + '</div><div class="calc-block">';
+      html += `<div class="calc-roll-line">${t.skill} check: 2D [${dice.join('+')}] ${TC.signed(dm)} = <b>${total}</b> vs 8+ → <b style="color:${success ? '#00ffaa' : '#ff5a4a'}">${success ? 'SUCCESS' : 'FAILED'}</b>
+        &nbsp;·&nbsp; Took 1D [${time}] = <b>${time} ${t.unit === 'days' ? (time === 1 ? 'day' : 'days') : (time === 1 ? 'hour' : 'hours')}</b></div>${TC.dmList(rows)}`;
+
+      if (success) {
+        const b = { kind: t.key, label: t.label, illegal: t.illegal, online: t.online, broker: t.broker };
+        if (t.broker) {
+          const bd = [TC.d6(), TC.d6()];
+          const sk = Math.floor(TC.sum(bd) / 3);
+          b.brokerSkill = sk; b.brokerSkillName = t.brokerSkill; b.fee = t.fee; b.negotiationDM = 2;
+          html += `<div class="calc-note" style="margin-top:10px"><b>${t.label} found.</b> Their ${t.brokerSkill} skill: 2D [${bd.join('+')}] = ${TC.sum(bd)} ÷ 3 (round down) = <b>${sk}</b>.
+            They charge <b>${t.fee}%</b> of the gross proceeds, settled after the sale, and add <b>DM+2</b> to negotiations.</div>`;
+        } else {
+          html += `<div class="calc-note" style="margin-top:10px"><b>${t.label} found.</b> You negotiate the deals yourself.</div>`;
+        }
+        html += t.illegal
+          ? '<div class="calc-note">This contact deals in <b>illegal goods only</b>. Smuggling carries a risk of fines or imprisonment (see Law Levels, p.255); the referee decides if you are caught.</div>'
+          : '<div class="calc-note">This contact deals in legal goods only. Search for an illicit buyer or broker to sell illegal cargo.</div>';
+        sell.buyer = b;
+      } else {
+        html += '<div class="calc-empty" style="margin-top:10px">No ' + t.label.toLowerCase() + ' found. You can search again (each attempt this month is DM−1).</div>';
+        sell.buyer = null;
+      }
+      html += '</div>';
+      out.innerHTML = html;
+
+      document.getElementById('find-prev').value = prev + 1;
+      syncOffersButton();
+      TC.save();
+    }
+
+    // ── Step 2: offers for the cargo on the active ship ──
+    function worldCodeSet() {
+      const set = new Set();
+      for (let i = 0; i < 5; i++) { const v = document.getElementById('tc-' + i).value; if (v) set.add(v); }
+      const zone = TC.readWorld('dst').zone;
+      if (zone === 'Amber' || zone === 'Red') set.add(zone);
+      return set;
+    }
+
+    function bestDM(list, codes) {
+      const hit = list.filter(([c]) => codes.has(c));
+      if (!hit.length) return { dm: 0, label: 'none' };
+      const top = hit.reduce((a, b) => (b[1] > a[1] ? b : a));
+      return { dm: top[1], label: top[0] + ' ' + TC.signed(top[1]) };
+    }
+
+    async function getOffers() {
+      const b = sell.buyer;
+      if (!b || sell.offers) return;
+      try {
+        const ship = await TC.activeShip();
+        const { data, error } = await supabaseClient.from('spacecraft_cargo')
+          .select('id,tonnage,trade_good_id,purchase_price,base_price,origin_world,illegal')
+          .eq('spacecraft_id', ship.id).not('trade_good_id', 'is', null);
+        if (error) {
+          if (/column|schema cache/i.test(error.message)) throw new Error('The cargo table needs the trade columns. Run docs/cargo-trade-columns.sql in Supabase first.');
+          throw error;
+        }
+        const codes = worldCodeSet();
+        const law = TC.num('law');
+        const skill = b.broker ? b.brokerSkill : TC.num('my-broker');
+        const skillLabel = b.broker ? "local broker's Broker skill" : 'your Broker skill';
+        const brokerDM = b.broker ? 2 : 0;
+        const buyerBroker = TC.num('sup-broker');
+
+        const offers = [], skipped = [];
+        (data || []).forEach(r => {
+          const g = TRADE_GOODS.find(x => x.id === r.trade_good_id);
+          if (!g) return;
+          if (!!r.illegal !== !!b.illegal) { skipped.push(g.name); return; }
+          let sellBest = bestDM(g.sell, codes);
+          if (LAW_BANNED[g.id] !== undefined) {
+            const lawDM = law - LAW_BANNED[g.id];
+            if (lawDM > sellBest.dm) sellBest = { dm: lawDM, label: 'Law Level ' + law + ' vs banned at ' + LAW_BANNED[g.id] };
+          }
+          const buyBest = bestDM(g.buy, codes);
+          const pd = [TC.d6(), TC.d6(), TC.d6()];
+          const total = TC.sum(pd) + skill + brokerDM + sellBest.dm - buyBest.dm - buyerBroker;
+          const pct = salePct(total);
+          const base = parseFloat(r.base_price) || g.price;
+          offers.push({
+            rowId: r.id, id: g.id, name: g.name, example: g.example, illegal: !!r.illegal,
+            held: parseFloat(r.tonnage) || 0, paid: parseFloat(r.purchase_price) || 0, base,
+            origin: r.origin_world || '', pct, offer: Math.round(base * pct / 100),
+            rollText: '3D [' + pd.join('+') + '] ' + TC.signed(skill) + ' ' + skillLabel + (brokerDM ? ' ' + TC.signed(brokerDM) + ' local broker' : '') +
+              ' ' + TC.signed(sellBest.dm) + ' Sale DM (' + sellBest.label + ') ' + TC.signed(-buyBest.dm) + ' Purchase DM (' + buyBest.label + ') ' +
+              TC.signed(-buyerBroker) + " buyer's Broker = " + total + ' → ' + pct + '% of ' + TC.cr(base)
+          });
+        });
+        sell.offers = offers;
+        sell.skipped = skipped;
+        sell.shipName = ship.name;
+        sell.msg = '';
+        renderOffers();
+        syncOffersButton();
+        TC.save();
+      } catch (e) {
+        document.getElementById('step2').innerHTML = '<div class="calc-block"><div class="calc-empty" style="color:#ff5a4a">Could not get offers: ' + (e.message || e) + '</div></div>';
+      }
+    }
+
+    function offerRow(o) {
+      const diff = o.offer - o.paid;
+      const profitPct = o.paid ? Math.round(diff / o.paid * 100) : 0;
+      const col = diff > 0 ? '#00ffaa' : diff < 0 ? '#ff5a4a' : '#b0d8e8';
+      const sign = diff > 0 ? '+' : diff < 0 ? '−' : '';
+      return `<div class="good-row">
+        <div class="good-main"><b>${o.name}</b> (${o.id})
+          <span class="good-tons">${o.held} ton${o.held === 1 ? '' : 's'} held</span>
+          <span>offer: <b>${TC.cr(o.offer)}</b> per ton <span style="color:#4a9ab8">(${o.pct}% of base)</span></span>
+          <span>you paid ${TC.cr(o.paid)}${o.origin ? ' on ' + o.origin : ''}:
+            <b style="color:${col}">${sign}${TC.cr(Math.abs(diff))}/ton (${sign}${Math.abs(profitPct)}%)</b></span>
+          ${o.illegal ? '<span class="good-badge" style="color:#ff5a4a">ILLEGAL</span>' : ''}
+          ${o.held > 0 ? '<label class="good-buy">Sell <input type="number" id="sell-' + o.rowId + '" min="0" max="' + o.held + '" value="0" oninput="updateSellTotals()" /> tons</label>' : '<span class="good-badge">sold out</span>'}
+        </div>
+        <details class="dm-detail"><summary>How this offer was worked out</summary><div>${o.rollText}</div></details>
+      </div>`;
+    }
+
+    function renderOffers() {
+      const b = sell.buyer;
+      if (!b || !sell.offers) return;
+      let html = '<div class="calc-result-title" style="margin-top:20px">OFFERS FOR THE CARGO ON ' + (sell.shipName || 'THE ACTIVE SHIP').toUpperCase() + '</div>';
+      html += `<div class="calc-note">Buyer: <b>${b.label}</b>${b.broker ? ' (broker skill ' + b.brokerSkill + ', ' + b.fee + '% fee after the sale, DM+2)' : ''}.
+        Offers were rolled once for this buyer; to get new prices, search for another buyer. Green is a profit over what you paid, red a loss.</div>`;
+      if (sell.offers.length) {
+        html += '<div class="calc-block">' + sell.offers.map(offerRow).join('') + '</div>';
+      } else {
+        html += '<div class="calc-block"><div class="calc-empty">No ' + (b.illegal ? 'illegal' : 'legal') + ' trade cargo on the active ship to sell to this buyer.</div></div>';
+      }
+      if (sell.skipped && sell.skipped.length) {
+        html += `<div class="calc-note">Not offered to this ${b.illegal ? 'illicit' : 'legal'} buyer: ${sell.skipped.join(', ')} (${b.illegal ? 'legal' : 'illegal'} goods need a ${b.illegal ? 'legal' : 'illicit'} buyer or broker).</div>`;
+      }
+      html += `<div class="calc-block calc-row">
+        <div class="calc-block-title">Sale</div>
+        <span id="sell-summary">0 tons selected</span>
+        <button class="btn-primary" onclick="sellGoods()">Sell Selected</button>
+        <span id="sell-msg" class="calc-note" style="margin:0">${sell.msg || ''}</span>
+      </div>`;
+      document.getElementById('step2').innerHTML = html;
+    }
+
+    function sellPicks() {
+      return (sell.offers || []).map(o => {
+        const el = document.getElementById('sell-' + o.rowId);
+        const n = el ? Math.max(0, Math.min(parseInt(el.value, 10) || 0, o.held)) : 0;
+        return { o, n };
+      }).filter(p => p.n > 0);
+    }
+
+    function feeRate() { return sell.buyer && sell.buyer.broker ? sell.buyer.fee / 100 : 0; }
+
+    function updateSellTotals() {
+      const picks = sellPicks();
+      const tons = picks.reduce((t, p) => t + p.n, 0);
+      const gross = picks.reduce((t, p) => t + p.n * p.o.offer, 0);
+      const cost = picks.reduce((t, p) => t + p.n * p.o.paid, 0);
+      const fee = Math.round(gross * feeRate());
+      const net = gross - fee;
+      const profit = net - cost;
+      document.getElementById('sell-summary').innerHTML = '<b>' + tons + ' ton' + (tons === 1 ? '' : 's') + '</b> · gross <b>' + TC.cr(gross) + '</b>' +
+        (fee ? ' · broker fee <b>' + TC.cr(fee) + '</b> · net <b>' + TC.cr(net) + '</b>' : '') +
+        ' · profit <b style="color:' + (profit >= 0 ? '#00ffaa' : '#ff5a4a') + '">' + (profit < 0 ? '−' : '') + TC.cr(Math.abs(profit)) + '</b>';
+    }
+
+    function sellMessage(text, ok) {
+      sell.msg = '<span style="color:' + (ok ? '#00ffaa' : '#ff5a4a') + '">' + text + '</span>';
+      const el = document.getElementById('sell-msg');
+      if (el) el.innerHTML = sell.msg;
+      TC.save();
+    }
+
+    async function sellGoods() {
+      const picks = sellPicks();
+      if (!picks.length) { sellMessage('Enter how many tons to sell of at least one good first.', false); return; }
+      const world = document.getElementById('dst-name').value.trim();
+      try {
+        const ship = await TC.activeShip();
+        // re-read the cargo so we never sell more than is really aboard
+        const ids = picks.map(p => p.o.rowId);
+        const { data: now, error: re } = await supabaseClient.from('spacecraft_cargo').select('id,tonnage').in('id', ids);
+        if (re) throw re;
+        const current = {};
+        (now || []).forEach(r => { current[r.id] = parseFloat(r.tonnage) || 0; });
+        for (const p of picks) {
+          if ((current[p.o.rowId] || 0) < p.n) throw new Error(p.o.name + ' is no longer aboard in that quantity. Reload the page or check the Spacecraft Record.');
+        }
+
+        // 1. sales record
+        const rate = feeRate();
+        const logRows = picks.map(p => {
+          const gross = p.n * p.o.offer;
+          return { spacecraft_id: ship.id, trade_good_id: p.o.id, good_name: p.o.name, tons: p.n, purchase_price: p.o.paid,
+            sale_price: p.o.offer, origin_world: p.o.origin || null, sold_world: world || null, gross, broker_fee: Math.round(gross * rate), illegal: p.o.illegal };
+        });
+        const { error: le } = await supabaseClient.from('spacecraft_trade_log').insert(logRows);
+        if (le) {
+          if (/relation|does not exist|schema cache/i.test(le.message)) throw new Error('The sales record table is missing. Run docs/trade-log.sql in Supabase first.');
+          throw le;
+        }
+
+        // 2. take the tons off the ship
+        for (const p of picks) {
+          const left = current[p.o.rowId] - p.n;
+          const res = left > 0
+            ? await supabaseClient.from('spacecraft_cargo').update({ tonnage: left }).eq('id', p.o.rowId)
+            : await supabaseClient.from('spacecraft_cargo').delete().eq('id', p.o.rowId);
+          if (res.error) throw res.error;
+        }
+
+        const gross = logRows.reduce((t, r) => t + r.gross, 0), fee = logRows.reduce((t, r) => t + r.broker_fee, 0);
+        const cost = picks.reduce((t, p) => t + p.n * p.o.paid, 0), tons = picks.reduce((t, p) => t + p.n, 0);
+        picks.forEach(p => { p.o.held -= p.n; });
+        const profit = gross - fee - cost;
+        sell.msg = '<span style="color:#00ffaa">Sold ' + tons + ' ton' + (tons === 1 ? '' : 's') + ' for ' + TC.cr(gross) +
+          (fee ? ', broker fee ' + TC.cr(fee) + ', net ' + TC.cr(gross - fee) : '') + '. Profit ' + (profit < 0 ? '−' : '') + TC.cr(Math.abs(profit)) +
+          '. Recorded on the <a href="spacecraft-record.html" style="color:#00e5ff">Spacecraft Record</a> (Finance &amp; Cargo tab).</span>';
+        renderOffers();
+        TC.save();
+      } catch (e) { sellMessage('Could not complete the sale: ' + (e.message || e), false); }
+    }
+
+    // ── Negotiation block & Get Offers button ──
+    function renderNegotiation() {
+      const b = sell.buyer;
+      const mine = document.getElementById('neg-mine'), el = document.getElementById('neg-broker');
+      if (b && b.broker) {
+        mine.style.display = 'none';
+        el.style.display = 'inline';
+        el.innerHTML = b.brokerSkillName + ' skill of the broker (2D/3) = <b>' + b.brokerSkill + '</b> &nbsp;+&nbsp; DM+2 (local) &nbsp;=&nbsp; <b>' + TC.signed(b.brokerSkill + 2) + '</b>';
+      } else {
+        mine.style.display = '';
+        el.style.display = 'none';
+      }
+    }
+
+    function syncOffersButton() {
+      renderNegotiation();
+      const btn = document.getElementById('goods-btn');
+      btn.disabled = !sell.buyer || !!sell.offers;
+      btn.title = !sell.buyer ? 'Find a buyer or broker first'
+        : sell.offers ? 'To get new prices, search for another buyer or broker' : '';
+    }
+
+    updateFindLabels();
+    TC.persist('sell', () => sell, v => { sell = v || { buyer: null, offers: null, msg: '' }; }, ['step1', 'step2']);
+    updateFindLabels();
+    syncOffersButton();
+  </script>
+</body>
+</html>

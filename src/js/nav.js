@@ -12,7 +12,8 @@ const NAV_GROUPS = [
   { id: 'tools', label: 'Player Tools', items: [
     ['passenger-calculator.html', 'Passenger Calculator'],
     ['freight-calculator.html',   'Freight & Mail Calculator'],
-    ['speculative-trade.html',     'Speculative Trade'],
+    ['buy-cargo.html',             'Buy Cargo'],
+    ['sell-cargo.html',            'Sell Cargo'],
     ['https://travellermap.com',   'Traveller Map', true]   // third value: opens in a new tab
   ]},
   { id: 'reference', label: 'Reference', items: [

@@ -576,6 +576,15 @@
           <button class="add-row-btn" onclick="addCargoRow()">+ Add Cargo</button>
         </div>
 
+        <div class="cr-section" id="trade-log-section" style="display:none">
+          <div class="cr-section-title">Cargo Sales Record</div>
+          <table class="gear-table">
+            <thead><tr><th>Date</th><th>Good</th><th>Tons</th><th>Bought</th><th>Sold</th><th>Gross</th><th>Broker fee</th><th>Profit</th><th></th></tr></thead>
+            <tbody id="trade-log-tbody"></tbody>
+          </table>
+          <div style="font-size:0.78rem;color:#4a9ab8;margin-top:6px">Total profit: <span id="trade-log-total" style="color:#00ffaa;font-weight:600">Cr0</span></div>
+        </div>
+
         <div class="cr-section">
           <div class="cr-section-title">Passengers</div>
           <table class="pass-table">
@@ -741,6 +750,7 @@ async function loadShip() {
   renderCritGrid();
   compileCritDamage();
   await renderCargo();
+  await renderTradeLog();
   await renderPassengers();
   await renderCrew();
   renderFinance();
@@ -1346,6 +1356,40 @@ async function deleteCargoRow(id, tr) {
   await supabaseClient.from('spacecraft_cargo').delete().eq('id', id);
   tr.remove();
   await renderCargo();
+}
+
+// ── Cargo sales record (written by the Sell Cargo page) ──
+async function renderTradeLog() {
+  const sec = document.getElementById('trade-log-section');
+  const { data, error } = await supabaseClient.from('spacecraft_trade_log').select('*')
+    .eq('spacecraft_id', ship.id).order('sold_at', { ascending: false });
+  if (error || !data || !data.length) { sec.style.display = 'none'; return; }   // no table yet, or nothing sold
+  sec.style.display = '';
+  const cr = n => 'Cr' + Math.round(n || 0).toLocaleString('en-US');
+  let total = 0;
+  document.getElementById('trade-log-tbody').innerHTML = data.map(r => {
+    const cost = (r.purchase_price || 0) * (r.tons || 0);
+    const profit = (r.gross || 0) - (r.broker_fee || 0) - cost;
+    total += profit;
+    return `<tr data-id="${r.id}">
+      <td>${new Date(r.sold_at).toLocaleDateString()}</td>
+      <td>${r.good_name}${r.illegal ? ' <span style="color:#ff5a4a">(illegal)</span>' : ''}</td>
+      <td>${r.tons}</td>
+      <td>${cr(r.purchase_price)}/t${r.origin_world ? ' · ' + r.origin_world : ''}</td>
+      <td>${cr(r.sale_price)}/t${r.sold_world ? ' · ' + r.sold_world : ''}</td>
+      <td>${cr(r.gross)}</td><td>${cr(r.broker_fee)}</td>
+      <td style="color:${profit >= 0 ? '#00ffaa' : '#ff5a4a'}">${profit < 0 ? '−' : ''}${cr(Math.abs(profit))}</td>
+      <td class="td-act"><button class="skill-remove" onclick="deleteTradeLog('${r.id}')">✕</button></td>
+    </tr>`;
+  }).join('');
+  const t = document.getElementById('trade-log-total');
+  t.textContent = (total < 0 ? '−' : '') + cr(Math.abs(total));
+  t.style.color = total >= 0 ? '#00ffaa' : '#ff5a4a';
+}
+
+async function deleteTradeLog(id) {
+  await supabaseClient.from('spacecraft_trade_log').delete().eq('id', id);
+  await renderTradeLog();
 }
 
 // ── Passengers ───────────────────────────────────────────
