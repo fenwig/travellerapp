@@ -37,7 +37,7 @@
   <script src="../js/trade-calc.js"></script>
   <script>
     document.getElementById('form').innerHTML = `
-      <div class="calc-block">
+      <div class="calc-block calc-row">
         <div class="calc-block-title">Ship &amp; Journey</div>
         <div class="calc-fields">
           <label>Highest Steward skill on ship<input type="number" id="steward" min="0" max="6" value="0" /></label>
@@ -46,9 +46,9 @@
       </div>
       ${TC.worldBlock('src', 'Source World (where you are)', false)}
       ${TC.worldBlock('dst', 'Destination World', false)}
-      <div class="calc-block">
-        <div class="calc-block-title">Skill Check (Broker, Carouse or Streetwise)</div>
-        <label class="calc-check"><input type="checkbox" id="use-check" checked /> Make an Average (8+) check; its Effect is added to every passenger roll</label>
+      <div class="calc-block calc-row">
+        <div class="calc-block-title">Skill Check</div>
+        <label class="calc-check"><input type="checkbox" id="use-check" checked /> Make an Average (8+) check, Effect added to every roll</label>
         <div class="calc-fields">
           <label>Skill<select id="chk-skill">${TC.opts(['Broker','Carouse','Streetwise'], 'Broker')}</select></label>
           <label>Skill level<input type="number" id="chk-level" min="-3" max="6" value="0" /></label>

@@ -11,8 +11,7 @@ const NAV_GROUPS = [
   ]},
   { id: 'tools', label: 'Player Tools', items: [
     ['passenger-calculator.html', 'Passenger Calculator'],
-    ['freight-calculator.html',   'Freight Calculator'],
-    ['mail-calculator.html',      'Mail Calculator'],
+    ['freight-calculator.html',   'Freight & Mail Calculator'],
     [null,                        'Speculative Trade (coming soon)']
   ]},
   { id: 'reference', label: 'Reference', items: [

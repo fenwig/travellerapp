@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Freight Calculator — Traveller</title>
+  <title>Freight &amp; Mail Calculator — Traveller</title>
   <link rel="stylesheet" href="../css/main.css" />
   <link rel="stylesheet" href="../css/reference.css" />
   <link rel="stylesheet" href="../css/calculators.css" />
@@ -24,11 +24,15 @@
     </nav>
 
     <main class="page-main">
-      <h1 class="page-title">FREIGHT CALCULATOR</h1>
-      <p class="calc-intro">Shipping freight (Core Rulebook pp.239–241). Enter the pick-up and destination worlds and the distance, then roll. Freight lots cannot be broken up, so tick the whole lots you want to carry. Cargo is paid on delivery; late delivery cuts the payment by (1D+4) × 10%.</p>
+      <h1 class="page-title">FREIGHT &amp; MAIL CALCULATOR</h1>
+      <p class="calc-intro"><b>Freight</b> (Core Rulebook pp.239–241): freight lots cannot be broken up, so tick the whole lots you want to carry. Cargo is paid on delivery; late delivery cuts the payment by (1D+4) × 10%. <b>Mail</b> (p.241): roll 2D plus the freight modifiers; on 12 or more you are offered 1D containers (5 tons and Cr25000 each, flat rate). Take all of them or none.</p>
       <div id="form"></div>
-      <div class="calc-actions"><button class="btn-primary" onclick="rollFreight()">Roll for Freight</button></div>
+      <div class="calc-actions">
+        <button class="btn-primary" onclick="rollFreight()">Roll for Freight</button>
+        <button class="btn-primary" onclick="rollMail()" style="margin-left:10px">Roll for Mail</button>
+      </div>
       <div id="results"></div>
+      <div id="mail-results"></div>
     </main>
   </div>
 
@@ -37,21 +41,29 @@
   <script src="../js/trade-calc.js"></script>
   <script>
     document.getElementById('form').innerHTML = `
-      <div class="calc-block">
+      <div class="calc-block calc-row">
         <div class="calc-block-title">Journey</div>
         <div class="calc-fields">
           <label>Distance (parsecs)<select id="dist">${TC.opts([1,2,3,4,5,6], 1)}</select></label>
         </div>
       </div>
-      ${TC.worldBlock('src', 'Pick-up World (where the freight is)', true)}
+      ${TC.worldBlock('src', 'Pick-up World', true)}
       ${TC.worldBlock('dst', 'Destination World', true)}
-      <div class="calc-block">
-        <div class="calc-block-title">Skill Check (Broker or Streetwise)</div>
-        <label class="calc-check"><input type="checkbox" id="use-check" checked /> Make an Average (8+) check; its Effect is added to every freight roll</label>
+      <div class="calc-block calc-row">
+        <div class="calc-block-title">Skill Check</div>
+        <label class="calc-check"><input type="checkbox" id="use-check" checked /> Make an Average (8+) check, Effect added to every roll</label>
         <div class="calc-fields">
           <label>Skill<select id="chk-skill">${TC.opts(['Broker','Streetwise'], 'Broker')}</select></label>
           <label>Skill level<input type="number" id="chk-level" min="-3" max="6" value="0" /></label>
           <label>Characteristic DM<input type="number" id="chk-dm" min="-3" max="6" value="0" /></label>
+        </div>
+      </div>
+      <div class="calc-block calc-row">
+        <div class="calc-block-title">Mail Modifiers</div>
+        <label class="calc-check"><input type="checkbox" id="armed" /> Ship is armed (DM+2)</label>
+        <div class="calc-fields">
+          <label>Highest Naval or Scout rank<input type="number" id="rank" min="0" max="6" value="0" /></label>
+          <label>Highest SOC DM<input type="number" id="soc" min="-3" max="3" value="0" /></label>
         </div>
       </div>`;
 
@@ -60,23 +72,30 @@
       { key: 'minor',      label: 'Minor Cargo',      lotDM: 0,  mult: 5,  desc: '1D × 5 tons per lot', note: '' },
       { key: 'major',      label: 'Major Cargo',      lotDM: -4, mult: 10, desc: '1D × 10 tons per lot', note: 'DM−4 for Major' }
     ];
-    let lots = [];      // { id, type, tons }
+    let lots = [];      // { type, tons }
     let rate = 0;
+    let mailCount = 0;
 
-    function rollFreight() {
+    // DMs shared by the freight and mail rolls (worlds, distance, skill check Effect)
+    function sharedRows() {
       const dist = TC.num('dist');
       const src = TC.readWorld('src'), dst = TC.readWorld('dst');
-      rate = TC.FARES[dist].freight;
-      lots = [];
-
-      let effect = 0, checkText = '';
+      let checkText = '';
+      const rows = [];
       if (document.getElementById('use-check').checked) {
         const c = TC.skillCheck(document.getElementById('chk-skill').value, TC.num('chk-level'), TC.num('chk-dm'));
-        effect = c.effect; checkText = c.text;
+        checkText = c.text;
+        rows.push(['Skill check Effect', c.effect]);
       }
-      const baseRows = [];
-      if (checkText) baseRows.push(['Skill check Effect', effect]);
-      baseRows.push(...TC.freightWorldDMs(src, 'Pick-up'), ...TC.freightWorldDMs(dst, 'Destination'), ...TC.distanceDM(dist));
+      rows.push(...TC.freightWorldDMs(src, 'Pick-up'), ...TC.freightWorldDMs(dst, 'Destination'), ...TC.distanceDM(dist));
+      return { dist, src, rows, checkText };
+    }
+
+    // ── Freight ──
+    function rollFreight() {
+      const { dist, rows: baseRows, checkText } = sharedRows();
+      rate = TC.FARES[dist].freight;
+      lots = [];
 
       let html = '<div class="calc-result-title">FREIGHT AVAILABLE — ' + TC.cr(rate) + ' per ton</div>';
       if (checkText) html += '<div class="calc-note">' + checkText + '</div>';
@@ -107,14 +126,22 @@
         }
         html += '</div>';
       });
-      html += '<div class="calc-total"><small id="total-tons">0 tons</small><span id="grand-total">Cr0</span></div>' + TC.transferBlock();
+      html += '<div class="calc-total"><small id="total-tons">0 tons</small><span id="grand-total">Cr0</span></div>' +
+        TC.transferBlock('ft', 'transferFreight');
       document.getElementById('results').innerHTML = html;
     }
 
-    async function transferToShip() {
+    function updateFreightTotals() {
+      let tons = 0;
+      lots.forEach((l, i) => { if (document.getElementById('lot-' + i).checked) tons += l.tons; });
+      document.getElementById('total-tons').textContent = tons + ' ton' + (tons === 1 ? '' : 's') + ' of cargo space';
+      document.getElementById('grand-total').textContent = TC.cr(tons * rate);
+    }
+
+    async function transferFreight() {
       const picked = lots.filter((l, i) => document.getElementById('lot-' + i).checked);
-      if (!picked.length) { TC.xferMsg('Tick at least one lot to take first.', false); return; }
-      const dest = document.getElementById('xfer-dest').value.trim();
+      if (!picked.length) { TC.xferMsg('Tick at least one lot to take first.', false, 'ft'); return; }
+      const dest = document.getElementById('ft-dest').value.trim();
       const names = { incidental: 'Incidental', minor: 'Minor', major: 'Major' };
       try {
         const ship = await TC.activeShip();
@@ -125,16 +152,67 @@
         })));
         if (error) throw error;
         const tons = picked.reduce((s, l) => s + l.tons, 0);
-        TC.xferDone();
-        TC.xferMsg('Added ' + picked.length + ' lot' + (picked.length === 1 ? '' : 's') + ' (' + tons + ' tons) to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).', true);
-      } catch (e) { TC.xferMsg('Transfer failed: ' + (e.message || e), false); }
+        TC.xferDone('ft');
+        TC.xferMsg('Added ' + picked.length + ' lot' + (picked.length === 1 ? '' : 's') + ' (' + tons + ' tons) to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).', true, 'ft');
+      } catch (e) { TC.xferMsg('Transfer failed: ' + (e.message || e), false, 'ft'); }
     }
 
-    function updateFreightTotals() {
-      let tons = 0;
-      lots.forEach((l, i) => { if (document.getElementById('lot-' + i).checked) tons += l.tons; });
-      document.getElementById('total-tons').textContent = tons + ' ton' + (tons === 1 ? '' : 's') + ' of cargo space';
-      document.getElementById('grand-total').textContent = TC.cr(tons * rate);
+    // ── Mail ──
+    function rollMail() {
+      const { rows: baseRows, src, checkText } = sharedRows();
+      // The "Freight Traffic DM" is the total modifier on the freight roll
+      // (worlds, distance, skill Effect), before the lot-size adjustments.
+      const ft = TC.sum(baseRows.map(r => r[1]));
+      const bracket = ft <= -10 ? -2 : ft <= -5 ? -1 : ft <= 4 ? 0 : ft <= 9 ? 1 : 2;
+      const rows = [['Freight Traffic DM of ' + TC.signed(ft), bracket]];
+      if (document.getElementById('armed').checked) rows.push(["Ship is armed", 2]);
+      if (src.tl <= 5) rows.push(['Pick-up world is TL 5 or less', -4]);
+      rows.push(['Highest Naval or Scout rank', TC.num('rank')]);
+      rows.push(['Highest SOC DM', TC.num('soc')]);
+
+      const dm = TC.sum(rows.map(r => r[1]));
+      const dice = [TC.d6(), TC.d6()];
+      const total = TC.sum(dice) + dm;
+
+      let html = '<div class="calc-result-title" style="margin-top:20px">MAIL</div><div class="calc-block">';
+      if (checkText) html += '<div class="calc-note">' + checkText + '</div>';
+      html += `<div class="calc-roll-line">2D [${dice.join('+')}] ${TC.signed(dm)} = <b>${total}</b> (needs 12+)</div>${TC.dmList(rows)}`;
+      mailCount = 0;
+      if (total >= 12) {
+        const d = TC.d6();
+        mailCount = d;
+        html += `<div class="calc-note" style="margin-top:10px"><b>Mail is available:</b> 1D [${d}] = <b>${d} container${d === 1 ? '' : 's'}</b>,
+          ${d * 5} tons of space, paying <b>${TC.cr(d * 25000)}</b> (${TC.cr(25000)} each).</div>
+          <label class="calc-check"><input type="checkbox" id="take-mail" onchange="updateMail()" /> Take all ${d} container${d === 1 ? '' : 's'} (all or none)</label>`;
+      } else {
+        html += '<div class="calc-empty" style="margin-top:10px">No mail available on this roll.</div>';
+      }
+      html += '</div>';
+      if (total >= 12) html += '<div class="calc-total"><small id="mail-tons">0 tons</small><span id="mail-total">Cr0</span></div>' +
+        TC.transferBlock('ml', 'transferMail');
+      document.getElementById('mail-results').innerHTML = html;
+    }
+
+    function updateMail() {
+      const on = document.getElementById('take-mail').checked;
+      document.getElementById('mail-tons').textContent = (on ? mailCount * 5 : 0) + ' tons of cargo space';
+      document.getElementById('mail-total').textContent = TC.cr(on ? mailCount * 25000 : 0);
+    }
+
+    async function transferMail() {
+      if (!document.getElementById('take-mail').checked) { TC.xferMsg('Tick "Take all" first.', false, 'ml'); return; }
+      const dest = document.getElementById('ml-dest').value.trim();
+      try {
+        const ship = await TC.activeShip();
+        const { error } = await supabaseClient.from('spacecraft_cargo').insert({
+          spacecraft_id: ship.id,
+          description: 'Mail' + (dest ? ' to ' + dest : '') + ' (' + mailCount + ' container' + (mailCount === 1 ? '' : 's') + ', ' + TC.cr(mailCount * 25000) + ')',
+          tonnage: mailCount * 5
+        });
+        if (error) throw error;
+        TC.xferDone('ml');
+        TC.xferMsg('Added mail (' + mailCount * 5 + ' tons) to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).', true, 'ml');
+      } catch (e) { TC.xferMsg('Transfer failed: ' + (e.message || e), false, 'ml'); }
     }
   </script>
 </body>

@@ -63,7 +63,7 @@ const TC = {
   },
   worldBlock(id, title, withTL) {
     const pops = Array.from({ length: 13 }, (_, i) => i);
-    return '<div class="calc-block"><div class="calc-block-title">' + title + '</div><div class="calc-fields">' +
+    return '<div class="calc-block calc-row"><div class="calc-block-title">' + title + '</div><div class="calc-fields">' +
       '<label>Population<select id="' + id + '-pop">' + TC.opts(pops, 7) + '</select></label>' +
       '<label>Starport<select id="' + id + '-port">' + TC.opts(['A','B','C','D','E','X'], 'C') + '</select></label>' +
       '<label>Zone<select id="' + id + '-zone">' + TC.opts(['Green','Amber','Red'], 'Green') + '</select></label>' +
@@ -87,11 +87,12 @@ const TC = {
   },
 
   // ── Transfer to the active spacecraft record ──
-  transferBlock() {
-    return '<div class="calc-block"><div class="calc-block-title">Transfer to Spacecraft Record</div>' +
-      '<div class="calc-fields"><label>Destination (optional)<input type="text" id="xfer-dest" style="width:220px" placeholder="e.g. Regina" /></label></div>' +
-      '<div class="calc-actions" style="margin-bottom:0"><button class="btn-primary" id="xfer-btn" onclick="transferToShip()">Transfer to Active Spacecraft</button>' +
-      ' <span id="xfer-msg" class="calc-note" style="margin-left:10px"></span></div></div>';
+  transferBlock(p, fn) {
+    p = p || 'xfer'; fn = fn || 'transferToShip';
+    return '<div class="calc-block calc-row"><div class="calc-block-title">Transfer to Spacecraft Record</div>' +
+      '<div class="calc-fields"><label>Destination (optional)<input type="text" id="' + p + '-dest" style="width:200px" placeholder="e.g. Regina" /></label></div>' +
+      '<div class="calc-actions" style="margin:0"><button class="btn-primary" id="' + p + '-btn" onclick="' + fn + '()">Transfer to Active Spacecraft</button>' +
+      ' <span id="' + p + '-msg" class="calc-note" style="margin:0 0 0 10px"></span></div></div>';
   },
   async activeShip() {
     const { data, error } = await supabaseClient.from('spacecraft').select('id,name').eq('status', 'active');
@@ -100,11 +101,11 @@ const TC = {
     if (data.length > 1) throw new Error('More than one spacecraft is marked Active. Leave only one Active on the Roster.');
     return data[0];
   },
-  xferMsg(text, ok) {
-    const m = document.getElementById('xfer-msg');
+  xferMsg(text, ok, p) {
+    const m = document.getElementById((p || 'xfer') + '-msg');
     m.innerHTML = text; m.style.color = ok ? '#00ffaa' : '#ff5a4a';
   },
-  xferDone() { document.getElementById('xfer-btn').disabled = true; },
+  xferDone(p) { document.getElementById((p || 'xfer') + '-btn').disabled = true; },
 
   async doSignOut() {
     await supabaseClient.auth.signOut();
