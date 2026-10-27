@@ -29,10 +29,21 @@
       <div id="form"></div>
       <div class="calc-actions">
         <button class="btn-primary" onclick="rollFind()">Search</button>
-        <button class="btn-primary" id="goods-btn" onclick="findGoods()" disabled>Find Goods</button>
         <button class="btn-outline" onclick="TC.reset()">Reset</button>
       </div>
-      <div id="results"><div id="step1"></div><div id="step2"></div></div>
+      <div id="step1"></div>
+      <div class="calc-block calc-row" id="neg-block">
+        <div class="calc-block-title">Negotiation</div>
+        <div class="calc-fields">
+          <label id="neg-mine">Your Broker skill<input type="number" id="my-broker" min="0" max="6" value="0" /></label>
+          <span id="neg-broker" style="display:none"></span>
+          <label>Supplier's Broker skill<input type="number" id="sup-broker" min="0" max="6" value="2" /></label>
+        </div>
+      </div>
+      <div class="calc-actions">
+        <button class="btn-primary" id="goods-btn" onclick="findGoods()" disabled>Find Goods</button>
+      </div>
+      <div id="step2"></div>
     </main>
   </div>
 
@@ -79,14 +90,7 @@
           <label>Previous attempts this month<input type="number" id="find-prev" min="0" max="30" value="0" /></label>
         </div>
       </div>
-      <div class="calc-block calc-row">
-        <div class="calc-block-title">Negotiation</div>
-        <div class="calc-fields">
-          <label>Your Broker skill<input type="number" id="my-broker" min="0" max="6" value="0" /></label>
-          <label>Supplier's Broker skill<input type="number" id="sup-broker" min="0" max="6" value="2" /></label>
-        </div>
-        <div class="calc-note" style="margin:0">A hired broker's own skill (and DM+2) is used instead of yours.</div>
-      </div>`;
+`;
 
     let trade = { supplier: null };   // result of Step 1, used by later steps
 
@@ -215,9 +219,13 @@
       const items = new Map();
       const add = (g, kind) => { if (!items.has(g.id)) items.set(g.id, makeItem(g, kind, ctx)); };
 
-      TRADE_GOODS.filter(g => g.codes === 'all').forEach(g => add(g, 'common'));
-      TRADE_GOODS.filter(g => g.codes !== 'all' && !g.illegal && g.codes.some(c => codes.has(c))).forEach(g => add(g, 'code'));
-      if (s.illegal) TRADE_GOODS.filter(g => g.illegal && g.codes.some(c => codes.has(c))).forEach(g => add(g, 'illegal'));
+      if (s.illegal) {
+        // illicit contact: only the illegal goods for this world's codes (random rolls below may add more)
+        TRADE_GOODS.filter(g => g.illegal && g.codes.some(c => codes.has(c))).forEach(g => add(g, 'illegal'));
+      } else {
+        TRADE_GOODS.filter(g => g.codes === 'all').forEach(g => add(g, 'common'));
+        TRADE_GOODS.filter(g => g.codes !== 'all' && !g.illegal && g.codes.some(c => codes.has(c))).forEach(g => add(g, 'code'));
+      }
 
       // random extras: one roll per point of Population (d56, or d66 for illegal contacts)
       const rolls = [];
@@ -272,9 +280,13 @@
       let html = '<div class="calc-result-title" style="margin-top:20px">STEP 2 — GOODS AVAILABLE</div>';
       html += `<div class="calc-note">Supplier: <b>${s.label}</b>${s.broker ? ' (broker skill ' + s.brokerSkill + ', ' + s.fee + '% fee, DM+2)' : ''}.
         A green % is below the base price (a good deal); red is above it.</div>`;
-      html += sec('Common Goods (available everywhere)', 'common');
-      html += sec("Trade Goods for this world's trade codes", 'code');
-      if (s.illegal) html += sec("Illegal Goods for this world's trade codes", 'illegal');
+      if (s.illegal) {
+        html += sec("Illegal Goods for this world's trade codes", 'illegal');
+        if (!shown.some(i => i.kind === 'illegal')) html += '<div class="calc-note">No illegal goods match this world\'s trade codes.</div>';
+      } else {
+        html += sec('Common Goods (available everywhere)', 'common');
+        html += sec("Trade Goods for this world's trade codes", 'code');
+      }
       html += sec('Random Goods', 'random');
       html += `<div class="calc-note">Random rolls (${rolls.length}, ${s.illegal ? 'd66' : 'd56'}): ${rolls.length ? rolls.join(', ') : 'none (Population 0)'}.
         ${exotics ? '<b>Exotics (66) × ' + exotics + '</b>: outside the normal trade rules; the referee decides what is on offer. ' : ''}
@@ -282,7 +294,21 @@
       document.getElementById('step2').innerHTML = html;
     }
 
+    function renderNegotiation() {
+      const s = trade.supplier;
+      const mine = document.getElementById('neg-mine'), b = document.getElementById('neg-broker');
+      if (s && s.broker) {
+        mine.style.display = 'none';
+        b.style.display = 'inline';
+        b.innerHTML = s.brokerSkillName + ' skill of the broker (2D/3) = <b>' + s.brokerSkill + '</b> &nbsp;+&nbsp; DM+2 (local) &nbsp;=&nbsp; <b>' + TC.signed(s.brokerSkill + 2) + '</b>';
+      } else {
+        mine.style.display = '';
+        b.style.display = 'none';
+      }
+    }
+
     function syncGoodsButton() {
+      renderNegotiation();
       const b = document.getElementById('goods-btn');
       const s = trade.supplier;
       b.disabled = !s || !!trade.goods;
@@ -291,7 +317,7 @@
     }
 
     updateFindLabels();
-    TC.persist('speculative', () => trade, v => { trade = v || { supplier: null }; });
+    TC.persist('speculative', () => trade, v => { trade = v || { supplier: null }; }, ['step1', 'step2']);
     updateFindLabels();
     syncGoodsButton();
   </script>

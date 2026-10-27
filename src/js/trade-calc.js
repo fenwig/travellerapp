@@ -110,15 +110,20 @@ const TC = {
 
   // ── Keep the calculator as the player left it (this browser only) ──
   _persist: null,
-  persist(key, getExtra, setExtra) {
-    TC._persist = { key: 'tcalc-' + key, getExtra, setExtra };
+  persist(key, getExtra, setExtra, containers) {
+    // containers: ids of the result areas to keep (default: the calculators' two)
+    TC._persist = { key: 'tcalc-' + key, getExtra, setExtra, containers: containers || null };
     const p = TC._persist;
     try {
       const saved = JSON.parse(localStorage.getItem(p.key) || 'null');
       if (saved) {
-        document.getElementById('results').innerHTML = saved.results || '';
-        const mail = document.getElementById('mail-results');
-        if (mail) mail.innerHTML = saved.mail || '';
+        if (p.containers) {
+          p.containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = (saved.containers || {})[id] || ''; });
+        } else {
+          document.getElementById('results').innerHTML = saved.results || '';
+          const mail = document.getElementById('mail-results');
+          if (mail) mail.innerHTML = saved.mail || '';
+        }
         Object.entries(saved.fields || {}).forEach(([id, v]) => {
           const el = document.getElementById(id);
           if (!el) return;
@@ -136,11 +141,16 @@ const TC = {
       document.querySelectorAll('main input[id], main select[id]').forEach(el => {
         fields[el.id] = el.type === 'checkbox' ? el.checked : el.value;
       });
-      const mail = document.getElementById('mail-results');
-      localStorage.setItem(p.key, JSON.stringify({
-        fields, results: document.getElementById('results').innerHTML,
-        mail: mail ? mail.innerHTML : '', extra: p.getExtra ? p.getExtra() : null
-      }));
+      const data = { fields, extra: p.getExtra ? p.getExtra() : null };
+      if (p.containers) {
+        data.containers = {};
+        p.containers.forEach(id => { const el = document.getElementById(id); if (el) data.containers[id] = el.innerHTML; });
+      } else {
+        const mail = document.getElementById('mail-results');
+        data.results = document.getElementById('results').innerHTML;
+        data.mail = mail ? mail.innerHTML : '';
+      }
+      localStorage.setItem(p.key, JSON.stringify(data));
     } catch (e) {}
   },
   reset() {
