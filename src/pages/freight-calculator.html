@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Freight Calculator — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <link rel="stylesheet" href="../css/calculators.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/nav.js" defer></script>
+</head>
+<body>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">FREIGHT CALCULATOR</h1>
+      <p class="calc-intro">Shipping freight (Core Rulebook pp.239–241). Enter the world you are collecting cargo from and the distance, then roll. Freight lots cannot be broken up, so tick the whole lots you want to carry. Cargo is paid on delivery; late delivery cuts the payment by (1D+4) × 10%.</p>
+      <div id="form"></div>
+      <div class="calc-actions"><button class="btn-primary" onclick="rollFreight()">Roll for Freight</button></div>
+      <div id="results"></div>
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/trade-calc.js"></script>
+  <script>
+    document.getElementById('form').innerHTML = `
+      <div class="calc-block">
+        <div class="calc-block-title">Journey</div>
+        <div class="calc-fields">
+          <label>Distance (parsecs)<select id="dist">${TC.opts([1,2,3,4,5,6], 1)}</select></label>
+        </div>
+      </div>
+      ${TC.worldBlock('src', 'Pick-up World (where the freight is)', true)}
+      <div class="calc-block">
+        <div class="calc-block-title">Skill Check (Broker or Streetwise)</div>
+        <label class="calc-check"><input type="checkbox" id="use-check" checked /> Make an Average (8+) check; its Effect is added to every freight roll</label>
+        <div class="calc-fields">
+          <label>Skill<select id="chk-skill">${TC.opts(['Broker','Streetwise'], 'Broker')}</select></label>
+          <label>Skill level<input type="number" id="chk-level" min="-3" max="6" value="0" /></label>
+          <label>Characteristic DM<input type="number" id="chk-dm" min="-3" max="6" value="0" /></label>
+        </div>
+      </div>`;
+
+    const LOT_TYPES = [
+      { key: 'incidental', label: 'Incidental Cargo', lotDM: 2,  mult: 1,  desc: '1D tons per lot', note: 'DM+2 for Incidental' },
+      { key: 'minor',      label: 'Minor Cargo',      lotDM: 0,  mult: 5,  desc: '1D × 5 tons per lot', note: '' },
+      { key: 'major',      label: 'Major Cargo',      lotDM: -4, mult: 10, desc: '1D × 10 tons per lot', note: 'DM−4 for Major' }
+    ];
+    let lots = [];      // { id, type, tons }
+    let rate = 0;
+
+    function rollFreight() {
+      const dist = TC.num('dist');
+      const src = TC.readWorld('src');
+      rate = TC.FARES[dist].freight;
+      lots = [];
+
+      let effect = 0, checkText = '';
+      if (document.getElementById('use-check').checked) {
+        const c = TC.skillCheck(document.getElementById('chk-skill').value, TC.num('chk-level'), TC.num('chk-dm'));
+        effect = c.effect; checkText = c.text;
+      }
+      const baseRows = [];
+      if (checkText) baseRows.push(['Skill check Effect', effect]);
+      baseRows.push(...TC.freightWorldDMs(src, 'Pick-up'), ...TC.distanceDM(dist));
+
+      let html = '<div class="calc-result-title">FREIGHT AVAILABLE — ' + TC.cr(rate) + ' per ton</div>';
+      if (checkText) html += '<div class="calc-note">' + checkText + '</div>';
+
+      LOT_TYPES.forEach(t => {
+        const rows = baseRows.slice();
+        if (t.lotDM) rows.push([t.note, t.lotDM]);
+        const dm = TC.sum(rows.map(r => r[1]));
+        const dice = [TC.d6(), TC.d6()];
+        const total = TC.sum(dice) + dm;
+        const n = TC.diceFor(TC.FREIGHT_DICE, total);
+        const lotRolls = TC.rollDice(n);
+        const count = TC.sum(lotRolls);
+
+        html += `<div class="calc-block">
+          <div class="calc-block-title">${t.label} — ${count} lot${count === 1 ? '' : 's'} <span style="color:#4a9ab8;font-weight:400">(${t.desc})</span></div>
+          <div class="calc-roll-line">2D [${dice.join('+')}] ${TC.signed(dm)} = <b>${total}</b> → ${n}D${n ? ' [' + lotRolls.join('+') + '] = <b>' + count + '</b>' : ' = <b>0</b>'}</div>
+          ${TC.dmList(rows)}`;
+        if (!count) html += '<div class="calc-empty" style="margin-top:8px">No lots available.</div>';
+        for (let i = 0; i < count; i++) {
+          const die = TC.d6(), tons = die * t.mult, id = lots.length;
+          lots.push({ type: t.key, tons });
+          html += `<div class="lot-row">
+            <input type="checkbox" id="lot-${id}" onchange="updateFreightTotals()" />
+            <label for="lot-${id}">Lot ${i + 1}: 1D [${die}]${t.mult > 1 ? ' × ' + t.mult : ''} = <b>${tons} ton${tons === 1 ? '' : 's'}</b></label>
+            <span class="calc-line-total">${TC.cr(tons * rate)}</span>
+          </div>`;
+        }
+        html += '</div>';
+      });
+      html += '<div class="calc-total"><small id="total-tons">0 tons</small><span id="grand-total">Cr0</span></div>';
+      document.getElementById('results').innerHTML = html;
+    }
+
+    function updateFreightTotals() {
+      let tons = 0;
+      lots.forEach((l, i) => { if (document.getElementById('lot-' + i).checked) tons += l.tons; });
+      document.getElementById('total-tons').textContent = tons + ' ton' + (tons === 1 ? '' : 's') + ' of cargo space';
+      document.getElementById('grand-total').textContent = TC.cr(tons * rate);
+    }
+  </script>
+</body>
+</html>

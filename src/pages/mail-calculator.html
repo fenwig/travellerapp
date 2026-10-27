@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mail Calculator — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <link rel="stylesheet" href="../css/calculators.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/nav.js" defer></script>
+</head>
+<body>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">MAIL CALCULATOR</h1>
+      <p class="calc-intro">Mail (Core Rulebook p.241). Roll 2D plus the modifiers below; on 12 or more the Travellers are offered 1D mail containers. Each container takes 5 tons and pays Cr25000 flat, regardless of distance. The Travellers must take all of the containers or none.</p>
+      <div id="form"></div>
+      <div class="calc-actions"><button class="btn-primary" onclick="rollMail()">Roll for Mail</button></div>
+      <div id="results"></div>
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/trade-calc.js"></script>
+  <script>
+    document.getElementById('form').innerHTML = `
+      <div class="calc-block">
+        <div class="calc-block-title">Journey &amp; Ship</div>
+        <div class="calc-fields">
+          <label>Distance (parsecs)<select id="dist">${TC.opts([1,2,3,4,5,6], 1)}</select></label>
+          <label>Highest Naval or Scout rank<input type="number" id="rank" min="0" max="6" value="0" /></label>
+          <label>Highest SOC DM in group<input type="number" id="soc" min="-3" max="3" value="0" /></label>
+        </div>
+        <label class="calc-check" style="margin-top:12px"><input type="checkbox" id="armed" /> Travellers' ship is armed (DM+2)</label>
+      </div>
+      ${TC.worldBlock('src', 'Pick-up World (where the mail is)', true)}`;
+
+    // "Freight Traffic DM" bracket from the Mail table
+    function ftBracketDM(ft) {
+      if (ft <= -10) return -2;
+      if (ft <= -5)  return -1;
+      if (ft <= 4)   return 0;
+      if (ft <= 9)   return 1;
+      return 2;
+    }
+
+    let mailCount = 0;
+
+    function rollMail() {
+      const dist = TC.num('dist');
+      const src = TC.readWorld('src');
+
+      const ftRows = [...TC.freightWorldDMs(src, 'Pick-up'), ...TC.distanceDM(dist)];
+      const ft = TC.sum(ftRows.map(r => r[1]));
+      const rows = [
+        ['Freight Traffic DM of ' + TC.signed(ft), ftBracketDM(ft)]
+      ];
+      if (document.getElementById('armed').checked) rows.push(["Travellers' ship is armed", 2]);
+      if (src.tl <= 5) rows.push(['World is TL 5 or less', -4]);
+      rows.push(['Highest Naval or Scout rank', TC.num('rank')]);
+      rows.push(['Highest SOC DM', TC.num('soc')]);
+
+      const dm = TC.sum(rows.map(r => r[1]));
+      const dice = [TC.d6(), TC.d6()];
+      const total = TC.sum(dice) + dm;
+
+      let html = '<div class="calc-result-title">MAIL</div><div class="calc-block">';
+      html += `<div class="calc-roll-line">2D [${dice.join('+')}] ${TC.signed(dm)} = <b>${total}</b> (needs 12+)</div>${TC.dmList(rows)}`;
+      mailCount = 0;
+      if (total >= 12) {
+        const d = TC.d6();
+        mailCount = d;
+        html += `<div class="calc-note" style="margin-top:10px"><b>Mail is available:</b> 1D [${d}] = <b>${d} container${d === 1 ? '' : 's'}</b>,
+          ${d * 5} tons of space, paying <b>${TC.cr(d * 25000)}</b> (${TC.cr(25000)} each).</div>
+          <label class="calc-check"><input type="checkbox" id="take-mail" onchange="updateMail()" /> Take all ${d} container${d === 1 ? '' : 's'} (all or none)</label>`;
+      } else {
+        html += '<div class="calc-empty" style="margin-top:10px">No mail available on this roll.</div>';
+      }
+      html += '</div>';
+      if (total >= 12) html += '<div class="calc-total"><small id="mail-tons">0 tons</small><span id="grand-total">Cr0</span></div>';
+      document.getElementById('results').innerHTML = html;
+    }
+
+    function updateMail() {
+      const on = document.getElementById('take-mail').checked;
+      document.getElementById('mail-tons').textContent = (on ? mailCount * 5 : 0) + ' tons of cargo space';
+      document.getElementById('grand-total').textContent = TC.cr(on ? mailCount * 25000 : 0);
+    }
+  </script>
+</body>
+</html>

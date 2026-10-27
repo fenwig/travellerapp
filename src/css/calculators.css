@@ -1,0 +1,30 @@
+/* Player Tools calculators (passenger / freight / mail) */
+.calc-intro { color: #4a9ab8; font-size: 0.85rem; margin-bottom: 16px; max-width: 760px; }
+.calc-block {
+  background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 8px;
+  padding: 14px 18px; margin-bottom: 14px; max-width: 760px;
+}
+.calc-block-title { color: #00e5ff; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 10px; font-size: 0.95rem; }
+.calc-fields { display: flex; flex-wrap: wrap; gap: 12px 20px; }
+.calc-fields label { display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; color: #4a9ab8; min-width: 110px; }
+.calc-fields input, .calc-fields select { width: 130px; }
+.calc-check { display: flex; align-items: center; gap: 8px; color: #b0d8e8; font-size: 0.85rem; margin-bottom: 10px; }
+.calc-actions { margin: 6px 0 18px; }
+.calc-result-title { color: #00e5ff; font-weight: 700; margin: 6px 0 10px; letter-spacing: 0.04em; }
+.calc-note { color: #b0d8e8; font-size: 0.82rem; margin-bottom: 10px; max-width: 760px; }
+.calc-roll-line { color: #b0d8e8; font-size: 0.82rem; margin-top: 6px; }
+.calc-roll-line b, .calc-note b { color: #00e5ff; }
+.dm-detail { font-size: 0.75rem; color: #4a9ab8; margin-top: 6px; }
+.dm-detail summary { cursor: pointer; }
+.dm-detail div { padding-left: 12px; }
+.dm-detail b { color: #b0d8e8; }
+.calc-take { display: flex; align-items: center; gap: 10px; margin-top: 10px; color: #b0d8e8; font-size: 0.85rem; }
+.calc-take input[type="number"] { width: 80px; }
+.calc-take .calc-line-total { margin-left: auto; color: #00ffaa; font-weight: 600; }
+.calc-total { max-width: 760px; text-align: right; font-size: 1.1rem; color: #00ffaa; font-weight: 700; padding: 8px 4px; }
+.calc-total small { color: #4a9ab8; font-weight: 400; font-size: 0.78rem; margin-right: 10px; }
+.lot-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-top: 1px solid #0a4a6055; font-size: 0.85rem; color: #b0d8e8; }
+.lot-row:first-of-type { border-top: none; }
+.lot-row .calc-line-total { margin-left: auto; color: #00ffaa; }
+.lot-row input[type="checkbox"], .calc-check input[type="checkbox"] { accent-color: #00e5ff; width: 16px; height: 16px; }
+.calc-empty { color: #4a9ab8; font-size: 0.85rem; }

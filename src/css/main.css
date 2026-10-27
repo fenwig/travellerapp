@@ -354,3 +354,17 @@ input:focus {
   font-size: 0.9rem;
   padding: 20px 0;
 }
+
+/* Collapsible sidebar groups (built by nav.js) */
+.sidebar-group-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+.sidebar-group-toggle:hover { color: #4a9ab8; }
+.nav-caret::before { content: '\25B8'; }
+.sidebar-group-toggle.open .nav-caret::before { content: '\25BE'; }
+.sidebar-nav-item.disabled { color: #2a6a80; cursor: default; font-style: italic; }
+.sidebar-nav-item.disabled:hover { color: #2a6a80; background: none; }
