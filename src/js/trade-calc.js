@@ -61,7 +61,7 @@ const TC = {
   opts(list, sel) {
     return list.map(v => '<option' + (String(v) === String(sel) ? ' selected' : '') + '>' + v + '</option>').join('');
   },
-  worldBlock(id, title, withTL) {
+  worldBlock(id, title, withTL, extra) {
     const pops = Array.from({ length: 13 }, (_, i) => i);
     return '<div class="calc-block calc-row"><div class="calc-block-title">' + title + '</div><div class="calc-fields">' +
       '<label>World<input type="text" id="' + id + '-name" placeholder="name" style="width:120px" /></label>' +
@@ -69,6 +69,7 @@ const TC = {
       '<label>Starport<select id="' + id + '-port">' + TC.opts(['A','B','C','D','E','X'], 'C') + '</select></label>' +
       '<label>Zone<select id="' + id + '-zone">' + TC.opts(['Green','Amber','Red'], 'Green') + '</select></label>' +
       (withTL ? '<label>Tech Level<input type="number" id="' + id + '-tl" min="0" max="25" value="8" /></label>' : '') +
+      (extra || '') +
       '</div></div>';
   },
   readWorld(id) {

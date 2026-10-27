@@ -69,8 +69,4 @@
 
 .good-buy { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: #00e5ff; font-weight: 600; }
 .good-buy input[type="number"] { width: 70px; }
-#buy-summary { color: #b0d8e8; font-size: 0.85rem; }
-
-.good-buy { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: #00e5ff; font-weight: 600; }
-.good-buy input[type="number"] { width: 70px; }
-#buy-summary { color: #b0d8e8; font-size: 0.85rem; }
+#buy-summary, #sell-summary { color: #b0d8e8; font-size: 0.85rem; }

@@ -86,10 +86,10 @@
     ).join('');
 
     document.getElementById('form').innerHTML = `
-      ${TC.worldBlock('dst', 'Selling World', true)}
+      ${TC.worldBlock('dst', 'Selling World', true, '<label>Law Level<input type="number" id="law" min="0" max="15" value="0" /></label>')}
       <div class="calc-block calc-row" style="flex-wrap:wrap">
         <div class="calc-block-title">Trade Codes</div>
-        <div class="calc-fields" style="flex-wrap:wrap">${codeSelects}<label>Law Level<input type="number" id="law" min="0" max="15" value="0" /></label></div>
+        <div class="calc-fields" style="flex-wrap:wrap">${codeSelects}</div>
       </div>
       <div class="calc-block calc-row">
         <div class="calc-block-title">Looking For</div>
@@ -353,7 +353,7 @@
         const profit = gross - fee - cost;
         sell.msg = '<span style="color:#00ffaa">Sold ' + tons + ' ton' + (tons === 1 ? '' : 's') + ' for ' + TC.cr(gross) +
           (fee ? ', broker fee ' + TC.cr(fee) + ', net ' + TC.cr(gross - fee) : '') + '. Profit ' + (profit < 0 ? '−' : '') + TC.cr(Math.abs(profit)) +
-          '. Recorded on the <a href="spacecraft-record.html" style="color:#00e5ff">Spacecraft Record</a> (Finance &amp; Cargo tab).</span>';
+          '. Recorded on the <a href="spacecraft-record.html" style="color:#00e5ff">Spacecraft Record</a> (Notes tab).</span>';
         renderOffers();
         TC.save();
       } catch (e) { sellMessage('Could not complete the sale: ' + (e.message || e), false); }
