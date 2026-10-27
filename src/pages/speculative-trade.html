@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speculative Trade — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <link rel="stylesheet" href="../css/calculators.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/nav.js" defer></script>
+</head>
+<body>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">SPECULATIVE TRADE</h1>
+      <p class="calc-intro">Speculative trade (Core Rulebook pp.241–244) is worked through step by step, and your progress is saved as you go. <b>Step 1: Find a Supplier or Broker</b> (p.241). Enter the world you are on, choose what you are looking for, and roll.</p>
+      <div id="form"></div>
+      <div class="calc-actions">
+        <button class="btn-primary" onclick="rollFind()">Search</button>
+        <button class="btn-outline" onclick="TC.reset()">Reset</button>
+      </div>
+      <div id="results"></div>
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/trade-calc.js"></script>
+  <script>
+    // Trade codes, Core Rulebook p.260
+    const TRADE_CODES = [
+      ['Ag','Agricultural'], ['As','Asteroids'], ['Ba','Barren'], ['De','Desert'], ['Fl','Fluid Oceans'],
+      ['Ga','Garden'], ['Hi','High Population'], ['Ht','High Tech'], ['Ic','Ice-Capped'], ['In','Industrial'],
+      ['Lo','Low Population'], ['Lt','Low Tech'], ['Na','Non-Agricultural'], ['Ni','Non-Industrial'],
+      ['Po','Poor'], ['Ri','Rich'], ['Va','Vacuum'], ['Wa','Water World']
+    ];
+
+    // What the player can look for (p.241)
+    const FIND_TYPES = [
+      { key: 'supplier',   label: 'Supplier',                 skill: 'Broker',     char: 'EDU or SOC', unit: 'days',  illegal: false, broker: false, online: false },
+      { key: 'broker',     label: 'Broker',                   skill: 'Broker',     char: 'EDU or SOC', unit: 'days',  illegal: false, broker: true,  online: false, fee: 10, brokerSkill: 'Broker' },
+      { key: 'bm-supplier',label: 'Black Market Supplier',    skill: 'Streetwise', char: 'EDU or SOC', unit: 'days',  illegal: true,  broker: false, online: false },
+      { key: 'bm-broker',  label: 'Broker of Illegal Goods',  skill: 'Streetwise', char: 'EDU or SOC', unit: 'days',  illegal: true,  broker: true,  online: false, fee: 20, brokerSkill: 'Streetwise' },
+      { key: 'on-supplier',label: 'Online Supplier (TL8+)',   skill: 'Admin',      char: 'EDU',        unit: 'hours', illegal: false, broker: false, online: true },
+      { key: 'on-broker',  label: 'Online Broker (TL8+)',     skill: 'Admin',      char: 'EDU',        unit: 'hours', illegal: false, broker: true,  online: true,  fee: 10, brokerSkill: 'Broker' }
+    ];
+    const STARPORT_FIND_DM = { A: 6, B: 4, C: 2, D: 0, E: 0, X: 0 };
+
+    const codeSelects = Array.from({ length: 5 }, (_, i) =>
+      `<select id="tc-${i}" style="width:165px"><option value="">—</option>${TRADE_CODES.map(c => `<option value="${c[0]}" title="${c[1]}">${c[0]} – ${c[1]}</option>`).join('')}</select>`
+    ).join('');
+
+    document.getElementById('form').innerHTML = `
+      ${TC.worldBlock('src', 'Source World', true)}
+      <div class="calc-block calc-row" style="flex-wrap:wrap">
+        <div class="calc-block-title">Trade Codes</div>
+        <div class="calc-fields" style="flex-wrap:wrap">${codeSelects}</div>
+      </div>
+      <div class="calc-block calc-row">
+        <div class="calc-block-title">Looking For</div>
+        <div class="calc-fields">
+          <label><select id="find-type" onchange="updateFindLabels()">${FIND_TYPES.map(t => `<option value="${t.key}">${t.label}</option>`).join('')}</select></label>
+          <label><span id="lbl-skill">Broker</span> skill<input type="number" id="find-level" min="-3" max="6" value="0" /></label>
+          <label><span id="lbl-char">EDU or SOC</span> DM<input type="number" id="find-dm" min="-3" max="6" value="0" /></label>
+          <label>Previous attempts this month<input type="number" id="find-prev" min="0" max="30" value="0" /></label>
+        </div>
+      </div>`;
+
+    let trade = { supplier: null };   // result of Step 1, used by later steps
+
+    function findType() { return FIND_TYPES.find(t => t.key === document.getElementById('find-type').value); }
+
+    function updateFindLabels() {
+      const t = findType();
+      document.getElementById('lbl-skill').textContent = t.skill;
+      document.getElementById('lbl-char').textContent = t.char;
+    }
+
+    function rollFind() {
+      const t = findType();
+      const src = TC.readWorld('src');
+      const out = document.getElementById('results');
+
+      if (t.online && src.tl < 8) {
+        out.innerHTML = '<div class="calc-block"><div class="calc-empty">Online suppliers and brokers are only available on worlds of TL8 or higher. Choose another option or change the world.</div></div>';
+        trade.supplier = null; TC.save(); return;
+      }
+
+      const level = TC.num('find-level'), charDM = TC.num('find-dm'), prev = TC.num('find-prev');
+      const portDM = STARPORT_FIND_DM[src.port] || 0;
+      const rows = [
+        [t.skill + ' skill', level],
+        [t.char + ' characteristic DM', charDM],
+        ['Starport ' + src.port + ' (supplier/broker bonus)', portDM],
+        ['Previous attempts this month (−1 each)', -prev]
+      ];
+      const dm = TC.sum(rows.map(r => r[1]));
+      const dice = [TC.d6(), TC.d6()], total = TC.sum(dice) + dm;
+      const time = TC.d6();
+      const success = total >= 8;
+
+      let html = '<div class="calc-result-title">STEP 1 — FIND A ' + t.label.toUpperCase() + '</div><div class="calc-block">';
+      html += `<div class="calc-roll-line">${t.skill} check: 2D [${dice.join('+')}] ${TC.signed(dm)} = <b>${total}</b> vs 8+ → <b style="color:${success ? '#00ffaa' : '#ff5a4a'}">${success ? 'SUCCESS' : 'FAILED'}</b>
+        &nbsp;·&nbsp; Took 1D [${time}] = <b>${time} ${t.unit === 'days' ? (time === 1 ? 'day' : 'days') : (time === 1 ? 'hour' : 'hours')}</b></div>${TC.dmList(rows)}`;
+
+      if (success) {
+        const s = { kind: t.key, label: t.label, illegal: t.illegal, online: t.online, broker: t.broker };
+        if (t.broker) {
+          const bd = [TC.d6(), TC.d6()];
+          const sk = Math.floor(TC.sum(bd) / 3);
+          s.brokerSkill = sk; s.brokerSkillName = t.brokerSkill; s.fee = t.fee; s.negotiationDM = 2;
+          html += `<div class="calc-note" style="margin-top:10px"><b>${t.label} found.</b> Their ${t.brokerSkill} skill: 2D [${bd.join('+')}] = ${TC.sum(bd)} ÷ 3 (round down) = <b>${sk}</b>.
+            They charge <b>${t.fee}%</b> of the gross proceeds of each transaction and add <b>DM+2</b> to negotiations.</div>`;
+        } else {
+          html += `<div class="calc-note" style="margin-top:10px"><b>${t.label} found.</b> You negotiate the deals yourself.</div>`;
+        }
+        if (t.illegal) html += '<div class="calc-note">Illegal goods are available from this contact. Selling them on a world risks fines or imprisonment (see Law Levels, p.255).</div>';
+        trade.supplier = s;
+      } else {
+        html += '<div class="calc-empty" style="margin-top:10px">No ' + t.label.toLowerCase() + ' found. You can search again (each attempt this month is DM−1).</div>';
+        trade.supplier = null;
+      }
+      html += '</div>';
+      out.innerHTML = html;
+
+      // each attempt counts against the next one this month
+      document.getElementById('find-prev').value = prev + 1;
+      TC.save();
+    }
+
+    updateFindLabels();
+    TC.persist('speculative', () => trade, v => { trade = v || { supplier: null }; });
+    updateFindLabels();
+  </script>
+</body>
+</html>

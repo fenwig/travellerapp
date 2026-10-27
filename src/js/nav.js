@@ -12,7 +12,7 @@ const NAV_GROUPS = [
   { id: 'tools', label: 'Player Tools', items: [
     ['passenger-calculator.html', 'Passenger Calculator'],
     ['freight-calculator.html',   'Freight & Mail Calculator'],
-    [null,                        'Speculative Trade (coming soon)']
+    ['speculative-trade.html',     'Speculative Trade']
   ]},
   { id: 'reference', label: 'Reference', items: [
     ['general-rules.html',        'General Rules'],
