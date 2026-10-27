@@ -89,7 +89,7 @@ const TC = {
   // ── Transfer to the active spacecraft record ──
   transferBlock(p, fn) {
     p = p || 'xfer'; fn = fn || 'transferToShip';
-    return '<div class="calc-block calc-row"><div class="calc-block-title">Transfer to Spacecraft Record</div>' +
+    return '<div class="calc-block calc-row"><div class="calc-block-title">Transfer to Ship</div>' +
       '<div class="calc-fields"><label>Destination (optional)<input type="text" id="' + p + '-dest" style="width:200px" placeholder="e.g. Regina" /></label></div>' +
       '<div class="calc-actions" style="margin:0"><button class="btn-primary" id="' + p + '-btn" onclick="' + fn + '()">Transfer to Active Spacecraft</button>' +
       ' <span id="' + p + '-msg" class="calc-note" style="margin:0 0 0 10px"></span></div></div>';
