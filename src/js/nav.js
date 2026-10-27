@@ -12,7 +12,8 @@ const NAV_GROUPS = [
   { id: 'tools', label: 'Player Tools', items: [
     ['passenger-calculator.html', 'Passenger Calculator'],
     ['freight-calculator.html',   'Freight & Mail Calculator'],
-    ['speculative-trade.html',     'Speculative Trade']
+    ['speculative-trade.html',     'Speculative Trade'],
+    ['https://travellermap.com',   'Traveller Map', true]   // third value: opens in a new tab
   ]},
   { id: 'reference', label: 'Reference', items: [
     ['general-rules.html',        'General Rules'],
@@ -46,10 +47,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const body = document.createElement('div');
     body.className = 'sidebar-group-body';
 
-    g.items.forEach(([href, label]) => {
+    g.items.forEach(([href, label, newTab]) => {
       const a = document.createElement(href ? 'a' : 'span');
       a.className = 'sidebar-nav-item' + (href === here ? ' active' : '') + (href ? '' : ' disabled');
       if (href) a.href = href;
+      if (newTab) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
       a.textContent = label;
       body.appendChild(a);
     });
