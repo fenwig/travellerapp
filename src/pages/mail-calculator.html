@@ -90,8 +90,24 @@
         html += '<div class="calc-empty" style="margin-top:10px">No mail available on this roll.</div>';
       }
       html += '</div>';
-      if (total >= 12) html += '<div class="calc-total"><small id="mail-tons">0 tons</small><span id="grand-total">Cr0</span></div>';
+      if (total >= 12) html += '<div class="calc-total"><small id="mail-tons">0 tons</small><span id="grand-total">Cr0</span></div>' + TC.transferBlock();
       document.getElementById('results').innerHTML = html;
+    }
+
+    async function transferToShip() {
+      if (!document.getElementById('take-mail').checked) { TC.xferMsg('Tick "Take all" first.', false); return; }
+      const dest = document.getElementById('xfer-dest').value.trim();
+      try {
+        const ship = await TC.activeShip();
+        const { error } = await supabaseClient.from('spacecraft_cargo').insert({
+          spacecraft_id: ship.id,
+          description: 'Mail' + (dest ? ' to ' + dest : '') + ' (' + mailCount + ' container' + (mailCount === 1 ? '' : 's') + ', ' + TC.cr(mailCount * 25000) + ')',
+          tonnage: mailCount * 5
+        });
+        if (error) throw error;
+        TC.xferDone();
+        TC.xferMsg('Added mail (' + mailCount * 5 + ' tons) to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).', true);
+      } catch (e) { TC.xferMsg('Transfer failed: ' + (e.message || e), false); }
     }
 
     function updateMail() {

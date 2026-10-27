@@ -86,6 +86,26 @@ const TC = {
       rows.map(r => '<div>' + r[0] + ': <b>' + TC.signed(r[1]) + '</b></div>').join('') + '</details>';
   },
 
+  // ── Transfer to the active spacecraft record ──
+  transferBlock() {
+    return '<div class="calc-block"><div class="calc-block-title">Transfer to Spacecraft Record</div>' +
+      '<div class="calc-fields"><label>Destination (optional)<input type="text" id="xfer-dest" style="width:220px" placeholder="e.g. Regina" /></label></div>' +
+      '<div class="calc-actions" style="margin-bottom:0"><button class="btn-primary" id="xfer-btn" onclick="transferToShip()">Transfer to Active Spacecraft</button>' +
+      ' <span id="xfer-msg" class="calc-note" style="margin-left:10px"></span></div></div>';
+  },
+  async activeShip() {
+    const { data, error } = await supabaseClient.from('spacecraft').select('id,name').eq('status', 'active');
+    if (error) throw error;
+    if (!data || data.length === 0) throw new Error('There is no active spacecraft. Set one to Active on the Roster first.');
+    if (data.length > 1) throw new Error('More than one spacecraft is marked Active. Leave only one Active on the Roster.');
+    return data[0];
+  },
+  xferMsg(text, ok) {
+    const m = document.getElementById('xfer-msg');
+    m.innerHTML = text; m.style.color = ok ? '#00ffaa' : '#ff5a4a';
+  },
+  xferDone() { document.getElementById('xfer-btn').disabled = true; },
+
   async doSignOut() {
     await supabaseClient.auth.signOut();
     window.location.href = '../../index.html';

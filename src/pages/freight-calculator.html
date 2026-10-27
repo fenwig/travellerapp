@@ -106,8 +106,27 @@
         }
         html += '</div>';
       });
-      html += '<div class="calc-total"><small id="total-tons">0 tons</small><span id="grand-total">Cr0</span></div>';
+      html += '<div class="calc-total"><small id="total-tons">0 tons</small><span id="grand-total">Cr0</span></div>' + TC.transferBlock();
       document.getElementById('results').innerHTML = html;
+    }
+
+    async function transferToShip() {
+      const picked = lots.filter((l, i) => document.getElementById('lot-' + i).checked);
+      if (!picked.length) { TC.xferMsg('Tick at least one lot to take first.', false); return; }
+      const dest = document.getElementById('xfer-dest').value.trim();
+      const names = { incidental: 'Incidental', minor: 'Minor', major: 'Major' };
+      try {
+        const ship = await TC.activeShip();
+        const { error } = await supabaseClient.from('spacecraft_cargo').insert(picked.map(l => ({
+          spacecraft_id: ship.id,
+          description: 'Freight' + (dest ? ' to ' + dest : '') + ' (' + names[l.type] + ' lot, ' + TC.cr(l.tons * rate) + ')',
+          tonnage: l.tons
+        })));
+        if (error) throw error;
+        const tons = picked.reduce((s, l) => s + l.tons, 0);
+        TC.xferDone();
+        TC.xferMsg('Added ' + picked.length + ' lot' + (picked.length === 1 ? '' : 's') + ' (' + tons + ' tons) to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).', true);
+      } catch (e) { TC.xferMsg('Transfer failed: ' + (e.message || e), false); }
     }
 
     function updateFreightTotals() {

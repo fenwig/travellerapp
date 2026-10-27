@@ -196,7 +196,17 @@
     }
 
     async function changeSpacecraftStatus(id, newStatus) {
-      await supabaseClient.from('spacecraft').update({ status: newStatus }).eq('id', id);
+      if (newStatus === 'active') {
+        const { data: others } = await supabaseClient.from('spacecraft')
+          .select('id,name').eq('status', 'active').neq('id', id);
+        if (others && others.length > 0) {
+          alert('"' + others[0].name + '" is already the active spacecraft. Set it to Reserve first.');
+          await loadSpacecraft();
+          return;
+        }
+      }
+      const { error } = await supabaseClient.from('spacecraft').update({ status: newStatus }).eq('id', id);
+      if (error) alert('Could not change status: ' + error.message);
       await loadSpacecraft();
     }
 

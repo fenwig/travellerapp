@@ -106,8 +106,26 @@
           </div>
         </div>`;
       });
-      html += '<div class="calc-total"><small id="total-pax">0 passengers</small><span id="grand-total">Cr0</span></div>';
+      html += '<div class="calc-total"><small id="total-pax">0 passengers</small><span id="grand-total">Cr0</span></div>' + TC.transferBlock();
       document.getElementById('results').innerHTML = html;
+    }
+
+    async function transferToShip() {
+      const n = {};
+      CLASSES.forEach(c => { n[c.key] = Math.max(0, Math.min(parseInt(document.getElementById('take-' + c.key).value, 10) || 0, current.avail[c.key])); });
+      const pax = n.low + n.basic + n.middle + n.high;
+      if (!pax) { TC.xferMsg('Choose at least one passenger to take first.', false); return; }
+      try {
+        const ship = await TC.activeShip();
+        const { error } = await supabaseClient.from('spacecraft_passengers').insert({
+          spacecraft_id: ship.id,
+          destination: document.getElementById('xfer-dest').value.trim() || null,
+          high_passage: n.high, middle_passage: n.middle, basic_passage: n.basic, low_passage: n.low
+        });
+        if (error) throw error;
+        TC.xferDone();
+        TC.xferMsg('Added ' + pax + ' passenger' + (pax === 1 ? '' : 's') + ' to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).', true);
+      } catch (e) { TC.xferMsg('Transfer failed: ' + (e.message || e), false); }
     }
 
     function updateTotals() {
