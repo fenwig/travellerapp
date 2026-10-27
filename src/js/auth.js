@@ -42,7 +42,7 @@ async function signOut() {
 }
 
 function showDashboard(user) {
-  window.location.href = 'src/pages/character-record.html';
+  window.location.href = 'src/pages/character-list.html';
 }
 
 // Check if already logged in on page load
