@@ -249,22 +249,28 @@
 
       const list = [...items.values()];
       const shown = list.filter(i => i.tons > 0), hidden = list.length - shown.length;
+      shown.forEach(i => { i.bought = 0; });
       trade.goods = shown;
-      renderGoods(shown, hidden, rolls, exotics, s);
+      trade.goodsMeta = { hidden, rolls, exotics };
+      trade.loadMsg = '';
+      renderGoods();
       syncGoodsButton();
       TC.save();
     }
 
     function goodsRow(i) {
+      const left = i.tons - (i.bought || 0);
       const good = i.mod < 0, flat = i.mod === 0;
       const col = good ? '#00ffaa' : flat ? '#b0d8e8' : '#ff5a4a';
       const pctText = (i.mod > 0 ? '+' : i.mod < 0 ? '−' : '') + Math.abs(i.mod) + '%';
       return `<div class="good-row">
         <div class="good-main"><b>${i.name}</b> (${i.id})
-          <span class="good-tons">${i.tons} ton${i.tons === 1 ? '' : 's'}</span>
+          <span class="good-tons">${left} ton${left === 1 ? '' : 's'}</span>
           <span>price: <b>${TC.cr(i.price)}</b> per ton <b style="color:${col}">(${pctText})</b></span>
           ${i.illegal ? '<span class="good-badge" style="color:#ff5a4a">ILLEGAL</span>' : ''}
           ${i.extra ? '<span class="good-badge">rolled again ×' + i.extra + '</span>' : ''}
+          ${i.bought ? '<span class="good-badge">' + i.bought + ' loaded</span>' : ''}
+          ${left > 0 ? '<label class="good-buy">Buy <input type="number" id="buy-' + i.id + '" min="0" max="' + left + '" value="0" oninput="updateBuyTotals()" /> tons</label>' : '<span class="good-badge">all purchased</span>'}
         </div>
         <div class="good-ex">${i.example}</div>
         <details class="dm-detail"><summary>How this was worked out</summary>
@@ -272,7 +278,9 @@
       </div>`;
     }
 
-    function renderGoods(shown, hidden, rolls, exotics, s) {
+    function renderGoods() {
+      const shown = trade.goods || [], m = trade.goodsMeta || { hidden: 0, rolls: [], exotics: 0 }, s = trade.supplier;
+      if (!s) return;
       const sec = (title, kind) => {
         const rows = shown.filter(i => i.kind === kind).sort((a, b) => a.id - b.id);
         return rows.length ? `<div class="calc-block"><div class="calc-block-title">${title}</div>${rows.map(goodsRow).join('')}</div>` : '';
@@ -283,15 +291,82 @@
       if (s.illegal) {
         html += sec("Illegal Goods for this world's trade codes", 'illegal');
         if (!shown.some(i => i.kind === 'illegal')) html += '<div class="calc-note">No illegal goods match this world\'s trade codes.</div>';
+        html += sec('Random Goods', 'random');
       } else {
-        html += sec('Common Goods (available everywhere)', 'common');
         html += sec("Trade Goods for this world's trade codes", 'code');
+        html += sec('Random Goods', 'random');
+        html += sec('Common Goods (available everywhere)', 'common');
       }
-      html += sec('Random Goods', 'random');
-      html += `<div class="calc-note">Random rolls (${rolls.length}, ${s.illegal ? 'd66' : 'd56'}): ${rolls.length ? rolls.join(', ') : 'none (Population 0)'}.
-        ${exotics ? '<b>Exotics (66) × ' + exotics + '</b>: outside the normal trade rules; the referee decides what is on offer. ' : ''}
-        ${hidden ? hidden + ' good' + (hidden === 1 ? '' : 's') + ' had no quantity available.' : ''}</div>`;
+      html += `<div class="calc-note">Random rolls (${m.rolls.length}, ${s.illegal ? 'd66' : 'd56'}): ${m.rolls.length ? m.rolls.join(', ') : 'none (Population 0)'}.
+        ${m.exotics ? '<b>Exotics (66) × ' + m.exotics + '</b>: outside the normal trade rules; the referee decides what is on offer. ' : ''}
+        ${m.hidden ? m.hidden + ' good' + (m.hidden === 1 ? '' : 's') + ' had no quantity available.' : ''}</div>`;
+      html += `<div class="calc-block calc-row">
+        <div class="calc-block-title">Purchase</div>
+        <span id="buy-summary">0 tons selected</span>
+        <button class="btn-primary" onclick="loadGoods()">Load onto Active Ship</button>
+        <span id="load-msg" class="calc-note" style="margin:0">${trade.loadMsg || ''}</span>
+      </div>`;
       document.getElementById('step2').innerHTML = html;
+    }
+
+    // tons chosen per good (clamped to what is left)
+    function buyPicks() {
+      return (trade.goods || []).map(i => {
+        const el = document.getElementById('buy-' + i.id);
+        const left = i.tons - (i.bought || 0);
+        const n = el ? Math.max(0, Math.min(parseInt(el.value, 10) || 0, left)) : 0;
+        return { i, n };
+      }).filter(p => p.n > 0);
+    }
+
+    function updateBuyTotals() {
+      const picks = buyPicks();
+      const tons = picks.reduce((t, p) => t + p.n, 0);
+      const cost = picks.reduce((t, p) => t + p.n * p.i.price, 0);
+      document.getElementById('buy-summary').innerHTML = '<b>' + tons + ' ton' + (tons === 1 ? '' : 's') + '</b> selected · total <b>' + TC.cr(cost) +
+        '</b> <span style="color:#4a9ab8">(any broker fee is settled after the sale)</span>';
+    }
+
+    function loadMessage(text, ok) {
+      trade.loadMsg = '<span style="color:' + (ok ? '#00ffaa' : '#ff5a4a') + '">' + text + '</span>';
+      const el = document.getElementById('load-msg');
+      if (el) el.innerHTML = trade.loadMsg;
+      TC.save();
+    }
+
+    async function loadGoods() {
+      const picks = buyPicks();
+      if (!picks.length) { loadMessage('Enter how many tons to buy of at least one good first.', false); return; }
+      const total = picks.reduce((t, p) => t + p.n, 0);
+      const world = document.getElementById('src-name').value.trim();
+      try {
+        const ship = await TC.activeShip();
+        const { data: cargo, error: ce } = await supabaseClient.from('spacecraft_cargo').select('tonnage').eq('spacecraft_id', ship.id);
+        if (ce) throw ce;
+        const used = (cargo || []).reduce((t, r) => t + (parseFloat(r.tonnage) || 0), 0);
+        const free = (parseFloat(ship.cargo_max) || 0) - used;
+        if (total > free) {
+          loadMessage('Not enough cargo space on ' + ship.name + ': you selected ' + total + ' tons but only ' + Math.max(0, free) + ' tons are free (capacity ' + (ship.cargo_max || 0) + ', loaded ' + used + ').', false);
+          return;
+        }
+        const rows = picks.map(p => ({
+          spacecraft_id: ship.id,
+          description: p.i.name + ' (' + p.i.id + ') — bought at ' + TC.cr(p.i.price) + '/ton' + (world ? ' on ' + world : ''),
+          tonnage: p.n,
+          trade_good_id: p.i.id, purchase_price: p.i.price, base_price: p.i.base, origin_world: world || null, illegal: !!p.i.illegal
+        }));
+        const { error } = await supabaseClient.from('spacecraft_cargo').insert(rows);
+        if (error) {
+          if (/column|schema cache/i.test(error.message)) throw new Error('The cargo table needs the new trade columns. Run docs/cargo-trade-columns.sql in Supabase first.');
+          throw error;
+        }
+        const cost = picks.reduce((t, p) => t + p.n * p.i.price, 0);
+        picks.forEach(p => { p.i.bought = (p.i.bought || 0) + p.n; });
+        trade.loadMsg = '<span style="color:#00ffaa">Loaded ' + total + ' ton' + (total === 1 ? '' : 's') + ' onto <b>' + ship.name + '</b> for ' + TC.cr(cost) +
+          '. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).</span>';
+        renderGoods();
+        TC.save();
+      } catch (e) { loadMessage('Could not load the cargo: ' + (e.message || e), false); }
     }
 
     function renderNegotiation() {

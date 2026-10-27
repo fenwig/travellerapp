@@ -142,7 +142,7 @@
     async function transferFreight() {
       const picked = lots.filter((l, i) => document.getElementById('lot-' + i).checked);
       if (!picked.length) { TC.xferMsg('Tick at least one lot to take first.', false, 'ft'); return; }
-      const dest = document.getElementById('ft-dest').value.trim();
+      const dest = document.getElementById('dst-name').value.trim();
       const names = { incidental: 'Incidental', minor: 'Minor', major: 'Major' };
       try {
         const ship = await TC.activeShip();
@@ -203,7 +203,7 @@
 
     async function transferMail() {
       if (!document.getElementById('take-mail').checked) { TC.xferMsg('Tick "Take all" first.', false, 'ml'); return; }
-      const dest = document.getElementById('ml-dest').value.trim();
+      const dest = document.getElementById('dst-name').value.trim();
       try {
         const ship = await TC.activeShip();
         const { error } = await supabaseClient.from('spacecraft_cargo').insert({

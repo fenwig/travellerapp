@@ -66,3 +66,11 @@
 .good-tons { color: #00ffaa; font-weight: 600; }
 .good-ex { color: #4a9ab8; font-size: 0.78rem; margin-top: 2px; }
 .good-badge { background: rgba(0,229,255,0.1); border: 1px solid #0a4a60; border-radius: 4px; padding: 0 8px; font-size: 0.72rem; color: #00e5ff; }
+
+.good-buy { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: #00e5ff; font-weight: 600; }
+.good-buy input[type="number"] { width: 70px; }
+#buy-summary { color: #b0d8e8; font-size: 0.85rem; }
+
+.good-buy { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: #00e5ff; font-weight: 600; }
+.good-buy input[type="number"] { width: 70px; }
+#buy-summary { color: #b0d8e8; font-size: 0.85rem; }

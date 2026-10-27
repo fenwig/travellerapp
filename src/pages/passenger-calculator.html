@@ -120,7 +120,7 @@
         const ship = await TC.activeShip();
         const { error } = await supabaseClient.from('spacecraft_passengers').insert({
           spacecraft_id: ship.id,
-          destination: document.getElementById('xfer-dest').value.trim() || null,
+          destination: document.getElementById('dst-name').value.trim() || null,
           high_passage: n.high, middle_passage: n.middle, basic_passage: n.basic, low_passage: n.low
         });
         if (error) throw error;
