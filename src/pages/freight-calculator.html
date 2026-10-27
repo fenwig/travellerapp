@@ -53,6 +53,7 @@
       <div class="calc-block calc-row">
         <div class="calc-block-title">Skill Check</div>
         <div class="calc-fields">
+          <label>Skill<select id="chk-skill">${TC.opts(['Broker','Streetwise'], 'Broker')}</select></label>
           <label>Skill level<input type="number" id="chk-level" min="-3" max="6" value="0" /></label>
           <label>Characteristic DM<input type="number" id="chk-dm" min="-3" max="6" value="0" /></label>
         </div>
@@ -82,7 +83,7 @@
       let checkText = '';
       const rows = [];
       {
-        const c = TC.skillCheck('Skill', TC.num('chk-level'), TC.num('chk-dm'));
+        const c = TC.skillCheck(document.getElementById('chk-skill').value, TC.num('chk-level'), TC.num('chk-dm'));
         checkText = c.text;
         rows.push(['Skill check Effect', c.effect]);
       }

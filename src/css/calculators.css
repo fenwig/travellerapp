@@ -57,3 +57,12 @@
 .calc-actions .btn-primary { width: 200px; max-width: 200px; }
 
 .calc-actions .btn-outline { width: auto; padding: 7px 18px; font-size: 0.85rem; }
+
+/* Speculative trade goods list */
+.good-row { padding: 8px 0; border-top: 1px solid #0a4a6055; font-size: 0.85rem; color: #b0d8e8; }
+.good-row:first-of-type { border-top: none; }
+.good-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.good-main b:first-child { color: #00e5ff; }
+.good-tons { color: #00ffaa; font-weight: 600; }
+.good-ex { color: #4a9ab8; font-size: 0.78rem; margin-top: 2px; }
+.good-badge { background: rgba(0,229,255,0.1); border: 1px solid #0a4a60; border-radius: 4px; padding: 0 8px; font-size: 0.72rem; color: #00e5ff; }

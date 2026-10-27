@@ -29,15 +29,17 @@
       <div id="form"></div>
       <div class="calc-actions">
         <button class="btn-primary" onclick="rollFind()">Search</button>
+        <button class="btn-primary" id="goods-btn" onclick="findGoods()" disabled>Find Goods</button>
         <button class="btn-outline" onclick="TC.reset()">Reset</button>
       </div>
-      <div id="results"></div>
+      <div id="results"><div id="step1"></div><div id="step2"></div></div>
     </main>
   </div>
 
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/trade-calc.js"></script>
+  <script src="../js/trade-goods.js"></script>
   <script>
     // Trade codes, Core Rulebook p.260
     const TRADE_CODES = [
@@ -76,6 +78,14 @@
           <label><span id="lbl-char">EDU or SOC</span> DM<input type="number" id="find-dm" min="-3" max="6" value="0" /></label>
           <label>Previous attempts this month<input type="number" id="find-prev" min="0" max="30" value="0" /></label>
         </div>
+      </div>
+      <div class="calc-block calc-row">
+        <div class="calc-block-title">Negotiation</div>
+        <div class="calc-fields">
+          <label>Your Broker skill<input type="number" id="my-broker" min="0" max="6" value="0" /></label>
+          <label>Supplier's Broker skill<input type="number" id="sup-broker" min="0" max="6" value="2" /></label>
+        </div>
+        <div class="calc-note" style="margin:0">A hired broker's own skill (and DM+2) is used instead of yours.</div>
       </div>`;
 
     let trade = { supplier: null };   // result of Step 1, used by later steps
@@ -91,11 +101,12 @@
     function rollFind() {
       const t = findType();
       const src = TC.readWorld('src');
-      const out = document.getElementById('results');
+      const out = document.getElementById('step1');
+      trade.goods = null; document.getElementById('step2').innerHTML = '';
 
       if (t.online && src.tl < 8) {
         out.innerHTML = '<div class="calc-block"><div class="calc-empty">Online suppliers and brokers are only available on worlds of TL8 or higher. Choose another option or change the world.</div></div>';
-        trade.supplier = null; TC.save(); return;
+        trade.supplier = null; syncGoodsButton(); TC.save(); return;
       }
 
       const level = TC.num('find-level'), charDM = TC.num('find-dm'), prev = TC.num('find-prev');
@@ -137,12 +148,152 @@
 
       // each attempt counts against the next one this month
       document.getElementById('find-prev').value = prev + 1;
+      syncGoodsButton();
       TC.save();
+    }
+
+    // ── Step 2: Goods available ──
+    // Modified Price table, Purchase column (p.243): total -> % of base price
+    const PURCHASE_PCT = { '-2':250,'-1':200,'0':175,'1':150,'2':135,'3':125,'4':120,'5':115,'6':110,'7':105,'8':100,
+      '9':95,'10':90,'11':85,'12':80,'13':75,'14':70,'15':65,'16':60,'17':55,'18':50,'19':45,'20':40,'21':35,
+      '22':30,'23':25,'24':20 };
+    function purchasePct(t) { return t <= -3 ? 300 : t >= 25 ? 15 : PURCHASE_PCT[String(t)]; }
+
+    function worldCodeSet() {
+      const set = new Set();
+      for (let i = 0; i < 5; i++) { const v = document.getElementById('tc-' + i).value; if (v) set.add(v); }
+      const zone = TC.readWorld('src').zone;
+      if (zone === 'Amber' || zone === 'Red') set.add(zone);
+      return set;
+    }
+
+    // largest matching DM from one column (none matching = 0)
+    function bestDM(list, codes) {
+      const hit = list.filter(([c]) => codes.has(c));
+      if (!hit.length) return { dm: 0, label: 'none' };
+      const top = hit.reduce((a, b) => (b[1] > a[1] ? b : a));
+      return { dm: top[1], label: top[0] + ' ' + TC.signed(top[1]) };
+    }
+
+    function goodsById(id) { return TRADE_GOODS.find(g => g.id === id); }
+
+    function makeItem(g, kind, ctx) {
+      // quantity: dice total + population DM (min 0), times the multiplier
+      const dice = TC.rollDice(g.tons[0]);
+      const qtyTotal = Math.max(0, TC.sum(dice) + ctx.popDM);
+      const tons = qtyTotal * g.tons[1];
+      // price: 3D + skill (+ broker DM) + Purchase DM - Sale DM - supplier Broker
+      const pd = [TC.d6(), TC.d6(), TC.d6()];
+      const buy = bestDM(g.buy, ctx.codes), sell = bestDM(g.sell, ctx.codes);
+      const total = TC.sum(pd) + ctx.skill + ctx.brokerDM + buy.dm - sell.dm - ctx.supplierBroker;
+      const pct = purchasePct(total);
+      return {
+        id: g.id, name: g.name, example: g.example, illegal: !!g.illegal, kind, tons, price: Math.round(g.price * pct / 100),
+        base: g.price, pct, mod: pct - 100, extra: 0,
+        qtyText: g.tons[0] + 'D [' + dice.join('+') + ']' + (ctx.popDM ? ' ' + TC.signed(ctx.popDM) + ' (population)' : '') +
+          (g.tons[1] > 1 ? ' × ' + g.tons[1] : '') + ' = ' + tons + ' tons',
+        priceText: '3D [' + pd.join('+') + '] ' + TC.signed(ctx.skill) + ' ' + ctx.skillLabel +
+          (ctx.brokerDM ? ' ' + TC.signed(ctx.brokerDM) + ' local broker' : '') + ' ' + TC.signed(buy.dm) + ' Purchase DM (' + buy.label + ') ' +
+          TC.signed(-sell.dm) + ' Sale DM (' + sell.label + ') ' + TC.signed(-ctx.supplierBroker) + ' supplier Broker = ' + total +
+          ' → ' + pct + '% of ' + TC.cr(g.price)
+      };
+    }
+
+    function findGoods() {
+      const s = trade.supplier;
+      if (!s || trade.goods) return;
+      const src = TC.readWorld('src');
+      const codes = worldCodeSet();
+      const ctx = {
+        codes,
+        popDM: src.pop <= 3 ? -3 : src.pop >= 9 ? 3 : 0,
+        skill: s.broker ? s.brokerSkill : TC.num('my-broker'),
+        skillLabel: s.broker ? "local broker's Broker skill" : 'your Broker skill',
+        brokerDM: s.broker ? 2 : 0,
+        supplierBroker: TC.num('sup-broker')
+      };
+      const items = new Map();
+      const add = (g, kind) => { if (!items.has(g.id)) items.set(g.id, makeItem(g, kind, ctx)); };
+
+      TRADE_GOODS.filter(g => g.codes === 'all').forEach(g => add(g, 'common'));
+      TRADE_GOODS.filter(g => g.codes !== 'all' && !g.illegal && g.codes.some(c => codes.has(c))).forEach(g => add(g, 'code'));
+      if (s.illegal) TRADE_GOODS.filter(g => g.illegal && g.codes.some(c => codes.has(c))).forEach(g => add(g, 'illegal'));
+
+      // random extras: one roll per point of Population (d56, or d66 for illegal contacts)
+      const rolls = [];
+      let exotics = 0;
+      for (let i = 0; i < src.pop; i++) {
+        const first = s.illegal ? Math.floor(Math.random() * 6) + 1 : Math.floor(Math.random() * 5) + 1;
+        const id = first * 10 + TC.d6();
+        rolls.push(id);
+        if (id === 66) { exotics++; continue; }
+        const g = goodsById(id);
+        if (items.has(id)) {
+          const it = items.get(id);                 // repeat: add tons, keep the first price
+          const dice = TC.rollDice(g.tons[0]);
+          const more = Math.max(0, TC.sum(dice) + ctx.popDM) * g.tons[1];
+          it.tons += more; it.extra++;
+          it.qtyText += ' &nbsp;+&nbsp; random repeat: ' + g.tons[0] + 'D [' + dice.join('+') + ']' + (g.tons[1] > 1 ? ' × ' + g.tons[1] : '') + ' = ' + more + ' tons';
+        } else {
+          items.set(id, makeItem(g, 'random', ctx));
+        }
+      }
+
+      const list = [...items.values()];
+      const shown = list.filter(i => i.tons > 0), hidden = list.length - shown.length;
+      trade.goods = shown;
+      renderGoods(shown, hidden, rolls, exotics, s);
+      syncGoodsButton();
+      TC.save();
+    }
+
+    function goodsRow(i) {
+      const good = i.mod < 0, flat = i.mod === 0;
+      const col = good ? '#00ffaa' : flat ? '#b0d8e8' : '#ff5a4a';
+      const pctText = (i.mod > 0 ? '+' : i.mod < 0 ? '−' : '') + Math.abs(i.mod) + '%';
+      return `<div class="good-row">
+        <div class="good-main"><b>${i.name}</b> (${i.id})
+          <span class="good-tons">${i.tons} ton${i.tons === 1 ? '' : 's'}</span>
+          <span>price: <b>${TC.cr(i.price)}</b> per ton <b style="color:${col}">(${pctText})</b></span>
+          ${i.illegal ? '<span class="good-badge" style="color:#ff5a4a">ILLEGAL</span>' : ''}
+          ${i.extra ? '<span class="good-badge">rolled again ×' + i.extra + '</span>' : ''}
+        </div>
+        <div class="good-ex">${i.example}</div>
+        <details class="dm-detail"><summary>How this was worked out</summary>
+          <div>Quantity: ${i.qtyText}</div><div>Price: ${i.priceText}</div></details>
+      </div>`;
+    }
+
+    function renderGoods(shown, hidden, rolls, exotics, s) {
+      const sec = (title, kind) => {
+        const rows = shown.filter(i => i.kind === kind).sort((a, b) => a.id - b.id);
+        return rows.length ? `<div class="calc-block"><div class="calc-block-title">${title}</div>${rows.map(goodsRow).join('')}</div>` : '';
+      };
+      let html = '<div class="calc-result-title" style="margin-top:20px">STEP 2 — GOODS AVAILABLE</div>';
+      html += `<div class="calc-note">Supplier: <b>${s.label}</b>${s.broker ? ' (broker skill ' + s.brokerSkill + ', ' + s.fee + '% fee, DM+2)' : ''}.
+        A green % is below the base price (a good deal); red is above it.</div>`;
+      html += sec('Common Goods (available everywhere)', 'common');
+      html += sec("Trade Goods for this world's trade codes", 'code');
+      if (s.illegal) html += sec("Illegal Goods for this world's trade codes", 'illegal');
+      html += sec('Random Goods', 'random');
+      html += `<div class="calc-note">Random rolls (${rolls.length}, ${s.illegal ? 'd66' : 'd56'}): ${rolls.length ? rolls.join(', ') : 'none (Population 0)'}.
+        ${exotics ? '<b>Exotics (66) × ' + exotics + '</b>: outside the normal trade rules; the referee decides what is on offer. ' : ''}
+        ${hidden ? hidden + ' good' + (hidden === 1 ? '' : 's') + ' had no quantity available.' : ''}</div>`;
+      document.getElementById('step2').innerHTML = html;
+    }
+
+    function syncGoodsButton() {
+      const b = document.getElementById('goods-btn');
+      const s = trade.supplier;
+      b.disabled = !s || !!trade.goods;
+      b.title = !s ? 'Find a supplier or broker first (Step 1)'
+        : trade.goods ? 'To roll a new list, search for a supplier or broker again (Step 1)' : '';
     }
 
     updateFindLabels();
     TC.persist('speculative', () => trade, v => { trade = v || { supplier: null }; });
     updateFindLabels();
+    syncGoodsButton();
   </script>
 </body>
 </html>
