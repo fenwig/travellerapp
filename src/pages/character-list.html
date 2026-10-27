@@ -37,6 +37,8 @@
       -webkit-appearance: none; -moz-appearance: none; appearance: none;
     }
     .status-select option { background: #0a1a22; color: #b0d8e8; }
+    .roster-thumb { display: inline-block; vertical-align: middle; width: 36px; height: 36px; margin-right: 10px;
+      border-radius: 4px; border: 1px solid #0a4a60; background: #0d1520; }
     .roster-empty td { color: #4a9ab8; font-size: 0.85rem; }
   </style>
 </head>
@@ -122,6 +124,7 @@
 
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
+  <script src="../js/portrait.js"></script>
   <script>
     let currentUser = null;
     const STATUS_OPTIONS = ['active', 'reserve', 'archived', 'deceased', 'other'];
@@ -146,7 +149,7 @@
     async function loadCharacters() {
       const { data, error } = await supabaseClient
         .from('characters')
-        .select('id,name,player_name,species,primary_role,secondary_role,status,onboard,user_id')
+        .select('id,portrait_url,portrait_crop,name,player_name,species,primary_role,secondary_role,status,onboard,user_id')
         .order('name');
 
       const tbody = document.getElementById('char-tbody');
@@ -160,7 +163,7 @@
         const canManage = gm || c.user_id === currentUser.id;
         return `
         <tr data-id="${c.id}">
-          <td onclick="openCharacter('${c.id}', '${c.status}')">${c.name || '—'}</td>
+          <td onclick="openCharacter('${c.id}', '${c.status}')"><span class="roster-thumb" data-url="${c.portrait_url || ''}" data-crop='${c.portrait_crop ? JSON.stringify(c.portrait_crop) : ''}'></span>${c.name || '—'}</td>
           <td onclick="openCharacter('${c.id}', '${c.status}')">${c.player_name || '—'}</td>
           <td onclick="openCharacter('${c.id}', '${c.status}')">${c.species || '—'}</td>
           <td onclick="openCharacter('${c.id}', '${c.status}')">${c.primary_role || '—'}</td>
@@ -181,6 +184,9 @@
         </tr>
       `;
       }).join('');
+      tbody.querySelectorAll('.roster-thumb').forEach(el => {
+        renderPortrait(el, el.dataset.url, el.dataset.crop ? JSON.parse(el.dataset.crop) : null);
+      });
     }
 
     function confirmDelete(btn, kind) {

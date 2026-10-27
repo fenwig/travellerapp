@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/supabase-config.js"></script>
+  <script src="../js/portrait.js"></script>
   <script src="../js/skills-data.js"></script>
   <style>
     /* ── Header ── */
@@ -23,7 +24,7 @@
       flex-wrap: wrap;
     }
     .char-portrait {
-      width: 90px; height: 90px;
+      width: 110px; height: 110px;
       border-radius: 6px;
       border: 2px solid #0a4a60;
       background: #0d1520;
@@ -31,6 +32,23 @@
       display: flex; align-items: center; justify-content: center;
       color: #4a9ab8; font-size: 11px; text-align: center;
     }
+    .char-portrait.has-img { cursor: zoom-in; }
+    body.editing .char-portrait.has-img { cursor: default; }
+    .portrait-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+    .portrait-btns { flex-direction: column; gap: 4px; align-items: stretch; }
+    .portrait-btns .btn { font-size: 0.7rem; padding: 3px 8px; }
+    .crop-modal { position: fixed; inset: 0; background: rgba(4,8,12,0.94); z-index: 9998; display: none;
+      flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; }
+    .crop-modal.open { display: flex; }
+    .crop-title { color: #00e5ff; font-weight: 700; letter-spacing: 0.05em; }
+    .crop-hint { color: #4a9ab8; font-size: 0.8rem; text-align: center; }
+    .crop-stage { position: relative; touch-action: none; user-select: none; border: 1px solid #0a4a60; }
+    .crop-stage img { display: block; width: 100%; height: 100%; pointer-events: none; }
+    .crop-frame { position: absolute; border: 2px solid #00e5ff; border-radius: 4px; cursor: move;
+      box-shadow: 0 0 0 9999px rgba(4,8,12,0.65); }
+    .crop-zoom { display: flex; align-items: center; gap: 10px; color: #b0d8e8; font-size: 0.85rem; }
+    .crop-zoom input { width: 220px; accent-color: #00e5ff; }
+    .crop-actions { display: flex; gap: 10px; }
     .char-identity { flex: 1; min-width: 200px; }
     .char-name { font-size: 1.5rem; color: #00e5ff; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 4px; }
     .char-meta { display: flex; flex-wrap: wrap; gap: 10px 24px; color: #b0d8e8; font-size: 0.85rem; margin-bottom: 6px; }
@@ -235,7 +253,16 @@
 
         <!-- ── Header ── -->
         <div class="char-header">
-          <div class="char-portrait" id="portrait-wrap">No Portrait</div>
+          <div class="portrait-col">
+            <div class="char-portrait" id="portrait-wrap" onclick="portraitClick()">No Portrait</div>
+            <div class="portrait-btns edit-only">
+              <input type="file" id="portrait-file" accept="image/*" style="display:none" onchange="uploadPortrait(this)" />
+              <button class="btn btn-ghost" onclick="document.getElementById('portrait-file').click()">Upload Image</button>
+              <button class="btn btn-ghost" id="portrait-adjust-btn" onclick="openCropper()" style="display:none">Adjust Face</button>
+              <button class="btn btn-ghost" id="portrait-remove-btn" onclick="removePortrait()" style="display:none">Remove</button>
+            </div>
+            <div class="char-created" id="portrait-msg"></div>
+          </div>
           <div class="char-identity">
             <div class="char-name" id="disp-name">—</div>
             <div class="char-meta">
@@ -537,6 +564,22 @@
     </main>
   </div>
 
+<div class="crop-modal" id="crop-modal">
+  <div class="crop-title">SET PORTRAIT FACE</div>
+  <div class="crop-hint">Drag the square onto the face, then use the slider to zoom in or out.</div>
+  <div class="crop-stage" id="crop-stage" style="overflow:hidden">
+    <img id="crop-img" alt="Full portrait" />
+    <div class="crop-frame" id="crop-frame"></div>
+  </div>
+  <div class="crop-zoom">Zoom
+    <input type="range" id="crop-zoom" min="1" max="6" step="0.05" value="2" oninput="setCropZoom(this.value)" />
+  </div>
+  <div class="crop-actions">
+    <button class="btn btn-primary" onclick="saveCrop()">Save Face</button>
+    <button class="btn btn-ghost" onclick="closeCropper()">Cancel</button>
+  </div>
+</div>
+
 <script>
 // ── State ──────────────────────────────────────────────────
 let currentUser = null;
@@ -641,6 +684,185 @@ function renderHeader() {
   document.getElementById('disp-created').textContent = created
     ? 'Created ' + created.toLocaleDateString()
     : '';
+  renderPortraitArea();
+}
+
+// ── Portrait ───────────────────────────────────────────────
+const PORTRAIT_MAX_PX = 1600;
+
+function renderPortraitArea() {
+  const wrap = document.getElementById('portrait-wrap');
+  const url  = character.portrait_url;
+  if (url) {
+    renderPortrait(wrap, url, character.portrait_crop);
+    wrap.classList.add('has-img');
+  } else {
+    wrap.textContent = 'No Portrait';
+    wrap.classList.remove('has-img');
+  }
+  document.getElementById('portrait-adjust-btn').style.display = url ? 'inline-flex' : 'none';
+  document.getElementById('portrait-remove-btn').style.display = url ? 'inline-flex' : 'none';
+}
+
+function portraitClick() {
+  if (document.body.classList.contains('editing')) return;
+  openPortraitLightbox(character.portrait_url);
+}
+
+// Storage path is the part of the public URL after /portraits/
+function portraitPathFromUrl(url) {
+  const i = url ? url.indexOf('/portraits/') : -1;
+  return i < 0 ? null : decodeURIComponent(url.slice(i + '/portraits/'.length).split('?')[0]);
+}
+
+function shrinkImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, PORTRAIT_MAX_PX / Math.max(img.naturalWidth, img.naturalHeight));
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.naturalWidth  * scale);
+      canvas.height = Math.round(img.naturalHeight * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(objUrl);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('Could not process image')), 'image/jpeg', 0.85);
+    };
+    img.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error('That file is not a readable image')); };
+    img.src = objUrl;
+  });
+}
+
+async function uploadPortrait(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  const msg = document.getElementById('portrait-msg');
+  msg.textContent = 'Uploading…';
+  try {
+    const blob = await shrinkImage(file);
+    const path = character.id + '/' + Date.now() + '.jpg';
+    const { error: upErr } = await supabaseClient.storage.from('portraits')
+      .upload(path, blob, { contentType: 'image/jpeg' });
+    if (upErr) throw upErr;
+    const url = supabaseClient.storage.from('portraits').getPublicUrl(path).data.publicUrl;
+
+    const oldPath = portraitPathFromUrl(character.portrait_url);
+    const crop = { cx: 0.5, cy: 0.2, zoom: 2 };
+    const { data, error } = await supabaseClient.from('characters')
+      .update({ portrait_url: url, portrait_crop: crop }).eq('id', character.id).select();
+    if (error || !data || !data.length) {
+      await supabaseClient.storage.from('portraits').remove([path]);
+      throw error || new Error('Not allowed to update this character');
+    }
+    if (oldPath) await supabaseClient.storage.from('portraits').remove([oldPath]);
+
+    character.portrait_url  = url;
+    character.portrait_crop = crop;
+    renderPortraitArea();
+    msg.textContent = '';
+    openCropper();
+  } catch (e) {
+    msg.textContent = '';
+    alert('Portrait upload failed: ' + (e.message || e));
+  }
+}
+
+async function removePortrait() {
+  if (!character.portrait_url || !confirm('Remove this character\'s portrait?')) return;
+  const oldPath = portraitPathFromUrl(character.portrait_url);
+  const { data, error } = await supabaseClient.from('characters')
+    .update({ portrait_url: null, portrait_crop: null }).eq('id', character.id).select();
+  if (error || !data || !data.length) { alert('Could not remove portrait: ' + (error?.message || 'not allowed')); return; }
+  if (oldPath) await supabaseClient.storage.from('portraits').remove([oldPath]);
+  character.portrait_url = null;
+  character.portrait_crop = null;
+  renderPortraitArea();
+}
+
+// ── Face cropper ───────────────────────────────────────────
+let cropState = null;   // { cx, cy, zoom, w, h, dispW, dispH }
+
+function openCropper() {
+  const url = character.portrait_url;
+  if (!url) return;
+  const modal = document.getElementById('crop-modal');
+  const stage = document.getElementById('crop-stage');
+  const img   = document.getElementById('crop-img');
+  img.onload = () => {
+    const w = img.naturalWidth, h = img.naturalHeight;
+    const maxW = Math.min(window.innerWidth - 32, 700);
+    const maxH = window.innerHeight - 200;
+    const k = Math.min(maxW / w, maxH / h, 1);
+    const c = character.portrait_crop || { cx: 0.5, cy: 0.2, zoom: 2 };
+    cropState = { cx: c.cx, cy: c.cy, zoom: c.zoom, w, h, dispW: w * k, dispH: h * k };
+    stage.style.width  = cropState.dispW + 'px';
+    stage.style.height = cropState.dispH + 'px';
+    document.getElementById('crop-zoom').value = cropState.zoom;
+    updateCropFrame();
+  };
+  img.src = url;
+  modal.classList.add('open');
+}
+
+function cropSidePx() {   // frame side on screen
+  return Math.min(cropState.dispW, cropState.dispH) / cropState.zoom;
+}
+
+function clampCrop() {
+  const s = cropSidePx();
+  const halfX = s / 2 / cropState.dispW, halfY = s / 2 / cropState.dispH;
+  cropState.cx = Math.min(1 - halfX, Math.max(halfX, cropState.cx));
+  cropState.cy = Math.min(1 - halfY, Math.max(halfY, cropState.cy));
+}
+
+function updateCropFrame() {
+  clampCrop();
+  const s = cropSidePx(), f = document.getElementById('crop-frame');
+  f.style.width = f.style.height = s + 'px';
+  f.style.left = (cropState.cx * cropState.dispW - s / 2) + 'px';
+  f.style.top  = (cropState.cy * cropState.dispH - s / 2) + 'px';
+}
+
+function setCropZoom(v) {
+  cropState.zoom = parseFloat(v);
+  updateCropFrame();
+}
+
+(function initCropDrag() {
+  document.addEventListener('DOMContentLoaded', () => {
+    const frame = document.getElementById('crop-frame');
+    let drag = null;
+    frame.addEventListener('pointerdown', e => {
+      drag = { x: e.clientX, y: e.clientY, cx: cropState.cx, cy: cropState.cy };
+      frame.setPointerCapture(e.pointerId);
+    });
+    frame.addEventListener('pointermove', e => {
+      if (!drag) return;
+      cropState.cx = drag.cx + (e.clientX - drag.x) / cropState.dispW;
+      cropState.cy = drag.cy + (e.clientY - drag.y) / cropState.dispH;
+      updateCropFrame();
+    });
+    const end = () => { drag = null; };
+    frame.addEventListener('pointerup', end);
+    frame.addEventListener('pointercancel', end);
+  });
+})();
+
+async function saveCrop() {
+  const crop = {
+    cx: +cropState.cx.toFixed(4), cy: +cropState.cy.toFixed(4), zoom: +cropState.zoom.toFixed(2)
+  };
+  const { data, error } = await supabaseClient.from('characters')
+    .update({ portrait_crop: crop }).eq('id', character.id).select();
+  if (error || !data || !data.length) { alert('Could not save crop: ' + (error?.message || 'not allowed')); return; }
+  character.portrait_crop = crop;
+  renderPortraitArea();
+  closeCropper();
+}
+
+function closeCropper() {
+  document.getElementById('crop-modal').classList.remove('open');
 }
 
 // ── Stats ──────────────────────────────────────────────────
