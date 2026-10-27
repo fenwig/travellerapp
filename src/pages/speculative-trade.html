@@ -297,8 +297,13 @@
         html += sec('Random Goods', 'random');
         html += sec('Common Goods (available everywhere)', 'common');
       }
+      if (m.exotics) {
+        html += `<div class="calc-block" style="border-color:#ffb020">
+          <div class="calc-block-title" style="color:#ffb020">Exotic Goods (66)${m.exotics > 1 ? ' × ' + m.exotics : ''}</div>
+          <div class="calc-note" style="margin:0">Exotic goods were rolled. They fall outside the normal trade rules (alien relics, prototype technology, unique life, priceless treasures and so on). <b>Consult with the Referee.</b></div>
+        </div>`;
+      }
       html += `<div class="calc-note">Random rolls (${m.rolls.length}, ${s.illegal ? 'd66' : 'd56'}): ${m.rolls.length ? m.rolls.join(', ') : 'none (Population 0)'}.
-        ${m.exotics ? '<b>Exotics (66) × ' + m.exotics + '</b>: outside the normal trade rules; the referee decides what is on offer. ' : ''}
         ${m.hidden ? m.hidden + ' good' + (m.hidden === 1 ? '' : 's') + ' had no quantity available.' : ''}</div>`;
       html += `<div class="calc-block calc-row">
         <div class="calc-block-title">Purchase</div>
