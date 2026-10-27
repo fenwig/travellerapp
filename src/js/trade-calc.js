@@ -81,7 +81,7 @@ const TC = {
       tl:   tl ? parseInt(tl.value, 10) || 0 : 0
     };
   },
-  num(id) { return parseInt(document.getElementById(id).value, 10) || 0; },
+  num(id) { const el = document.getElementById(id); return el ? parseInt(el.value, 10) || 0 : 0; },
 
   dmList(rows) {
     return '<details class="dm-detail"><summary>Modifiers (' + TC.signed(TC.sum(rows.map(r => r[1]))) + ')</summary>' +
