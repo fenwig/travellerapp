@@ -52,3 +52,6 @@
   width: auto; padding: 7px 18px; font-size: 0.85rem; margin-left: 0 !important;
 }
 @media (max-width: 760px) { .calc-row, .calc-row:not(:has(.calc-check)) { flex-wrap: wrap; } }
+
+/* Roll buttons: fixed 200px wide */
+.calc-actions .btn-primary { width: 200px; max-width: 200px; }
