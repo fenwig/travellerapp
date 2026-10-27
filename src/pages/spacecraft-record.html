@@ -310,7 +310,7 @@
             <div class="mc-box">
               <div class="mc-label">Armour</div>
               <div class="mc-row" style="font-size:1.3rem;font-weight:600">
-                <span class="view-only" id="sv-arm-max2">0</span><input class="edit-only" type="number" id="ei-arm-max" value="0" style="width:50px" />
+                <span class="view-only" id="sv-arm-max2">0</span><input class="edit-only" type="number" id="ei-arm-max" value="0" style="width:72px" />
                 <span style="color:#4a9ab8"> / </span>
                 <span id="sv-arm-cur2">0</span>
               </div>
@@ -318,7 +318,7 @@
             <div class="mc-box">
               <div class="mc-label">Cargo (tons)</div>
               <div class="mc-row" style="font-size:1.3rem;font-weight:600">
-                <span class="view-only" id="sv-cargo-max-mc">0</span><input class="edit-only" type="number" id="ei-cargo-max" min="0" step="0.5" value="0" oninput="syncCargoMax()" style="width:50px" />
+                <span class="view-only" id="sv-cargo-max-mc">0</span><input class="edit-only" type="number" id="ei-cargo-max" min="0" step="0.5" value="0" oninput="syncCargoMax()" style="width:72px" />
                 <span style="color:#4a9ab8"> / </span>
                 <span id="sv-cargo-cur" title="Total of all cargo entries on Finance &amp; Cargo tab">0</span>
               </div>
@@ -364,11 +364,11 @@
               <div class="mc-label">Fuel (tons)</div>
               <div class="mc-row"><div class="mc-sub">Max</div>
                 <div class="mc-value view-only" id="sv-fuel-max">0</div>
-                <input class="mc-input edit-only" type="number" id="ei-fuel-max" value="0" style="width:50px" />
+                <input class="mc-input edit-only" type="number" id="ei-fuel-max" value="0" style="width:72px" />
               </div>
               <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div>
                 <span class="stepper">
-                  <input class="mc-input" type="number" id="ei-fuel-cur" value="0" style="width:50px" onchange="autoSaveField('fuel_current', this.value)" />
+                  <input class="mc-input" type="number" id="ei-fuel-cur" value="0" style="width:72px" onchange="autoSaveField('fuel_current', this.value)" />
                   <span class="stepper-btns">
                     <button type="button" class="stepper-btn" onclick="stepCurrent('ei-fuel-cur',1,'fuel_current')">▲</button>
                     <button type="button" class="stepper-btn" onclick="stepCurrent('ei-fuel-cur',-1,'fuel_current')">▼</button>
@@ -497,7 +497,7 @@
                   </div>
                   <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div>
                     <span class="stepper">
-                      <input class="mc-input" type="number" id="ei-hull-cur" value="0" style="width:50px" onchange="autoSaveField('hull_current', this.value)" />
+                      <input class="mc-input" type="number" id="ei-hull-cur" value="0" style="width:72px" onchange="autoSaveField('hull_current', this.value)" />
                       <span class="stepper-btns">
                         <button type="button" class="stepper-btn" onclick="stepCurrent('ei-hull-cur',1,'hull_current')">▲</button>
                         <button type="button" class="stepper-btn" onclick="stepCurrent('ei-hull-cur',-1,'hull_current')">▼</button>
@@ -512,7 +512,7 @@
                   </div>
                   <div class="mc-row" style="margin-top:6px"><div class="mc-sub">Current</div>
                     <span class="stepper">
-                      <input class="mc-input" type="number" id="ei-arm-cur" value="0" style="width:50px" onchange="autoSaveField('armour_current', this.value)" />
+                      <input class="mc-input" type="number" id="ei-arm-cur" value="0" style="width:72px" onchange="autoSaveField('armour_current', this.value)" />
                       <span class="stepper-btns">
                         <button type="button" class="stepper-btn" onclick="stepCurrent('ei-arm-cur',1,'armour_current')">▲</button>
                         <button type="button" class="stepper-btn" onclick="stepCurrent('ei-arm-cur',-1,'armour_current')">▼</button>
@@ -1330,7 +1330,7 @@ function addCargoRow() {
   if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
   const tr = document.createElement('tr'); tr.dataset.id = 'new-'+Date.now();
   tr.innerHTML = `<td><input placeholder="Description" /></td>
-    <td><input type="number" placeholder="0" step="0.5" style="width:70px" /></td>
+    <td><input type="number" placeholder="0" step="0.5" style="width:95px" /></td>
     <td class="td-act"><button class="btn-small" onclick="saveCargoRow(this.closest('tr'))">Save</button></td>`;
   tbody.appendChild(tr);
 }

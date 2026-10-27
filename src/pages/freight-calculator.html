@@ -30,6 +30,7 @@
       <div class="calc-actions">
         <button class="btn-primary" onclick="rollFreight()">Roll for Freight</button>
         <button class="btn-primary" onclick="rollMail()" style="margin-left:10px">Roll for Mail</button>
+        <button class="btn-outline" onclick="TC.reset()">Reset</button>
       </div>
       <div id="results"></div>
       <div id="mail-results"></div>
@@ -129,6 +130,7 @@
       html += '<div class="calc-total"><small id="total-tons">0 tons</small><span id="grand-total">Cr0</span></div>' +
         TC.transferBlock('ft', 'transferFreight');
       document.getElementById('results').innerHTML = html;
+      TC.save();
     }
 
     function updateFreightTotals() {
@@ -191,6 +193,7 @@
       if (total >= 12) html += '<div class="calc-total"><small id="mail-tons">0 tons</small><span id="mail-total">Cr0</span></div>' +
         TC.transferBlock('ml', 'transferMail');
       document.getElementById('mail-results').innerHTML = html;
+      TC.save();
     }
 
     function updateMail() {
@@ -214,6 +217,7 @@
         TC.xferMsg('Added mail (' + mailCount * 5 + ' tons) to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).', true, 'ml');
       } catch (e) { TC.xferMsg('Transfer failed: ' + (e.message || e), false, 'ml'); }
     }
+    TC.persist('freight', () => ({ lots, rate, mailCount }), v => { lots = v.lots || []; rate = v.rate || 0; mailCount = v.mailCount || 0; });
   </script>
 </body>
 </html>

@@ -104,8 +104,51 @@ const TC = {
   xferMsg(text, ok, p) {
     const m = document.getElementById((p || 'xfer') + '-msg');
     m.innerHTML = text; m.style.color = ok ? '#00ffaa' : '#ff5a4a';
+    TC.save();
   },
   xferDone(p) { document.getElementById((p || 'xfer') + '-btn').disabled = true; },
+
+  // ── Keep the calculator as the player left it (this browser only) ──
+  _persist: null,
+  persist(key, getExtra, setExtra) {
+    TC._persist = { key: 'tcalc-' + key, getExtra, setExtra };
+    const p = TC._persist;
+    try {
+      const saved = JSON.parse(localStorage.getItem(p.key) || 'null');
+      if (saved) {
+        document.getElementById('results').innerHTML = saved.results || '';
+        const mail = document.getElementById('mail-results');
+        if (mail) mail.innerHTML = saved.mail || '';
+        Object.entries(saved.fields || {}).forEach(([id, v]) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
+        });
+        if (saved.extra && p.setExtra) p.setExtra(saved.extra);
+      }
+    } catch (e) {}
+    ['input', 'change'].forEach(ev => document.addEventListener(ev, () => TC.save()));
+  },
+  save() {
+    const p = TC._persist; if (!p) return;
+    try {
+      const fields = {};
+      document.querySelectorAll('main input[id], main select[id]').forEach(el => {
+        fields[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+      });
+      const mail = document.getElementById('mail-results');
+      localStorage.setItem(p.key, JSON.stringify({
+        fields, results: document.getElementById('results').innerHTML,
+        mail: mail ? mail.innerHTML : '', extra: p.getExtra ? p.getExtra() : null
+      }));
+    } catch (e) {}
+  },
+  reset() {
+    const p = TC._persist;
+    if (!confirm('Clear all entries and rolled results on this calculator?')) return;
+    try { localStorage.removeItem(p.key); } catch (e) {}
+    location.reload();
+  },
 
   async doSignOut() {
     await supabaseClient.auth.signOut();
