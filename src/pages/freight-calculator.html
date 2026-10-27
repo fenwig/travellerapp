@@ -25,7 +25,7 @@
 
     <main class="page-main">
       <h1 class="page-title">FREIGHT CALCULATOR</h1>
-      <p class="calc-intro">Shipping freight (Core Rulebook pp.239–241). Enter the world you are collecting cargo from and the distance, then roll. Freight lots cannot be broken up, so tick the whole lots you want to carry. Cargo is paid on delivery; late delivery cuts the payment by (1D+4) × 10%.</p>
+      <p class="calc-intro">Shipping freight (Core Rulebook pp.239–241). Enter the pick-up and destination worlds and the distance, then roll. Freight lots cannot be broken up, so tick the whole lots you want to carry. Cargo is paid on delivery; late delivery cuts the payment by (1D+4) × 10%.</p>
       <div id="form"></div>
       <div class="calc-actions"><button class="btn-primary" onclick="rollFreight()">Roll for Freight</button></div>
       <div id="results"></div>
@@ -44,6 +44,7 @@
         </div>
       </div>
       ${TC.worldBlock('src', 'Pick-up World (where the freight is)', true)}
+      ${TC.worldBlock('dst', 'Destination World', true)}
       <div class="calc-block">
         <div class="calc-block-title">Skill Check (Broker or Streetwise)</div>
         <label class="calc-check"><input type="checkbox" id="use-check" checked /> Make an Average (8+) check; its Effect is added to every freight roll</label>
@@ -64,7 +65,7 @@
 
     function rollFreight() {
       const dist = TC.num('dist');
-      const src = TC.readWorld('src');
+      const src = TC.readWorld('src'), dst = TC.readWorld('dst');
       rate = TC.FARES[dist].freight;
       lots = [];
 
@@ -75,7 +76,7 @@
       }
       const baseRows = [];
       if (checkText) baseRows.push(['Skill check Effect', effect]);
-      baseRows.push(...TC.freightWorldDMs(src, 'Pick-up'), ...TC.distanceDM(dist));
+      baseRows.push(...TC.freightWorldDMs(src, 'Pick-up'), ...TC.freightWorldDMs(dst, 'Destination'), ...TC.distanceDM(dist));
 
       let html = '<div class="calc-result-title">FREIGHT AVAILABLE — ' + TC.cr(rate) + ' per ton</div>';
       if (checkText) html += '<div class="calc-note">' + checkText + '</div>';
