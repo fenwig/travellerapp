@@ -49,7 +49,6 @@
       ${TC.worldBlock('dst', 'Destination World', false)}
       <div class="calc-block calc-row">
         <div class="calc-block-title">Skill Check</div>
-        <label class="calc-check"><input type="checkbox" id="use-check" checked /> Roll 8+ check (Effect added to rolls)</label>
         <div class="calc-fields">
           <label>Skill level<input type="number" id="chk-level" min="-3" max="6" value="0" /></label>
           <label>Characteristic DM<input type="number" id="chk-dm" min="-3" max="6" value="0" /></label>
@@ -70,7 +69,7 @@
       const steward = TC.num('steward');
 
       let effect = 0, checkText = '';
-      if (document.getElementById('use-check').checked) {
+      {
         const c = TC.skillCheck('Skill', TC.num('chk-level'), TC.num('chk-dm'));
         effect = c.effect; checkText = c.text;
       }
