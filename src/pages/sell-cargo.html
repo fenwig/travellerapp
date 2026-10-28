@@ -26,6 +26,7 @@
     <main class="page-main">
       <h1 class="page-title">SELL CARGO</h1>
       <p class="calc-intro">Selling goods (Core Rulebook p.243). Enter the world you are selling on, find a buyer or broker, then see what each good on your active ship would fetch. Sell as much or as little as you like to this buyer; to try a different buyer, search again. Your progress is saved as you go.</p>
+      <div class="calc-note" id="here-note"></div>
       <div id="form"></div>
       <div class="calc-actions">
         <button class="btn-primary" onclick="rollFind()">Search</button>
@@ -383,6 +384,12 @@
 
     updateFindLabels();
     TC.persist('sell', () => sell, v => { sell = v || { buyer: null, offers: null, msg: '' }; }, ['step1', 'step2']);
+    TC.hereWorld('dst').then(here => {
+      const el = document.getElementById('here-note');
+      el.innerHTML = here
+        ? 'Selling at <b>' + (here.name || 'unnamed world') + ' (' + here.uwp + ')</b>, the ship\'s Current World. If you have jumped, update it on the <a href="spacecraft-record.html" style="color:#00e5ff">Spacecraft Record</a> before selling.'
+        : '<span style="color:#ffb74a">The active ship has no Current World set.</span> Set it on the <a href="spacecraft-record.html" style="color:#00e5ff">Spacecraft Record</a> before selling, or enter the world below.';
+    });
     updateFindLabels();
     syncOffersButton();
   </script>

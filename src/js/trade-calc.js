@@ -80,6 +80,20 @@ const TC = {
     out.textContent = 'Starport ' + w.port + ' · Size ' + w.size + ' · Atmosphere ' + w.atmo + ' · Hydro ' + w.hydro +
       ' · Pop ' + w.pop + ' · Govt ' + w.gov + ' · Law ' + w.law + ' · TL ' + w.tl;
   },
+  // Fill a "where we are now" world block from the active ship's Current World (Spacecraft Record).
+  // If the ship has none set, the block stays editable. Returns { name, uwp } or null.
+  async hereWorld(id) {
+    try {
+      const { data, error } = await supabaseClient.from('spacecraft').select('current_world_name,current_world_uwp').eq('status', 'active');
+      const s = !error && data && data.length === 1 ? data[0] : null;
+      if (!s || !s.current_world_uwp) return null;
+      const name = document.getElementById(id + '-name'), uwp = document.getElementById(id + '-uwp');
+      name.value = s.current_world_name || ''; uwp.value = s.current_world_uwp;
+      [name, uwp].forEach(el => { el.readOnly = true; el.style.opacity = '0.75'; el.title = 'Set on the Spacecraft Record (Current World)'; });
+      TC.uwpShow(id);
+      return { name: s.current_world_name || '', uwp: s.current_world_uwp };
+    } catch (e) { return null; }
+  },
   uwpRefresh() { document.querySelectorAll('[id$="-uwp"]').forEach(el => TC.uwpShow(el.id.slice(0, -4))); },
   worldBlock(id, title) {
     return '<div class="calc-block calc-row"><div class="calc-block-title">' + title + '</div><div class="calc-fields">' +

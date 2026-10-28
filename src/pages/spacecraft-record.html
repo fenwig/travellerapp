@@ -235,6 +235,14 @@
             <div><span>Maintenance Period Expenses:</span><span id="hdr-maintenance-period-edit" style="color:#00ffaa;font-weight:600">0 cr</span></div>
           </div>
 
+          <!-- Current world: used by the Passenger, Freight, Buy Cargo and Sell Cargo calculators. Saves on its own (no Edit mode). -->
+          <div class="ship-meta" style="margin-top:6px;gap:8px 16px;align-items:center">
+            <div><span>Current World:</span><input class="ship-meta-input" id="cw-name" placeholder="World name" style="width:150px" /></div>
+            <div><span>Profile:</span><input class="ship-meta-input" id="cw-uwp" placeholder="A9B2887-A" maxlength="10" style="width:100px;text-transform:uppercase" /></div>
+            <button class="btn-primary" style="width:auto;padding:4px 14px;font-size:0.8rem" onclick="saveCurrentWorld()">Update Location</button>
+            <span id="cw-msg" style="font-size:0.8rem"></span>
+          </div>
+
           <div class="ship-meta view-only" style="margin-top:6px">
             <div><span>Purchase Value:</span><span id="hdr-pvalue">—</span> MCr</div>
             <div><span>Mortgage Amount:</span><span id="hdr-mortgage-value">—</span> MCr</div>
@@ -785,6 +793,24 @@ function renderHeader() {
   setVal('ei-tl',          s.tl);
   setVal('ei-status',      s.status || 'active');
   setVal('ei-streamlined', s.streamlined_status || 'Streamlined');
+  setVal('cw-name',        s.current_world_name);
+  setVal('cw-uwp',         s.current_world_uwp);
+}
+
+// Current world (name + UWP profile) — saved straight to Supabase, no Edit mode required
+async function saveCurrentWorld() {
+  const msg  = document.getElementById('cw-msg');
+  const name = document.getElementById('cw-name').value.trim();
+  const uwp  = document.getElementById('cw-uwp').value.trim().toUpperCase();
+  if (uwp && !/^[ABCDEX][0-9A-HJ-NP-Z]{6}-?[0-9A-HJ-NP-Z]$/.test(uwp)) {
+    msg.textContent = 'Profile should look like A9B2887-A'; msg.style.color = '#ff5a4a'; return;
+  }
+  const { error } = await supabaseClient.from('spacecraft')
+    .update({ current_world_name: name || null, current_world_uwp: uwp || null }).eq('id', ship.id);
+  if (error) { msg.textContent = 'Could not save: ' + error.message; msg.style.color = '#ff5a4a'; return; }
+  ship.current_world_name = name || null; ship.current_world_uwp = uwp || null;
+  setVal('cw-uwp', uwp);
+  msg.textContent = 'Location updated.'; msg.style.color = '#00ffaa';
 }
 
 // ── Specs ────────────────────────────────────────────────

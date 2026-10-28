@@ -398,6 +398,7 @@
 
     updateFindLabels();
     TC.persist('speculative', () => trade, v => { trade = v || { supplier: null }; }, ['step1', 'step2']);
+    TC.hereWorld('src');
     updateFindLabels();
     syncGoodsButton();
   </script>
