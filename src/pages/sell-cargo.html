@@ -86,7 +86,7 @@
     ).join('');
 
     document.getElementById('form').innerHTML = `
-      ${TC.worldBlock('dst', 'Selling World', true, '<label>Law Level<input type="number" id="law" min="0" max="15" value="0" /></label>')}
+      ${TC.worldBlock('dst', 'Selling World')}
       <div class="calc-block calc-row" style="flex-wrap:wrap">
         <div class="calc-block-title">Trade Codes</div>
         <div class="calc-fields" style="flex-wrap:wrap">${codeSelects}</div>
@@ -196,7 +196,7 @@
           throw error;
         }
         const codes = worldCodeSet();
-        const law = TC.num('law');
+        const law = TC.readWorld('dst').law;
         const skill = b.broker ? b.brokerSkill : TC.num('my-broker');
         const skillLabel = b.broker ? "local broker's Broker skill" : 'your Broker skill';
         const brokerDM = b.broker ? 2 : 0;

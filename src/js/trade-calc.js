@@ -61,25 +61,42 @@ const TC = {
   opts(list, sel) {
     return list.map(v => '<option' + (String(v) === String(sel) ? ' selected' : '') + '>' + v + '</option>').join('');
   },
-  worldBlock(id, title, withTL, extra) {
-    const pops = Array.from({ length: 13 }, (_, i) => i);
+  // ── World profile (UWP), e.g. A9B2887-A: Starport, Size, Atmosphere, Hydrographics,
+  //    Population, Government, Law Level, then Tech Level (extended hex, no I or O) ──
+  EHEX: '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ',
+  parseUWP(text) {
+    const m = /^\s*([ABCDEX])([0-9A-HJ-NP-Z])([0-9A-HJ-NP-Z])([0-9A-HJ-NP-Z])([0-9A-HJ-NP-Z])([0-9A-HJ-NP-Z])([0-9A-HJ-NP-Z])\s*-?\s*([0-9A-HJ-NP-Z])\s*$/i.exec(text || '');
+    if (!m) return null;
+    const v = c => TC.EHEX.indexOf(c.toUpperCase());
+    return { port: m[1].toUpperCase(), size: v(m[2]), atmo: v(m[3]), hydro: v(m[4]),
+             pop: v(m[5]), gov: v(m[6]), law: v(m[7]), tl: v(m[8]) };
+  },
+  uwpShow(id) {
+    const out = document.getElementById(id + '-uwp-text');
+    if (!out) return;
+    const w = TC.parseUWP(document.getElementById(id + '-uwp').value);
+    if (!w) { out.style.color = '#ff5a4a'; out.textContent = 'Not a valid profile (example: A9B2887-A)'; return; }
+    out.style.color = '#4a9ab8';
+    out.textContent = 'Starport ' + w.port + ' · Size ' + w.size + ' · Atmosphere ' + w.atmo + ' · Hydro ' + w.hydro +
+      ' · Pop ' + w.pop + ' · Govt ' + w.gov + ' · Law ' + w.law + ' · TL ' + w.tl;
+  },
+  uwpRefresh() { document.querySelectorAll('[id$="-uwp"]').forEach(el => TC.uwpShow(el.id.slice(0, -4))); },
+  worldBlock(id, title) {
     return '<div class="calc-block calc-row"><div class="calc-block-title">' + title + '</div><div class="calc-fields">' +
       '<label>World<input type="text" id="' + id + '-name" placeholder="name" style="width:120px" /></label>' +
-      '<label>Population<select id="' + id + '-pop">' + TC.opts(pops, 7) + '</select></label>' +
-      '<label>Starport<select id="' + id + '-port">' + TC.opts(['A','B','C','D','E','X'], 'C') + '</select></label>' +
+      '<label>Profile (UWP)<input type="text" id="' + id + '-uwp" value="C566777-8" maxlength="10" style="width:105px;text-transform:uppercase" oninput="TC.uwpShow(\'' + id + '\')" /></label>' +
       '<label>Zone<select id="' + id + '-zone">' + TC.opts(['Green','Amber','Red'], 'Green') + '</select></label>' +
-      (withTL ? '<label>Tech Level<input type="number" id="' + id + '-tl" min="0" max="25" value="8" /></label>' : '') +
-      (extra || '') +
+      '<span id="' + id + '-uwp-text" class="calc-note uwp-decoded" style="margin:0"></span>' +
       '</div></div>';
   },
   readWorld(id) {
-    const tl = document.getElementById(id + '-tl');
-    return {
-      pop:  parseInt(document.getElementById(id + '-pop').value, 10),
-      port: document.getElementById(id + '-port').value,
-      zone: document.getElementById(id + '-zone').value,
-      tl:   tl ? parseInt(tl.value, 10) || 0 : 0
-    };
+    const w = TC.parseUWP(document.getElementById(id + '-uwp').value);
+    if (!w) {
+      const msg = 'The world profile is not valid. Enter it like A9B2887-A (Starport, Size, Atmosphere, Hydrographics, Population, Government, Law Level, then -Tech Level).';
+      alert(msg); throw new Error(msg);
+    }
+    w.zone = document.getElementById(id + '-zone').value;
+    return w;
   },
   num(id) { const el = document.getElementById(id); return el ? parseInt(el.value, 10) || 0 : 0; },
 
@@ -133,6 +150,7 @@ const TC = {
         if (saved.extra && p.setExtra) p.setExtra(saved.extra);
       }
     } catch (e) {}
+    TC.uwpRefresh();
     ['input', 'change'].forEach(ev => document.addEventListener(ev, () => TC.save()));
   },
   save() {
