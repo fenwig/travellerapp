@@ -35,9 +35,9 @@
       <div class="calc-block calc-row" id="neg-block">
         <div class="calc-block-title">Negotiation</div>
         <div class="calc-fields">
-          <label id="neg-mine">Your Broker skill<input type="number" id="my-broker" min="0" max="6" value="0" /></label>
+          <label id="neg-mine">Your Broker skill<select id="my-broker"><option value="-3">None (−3)</option><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label>
           <span id="neg-broker" style="display:none"></span>
-          <label>Supplier's Broker skill<input type="number" id="sup-broker" min="0" max="6" value="2" /></label>
+          <label>Supplier's Broker skill<select id="sup-broker"><option value="-3">None (−3)</option><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label>
         </div>
       </div>
       <div class="calc-actions">
@@ -85,7 +85,7 @@
         <div class="calc-block-title">Looking For</div>
         <div class="calc-fields">
           <label><select id="find-type" onchange="updateFindLabels()">${FIND_TYPES.map(t => `<option value="${t.key}">${t.label}</option>`).join('')}</select></label>
-          <label><span id="lbl-skill">Broker</span> skill<input type="number" id="find-level" min="-3" max="6" value="0" /></label>
+          <label><span id="lbl-skill">Broker</span> skill<select id="find-level"><option value="-3">None (−3)</option><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label>
           <label><span id="lbl-char">EDU or SOC</span> DM<input type="number" id="find-dm" min="-3" max="6" value="0" /></label>
           <label>Previous attempts this month<input type="number" id="find-prev" min="0" max="30" value="0" /></label>
         </div>
