@@ -354,15 +354,17 @@
           loadMessage('Not enough cargo space on ' + ship.name + ': you selected ' + total + ' tons but only ' + Math.max(0, free) + ' tons are free (capacity ' + (ship.cargo_max || 0) + ', loaded ' + used + ').', false);
           return;
         }
+        // a broker on this purchase takes their cut again when the goods are sold
+        const buyFee = trade.supplier && trade.supplier.broker ? trade.supplier.fee : 0;
         const rows = picks.map(p => ({
           spacecraft_id: ship.id,
           description: p.i.name + ' (' + p.i.id + ') — bought at ' + TC.cr(p.i.price) + '/ton' + (world ? ' on ' + world : ''),
           tonnage: p.n,
-          trade_good_id: p.i.id, purchase_price: p.i.price, base_price: p.i.base, origin_world: world || null, illegal: !!p.i.illegal
+          trade_good_id: p.i.id, purchase_price: p.i.price, base_price: p.i.base, origin_world: world || null, illegal: !!p.i.illegal, buy_fee_pct: buyFee
         }));
         const { error } = await supabaseClient.from('spacecraft_cargo').insert(rows);
         if (error) {
-          if (/column|schema cache/i.test(error.message)) throw new Error('The cargo table needs the new trade columns. Run docs/cargo-trade-columns.sql in Supabase first.');
+          if (/column|schema cache/i.test(error.message)) throw new Error('The cargo table needs the new trade columns. Run docs/cargo-trade-columns.sql and docs/broker-fee-buy.sql in Supabase first.');
           throw error;
         }
         const cost = picks.reduce((t, p) => t + p.n * p.i.price, 0);

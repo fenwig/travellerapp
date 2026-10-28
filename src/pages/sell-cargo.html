@@ -190,10 +190,10 @@
       try {
         const ship = await TC.activeShip();
         const { data, error } = await supabaseClient.from('spacecraft_cargo')
-          .select('id,tonnage,trade_good_id,purchase_price,base_price,origin_world,illegal')
+          .select('id,tonnage,trade_good_id,purchase_price,base_price,origin_world,illegal,buy_fee_pct')
           .eq('spacecraft_id', ship.id).not('trade_good_id', 'is', null);
         if (error) {
-          if (/column|schema cache/i.test(error.message)) throw new Error('The cargo table needs the trade columns. Run docs/cargo-trade-columns.sql in Supabase first.');
+          if (/column|schema cache/i.test(error.message)) throw new Error('The cargo table needs the trade columns. Run docs/cargo-trade-columns.sql and docs/broker-fee-buy.sql in Supabase first.');
           throw error;
         }
         const codes = worldCodeSet();
@@ -220,7 +220,7 @@
           const base = parseFloat(r.base_price) || g.price;
           offers.push({
             rowId: r.id, id: g.id, name: g.name, example: g.example, illegal: !!r.illegal,
-            held: parseFloat(r.tonnage) || 0, paid: parseFloat(r.purchase_price) || 0, base,
+            held: parseFloat(r.tonnage) || 0, paid: parseFloat(r.purchase_price) || 0, base, buyFeePct: parseFloat(r.buy_fee_pct) || 0,
             origin: r.origin_world || '', pct, offer: Math.round(base * pct / 100),
             rollText: '3D [' + pd.join('+') + '] ' + TC.signed(skill) + ' ' + skillLabel + (brokerDM ? ' ' + TC.signed(brokerDM) + ' local broker' : '') +
               ' ' + TC.signed(sellBest.dm) + ' Sale DM (' + sellBest.label + ') ' + TC.signed(-buyBest.dm) + ' Purchase DM (' + buyBest.label + ') ' +
@@ -288,14 +288,16 @@
       }).filter(p => p.n > 0);
     }
 
-    function feeRate() { return sell.buyer && sell.buyer.broker ? sell.buyer.fee / 100 : 0; }
+    // Brokers take their cut at both ends: the one used when buying (stored on the cargo) and the one used now
+    function feeRate(o) { return ((sell.buyer && sell.buyer.broker ? sell.buyer.fee : 0) + (o.buyFeePct || 0)) / 100; }
+    function feeOf(p) { return Math.round(p.n * p.o.offer * feeRate(p.o)); }
 
     function updateSellTotals() {
       const picks = sellPicks();
       const tons = picks.reduce((t, p) => t + p.n, 0);
       const gross = picks.reduce((t, p) => t + p.n * p.o.offer, 0);
       const cost = picks.reduce((t, p) => t + p.n * p.o.paid, 0);
-      const fee = Math.round(gross * feeRate());
+      const fee = picks.reduce((t, p) => t + feeOf(p), 0);
       const net = gross - fee;
       const profit = net - cost;
       document.getElementById('sell-summary').innerHTML = '<b>' + tons + ' ton' + (tons === 1 ? '' : 's') + '</b> · gross <b>' + TC.cr(gross) + '</b>' +
@@ -327,11 +329,10 @@
         }
 
         // 1. sales record
-        const rate = feeRate();
         const logRows = picks.map(p => {
           const gross = p.n * p.o.offer;
           return { spacecraft_id: ship.id, trade_good_id: p.o.id, good_name: p.o.name, tons: p.n, purchase_price: p.o.paid,
-            sale_price: p.o.offer, origin_world: p.o.origin || null, sold_world: world || null, gross, broker_fee: Math.round(gross * rate), illegal: p.o.illegal };
+            sale_price: p.o.offer, origin_world: p.o.origin || null, sold_world: world || null, gross, broker_fee: feeOf(p), illegal: p.o.illegal };
         });
         const { error: le } = await supabaseClient.from('spacecraft_trade_log').insert(logRows);
         if (le) {
