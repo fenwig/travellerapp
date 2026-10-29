@@ -86,6 +86,13 @@
         </div>
       </div>
       <div class="calc-block calc-row">
+        <div class="calc-block-title">Pirate ship</div>
+        <div class="calc-fields">
+          <label>Thrust (M-drive)<input type="number" id="pirate-thrust" min="0" value="2" /></label>
+          <span class="calc-note" style="margin:0">Taken from the active spacecraft's M-drive each time you build; used only if there is no single active ship.</span>
+        </div>
+      </div>
+      <div class="calc-block calc-row">
         <div class="calc-block-title">Aboard</div>
         <div class="calc-fields">
           <label>Crew<input type="number" id="ship-crew" min="0" value="4" /></label>
@@ -215,11 +222,12 @@
     }
 
     // ── Step 2: build the encounter ──
-    function buildEncounter() {
+    async function buildEncounter() {
       if (!enc.prey) { alert('Find the prey first (Step 1).'); return; }
       if (enc.prey.type === 'None') { alert('Step 1 found no encounter. Roll again, or change the world and Find Prey.'); return; }
       const f = encounterFlags();
       const w = f.w;
+      const pirate = await getPirateThrust();
       const ship = {
         type: document.getElementById('ship-type').value.trim() || enc.prey.type,
         tons: TC.num('ship-tons'), thrust: TC.num('ship-thrust'), hold: TC.num('ship-hold'),
@@ -242,11 +250,10 @@
       enc.mor = { cls, die: md, base: MORALE_CLASS[cls].base, adj: [], noSurrender: false };
       applyQuirkEffects(q);
 
-      // distance, direction, transit
-      const dd = TC.rollDice(3), dirDie = TC.d6();
-      const diam = w.size === 0 ? 1000 : w.size * 1600;
-      enc.dist = { dice: dd, diam, km: TC.sum(dd) * diam };
-      enc.dir = { die: dirDie, text: dirDie <= 3 ? 'Heading towards the planet to land' : dirDie <= 5 ? 'Heading to the jump diameter limit' : 'Stationary, or heading elsewhere (a moon, another planet or another vessel)', kind: dirDie <= 3 ? 'down' : dirDie <= 5 ? 'up' : 'other' };
+      // distance, direction, position, speed, travel times and intercept
+      enc.chase = rollChase(w, ship, pirate);
+      enc.loc = { km: Math.round((enc.chase.rs ? enc.chase.rs.xq : enc.chase.x0) / 1000), limitKm: enc.chase.limitKm };
+      enc.dir = { die: enc.chase.dirDie, kind: enc.chase.kind };
 
       // hunter response (first roll)
       enc.hunterRows = f.hunter;
@@ -272,16 +279,113 @@
     }
     function morTotal() { return enc.mor.die + enc.mor.base + TC.sum(enc.mor.adj.map(a => a.delta)); }
 
-    function transit(size, thrust) {
-      if (!thrust) return null;
-      const diam = size === 0 ? 800 : size * 1600;       // the book's transit table uses an 80,000 km limit for Size 0
-      const d = 100 * diam * 1000, a = thrust * 9.8;      // metres, m/s²
-      return { limitKm: 100 * diam, up: Math.sqrt(2 * d / a) / 3600, down: 2 * Math.sqrt(d / a) / 3600 };
+    // ── Chase model ──
+    // Everything happens on one straight line from the planet (0) out to the 100-diameter jump limit (L).
+    // The book supplies the separation (3D x planet diameter) and direction (1D); the rest is this app's own:
+    // the encounter is made soon after arriving in the system, so the prey is "more towards the jump" (50-100% of the way out),
+    // already moving (it has been accelerating for 1D x 10 minutes), and the pirate starts at rest.
+    // A prey heading in accelerates, flips at the right moment and lands at zero speed; one heading out burns to the limit and jumps.
+    // The pirate burns towards the prey and brakes in time to match its speed.
+    const G = 9.8;
+    const RANGE_LONG_KM = 25000;   // Long range in the space combat rules: where the encounter proper begins
+    async function getPirateThrust() {
+      try {
+        const { data, error } = await supabaseClient.from('spacecraft').select('name,m_drive').eq('status', 'active');
+        if (!error && data && data.length === 1) {
+          const t = data[0].m_drive || 0;
+          document.getElementById('pirate-thrust').value = t;
+          return { thrust: t, name: data[0].name };
+        }
+      } catch (e) {}
+      return { thrust: TC.num('pirate-thrust'), name: '' };
     }
+    function rollChase(w, ship, pirate) {
+      const sepDiam = w.size === 0 ? 1000 : w.size * 1600;
+      const sepDice = TC.rollDice(3), sepKm = TC.sum(sepDice) * sepDiam;
+      const limitKm = 100 * (w.size === 0 ? 800 : w.size * 1600), L = limitKm * 1000;
+      const dirDie = TC.d6(), kind = dirDie <= 3 ? 'in' : dirDie <= 5 ? 'out' : 'none';
+      const posDie = TC.d6(), tenths = Math.min(posDie + 4, kind === 'out' ? 9 : 10), x0 = L * tenths / 10;
+      const burnDie = TC.d6(), burnMin = burnDie * 10;
+      const aq = ship.thrust * G, ap = pirate.thrust * G;
+      const moving = kind !== 'none' && aq > 0;
+      const v0 = moving ? Math.min(aq * burnMin * 60, Math.sqrt(aq * x0)) : 0;
+      // the pirate always arrives from the jump limit side of the prey
+      const sepM = sepKm * 1000, outer = true, xp0 = x0 + sepM;
+
+      // closed-form time for the prey to reach its destination from the start
+      let tDest = null;
+      if (moving && kind === 'in') {
+        const t1 = (-v0 + Math.sqrt(aq * x0 + v0 * v0 / 2)) / aq;
+        tDest = t1 + (v0 + aq * t1) / aq;
+      } else if (moving && kind === 'out') {
+        tDest = (-v0 + Math.sqrt(v0 * v0 + 2 * aq * (L - x0))) / aq;
+      }
+
+      // Lead-in: the pirate burns towards the prey (2-second steps) until it is inside Long range (25,000 km), braking early enough to stop before the planet.
+      // The encounter starts there. Distant and Very Long range are not used by the book's table here.
+      let rs = null, tRange = null, gapKm = null;
+      if (ap > 0) {
+        const dt = 2, tmax = Math.min(tDest || 86400, 172800);
+        let xq = x0, vq = kind === 'in' ? -v0 : kind === 'out' ? v0 : 0, xp = xp0, vp = 0, t = 0, landed = false;
+        for (; t <= tmax; t += dt) {
+          const e = xq - xp;
+          if (Math.abs(e) <= RANGE_LONG_KM * 1000) { tRange = t; rs = { xq, vq, xp, vp }; break; }
+          let acq = 0;
+          if (moving && kind === 'in' && !landed) {
+            acq = xq <= vq * vq / (2 * aq) ? aq : -aq;
+          } else if (moving && kind === 'out') acq = aq;
+          vq += acq * dt; xq += vq * dt;
+          if (kind === 'in' && (xq <= 0 || vq >= 0)) { landed = true; vq = 0; xq = Math.max(xq, 0); }
+          // burn towards the prey, but never carry more speed than the pirate can shed before the planet
+          let u = e > 0 ? ap : -ap;
+          if (vp < 0 && xp <= vp * vp / (2 * ap) * 1.05 + 1e6) u = ap;
+          vp += u * dt; xp += vp * dt;
+          if (xp <= 0) { xp = 0; vp = 0; }
+        }
+        if (tRange === null) gapKm = Math.abs(xq - xp) / 1000;
+      }
+
+      // From the moment the encounter starts: prey's time left to its destination, and the time to reverse
+      let destLeft = null, oppLeft = null;
+      if (rs && moving) {
+        destLeft = Math.max(0, tDest - tRange);
+        const x = rs.xq, v = rs.vq;
+        if (kind === 'in') {
+          const vin = Math.max(0, -v), x1 = x - vin * vin / (2 * aq);
+          oppLeft = vin / aq + Math.sqrt(2 * Math.max(0, L - x1) / aq);
+        } else {
+          const x1 = x + v * v / (2 * aq);
+          oppLeft = v / aq + 2 * Math.sqrt(x1 / aq);
+        }
+      }
+
+      // Closing from Long range to Adjacent with the Ship Movement table (Core Rulebook p.166): thrust is applied per 6-minute round.
+      // Ships heading towards each other add their thrust; a pursuer subtracts the fleeing ship's thrust.
+      let close = null;
+      if (rs) {
+        const startKm = tRange === 0 ? sepKm : RANGE_LONG_KM;
+        const pirateOuter = rs.xp > rs.xq;
+        const fleeing = moving && ((kind === 'in' && pirateOuter) || (kind === 'out' && !pirateOuter));
+        const approaching = moving && !fleeing;
+        const net = approaching ? pirate.thrust + ship.thrust : fleeing ? pirate.thrust - ship.thrust : pirate.thrust;
+        const steps = [], bands = [['Long', 10, 'Medium'], ['Medium', 5, 'Short'], ['Short', 2, 'Close'], ['Close', 1, 'Adjacent']];
+        const startBand = startKm > 10000 ? 0 : startKm > 1250 ? 1 : startKm > 10 ? 2 : startKm > 1 ? 3 : 4;
+        let rounds = 0;
+        if (net > 0) {
+          for (let i = startBand; i < bands.length; i++) { rounds += bands[i][1] / net; steps.push({ reach: bands[i][2], cost: bands[i][1], rounds }); }
+        }
+        close = { net, fleeing, approaching, steps, startBand: startBand < 4 ? bands[startBand][0] : 'Adjacent',
+          boardMin: net > 0 ? rounds * 6 : null };
+      }
+      return { sepDice, sepDiam, sepKm, limitKm, dirDie, kind, posDie, tenths, x0, burnDie, burnMin, v0, outer, moving,
+        tDest, tRange, rs, destLeft, oppLeft, close, pirateThrust: pirate.thrust, pirateName: pirate.name, gapKm,
+        slack: close && close.boardMin !== null && destLeft !== null ? destLeft - close.boardMin * 60 : null };
+    }
+    const fmtSec = sec => fmtHours(sec / 3600);
 
     function renderEncounter() {
       if (!enc.ship) { document.getElementById('enc-out').innerHTML = ''; return; }
-      const s = enc.ship, m = enc.mor, tr = transit(enc.world.size, s.thrust);
+      const s = enc.ship, m = enc.mor;
       const mor = morTotal();
       let html = '<div class="calc-result-title" style="margin-top:20px">THE ENCOUNTER</div>';
 
@@ -294,18 +398,43 @@
       else html += `<div class="calc-note" style="margin-top:6px">Demanding Surrender: Average (8+) Electronics (comms) check (1D × 10 seconds, SOC) with <b>DM−${Math.max(0, mor)}</b> (the target's current MOR). MOR drops by 1 for every critical hit, and by 1D for critical hits of Severity 4+. At MOR 0 the victim jumps out (if possible) or surrenders.</div>`;
       html += '</div>';
 
-      html += `<div class="calc-block"><div class="calc-block-title">Distance, Direction and Travel Time</div>
-        <div class="calc-roll-line">Initial distance: 3D [${enc.dist.dice.join('+')}] = ${TC.sum(enc.dist.dice)} × ${enc.dist.diam.toLocaleString('en-US')} km (diameter of the mainworld) = <b>${enc.dist.km.toLocaleString('en-US')} km</b></div>
-        <div class="calc-roll-line">Direction of travel: 1D [${enc.dir.die}] → <b>${enc.dir.text}</b></div>`;
-      if (tr) {
-        const hl = k => enc.dir.kind === k ? ' style="color:#00ffaa"' : '';
-        html += `<div class="calc-roll-line">At Thrust ${s.thrust}, from the hundred-diameter jump limit (${tr.limitKm.toLocaleString('en-US')} km):</div>
-          <div class="calc-roll-line" style="padding-left:14px"><span${hl('down')}>Down to the planet's surface (with turnover): <b>${fmtHours(tr.down)}</b></span></div>
-          <div class="calc-roll-line" style="padding-left:14px"><span${hl('up')}>Out to the jump limit at full thrust: <b>${fmtHours(tr.up)}</b></span></div>
-          <div class="calc-note" style="margin-top:6px;color:#4a9ab8">Calculated from thrust and planet size, so it may differ slightly from the book's Jump Limit Transit table. An arriving ship appears outside the limit, so these are minimum times. If the ship is elsewhere in the system it can jump out immediately when threatened, if it has fuel. Jumping inside the limit is DM−4. A pirate with higher Thrust within 100,000 km makes escape very difficult.</div>`;
+      const c = enc.chase, km = n => Math.round(n).toLocaleString('en-US');
+      const dirText = c.kind === 'in' ? 'heading towards the planet to land' : c.kind === 'out' ? 'heading out to the jump diameter limit' : 'stationary, or heading elsewhere (treated as at rest)';
+      html += `<div class="calc-block"><div class="calc-block-title">Distance, Direction and Intercept</div>
+        <div class="calc-roll-line"><b>Spotting the prey:</b> the ships are 3D [${c.sepDice.join('+')}] = ${TC.sum(c.sepDice)} × ${km(c.sepDiam)} km (planet diameter) = <b>${km(c.sepKm)} km</b> apart, the pirate on the jump limit side (it has just arrived by jump).</div>
+        <div class="calc-roll-line">Direction of travel: 1D [${c.dirDie}] → prey is <b>${dirText}</b></div>
+        <div class="calc-roll-line">Prey position: (1D [${c.posDie}] + 4) ÷ 10${c.kind === 'out' && c.tenths < c.posDie + 4 ? ' (held at 90%, since a prey heading out from the limit would already have jumped)' : ''} of the way to the jump limit = <b>${km(c.x0 / 1000)} km from the planet</b> (limit ${km(c.limitKm)} km)${c.moving ? ', under way for 1D [' + c.burnDie + '] × 10 = ' + c.burnMin + ' minutes at Thrust ' + s.thrust + ' (' + (c.v0 / 1000).toFixed(1) + ' km/s)' : ''}</div>`;
+      if (c.pirateThrust > 0) {
+        const who = 'Pirate' + (c.pirateName ? ' (' + esc(c.pirateName) + ')' : '') + ' at Thrust ' + c.pirateThrust + ', starting at rest';
+        if (c.tRange !== null) {
+          html += `<div class="calc-roll-line" style="margin-top:6px">${who}, closes to Long range (${km(RANGE_LONG_KM)} km) in <b>${fmtSec(c.tRange)}</b>. <b style="color:#00e5ff">THE ENCOUNTER STARTS HERE. Every time below runs from this moment.</b></div>
+            <div class="calc-roll-line">At that moment the prey is <b>${km(c.rs.xq / 1000)} km from the planet</b>${c.moving ? ', moving at <b>' + (Math.abs(c.rs.vq) / 1000).toFixed(1) + ' km/s</b>' : ''}.</div>`;
+          if (c.moving) {
+            html += `<div class="calc-roll-line">Prey's time to its destination (${c.kind === 'in' ? 'touching down, with the turnover' : 'the jump limit'}): <b>${fmtSec(c.destLeft)}</b></div>
+              <div class="calc-roll-line">If it reverses instead (${c.kind === 'in' ? 'back out to the jump limit' : 'down to the planet'}, including braking and turning around): <b>${fmtSec(c.oppLeft)}</b></div>`;
+          }
+          const cl = c.close;
+          html += `<div class="calc-roll-line" style="margin-top:6px"><b>Closing the range</b> (Ship Movement table, Core Rulebook p.166; thrust is applied in 6-minute rounds): ${cl.fleeing ? 'the prey is running away, so net thrust is ' + c.pirateThrust + ' − ' + s.thrust : cl.approaching ? 'the ships are heading towards each other, so net thrust is ' + c.pirateThrust + ' + ' + s.thrust : 'net thrust is the pirate\'s ' + c.pirateThrust} = <b>${cl.net}</b></div>`;
+          if (cl.net <= 0) {
+            html += `<div class="calc-roll-line"><b style="color:#ff5a4a">The pirate cannot close the range.</b> The prey is at least as fast.</div>`;
+          } else {
+            cl.steps.forEach(st => {
+              const min = st.rounds * 6, late = c.destLeft !== null && min * 60 > c.destLeft;
+              html += `<div class="calc-roll-line" style="padding-left:14px"><span${late ? ' style="color:#ff5a4a"' : ''}>${st.reach === 'Adjacent' ? '<b>Adjacent range (boarding position)</b>' : st.reach + ' range'}: ${Math.round(st.rounds * 10) / 10} rounds (${fmtHours(min / 60)}) from the start of the encounter${late ? ', after the prey has reached its destination' : ''}</span></div>`;
+            });
+            if (c.slack !== null) {
+              html += c.slack >= 0
+                ? `<div class="calc-roll-line">The pirates then have <b style="color:#00ffaa">${fmtSec(c.slack)}</b> before the prey reaches its destination.</div>`
+                : `<div class="calc-roll-line"><b style="color:#ff5a4a">The prey reaches its destination ${fmtSec(-c.slack)} before the pirate is alongside.</b> It can still be shot at from Long and Medium range.</div>`;
+            }
+          }
+        } else {
+          html += `<div class="calc-roll-line" style="margin-top:6px">${who}: <b style="color:#ff5a4a">cannot get within Long range (${km(RANGE_LONG_KM)} km)</b> before the prey ${c.moving ? (c.kind === 'in' ? 'lands' : 'jumps out') : 'is gone'}. It ends about ${km(c.gapKm)} km away. There is no encounter.</div>`;
+        }
       } else {
-        html += '<div class="calc-note" style="margin-top:6px;color:#ffb020">Enter a Thrust of 1 or more to get travel times.</div>';
+        html += '<div class="calc-note" style="margin-top:6px;color:#ffb020">The pirate ship has no thrust (M-drive 0), so it cannot chase. Set the active spacecraft\'s M-drive or enter a thrust above.</div>';
       }
+      html += '<details class="dm-detail"><summary>How this was worked out</summary><div>The book supplies the spotting distance, the direction, and the closing table. The rest is this app\'s own model, on a straight line from the planet to the jump limit: the pirate spots the prey soon after arrival, so the prey is 50–100% of the way out and already moving; a prey heading in accelerates, flips at the right moment and lands at zero speed, and one heading out burns to the limit and jumps. The time to reach Long range is worked out from the ships\' thrusts (1G, 9.8 m/s², per point), without using the Distant and Very Long steps of the table. From Long range the book\'s Ship Movement table is used: Long 10, Medium 5, Short 2 and Close 1 thrust to reach the next band. The encounter itself (negotiation, sensors, comms jamming, the hunter response) starts at Long range. It is an estimate for random prey, not for a planned ambush.</div></details>';
       html += '</div>';
 
       html += `<div class="calc-block"><div class="calc-block-title">Prey Quirks</div>
@@ -337,23 +466,43 @@
     function rollHunter(silent) {
       const rows = hunterDMRows(), dm = TC.sum(rows.map(r => r[1]));
       const dice = [TC.d6(), TC.d6()], total = TC.sum(dice) + dm;
-      const r = { dice, dm, total, text: hunterResponse(total), time: null };
+      const r = { dice, dm, total, text: hunterResponse(total), time: null, launch: null };
+      if (enc.loc) {
+        const e = enc.loc.km, lim = enc.loc.limitKm - e;
+        if (total >= 6 && total <= 7) r.launch = { from: 'starport', km: e };
+        else if (total >= 8 && total <= 9) r.launch = lim < e ? { from: 'jump limit', km: lim, other: e } : { from: 'starport', km: e, other: lim };
+      }
       const t = hunterTime(total);
       if (t) {
         const dd = TC.rollDice(t[0]);
         const val = TC.sum(dd) * t[1] + t[2];
         r.time = '1D [' + dd.join('+') + ']' + (t[1] > 1 ? ' × ' + t[1] : '') + (t[2] ? ' + ' + t[2] : '') + ' = ' + val + ' ' + t[3];
       }
+      if (!enc.hunterThrust) enc.hunterThrust = 2;
       enc.hunter.push(r);
       if (!silent) { renderHunter(); TC.save(); }
+    }
+    function setHunterThrust(v) {
+      enc.hunterThrust = Math.max(1, parseFloat(v) || 2);
+      renderHunter(); TC.save();
+    }
+    // travel time of the hunter from where it launches to the encounter (accelerate, flip, brake)
+    function hunterTravel(r) {
+      if (!r.launch) return '';
+      const t = enc.hunterThrust || 2;
+      const hrs = 2 * Math.sqrt(r.launch.km * 1000 / (t * 9.8)) / 3600;
+      let txt = '<br>Launches from the <b>' + r.launch.from + '</b>, ' + r.launch.km.toLocaleString('en-US') + ' km from the encounter';
+      if (r.launch.other !== undefined) txt += ' (closer than the ' + (r.launch.from === 'starport' ? 'jump limit' : 'starport') + ' at ' + r.launch.other.toLocaleString('en-US') + ' km)';
+      return txt + '. At Thrust ' + t + ' it arrives in about <b>' + fmtHours(hrs) + '</b>.';
     }
     function renderHunter() {
       const out = document.getElementById('hunter-out');
       if (!enc.hunter) { out.innerHTML = ''; return; }
       const rows = hunterDMRows();
       let html = '<div class="calc-block"><div class="calc-block-title">Pirate Hunter Response</div>';
+      html += '<div class="calc-fields" style="margin-bottom:8px"><label>Hunter thrust<input type="number" id="hunt-thrust" min="1" value="' + (enc.hunterThrust || 2) + '" onchange="setHunterThrust(this.value)" /></label></div>';
       html += enc.hunter.map((r, i) => `<div class="good-row"><div class="calc-roll-line" style="margin:0">Roll ${i + 1}: 2D [${r.dice.join('+')}] ${TC.signed(r.dm)} = <b>${r.total}</b></div>
-        <div class="calc-note" style="margin:2px 0 0"><b>${r.text}</b>${r.time ? '<br>' + r.time : ''}</div></div>`).join('');
+        <div class="calc-note" style="margin:2px 0 0"><b>${r.text}</b>${r.time ? '<br>' + r.time : ''}${hunterTravel(r)}</div></div>`).join('');
       html += `<details class="dm-detail"><summary>Modifiers for the next roll (${TC.signed(TC.sum(rows.map(r => r[1])))})</summary>${rows.length ? rows.map(r => '<div>' + r[0] + ': <b>' + TC.signed(r[1]) + '</b></div>').join('') : '<div>No modifiers.</div>'}</details>`;
       html += '<div class="calc-note" style="margin:6px 0 0">The first roll is made when the attack begins. Roll again each time the previous result says to (for instance "roll again in one hour").</div>';
       html += '<div style="margin-top:6px"><button class="btn-outline" onclick="rollHunter()">Roll Hunter Response again</button></div></div>';
@@ -537,6 +686,7 @@
 
     TC.persist('piracy', () => enc, v => { enc = v || {}; }, ['prey-out', 'enc-out', 'hunter-out', 'cargo-out', 'loot-out']);
     TC.hereWorld('wld');
+    getPirateThrust();
   </script>
 </body>
 </html>
