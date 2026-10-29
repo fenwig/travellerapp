@@ -25,7 +25,7 @@
 
     <main class="page-main">
       <h1 class="page-title">PIRACY ENCOUNTER</h1>
-      <p class="calc-intro">Pirates of Drinax, Book 1, Chapter 3 (pp.13–23). <b>Step 1:</b> describe the system and find the prey. <b>Step 2:</b> Find Prey picks a ship of the right kind from the ship list (docs/Traveller Ships.xlsx) and fills in its details; change anything you like, then build the encounter: morale, distance, travel times, quirks, complications, the first pirate hunter response, cargo and loot. Results are shown only on this screen and are kept in this browser, not shared with other players. Cargo uses the house rule: 40% common goods, 40% trade goods, and 20% goods for the trade route you choose (or more trade goods if there is no route).</p>
+      <p class="calc-intro">Pirates of Drinax, Book 1, Chapter 3 (pp.13–23). <b>Step 1:</b> describe the system and find the prey. <b>Step 2:</b> Find Prey picks a ship of the right kind from the ship list and fills in its details (change the type, tonnage, thrust, hold or morale class here if you like), then build the encounter: morale, distance, travel times, quirks, complications, the first pirate hunter response, cargo and loot. Results are shown only on this screen and are kept in this browser, not shared with other players. Cargo uses the house rule: 40% common goods, 40% trade goods, and 20% goods for the trade route you choose (or more trade goods if there is no route).</p>
       <div id="form"></div>
       <div class="calc-actions">
         <button class="btn-primary" onclick="findPrey()">Find Prey</button>
@@ -86,8 +86,6 @@
       <div class="calc-block calc-row">
         <div class="calc-block-title">Ship</div>
         <div class="calc-fields">
-          <label>Ship from list<select id="ship-pick" onchange="pickShip(this.value)"><option value="">(none picked)</option></select></label>
-          <button class="btn-outline" type="button" onclick="anotherShip()">Another ship of this kind</button>
           <label>Type<input type="text" id="ship-type" placeholder="e.g. Far Trader" /></label>
           <label>Tonnage<input type="number" id="ship-tons" min="0" value="200" /></label>
           <label>Thrust<input type="number" id="ship-thrust" min="0" value="1" /></label>
@@ -95,10 +93,8 @@
           <label>Morale class<select id="mor-class"><option value="auto">Auto (by prey type)</option><option value="merchant">Merchant (1D+3)</option><option value="armed">Armed ship (1D+6)</option><option value="naval">Naval ship (1D+8)</option></select></label>
         </div>
       </div>
-      <div class="calc-block calc-row">
-        <div class="calc-block-title">Aboard</div>
-        <div class="calc-note" id="ship-note" style="margin:0 0 6px"></div>
-        <div class="calc-fields">
+      <div style="display:none">
+        <div>
           <label>Crew<input type="number" id="ship-crew" min="0" value="4" /></label>
           <label>High passengers<input type="number" id="pass-high" min="0" value="0" /></label>
           <label>Middle<input type="number" id="pass-mid" min="0" value="0" /></label>
@@ -154,7 +150,7 @@
     }
 
     // ── Step 1: find the prey ──
-    function findPrey() {
+    async function findPrey() {
       const f = encounterFlags();
       const dm1 = TC.sum(f.first.map(r => r[1])), dm2 = TC.sum(f.second.map(r => r[1]));
       const a = TC.d6(), b = TC.d6();
@@ -198,29 +194,48 @@
         const opts = Object.entries(convoy.kinds).filter(e => e[1] && e[0] !== 'Armed escort').map(e => e[0] === 'Rich Freighter' ? 'Medium Freighter' : e[0]);
         enc.prey.kind = opts.length ? opts[Math.floor(Math.random() * opts.length)] : 'Medium Freighter';
       } else if (PREY_SHIPS.some(s => s.kinds.includes(type))) enc.prey.kind = type;
-      fillShipList();
-      if (enc.prey.kind) anotherShip();
+      if (enc.prey.kind && type !== 'Convoy') await rollSpecial();
+      if (enc.prey.kind) {
+        if (enc.prey.special) fillShip(enc.prey.special.ship, true); else fillShip(pickPreyShip(enc.prey.kind), false);
+      }
       renderPrey();
       TC.save();
     }
 
     // ── prey ship from the ship list ──
-    const shipLabel = s => s.type + ' (' + s.tons + ' t)';
-    function fillShipList() {
-      const kind = enc.prey && enc.prey.kind;
-      const list = kind ? PREY_SHIPS.filter(s => s.kinds.includes(kind)) : [];
-      document.getElementById('ship-pick').innerHTML = '<option value="">(none picked)</option>' + list.map(s => '<option value="' + PREY_SHIPS.indexOf(s) + '">' + esc(shipLabel(s)) + '</option>').join('');
-    }
-    function anotherShip() {
-      const kind = enc.prey && enc.prey.kind;
-      const s = kind && pickPreyShip(kind);
-      if (!s) { document.getElementById('ship-note').textContent = 'No ship in the list for this kind of prey. Enter the ship by hand.'; return; }
-      document.getElementById('ship-pick').value = PREY_SHIPS.indexOf(s);
-      pickShip(PREY_SHIPS.indexOf(s));
-    }
     // Crew share staterooms two to a room; High passengers take 1 room, Middle 2 per room; Low use their own berths.
-    function pickShip(i) {
-      const s = PREY_SHIPS[i]; if (!s) return;
+    async function usedSpecialNames() {
+      const { data, error } = await supabaseClient.from('special_ships_used').select('name');
+      if (error) throw error;
+      return new Set(data.map(r => r.name));
+    }
+    // Chance that this prey is a named ship from the Drinaxian Companion; ships already used are out of the pool.
+    async function rollSpecial() {
+      const p = enc.prey;
+      const poolKind = p.rich ? 'Rich Freighter' : p.kind;
+      let used;
+      try { used = await usedSpecialNames(); }
+      catch (e) { p.specialErr = true; return; }
+      const pool = SPECIAL_SHIPS.filter(s => s.kinds.includes(poolKind) && !s.used && !used.has(s.type));
+      const chance = pool.length ? (SPECIAL_CHANCE[poolKind] || 0) : 0;
+      const roll = Math.floor(Math.random() * 100) + 1;
+      p.specialRoll = { poolKind, chance, roll, left: pool.length };
+      if (roll <= chance) {
+        const s = pool[Math.floor(Math.random() * pool.length)];
+        p.special = { name: s.type, ship: s, marked: false };
+      }
+    }
+    async function setSpecialUsed(name, on) {
+      const q = supabaseClient.from('special_ships_used');
+      const { error } = on ? await q.upsert({ name }) : await q.delete().eq('name', name);
+      if (error) throw error;
+    }
+    async function unuseSpecial() {
+      try { await setSpecialUsed(enc.prey.special.name, false); enc.prey.special.marked = false; renderPrey(); TC.save(); }
+      catch (e) { alert('Could not update the used list: ' + (e.message || e)); }
+    }
+    function fillShip(s, isSpecial) {
+      if (!s) return;
       const set = (id, v) => { document.getElementById(id).value = v; };
       const free = Math.max(0, s.srooms - Math.ceil(s.crew / 2));
       const liner = s.kinds.includes('Liner');
@@ -228,10 +243,9 @@
       const used = Math.round(free * Math.min(1, occ));
       const highRooms = Math.round(used / 3), midRooms = used - highRooms;
       const low = Math.round(s.low * Math.min(1, occ));
-      set('ship-type', s.type); set('ship-tons', s.tons); set('ship-thrust', s.thrust); set('ship-hold', s.cargo);
+      set('ship-type', s.type); set('ship-tons', s.tons); set('ship-thrust', s.thrust); set('ship-hold', isSpecial ? 0 : s.cargo);
       set('ship-crew', s.crew); set('pass-high', highRooms); set('pass-mid', midRooms * 2); set('pass-low', low);
       set('veh-count', 0); set('veh-tons', 0);
-      document.getElementById('ship-note').textContent = s.type + ': ' + s.srooms + ' staterooms, ' + s.crew + ' crew in ' + Math.ceil(s.crew / 2) + ' of them, ' + free + ' left for passengers (' + Math.round(Math.min(1, occ) * 100) + '% full), ' + s.low + ' low berths.' + (s.est ? ' Estimated because the list left them blank: ' + s.est.join(', ') + '.' : '');
     }
 
     function renderPrey() {
@@ -242,8 +256,9 @@
         `D66 [${p.dice[0]}, ${p.dice[1]}] with ${TC.signed(p.dm1)} to the first die and ${TC.signed(p.dm2)} to the second = ${p.key}`,
         p.rolls.replace(/^ &nbsp;·&nbsp; /, ''),
         'Conditions applied: ' + p.flags + '.',
+        p.specialRoll ? 'Special ship: ' + p.specialRoll.chance + '% chance for a ' + p.specialRoll.poolKind + ' (' + p.specialRoll.left + ' not yet used), rolled ' + p.specialRoll.roll + '.' : '',
         'Results beyond the table edge (first digit above 7, second above 8) use the last row or column.'
-      ], rows.length ? rows : null);
+      ].filter(Boolean), rows.length ? rows : null);
       if (p.type === 'None') {
         html += '<div class="calc-note" style="margin-top:10px"><b>No encounter.</b> There are no ships in the system the pirate has a chance of tackling right now, although this may change at any moment if a ship jumps in. Roll again later.</div>';
       } else {
@@ -252,6 +267,10 @@
           html += `<div class="calc-note" style="margin-top:10px"><b style="font-size:1.05rem">CONVOY</b><br>${Object.entries(k).filter(e => e[1]).map(e => e[1] + ' × ' + e[0]).join(', ')}. Enter the single ship you attack in Step 2.</div>`;
         } else {
           html += `<div class="calc-note" style="margin-top:10px"><b style="font-size:1.05rem">${p.type}</b>${p.rich ? ' <span class="good-badge">RICH FREIGHTER</span>' : ''}<br>${PREY_INFO[p.type] || ''}</div>`;
+          if (p.special) {
+            html += `<div class="calc-note" style="color:#ffb020"><b>Special encounter from the Drinaxian Companion: ${esc(p.special.name)}.</b> Its cargo is part of the encounter as written, so none is rolled.${p.special.marked ? ' It is marked as used. <button class="btn-outline" type="button" onclick="unuseSpecial()">Mark as not used</button>' : ' It will be marked as used when you build the encounter.'}</div>`;
+          }
+          if (p.specialErr) html += '<div class="calc-note" style="color:#ffb020">The used-ships list could not be read, so special ships are off. Run docs/special-ships-used.sql in Supabase.</div>';
         }
         if (['System Defence Boat', 'Q-Ship', 'Naval Patrol'].includes(p.type)) {
           html += '<div class="calc-note" style="color:#ffb020">This is not normal prey. It is armed, and destroying a naval vessel guarantees the pirates will be hunted down.</div>';
@@ -277,6 +296,10 @@
       };
       enc.ship = ship;
       enc.reversed = false;
+      if (enc.prey.special && !enc.prey.special.marked) {
+        try { await setSpecialUsed(enc.prey.special.name, true); enc.prey.special.marked = true; renderPrey(); }
+        catch (e) { alert('Could not mark the special ship as used: ' + (e.message || e)); }
+      }
       enc.world = { size: w.size, name: ship.world };
 
       // quirk and complication first (a Coward quirk changes the morale roll)
@@ -763,7 +786,6 @@
     }
 
     TC.persist('piracy', () => enc, v => { enc = v || {}; }, ['prey-out', 'enc-out', 'hunter-out', 'cargo-out', 'loot-out']);
-    fillShipList();
     TC.hereWorld('wld');
     getPirateThrust();
   </script>
