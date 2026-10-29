@@ -25,7 +25,7 @@
 
     <main class="page-main">
       <h1 class="page-title">PIRACY ENCOUNTER</h1>
-      <p class="calc-intro">Pirates of Drinax, Book 1, Chapter 3 (pp.13–23). <b>Step 1:</b> describe the system and find the prey. <b>Step 2:</b> enter the prey ship you decide on and build the encounter: morale, distance, travel times, quirks, complications, the first pirate hunter response, cargo and loot. Results are shown only on this screen and are kept in this browser, not shared with other players. Cargo uses the house rule: 40% common goods, 40% trade goods, 20% Imperium/Hierate goods.</p>
+      <p class="calc-intro">Pirates of Drinax, Book 1, Chapter 3 (pp.13–23). <b>Step 1:</b> describe the system and find the prey. <b>Step 2:</b> enter the prey ship you decide on and build the encounter: morale, distance, travel times, quirks, complications, the first pirate hunter response, cargo and loot. Results are shown only on this screen and are kept in this browser, not shared with other players. Cargo uses the house rule: 40% common goods, 40% trade goods, and 20% goods for the trade route you choose (or more trade goods if there is no route).</p>
       <div id="form"></div>
       <div class="calc-actions">
         <button class="btn-primary" onclick="findPrey()">Find Prey</button>
@@ -50,27 +50,14 @@
   <script src="../js/trade-goods.js"></script>
   <script src="../js/piracy-data.js"></script>
   <script>
-    const TRADE_CODES = [
-      ['Ag','Agricultural'], ['As','Asteroids'], ['Ba','Barren'], ['De','Desert'], ['Fl','Fluid Oceans'],
-      ['Ga','Garden'], ['Hi','High Population'], ['Ht','High Tech'], ['Ic','Ice-Capped'], ['In','Industrial'],
-      ['Lo','Low Population'], ['Lt','Low Tech'], ['Na','Non-Agricultural'], ['Ni','Non-Industrial'],
-      ['Po','Poor'], ['Ri','Rich'], ['Va','Vacuum'], ['Wa','Water World']
-    ];
-    const codeSelects = Array.from({ length: 5 }, (_, i) =>
-      `<select id="tc-${i}" style="width:165px"><option value="">—</option>${TRADE_CODES.map(c => `<option value="${c[0]}" title="${c[1]}">${c[0]} – ${c[1]}</option>`).join('')}</select>`
-    ).join('');
     const AUTO = ['Auto', 'Yes', 'No'];
 
     document.getElementById('form').innerHTML = `
       ${TC.worldBlock('wld', 'System')}
-      <div class="calc-block calc-row" style="flex-wrap:wrap">
-        <div class="calc-block-title">Trade Codes</div>
-        <div class="calc-fields" style="flex-wrap:wrap">${codeSelects}</div>
-      </div>
       <div class="calc-block calc-row">
         <div class="calc-block-title">Not in the profile</div>
         <div class="calc-fields">
-          <label>On the Imperium–Hierate trade route?<select id="f-route">${TC.opts(['No','Yes'], 'No')}</select></label>
+          <label>Trade route<select id="f-route">${TC.opts(['None','Imperium → Hierate','Hierate → Imperium'], 'None')}</select></label>
           <label>Capital or other key system?<select id="f-key">${TC.opts(['No','Yes'], 'No')}</select></label>
           <label>Naval base<select id="f-naval">${TC.opts(['None','Within 6 parsecs','In this system'], 'None')}</select></label>
         </div>
@@ -127,15 +114,13 @@
     // ── world factors ──
     function encounterFlags() {
       const w = TC.readWorld('wld');
-      const codes = new Set();
-      for (let i = 0; i < 5; i++) { const v = document.getElementById('tc-' + i).value; if (v) codes.add(v); }
-      const route = document.getElementById('f-route').value === 'Yes';
+      const routeName = document.getElementById('f-route').value;
+      const route = routeName !== 'None';
       const capital = document.getElementById('f-key').value === 'Yes';
       const naval = document.getElementById('f-naval').value;
       const pick = (id, auto) => { const v = document.getElementById(id).value; return v === 'Yes' ? true : v === 'No' ? false : auto; };
-      const busy = ['Ht','Hi','In','Ag','Ri'].some(c => codes.has(c)) || route;
       const backwater = pick('o-backwater', ['X','E'].includes(w.port) && !route);
-      const high = pick('o-high', ['A','B'].includes(w.port) && busy);
+      const high = pick('o-high', ['A','B'].includes(w.port) && route);
       const dangerous = pick('o-dangerous', w.zone !== 'Green' || w.law <= 3);
       const secure = pick('o-secure', (w.law >= 7 && w.tl >= 8) || naval !== 'None');
       const navalHere = naval === 'In this system';
@@ -153,7 +138,7 @@
       if (secure) hunter.push(['Secure world', 1]);
       if (capital) hunter.push(['Capital or other key system', 2]);
       if (navalHere) hunter.push(['Naval base in the system', 2]);
-      return { w, first, second, hunter, summary: [backwater && 'backwater', high && 'high-traffic', dangerous && 'dangerous', secure && 'secure', capital && 'key system', navalHere && 'naval base here']
+      return { w, routeName, first, second, hunter, summary: [backwater && 'backwater', high && 'high-traffic', dangerous && 'dangerous', secure && 'secure', capital && 'key system', navalHere && 'naval base here']
         .filter(Boolean).join(', ') || 'none of the special conditions' };
     }
 
@@ -189,7 +174,6 @@
           kinds[r <= 2 ? 'Medium Freighter' : r <= 4 ? 'Heavy Freighter' : r === 5 ? 'Rich Freighter' : 'Armed escort']++;
         }
         convoy = { count, kinds };
-        extra = ' &nbsp;·&nbsp; Convoy size 2D [' + n.join('+') + '] = ' + count + ' ships';
       }
 
       enc = { prey: { type, rich, convoy, key, dice: [a, b], dm1, dm2, rolls: extra, flags: f.summary, firstRows: f.first, secondRows: f.second, hunterRows: f.hunter } };
@@ -216,10 +200,11 @@
       if (p.type === 'None') {
         html += '<div class="calc-note" style="margin-top:10px"><b>No encounter.</b> There are no ships in the system the pirate has a chance of tackling right now, although this may change at any moment if a ship jumps in. Roll again later.</div>';
       } else {
-        html += `<div class="calc-note" style="margin-top:10px"><b style="font-size:1.05rem">${p.type}</b>${p.rich ? ' <span class="good-badge">RICH FREIGHTER</span>' : ''}<br>${PREY_INFO[p.type] || ''}</div>`;
         if (p.convoy) {
           const k = p.convoy.kinds;
-          html += `<div class="calc-note"><b>Convoy:</b> ${Object.entries(k).filter(e => e[1]).map(e => e[1] + ' × ' + e[0]).join(', ')}. <span style="color:#4a9ab8">(The split between ship types is this app's own, as the book gives no table.)</span> Enter the single ship you attack in Step 2.</div>`;
+          html += `<div class="calc-note" style="margin-top:10px"><b style="font-size:1.05rem">CONVOY</b><br>${Object.entries(k).filter(e => e[1]).map(e => e[1] + ' × ' + e[0]).join(', ')}. Enter the single ship you attack in Step 2.</div>`;
+        } else {
+          html += `<div class="calc-note" style="margin-top:10px"><b style="font-size:1.05rem">${p.type}</b>${p.rich ? ' <span class="good-badge">RICH FREIGHTER</span>' : ''}<br>${PREY_INFO[p.type] || ''}</div>`;
         }
         if (['System Defence Boat', 'Q-Ship', 'Naval Patrol'].includes(p.type)) {
           html += '<div class="calc-note" style="color:#ffb020">This is not normal prey. It is armed, and destroying a naval vessel guarantees the pirates will be hunted down.</div>';
@@ -269,7 +254,9 @@
       rollHunter(true);
 
       // cargo + loot
-      enc.lots = ship.hold > 0 ? makeCargo(ship.hold, enc.prey.rich) : [];
+      const safeN = Math.max(1, Math.ceil(ship.tons / 100)), safeDice = TC.rollDice(safeN);
+      enc.safeTime = { n: safeN, dice: safeDice, hours: TC.sum(safeDice) };
+      enc.lots = ship.hold > 0 ? makeCargo(ship.hold, enc.prey.rich, f.routeName) : [];
       enc.hunterDone = true;
 
       renderEncounter(); renderHunter(); renderCargo(); renderLoot();
@@ -402,7 +389,7 @@
       const first = Math.round(total * a / (a + b));
       return { first, second: total - first, text: 'split 1D [' + a + '] : 1D [' + b + ']' };
     }
-    function makeCargo(hold, rich) {
+    function makeCargo(hold, rich, route) {
       const pctDie = TC.d6();
       const pct = Math.min(100, pctDie * 10 + 40);
       const filled = Math.round(hold * pct / 100);
@@ -424,9 +411,10 @@
       pair(commonRoller, common, 'common', 'Common goods (40%)');
       pair(tradeRoller, trade, 'trade', 'Trade goods (40%)');
       if (special > 0) {
-        lots.push(Object.assign(rollGood(ihRoller, rich), { lot: 'special', label: 'Imperium → Hierate goods (20%)', tons: special, loaded: 0, splitText: '' }));
-        lots.push(Object.assign(rollGood(hiRoller, rich), { lot: 'special', label: 'Hierate → Imperium goods (20%)', tons: special, loaded: 0, splitText: '' }));
+        const roller = route === 'Imperium → Hierate' ? ihRoller : route === 'Hierate → Imperium' ? hiRoller : tradeRoller;
+        lots.push(Object.assign(rollGood(roller, rich), { lot: 'special', label: route, tons: special, loaded: 0, splitText: '' }));
       }
+      lots.meta.route = route;
       return Object.assign({ meta: lots.meta }, { items: lots });
     }
 
@@ -452,7 +440,7 @@
       if (!c || !c.items) { out.innerHTML = ''; return; }
       const m = c.meta;
       let html = '<div class="calc-result-title" style="margin-top:20px">CARGO</div>';
-      html += `<div class="calc-note">Hold of ${m.hold} tons, filled to 1D × 10 + 40% = 1D [${m.pctDie}] → <b>${m.pct}%</b> = <b>${m.filled} tons</b>: ${m.common} tons common goods, ${m.trade} tons trade goods, ${m.special} tons Imperium/Hierate goods. Values use each good's base price per ton${enc.prey.rich ? '; as a Rich Freighter, every item was rolled twice and the more valuable kept' : ''}.</div>`;
+      html += `<div class="calc-note">Hold of ${m.hold} tons, filled to 1D × 10 + 40% = 1D [${m.pctDie}] → <b>${m.pct}%</b> = <b>${m.filled} tons</b>: ${m.common} tons common goods, ${m.trade} tons trade goods, ${m.special} tons ${m.route === 'None' ? 'more trade goods (no trade route)' : m.route + ' goods'}. Values use each good's base price per ton${enc.prey.rich ? '; as a Rich Freighter, every item was rolled twice and the more valuable kept' : ''}.</div>`;
       const sec = (title, lot, note) => {
         const rows = c.items.map((it, i) => ({ it, i })).filter(x => x.it.lot === lot);
         if (!rows.length) return '';
@@ -460,7 +448,7 @@
       };
       html += sec('Common Goods — 40% of the cargo', 'common');
       html += sec('Trade Goods — 40% of the cargo', 'trade');
-      html += sec('Imperium / Hierate Goods — 20% of the cargo', 'special', `Two alternatives, one for each direction of trade. Each shows the full ${m.special} tons; take from one or split between them, up to ${m.special} tons in all.`);
+      html += sec(m.route === 'None' ? 'Trade Goods — last 20% of the cargo' : m.route + ' Goods — last 20% of the cargo', 'special');
       if (!c.items.length) html += '<div class="calc-note">The hold is empty.</div>';
       html += `<div class="calc-block calc-row">
         <div class="calc-block-title">Loot the Cargo</div>
@@ -495,11 +483,6 @@
       const picks = takePicks();
       if (!picks.length) { loadMessage('Enter how many tons to take of at least one good first.', false); return; }
       const total = picks.reduce((t, p) => t + p.n, 0);
-      const specialTaken = picks.filter(p => p.it.lot === 'special').reduce((t, p) => t + p.n, 0);
-      const specialLoaded = enc.lots.items.filter(i => i.lot === 'special').reduce((t, i) => t + (i.loaded || 0), 0);
-      if (specialTaken + specialLoaded > enc.lots.meta.special) {
-        loadMessage('The Imperium/Hierate goods are one lot of ' + enc.lots.meta.special + ' tons shared between the two directions. You selected more than that in total.', false); return;
-      }
       try {
         const ship = await TC.activeShip();
         const { data: cargo, error: ce } = await supabaseClient.from('spacecraft_cargo').select('tonnage').eq('spacecraft_id', ship.id);
@@ -542,7 +525,8 @@
       const veh = s.vehicles * s.vehTons * LOOT.vehiclePerTon;
       const row = (name, val, how, fence) => `<div class="good-row"><div class="good-main"><b>${name}</b> <span style="color:#00ffaa;font-weight:600">${TC.cr(val)}</span>${fence ? '<span class="good-badge">must be fenced</span>' : ''}</div><div class="good-ex">${how}</div></div>`;
       let html = '<div class="calc-result-title" style="margin-top:20px">OTHER LOOT</div><div class="calc-block">';
-      html += row("Ship's safe (treasure)", safe, `Cr20,000 per 100 tons of ship (${s.tons} tons). Finding it takes a Difficult (10+) Recon check (1D hours, INT) per 100 tons of ship.`, false);
+      const st = enc.safeTime;
+      html += row("Ship's safe (treasure)", safe, `Cr20,000 per 100 tons of ship (${s.tons} tons). The players must succeed on a Difficult (10+) Recon check (INT). If they do, finding it takes 1D hours per 100 tons of ship: ${st ? st.n + 'D [' + st.dice.join('+') + '] = <b>' + st.hours + ' hour' + (st.hours === 1 ? '' : 's') + '</b>.' : ''}`, false);
       html += row('Passenger treasure', pass, `Cr10,000 per high, Cr5,000 per middle, Cr1,000 per low passenger. Looting takes 1D minutes per passenger (unless it is in the ship's safe).`, false);
       html += row('Crew equipment', equip, `Cr1,000 per crew member. Takes 1D minutes per crew member.`, true);
       html += row('Vehicles', veh, `${s.vehicles} × ${s.vehTons} tons at Cr250,000 per ton (a 20-ton launch is worth MCr5). Overriding security: Difficult (10+) Electronics (computers), 1D × 10 minutes. Flying it across: Average (8+) Pilot, 1D minutes.`, true);
