@@ -399,42 +399,38 @@
       html += '</div>';
 
       const c = enc.chase, km = n => Math.round(n).toLocaleString('en-US');
-      const dirText = c.kind === 'in' ? 'heading towards the planet to land' : c.kind === 'out' ? 'heading out to the jump diameter limit' : 'stationary, or heading elsewhere (treated as at rest)';
-      html += `<div class="calc-block"><div class="calc-block-title">Distance, Direction and Intercept</div>
-        <div class="calc-roll-line"><b>Spotting the prey:</b> the ships are 3D [${c.sepDice.join('+')}] = ${TC.sum(c.sepDice)} × ${km(c.sepDiam)} km (planet diameter) = <b>${km(c.sepKm)} km</b> apart, the pirate on the jump limit side (it has just arrived by jump).</div>
-        <div class="calc-roll-line">Direction of travel: 1D [${c.dirDie}] → prey is <b>${dirText}</b></div>
-        <div class="calc-roll-line">Prey position: (1D [${c.posDie}] + 4) ÷ 10${c.kind === 'out' && c.tenths < c.posDie + 4 ? ' (held at 90%, since a prey heading out from the limit would already have jumped)' : ''} of the way to the jump limit = <b>${km(c.x0 / 1000)} km from the planet</b> (limit ${km(c.limitKm)} km)${c.moving ? ', under way for 1D [' + c.burnDie + '] × 10 = ' + c.burnMin + ' minutes at Thrust ' + s.thrust + ' (' + (c.v0 / 1000).toFixed(1) + ' km/s)' : ''}</div>`;
+      const dirText = c.kind === 'in' ? 'heading towards the planet' : c.kind === 'out' ? 'heading out to the jump limit' : 'stationary';
+      const dest = c.kind === 'in' ? 'land' : 'reach the jump limit';
+      const L = t => '<div class="calc-roll-line">' + t + '</div>';
+      html += '<div class="calc-block"><div class="calc-block-title">Distance, Direction and Intercept</div>';
+      html += L(`<b>Spotting the prey:</b> ${km(c.sepKm)} km apart. The prey is ${dirText}.`);
+      html += L(`The prey is ${km(c.x0 / 1000)} km from the planet${c.moving ? ' and will ' + dest + ' in <b>' + fmtSec(c.tDest) + '</b>' : ''}.`);
       if (c.pirateThrust > 0) {
-        const who = 'Pirate' + (c.pirateName ? ' (' + esc(c.pirateName) + ')' : '') + ' at Thrust ' + c.pirateThrust + ', starting at rest';
         if (c.tRange !== null) {
-          html += `<div class="calc-roll-line" style="margin-top:6px">${who}, closes to Long range (${km(RANGE_LONG_KM)} km) in <b>${fmtSec(c.tRange)}</b>. <b style="color:#00e5ff">THE ENCOUNTER STARTS HERE. Every time below runs from this moment.</b></div>
-            <div class="calc-roll-line">At that moment the prey is <b>${km(c.rs.xq / 1000)} km from the planet</b>${c.moving ? ', moving at <b>' + (Math.abs(c.rs.vq) / 1000).toFixed(1) + ' km/s</b>' : ''}.</div>`;
+          html += L(`The pirate closes to Long range in <b>${fmtSec(c.tRange)}</b>. <b style="color:#00e5ff">THE ENCOUNTER STARTS HERE.</b> The times below run from this moment.`);
           if (c.moving) {
-            html += `<div class="calc-roll-line">Prey's time to its destination (${c.kind === 'in' ? 'touching down, with the turnover' : 'the jump limit'}): <b>${fmtSec(c.destLeft)}</b></div>
-              <div class="calc-roll-line">If it reverses instead (${c.kind === 'in' ? 'back out to the jump limit' : 'down to the planet'}, including braking and turning around): <b>${fmtSec(c.oppLeft)}</b></div>`;
+            html += L(`The prey will ${dest} in <b>${fmtSec(c.destLeft)}</b>. If it reverses course: <b>${fmtSec(c.oppLeft)}</b>.`);
           }
           const cl = c.close;
-          html += `<div class="calc-roll-line" style="margin-top:6px"><b>Closing the range</b> (Ship Movement table, Core Rulebook p.166; thrust is applied in 6-minute rounds): ${cl.fleeing ? 'the prey is running away, so net thrust is ' + c.pirateThrust + ' − ' + s.thrust : cl.approaching ? 'the ships are heading towards each other, so net thrust is ' + c.pirateThrust + ' + ' + s.thrust : 'net thrust is the pirate\'s ' + c.pirateThrust} = <b>${cl.net}</b></div>`;
           if (cl.net <= 0) {
-            html += `<div class="calc-roll-line"><b style="color:#ff5a4a">The pirate cannot close the range.</b> The prey is at least as fast.</div>`;
+            html += L('<b style="color:#ff5a4a">The pirate cannot close the range.</b> The prey is at least as fast.');
           } else {
             cl.steps.forEach(st => {
               const min = st.rounds * 6, late = c.destLeft !== null && min * 60 > c.destLeft;
-              html += `<div class="calc-roll-line" style="padding-left:14px"><span${late ? ' style="color:#ff5a4a"' : ''}>${st.reach === 'Adjacent' ? '<b>Adjacent range (boarding position)</b>' : st.reach + ' range'}: ${Math.round(st.rounds * 10) / 10} rounds (${fmtHours(min / 60)}) from the start of the encounter${late ? ', after the prey has reached its destination' : ''}</span></div>`;
+              html += `<div class="calc-roll-line" style="padding-left:14px"><span${late ? ' style="color:#ff5a4a"' : ''}>${st.reach === 'Adjacent' ? '<b>Adjacent (boarding position)</b>' : st.reach + ' range'}: <b>${fmtHours(min / 60)}</b>${late ? ' (after the prey has ' + (c.kind === 'in' ? 'landed' : 'jumped') + ')' : ''}</span></div>`;
             });
             if (c.slack !== null) {
               html += c.slack >= 0
-                ? `<div class="calc-roll-line">The pirates then have <b style="color:#00ffaa">${fmtSec(c.slack)}</b> before the prey reaches its destination.</div>`
-                : `<div class="calc-roll-line"><b style="color:#ff5a4a">The prey reaches its destination ${fmtSec(-c.slack)} before the pirate is alongside.</b> It can still be shot at from Long and Medium range.</div>`;
+                ? L(`Time to spare once alongside: <b style="color:#00ffaa">${fmtSec(c.slack)}</b>.`)
+                : L(`<b style="color:#ff5a4a">The prey ${c.kind === 'in' ? 'lands' : 'jumps out'} ${fmtSec(-c.slack)} before the pirate is alongside.</b>`);
             }
           }
         } else {
-          html += `<div class="calc-roll-line" style="margin-top:6px">${who}: <b style="color:#ff5a4a">cannot get within Long range (${km(RANGE_LONG_KM)} km)</b> before the prey ${c.moving ? (c.kind === 'in' ? 'lands' : 'jumps out') : 'is gone'}. It ends about ${km(c.gapKm)} km away. There is no encounter.</div>`;
+          html += L(`<b style="color:#ff5a4a">The pirate cannot reach Long range before the prey ${c.moving ? (c.kind === 'in' ? 'lands' : 'jumps out') : 'is gone'}.</b> There is no encounter.`);
         }
       } else {
         html += '<div class="calc-note" style="margin-top:6px;color:#ffb020">The pirate ship has no thrust (M-drive 0), so it cannot chase. Set the active spacecraft\'s M-drive or enter a thrust above.</div>';
       }
-      html += '<details class="dm-detail"><summary>How this was worked out</summary><div>The book supplies the spotting distance, the direction, and the closing table. The rest is this app\'s own model, on a straight line from the planet to the jump limit: the pirate spots the prey soon after arrival, so the prey is 50–100% of the way out and already moving; a prey heading in accelerates, flips at the right moment and lands at zero speed, and one heading out burns to the limit and jumps. The time to reach Long range is worked out from the ships\' thrusts (1G, 9.8 m/s², per point), without using the Distant and Very Long steps of the table. From Long range the book\'s Ship Movement table is used: Long 10, Medium 5, Short 2 and Close 1 thrust to reach the next band. The encounter itself (negotiation, sensors, comms jamming, the hunter response) starts at Long range. It is an estimate for random prey, not for a planned ambush.</div></details>';
       html += '</div>';
 
       html += `<div class="calc-block"><div class="calc-block-title">Prey Quirks</div>
