@@ -25,7 +25,7 @@
 
     <main class="page-main">
       <h1 class="page-title">PIRACY ENCOUNTER</h1>
-      <p class="calc-intro">Pirates of Drinax, Book 1, Chapter 3 (pp.13–23). <b>Step 1:</b> describe the system and find the prey. <b>Step 2:</b> enter the prey ship you decide on and build the encounter: morale, distance, travel times, quirks, complications, the first pirate hunter response, cargo and loot. Results are shown only on this screen and are kept in this browser, not shared with other players. Cargo uses the house rule: 40% common goods, 40% trade goods, and 20% goods for the trade route you choose (or more trade goods if there is no route).</p>
+      <p class="calc-intro">Pirates of Drinax, Book 1, Chapter 3 (pp.13–23). <b>Step 1:</b> describe the system and find the prey. <b>Step 2:</b> Find Prey picks a ship of the right kind from the ship list (docs/Traveller Ships.xlsx) and fills in its details; change anything you like, then build the encounter: morale, distance, travel times, quirks, complications, the first pirate hunter response, cargo and loot. Results are shown only on this screen and are kept in this browser, not shared with other players. Cargo uses the house rule: 40% common goods, 40% trade goods, and 20% goods for the trade route you choose (or more trade goods if there is no route).</p>
       <div id="form"></div>
       <div class="calc-actions">
         <button class="btn-primary" onclick="findPrey()">Find Prey</button>
@@ -49,6 +49,7 @@
   <script src="../js/trade-calc.js"></script>
   <script src="../js/trade-goods.js"></script>
   <script src="../js/piracy-data.js"></script>
+  <script src="../js/ships-data.js"></script>
   <script>
     const AUTO = ['Auto', 'Yes', 'No'];
 
@@ -85,6 +86,8 @@
       <div class="calc-block calc-row">
         <div class="calc-block-title">Ship</div>
         <div class="calc-fields">
+          <label>Ship from list<select id="ship-pick" onchange="pickShip(this.value)"><option value="">(none picked)</option></select></label>
+          <button class="btn-outline" type="button" onclick="anotherShip()">Another ship of this kind</button>
           <label>Type<input type="text" id="ship-type" placeholder="e.g. Far Trader" /></label>
           <label>Tonnage<input type="number" id="ship-tons" min="0" value="200" /></label>
           <label>Thrust<input type="number" id="ship-thrust" min="0" value="1" /></label>
@@ -94,6 +97,7 @@
       </div>
       <div class="calc-block calc-row">
         <div class="calc-block-title">Aboard</div>
+        <div class="calc-note" id="ship-note" style="margin:0 0 6px"></div>
         <div class="calc-fields">
           <label>Crew<input type="number" id="ship-crew" min="0" value="4" /></label>
           <label>High passengers<input type="number" id="pass-high" min="0" value="0" /></label>
@@ -189,13 +193,45 @@
       document.getElementById('cargo-out').innerHTML = '';
       document.getElementById('loot-out').innerHTML = '';
 
-      if (type !== 'None') {
-        const st = document.getElementById('ship-type');
-        if (!st.value || st.dataset.auto === '1') { st.value = type; st.dataset.auto = '1'; }
-        st.oninput = () => { st.dataset.auto = '0'; };
-      }
+      enc.prey.kind = null;
+      if (type === 'Convoy') {
+        const opts = Object.entries(convoy.kinds).filter(e => e[1] && e[0] !== 'Armed escort').map(e => e[0] === 'Rich Freighter' ? 'Medium Freighter' : e[0]);
+        enc.prey.kind = opts.length ? opts[Math.floor(Math.random() * opts.length)] : 'Medium Freighter';
+      } else if (PREY_SHIPS.some(s => s.kinds.includes(type))) enc.prey.kind = type;
+      fillShipList();
+      if (enc.prey.kind) anotherShip();
       renderPrey();
       TC.save();
+    }
+
+    // ── prey ship from the ship list ──
+    const shipLabel = s => s.type + ' (' + s.tons + ' t)';
+    function fillShipList() {
+      const kind = enc.prey && enc.prey.kind;
+      const list = kind ? PREY_SHIPS.filter(s => s.kinds.includes(kind)) : [];
+      document.getElementById('ship-pick').innerHTML = '<option value="">(none picked)</option>' + list.map(s => '<option value="' + PREY_SHIPS.indexOf(s) + '">' + esc(shipLabel(s)) + '</option>').join('');
+    }
+    function anotherShip() {
+      const kind = enc.prey && enc.prey.kind;
+      const s = kind && pickPreyShip(kind);
+      if (!s) { document.getElementById('ship-note').textContent = 'No ship in the list for this kind of prey. Enter the ship by hand.'; return; }
+      document.getElementById('ship-pick').value = PREY_SHIPS.indexOf(s);
+      pickShip(PREY_SHIPS.indexOf(s));
+    }
+    // Crew share staterooms two to a room; High passengers take 1 room, Middle 2 per room; Low use their own berths.
+    function pickShip(i) {
+      const s = PREY_SHIPS[i]; if (!s) return;
+      const set = (id, v) => { document.getElementById(id).value = v; };
+      const free = Math.max(0, s.srooms - Math.ceil(s.crew / 2));
+      const liner = s.kinds.includes('Liner');
+      const occ = liner ? 0.4 + TC.d6() * 0.1 : TC.d6() * 0.15;      // share of the berths in use
+      const used = Math.round(free * Math.min(1, occ));
+      const highRooms = Math.round(used / 3), midRooms = used - highRooms;
+      const low = Math.round(s.low * Math.min(1, occ));
+      set('ship-type', s.type); set('ship-tons', s.tons); set('ship-thrust', s.thrust); set('ship-hold', s.cargo);
+      set('ship-crew', s.crew); set('pass-high', highRooms); set('pass-mid', midRooms * 2); set('pass-low', low);
+      set('veh-count', 0); set('veh-tons', 0);
+      document.getElementById('ship-note').textContent = s.type + ': ' + s.srooms + ' staterooms, ' + s.crew + ' crew in ' + Math.ceil(s.crew / 2) + ' of them, ' + free + ' left for passengers (' + Math.round(Math.min(1, occ) * 100) + '% full), ' + s.low + ' low berths.' + (s.est ? ' Estimated because the list left them blank: ' + s.est.join(', ') + '.' : '');
     }
 
     function renderPrey() {
@@ -727,6 +763,7 @@
     }
 
     TC.persist('piracy', () => enc, v => { enc = v || {}; }, ['prey-out', 'enc-out', 'hunter-out', 'cargo-out', 'loot-out']);
+    fillShipList();
     TC.hereWorld('wld');
     getPirateThrust();
   </script>
