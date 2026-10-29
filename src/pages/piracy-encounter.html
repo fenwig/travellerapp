@@ -586,7 +586,7 @@
       const hrs = Math.sqrt(2 * dm / (t * 9.8)) / 3600;
       let calc = 'Launches ' + r.launch.km.toLocaleString('en-US') + ' km from the encounter';
       if (r.launch.other !== undefined) calc += ' (closer than the ' + (r.launch.from === 'starport' ? 'jump limit' : 'starport') + ' at ' + r.launch.other.toLocaleString('en-US') + ' km)';
-      return { text: 'Launches from the <b>' + r.launch.from + '</b> and is picked up at <b>Very Long range</b> ' + (dm ? 'in about <b>' + fmtHours(hrs) + '</b>.' : '<b>as soon as it launches</b>.') + ', calc: calc + '; hunter Thrust ' + t + '; straight burn to 50,000 km from the encounter.' };
+      return { text: 'Launches from the <b>' + r.launch.from + '</b> and is picked up at <b>Very Long range</b> ' + (dm ? 'in about <b>' + fmtHours(hrs) + '</b>.' : '<b>as soon as it launches</b>.'), calc: calc + '; hunter Thrust ' + t + '; straight burn to 50,000 km from the encounter.' };
     }
     function renderHunter() {
       const out = document.getElementById('hunter-out');
