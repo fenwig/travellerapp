@@ -138,8 +138,9 @@
       const success = total >= 8;
 
       let html = '<div class="calc-result-title">FIND A ' + t.label.toUpperCase() + '</div><div class="calc-block">';
-      html += `<div class="calc-roll-line">${t.skill} check: 2D [${dice.join('+')}] ${TC.signed(dm)} = <b>${total}</b> vs 8+ → <b style="color:${success ? '#00ffaa' : '#ff5a4a'}">${success ? 'SUCCESS' : 'FAILED'}</b>
-        &nbsp;·&nbsp; Took 1D [${time}] = <b>${time} ${t.unit === 'days' ? (time === 1 ? 'day' : 'days') : (time === 1 ? 'hour' : 'hours')}</b></div>${TC.dmList(rows)}`;
+      const timeText = time + ' ' + (t.unit === 'days' ? (time === 1 ? 'day' : 'days') : (time === 1 ? 'hour' : 'hours'));
+      const wk = [`${t.skill} check: 2D [${dice.join('+')}] ${TC.signed(dm)} = ${total} vs 8+ → ${success ? 'success' : 'failed'}`, `Time taken: 1D [${time}] = ${timeText}`];
+      html += `<div class="calc-roll-line"><b style="color:${success ? '#00ffaa' : '#ff5a4a'}">${success ? 'The search succeeded' : 'The search failed'}</b>. It took <b>${timeText}</b>.</div>`;
 
       if (success) {
         const b = { kind: t.key, label: t.label, illegal: t.illegal, online: t.online, broker: t.broker };
@@ -147,9 +148,12 @@
           const bd = [TC.d6(), TC.d6()];
           const sk = Math.floor(TC.sum(bd) / 3);
           b.brokerSkill = sk; b.brokerSkillName = t.brokerSkill; b.fee = t.fee; b.negotiationDM = 2;
-          html += `<div class="calc-note" style="margin-top:10px"><b>${t.label} found.</b> Their ${t.brokerSkill} skill: 2D [${bd.join('+')}] = ${TC.sum(bd)} ÷ 3 (round down) = <b>${sk}</b>.
+          wk.push(`Broker's ${t.brokerSkill} skill: 2D [${bd.join('+')}] = ${TC.sum(bd)} ÷ 3 (round down) = ${sk}`);
+          html += TC.workings(wk, rows);
+          html += `<div class="calc-note" style="margin-top:10px"><b>${t.label} found.</b> Their ${t.brokerSkill} skill is <b>${sk}</b>.
             They charge <b>${t.fee}%</b> of the gross proceeds, settled after the sale, and add <b>DM+2</b> to negotiations.</div>`;
         } else {
+          html += TC.workings(wk, rows);
           html += `<div class="calc-note" style="margin-top:10px"><b>${t.label} found.</b> You negotiate the deals yourself.</div>`;
         }
         html += t.illegal
@@ -157,6 +161,7 @@
           : '<div class="calc-note">This contact deals in legal goods only. Search for an illicit buyer or broker to sell illegal cargo.</div>';
         sell.buyer = b;
       } else {
+        html += TC.workings(wk, rows);
         html += '<div class="calc-empty" style="margin-top:10px">No ' + t.label.toLowerCase() + ' found. You can search again (each attempt this month is DM−1).</div>';
         sell.buyer = null;
       }
@@ -253,7 +258,7 @@
           ${o.illegal ? '<span class="good-badge" style="color:#ff5a4a">ILLEGAL</span>' : ''}
           ${o.held > 0 ? '<label class="good-buy">Sell <input type="number" id="sell-' + o.rowId + '" min="0" max="' + o.held + '" value="0" oninput="updateSellTotals()" /> tons</label>' : '<span class="good-badge">sold out</span>'}
         </div>
-        <details class="dm-detail"><summary>How this offer was worked out</summary><div>${o.rollText}</div></details>
+        <details class="dm-detail"><summary>How this was worked out</summary><div>${o.rollText}</div></details>
       </div>`;
     }
 

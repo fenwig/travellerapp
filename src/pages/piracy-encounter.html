@@ -62,6 +62,13 @@
           <label>Naval base<select id="f-naval">${TC.opts(['None','Within 6 parsecs','In this system'], 'None')}</select></label>
         </div>
       </div>
+      <div class="calc-block calc-row">
+        <div class="calc-block-title">Pirate ship</div>
+        <div class="calc-fields">
+          <label>Thrust (M-drive)<input type="number" id="pirate-thrust" min="0" value="2" /></label>
+          <span class="calc-note" style="margin:0">Taken from the active spacecraft's M-drive each time you build; used only if there is no single active ship.</span>
+        </div>
+      </div>
       <details class="dm-detail" style="margin-bottom:8px"><summary>Adjust the automatic judgements (backwater, dangerous, high-traffic, secure)</summary>
         <div class="calc-block calc-row" style="margin-top:6px">
           <div class="calc-fields">
@@ -83,13 +90,6 @@
           <label>Thrust<input type="number" id="ship-thrust" min="0" value="1" /></label>
           <label>Cargo hold (tons)<input type="number" id="ship-hold" min="0" value="0" style="width:80px" /></label>
           <label>Morale class<select id="mor-class"><option value="auto">Auto (by prey type)</option><option value="merchant">Merchant (1D+3)</option><option value="armed">Armed ship (1D+6)</option><option value="naval">Naval ship (1D+8)</option></select></label>
-        </div>
-      </div>
-      <div class="calc-block calc-row">
-        <div class="calc-block-title">Pirate ship</div>
-        <div class="calc-fields">
-          <label>Thrust (M-drive)<input type="number" id="pirate-thrust" min="0" value="2" /></label>
-          <span class="calc-note" style="margin:0">Taken from the active spacecraft's M-drive each time you build; used only if there is no single active ship.</span>
         </div>
       </div>
       <div class="calc-block calc-row">
@@ -200,10 +200,14 @@
 
     function renderPrey() {
       const p = enc.prey; if (!p) { document.getElementById('prey-out').innerHTML = ''; return; }
-      const rows = p.firstRows.map(r => r[0] + ' (first die): ' + TC.signed(r[1])).concat(p.secondRows.map(r => r[0] + ' (second die): ' + TC.signed(r[1])));
+      const rows = p.firstRows.map(r => [r[0] + ' (first die)', r[1]]).concat(p.secondRows.map(r => [r[0] + ' (second die)', r[1]]));
       let html = '<div class="calc-result-title" style="margin-top:20px">STEP 1 — PREY ENCOUNTER</div><div class="calc-block">';
-      html += `<div class="calc-roll-line">D66 [${p.dice[0]}, ${p.dice[1]}] with DM ${TC.signed(p.dm1)} to the first die and ${TC.signed(p.dm2)} to the second = <b>${p.key}</b>${p.rolls}</div>`;
-      html += `<details class="dm-detail"><summary>Conditions applied (${p.flags})</summary>${rows.length ? rows.map(r => '<div>' + r + '</div>').join('') : '<div>No modifiers.</div>'}<div>Table results beyond its edge (first digit above 7, second above 8) use the last row or column.</div></details>`;
+      html += TC.workings([
+        `D66 [${p.dice[0]}, ${p.dice[1]}] with ${TC.signed(p.dm1)} to the first die and ${TC.signed(p.dm2)} to the second = ${p.key}`,
+        p.rolls.replace(/^ &nbsp;·&nbsp; /, ''),
+        'Conditions applied: ' + p.flags + '.',
+        'Results beyond the table edge (first digit above 7, second above 8) use the last row or column.'
+      ], rows.length ? rows : null);
       if (p.type === 'None') {
         html += '<div class="calc-note" style="margin-top:10px"><b>No encounter.</b> There are no ships in the system the pirate has a chance of tackling right now, although this may change at any moment if a ship jumps in. Roll again later.</div>';
       } else {
@@ -394,7 +398,7 @@
         ${s.tons} tons · Thrust ${s.thrust} · ${s.crew} crew · passengers ${s.high} high / ${s.mid} middle / ${s.low} low · ${s.vehicles} vehicle${s.vehicles === 1 ? '' : 's'}${s.vehicles ? ' of ' + s.vehTons + ' tons' : ''} · cargo hold ${s.hold} tons</div></div>`;
 
       html += `<div class="calc-block"><div class="calc-block-title">Morale (MOR)</div>
-        <div class="calc-roll-line">${MORALE_CLASS[m.cls].label}: 1D [${m.die}] + ${m.base}${m.adj.map(a => ' ' + a.label).join('')} = <b>MOR ${Math.max(0, mor)}</b></div>`;
+        <div class="calc-roll-line">The prey's morale is <b>MOR ${Math.max(0, mor)}</b>.</div>${TC.workings([MORALE_CLASS[m.cls].label + ': 1D [' + m.die + '] + ' + m.base + m.adj.map(a => ' ' + a.label).join('') + ' = ' + Math.max(0, mor)])}`;
       if (m.noSurrender) html += '<div class="calc-note" style="margin-top:6px;color:#ffb020"><b>No Surrender:</b> this crew will not surrender under any circumstances. Ignore MOR.</div>';
       else html += `<div class="calc-note" style="margin-top:6px">Demanding Surrender: Average (8+) Electronics (comms) check (1D × 10 seconds, SOC) with <b>DM−${Math.max(0, mor)}</b> (the target's current MOR). MOR drops by 1 for every critical hit, and by 1D for critical hits of Severity 4+. At MOR 0 the victim jumps out (if possible) or surrenders.</div>`;
       html += '</div>';
@@ -439,11 +443,13 @@
       html += '</div>';
 
       html += `<div class="calc-block"><div class="calc-block-title">Prey Quirks</div>
-        ${enc.quirks.map(id => `<div class="good-row"><div class="good-main"><b>${id}: ${esc(PREY_QUIRKS[id][0])}</b></div><div class="calc-note" style="margin:2px 0 0">${esc(PREY_QUIRKS[id][1])}</div></div>`).join('')}
+        ${enc.quirks.map(id => `<div class="good-row"><div class="good-main"><b>${esc(PREY_QUIRKS[id][0])}</b></div><div class="calc-note" style="margin:2px 0 0">${esc(PREY_QUIRKS[id][1])}</div></div>`).join('')}
+        ${TC.workings(['Rolled D66: ' + enc.quirks.join(', ')])}
         <div style="margin-top:6px"><button class="btn-outline" onclick="addQuirk()">Roll another quirk</button></div></div>`;
 
       html += `<div class="calc-block"><div class="calc-block-title">Prey Complications</div>
-        ${enc.comps.map(id => `<div class="good-row"><div class="good-main"><b>${id}: ${esc(PREY_COMPLICATIONS[id][0])}</b></div><div class="calc-note" style="margin:2px 0 0">${esc(PREY_COMPLICATIONS[id][1])}</div></div>`).join('')}
+        ${enc.comps.map(id => `<div class="good-row"><div class="good-main"><b>${esc(PREY_COMPLICATIONS[id][0])}</b></div><div class="calc-note" style="margin:2px 0 0">${esc(PREY_COMPLICATIONS[id][1])}</div></div>`).join('')}
+        ${TC.workings(['Rolled D66: ' + enc.comps.join(', ')])}
         <div style="margin-top:6px"><button class="btn-outline" onclick="addComplication()">Roll another complication</button></div></div>`;
 
       document.getElementById('enc-out').innerHTML = html;
@@ -508,7 +514,8 @@
       if (t) {
         const dd = TC.rollDice(t[0]);
         const val = TC.sum(dd) * t[1] + t[2];
-        r.time = '1D [' + dd.join('+') + ']' + (t[1] > 1 ? ' × ' + t[1] : '') + (t[2] ? ' + ' + t[2] : '') + ' = ' + val + ' ' + t[3];
+        r.time = val + ' ' + t[3];
+        r.timeCalc = '1D [' + dd.join('+') + ']' + (t[1] > 1 ? ' × ' + t[1] : '') + (t[2] ? ' + ' + t[2] : '') + ' = ' + val + ' ' + t[3];
       }
       if (!enc.hunterThrust) enc.hunterThrust = 2;
       enc.hunter.push(r);
@@ -520,12 +527,12 @@
     }
     // travel time of the hunter from where it launches to the encounter (accelerate, flip, brake)
     function hunterTravel(r) {
-      if (!r.launch) return '';
+      if (!r.launch) return { text: '', calc: '' };
       const t = enc.hunterThrust || 2;
       const hrs = 2 * Math.sqrt(r.launch.km * 1000 / (t * 9.8)) / 3600;
-      let txt = '<br>Launches from the <b>' + r.launch.from + '</b>, ' + r.launch.km.toLocaleString('en-US') + ' km from the encounter';
-      if (r.launch.other !== undefined) txt += ' (closer than the ' + (r.launch.from === 'starport' ? 'jump limit' : 'starport') + ' at ' + r.launch.other.toLocaleString('en-US') + ' km)';
-      return txt + '. At Thrust ' + t + ' it arrives in about <b>' + fmtHours(hrs) + '</b>.';
+      let calc = 'Launches ' + r.launch.km.toLocaleString('en-US') + ' km from the encounter';
+      if (r.launch.other !== undefined) calc += ' (closer than the ' + (r.launch.from === 'starport' ? 'jump limit' : 'starport') + ' at ' + r.launch.other.toLocaleString('en-US') + ' km)';
+      return { text: 'Launches from the <b>' + r.launch.from + '</b> and arrives in about <b>' + fmtHours(hrs) + '</b>.', calc: calc + '; hunter Thrust ' + t + '.' };
     }
     function renderHunter() {
       const out = document.getElementById('hunter-out');
@@ -533,9 +540,9 @@
       const rows = hunterDMRows();
       let html = '<div class="calc-block"><div class="calc-block-title">Pirate Hunter Response</div>';
       html += '<div class="calc-fields" style="margin-bottom:8px"><label>Hunter thrust<input type="number" id="hunt-thrust" min="1" value="' + (enc.hunterThrust || 2) + '" onchange="setHunterThrust(this.value)" /></label></div>';
-      html += enc.hunter.map((r, i) => `<div class="good-row"><div class="calc-roll-line" style="margin:0">Roll ${i + 1}: 2D [${r.dice.join('+')}] ${TC.signed(r.dm)} = <b>${r.total}</b></div>
-        <div class="calc-note" style="margin:2px 0 0"><b>${r.text}</b>${r.time ? '<br>' + r.time : ''}${hunterTravel(r)}</div></div>`).join('');
-      html += `<details class="dm-detail"><summary>Modifiers for the next roll (${TC.signed(TC.sum(rows.map(r => r[1])))})</summary>${rows.length ? rows.map(r => '<div>' + r[0] + ': <b>' + TC.signed(r[1]) + '</b></div>').join('') : '<div>No modifiers.</div>'}</details>`;
+      html += enc.hunter.map((r, i) => { const tv = hunterTravel(r); return `<div class="good-row"><div class="calc-note" style="margin:0">Response ${i + 1}: <b>${r.text}</b>${r.time ? '<br>Response time: <b>' + r.time + '</b>.' : ''}${tv.text ? '<br>' + tv.text : ''}</div>
+        ${TC.workings(['2D [' + r.dice.join('+') + '] ' + TC.signed(r.dm) + ' = ' + r.total, r.timeCalc, tv.calc])}</div>`; }).join('');
+      html += TC.workings(['Modifiers for the next roll:'], rows);
       html += '<div class="calc-note" style="margin:6px 0 0">The first roll is made when the attack begins. Roll again each time the previous result says to (for instance "roll again in one hour").</div>';
       html += '<div style="margin-top:6px"><button class="btn-outline" onclick="rollHunter()">Roll Hunter Response again</button></div></div>';
       out.innerHTML = html;
@@ -621,7 +628,8 @@
       if (!c || !c.items) { out.innerHTML = ''; return; }
       const m = c.meta;
       let html = '<div class="calc-result-title" style="margin-top:20px">CARGO</div>';
-      html += `<div class="calc-note">Hold of ${m.hold} tons, filled to 1D × 10 + 40% = 1D [${m.pctDie}] → <b>${m.pct}%</b> = <b>${m.filled} tons</b>: ${m.common} tons common goods, ${m.trade} tons trade goods, ${m.special} tons ${m.route === 'None' ? 'more trade goods (no trade route)' : m.route + ' goods'}. Values use each good's base price per ton${enc.prey.rich ? '; as a Rich Freighter, every item was rolled twice and the more valuable kept' : ''}.</div>`;
+      html += `<div class="calc-note">The hold is <b>${m.pct}%</b> full: <b>${m.filled} tons</b> of cargo (${m.common} tons common goods, ${m.trade} tons trade goods, ${m.special} tons ${m.route === 'None' ? 'more trade goods' : m.route + ' goods'}). Values use each good's base price per ton.
+        ${TC.workings(['Hold of ' + m.hold + ' tons filled to 1D × 10 + 40% = 1D [' + m.pctDie + '] → ' + m.pct + '%', enc.prey.rich ? 'Rich Freighter: every item was rolled twice and the more valuable kept.' : ''])}</div>`;
       const sec = (title, lot, note) => {
         const rows = c.items.map((it, i) => ({ it, i })).filter(x => x.it.lot === lot);
         if (!rows.length) return '';
@@ -704,13 +712,15 @@
       const pass = s.high * LOOT.high + s.mid * LOOT.middle + s.low * LOOT.low;
       const equip = s.crew * LOOT.perCrew;
       const veh = s.vehicles * s.vehTons * LOOT.vehiclePerTon;
-      const row = (name, val, how, fence) => `<div class="good-row"><div class="good-main"><b>${name}</b> <span style="color:#00ffaa;font-weight:600">${TC.cr(val)}</span>${fence ? '<span class="good-badge">must be fenced</span>' : ''}</div><div class="good-ex">${how}</div></div>`;
+      const row = (name, val, note, how, fence) => `<div class="good-row"><div class="good-main"><b>${name}</b> <span style="color:#00ffaa;font-weight:600">${TC.cr(val)}</span>${fence ? '<span class="good-badge">must be fenced</span>' : ''}</div>${note ? '<div class="good-ex">' + note + '</div>' : ''}${TC.workings([how])}</div>`;
       let html = '<div class="calc-result-title" style="margin-top:20px">OTHER LOOT</div><div class="calc-block">';
       const st = enc.safeTime;
-      html += row("Ship's safe (treasure)", safe, `Cr20,000 per 100 tons of ship (${s.tons} tons). The players must succeed on a Difficult (10+) Recon check (INT). If they do, finding it takes 1D hours per 100 tons of ship: ${st ? st.n + 'D [' + st.dice.join('+') + '] = <b>' + st.hours + ' hour' + (st.hours === 1 ? '' : 's') + '</b>.' : ''}`, false);
-      html += row('Passenger treasure', pass, `Cr10,000 per high, Cr5,000 per middle, Cr1,000 per low passenger. Looting takes 1D minutes per passenger (unless it is in the ship's safe).`, false);
-      html += row('Crew equipment', equip, `Cr1,000 per crew member. Takes 1D minutes per crew member.`, true);
-      html += row('Vehicles', veh, `${s.vehicles} × ${s.vehTons} tons at Cr250,000 per ton (a 20-ton launch is worth MCr5). Overriding security: Difficult (10+) Electronics (computers), 1D × 10 minutes. Flying it across: Average (8+) Pilot, 1D minutes.`, true);
+      html += row("Ship's safe (treasure)", safe,
+        'The players need a Difficult (10+) Recon check (INT) to find it. If they succeed, it takes about <b>' + (st ? st.hours + ' hour' + (st.hours === 1 ? '' : 's') : '?') + '</b> to find.',
+        'Cr20,000 per 100 tons of ship (' + s.tons + ' tons). Search time is 1D hours per 100 tons of ship: ' + (st ? st.n + 'D [' + st.dice.join('+') + '] = ' + st.hours + ' hours.' : ''), false);
+      html += row('Passenger treasure', pass, '', 'Cr10,000 per high, Cr5,000 per middle, Cr1,000 per low passenger. Looting takes 1D minutes per passenger (unless it is in the safe).', false);
+      html += row('Crew equipment', equip, '', 'Cr1,000 per crew member. Takes 1D minutes per crew member.', true);
+      html += row('Vehicles', veh, s.vehicles ? 'Overriding its security needs a Difficult (10+) Electronics (computers) check; flying it across an Average (8+) Pilot check.' : '', s.vehicles + ' × ' + s.vehTons + ' tons at Cr250,000 per ton (a 20-ton launch is worth MCr5). Security: 1D × 10 minutes. Flying it across: 1D minutes.', true);
       const all = safe + pass;
       html += `<div class="calc-note" style="margin-top:8px">Spendable immediately (safe + passenger treasure): <b>${TC.cr(all)}</b>. Equipment and vehicles total <b>${TC.cr(equip + veh)}</b> before the fence's share.</div></div>`;
       out.innerHTML = html;

@@ -81,7 +81,7 @@
 
       current = { dist, avail: {} };
       let html = '<div class="calc-result-title">PASSENGERS AVAILABLE</div>';
-      if (checkText) html += '<div class="calc-note">' + checkText + '</div>';
+      if (checkText) html += '<div class="calc-note">Skill check Effect: <b>' + TC.signed(effect) + '</b>' + TC.workings([checkText]) + '</div>';
 
       CLASSES.forEach(c => {
         const rows = baseRows.slice();
@@ -96,9 +96,8 @@
         const fare = TC.FARES[dist][c.key];
         html += `<div class="calc-block">
           <div class="calc-block-title">${c.label} — ${count} available</div>
-          <div class="calc-roll-line">2D [${dice.join('+')}] ${TC.signed(dm)} = <b>${total}</b> → ${n}D${n ? ' [' + pax.join('+') + '] = <b>' + count + '</b>' : ' = <b>0</b>'}
-            &nbsp;·&nbsp; Fare <b>${TC.cr(fare)}</b> each</div>
-          ${TC.dmList(rows)}
+          <div class="calc-roll-line">Fare <b>${TC.cr(fare)}</b> each</div>
+          ${TC.workings(['2D [' + dice.join('+') + '] ' + TC.signed(dm) + ' = ' + total + ' → ' + n + 'D' + (n ? ' [' + pax.join('+') + '] = ' + count : ' = 0')], rows)}
           <div class="calc-take">Take
             <input type="number" id="take-${c.key}" min="0" max="${count}" value="0" ${count ? '' : 'disabled'} oninput="updateTotals()" />
             of ${count}

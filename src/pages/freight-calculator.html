@@ -80,25 +80,26 @@
     function sharedRows() {
       const dist = TC.num('dist');
       const src = TC.readWorld('src'), dst = TC.readWorld('dst');
-      let checkText = '';
+      let checkText = '', checkNote = '';
       const rows = [];
       {
         const c = TC.skillCheck(document.getElementById('chk-skill').value, TC.num('chk-level'), TC.num('chk-dm'));
         checkText = c.text;
+        checkNote = '<div class="calc-note">Skill check Effect: <b>' + TC.signed(c.effect) + '</b>' + TC.workings([c.text]) + '</div>';
         rows.push(['Skill check Effect', c.effect]);
       }
       rows.push(...TC.freightWorldDMs(src, 'Pick-up'), ...TC.freightWorldDMs(dst, 'Destination'), ...TC.distanceDM(dist));
-      return { dist, src, rows, checkText };
+      return { dist, src, rows, checkText, checkNote };
     }
 
     // ── Freight ──
     function rollFreight() {
-      const { dist, rows: baseRows, checkText } = sharedRows();
+      const { dist, rows: baseRows, checkNote } = sharedRows();
       rate = TC.FARES[dist].freight;
       lots = [];
 
       let html = '<div class="calc-result-title">FREIGHT AVAILABLE — ' + TC.cr(rate) + ' per ton</div>';
-      if (checkText) html += '<div class="calc-note">' + checkText + '</div>';
+      html += checkNote;
 
       LOT_TYPES.forEach(t => {
         const rows = baseRows.slice();
@@ -110,17 +111,21 @@
         const lotRolls = TC.rollDice(n);
         const count = TC.sum(lotRolls);
 
+        // lot sizes are rolled first so their dice can go into the hidden workings
+        const lotDice = [];
+        for (let i = 0; i < count; i++) lotDice.push(TC.d6());
+        const lotLine = count ? 'Lot sizes: ' + lotDice.map((d, i) => 'Lot ' + (i + 1) + ' 1D [' + d + ']' + (t.mult > 1 ? ' × ' + t.mult : '') + ' = ' + d * t.mult + ' tons').join('; ') : '';
+
         html += `<div class="calc-block">
           <div class="calc-block-title">${t.label} — ${count} lot${count === 1 ? '' : 's'} <span style="color:#4a9ab8;font-weight:400">(${t.desc})</span></div>
-          <div class="calc-roll-line">2D [${dice.join('+')}] ${TC.signed(dm)} = <b>${total}</b> → ${n}D${n ? ' [' + lotRolls.join('+') + '] = <b>' + count + '</b>' : ' = <b>0</b>'}</div>
-          ${TC.dmList(rows)}`;
+          ${TC.workings(['2D [' + dice.join('+') + '] ' + TC.signed(dm) + ' = ' + total + ' → ' + n + 'D' + (n ? ' [' + lotRolls.join('+') + '] = ' + count : ' = 0'), lotLine], rows)}`;
         if (!count) html += '<div class="calc-empty" style="margin-top:8px">No lots available.</div>';
         for (let i = 0; i < count; i++) {
-          const die = TC.d6(), tons = die * t.mult, id = lots.length;
+          const tons = lotDice[i] * t.mult, id = lots.length;
           lots.push({ type: t.key, tons });
           html += `<div class="lot-row">
             <input type="checkbox" id="lot-${id}" onchange="updateFreightTotals()" />
-            <label for="lot-${id}">Lot ${i + 1}: 1D [${die}]${t.mult > 1 ? ' × ' + t.mult : ''} = <b>${tons} ton${tons === 1 ? '' : 's'}</b></label>
+            <label for="lot-${id}">Lot ${i + 1}: <b>${tons} ton${tons === 1 ? '' : 's'}</b></label>
             <span class="calc-line-total">${TC.cr(tons * rate)}</span>
           </div>`;
         }
@@ -160,7 +165,7 @@
 
     // ── Mail ──
     function rollMail() {
-      const { rows: baseRows, src, checkText } = sharedRows();
+      const { rows: baseRows, src, checkNote } = sharedRows();
       // The "Freight Traffic DM" is the total modifier on the freight roll
       // (worlds, distance, skill Effect), before the lot-size adjustments.
       const ft = TC.sum(baseRows.map(r => r[1]));
@@ -176,13 +181,14 @@
       const total = TC.sum(dice) + dm;
 
       let html = '<div class="calc-result-title" style="margin-top:20px">MAIL</div><div class="calc-block">';
-      if (checkText) html += '<div class="calc-note">' + checkText + '</div>';
-      html += `<div class="calc-roll-line">2D [${dice.join('+')}] ${TC.signed(dm)} = <b>${total}</b> (needs 12+)</div>${TC.dmList(rows)}`;
+      html += checkNote;
       mailCount = 0;
+      const mailDie = total >= 12 ? TC.d6() : null;
+      html += TC.workings(['2D [' + dice.join('+') + '] ' + TC.signed(dm) + ' = ' + total + ' (needs 12+)', mailDie ? 'Containers: 1D [' + mailDie + ']' : ''], rows);
       if (total >= 12) {
-        const d = TC.d6();
+        const d = mailDie;
         mailCount = d;
-        html += `<div class="calc-note" style="margin-top:10px"><b>Mail is available:</b> 1D [${d}] = <b>${d} container${d === 1 ? '' : 's'}</b>,
+        html += `<div class="calc-note" style="margin-top:10px"><b>Mail is available:</b> <b>${d} container${d === 1 ? '' : 's'}</b>,
           ${d * 5} tons of space, paying <b>${TC.cr(d * 25000)}</b> (${TC.cr(25000)} each).</div>
           <label class="calc-check"><input type="checkbox" id="take-mail" onchange="updateMail()" /> Take all ${d} container${d === 1 ? '' : 's'} (all or none)</label>`;
       } else {

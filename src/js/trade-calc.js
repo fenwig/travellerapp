@@ -94,6 +94,16 @@ const TC = {
       return { name: s.current_world_name || '', uwp: s.current_world_uwp };
     } catch (e) { return null; }
   },
+  // Collapsed "how this was worked out" box: dice, modifiers and formulas stay out of sight until it is opened.
+  // lines: html strings; rows: optional modifier list [[label, dm], ...]
+  workings(lines, rows) {
+    const mods = rows && rows.length
+      ? '<div>Modifiers (' + TC.signed(TC.sum(rows.map(r => r[1]))) + '):</div>' +
+        rows.map(r => '<div style="padding-left:12px">' + r[0] + ': <b>' + TC.signed(r[1]) + '</b></div>').join('')
+      : '';
+    return '<details class="dm-detail"><summary>How this was worked out</summary>' +
+      lines.filter(Boolean).map(l => '<div>' + l + '</div>').join('') + mods + '</details>';
+  },
   uwpRefresh() { document.querySelectorAll('[id$="-uwp"]').forEach(el => TC.uwpShow(el.id.slice(0, -4))); },
   worldBlock(id, title) {
     return '<div class="calc-block calc-row"><div class="calc-block-title">' + title + '</div><div class="calc-fields">' +

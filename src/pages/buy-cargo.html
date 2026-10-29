@@ -127,8 +127,9 @@
       const success = total >= 8;
 
       let html = '<div class="calc-result-title">STEP 1 — FIND A ' + t.label.toUpperCase() + '</div><div class="calc-block">';
-      html += `<div class="calc-roll-line">${t.skill} check: 2D [${dice.join('+')}] ${TC.signed(dm)} = <b>${total}</b> vs 8+ → <b style="color:${success ? '#00ffaa' : '#ff5a4a'}">${success ? 'SUCCESS' : 'FAILED'}</b>
-        &nbsp;·&nbsp; Took 1D [${time}] = <b>${time} ${t.unit === 'days' ? (time === 1 ? 'day' : 'days') : (time === 1 ? 'hour' : 'hours')}</b></div>${TC.dmList(rows)}`;
+      const timeText = time + ' ' + (t.unit === 'days' ? (time === 1 ? 'day' : 'days') : (time === 1 ? 'hour' : 'hours'));
+      const wk = [`${t.skill} check: 2D [${dice.join('+')}] ${TC.signed(dm)} = ${total} vs 8+ → ${success ? 'success' : 'failed'}`, `Time taken: 1D [${time}] = ${timeText}`];
+      html += `<div class="calc-roll-line"><b style="color:${success ? '#00ffaa' : '#ff5a4a'}">${success ? 'The search succeeded' : 'The search failed'}</b>. It took <b>${timeText}</b>.</div>`;
 
       if (success) {
         const s = { kind: t.key, label: t.label, illegal: t.illegal, online: t.online, broker: t.broker };
@@ -136,14 +137,18 @@
           const bd = [TC.d6(), TC.d6()];
           const sk = Math.floor(TC.sum(bd) / 3);
           s.brokerSkill = sk; s.brokerSkillName = t.brokerSkill; s.fee = t.fee; s.negotiationDM = 2;
-          html += `<div class="calc-note" style="margin-top:10px"><b>${t.label} found.</b> Their ${t.brokerSkill} skill: 2D [${bd.join('+')}] = ${TC.sum(bd)} ÷ 3 (round down) = <b>${sk}</b>.
+          wk.push(`Broker's ${t.brokerSkill} skill: 2D [${bd.join('+')}] = ${TC.sum(bd)} ÷ 3 (round down) = ${sk}`);
+          html += TC.workings(wk, rows);
+          html += `<div class="calc-note" style="margin-top:10px"><b>${t.label} found.</b> Their ${t.brokerSkill} skill is <b>${sk}</b>.
             They charge <b>${t.fee}%</b> of the gross proceeds of each transaction and add <b>DM+2</b> to negotiations.</div>`;
         } else {
+          html += TC.workings(wk, rows);
           html += `<div class="calc-note" style="margin-top:10px"><b>${t.label} found.</b> You negotiate the deals yourself.</div>`;
         }
         if (t.illegal) html += '<div class="calc-note">Illegal goods are available from this contact. Selling them on a world risks fines or imprisonment (see Law Levels, p.255).</div>';
         trade.supplier = s;
       } else {
+        html += TC.workings(wk, rows);
         html += '<div class="calc-empty" style="margin-top:10px">No ' + t.label.toLowerCase() + ' found. You can search again (each attempt this month is DM−1).</div>';
         trade.supplier = null;
       }
@@ -303,8 +308,7 @@
           <div class="calc-note" style="margin:0">Exotic goods were rolled. They fall outside the normal trade rules (alien relics, prototype technology, unique life, priceless treasures and so on). <b>Consult with the Referee.</b></div>
         </div>`;
       }
-      html += `<div class="calc-note">Random rolls (${m.rolls.length}, ${s.illegal ? 'd66' : 'd56'}): ${m.rolls.length ? m.rolls.join(', ') : 'none (Population 0)'}.
-        ${m.hidden ? m.hidden + ' good' + (m.hidden === 1 ? '' : 's') + ' had no quantity available.' : ''}</div>`;
+      html += TC.workings([`Random rolls (${m.rolls.length}, ${s.illegal ? 'd66' : 'd56'}): ${m.rolls.length ? m.rolls.join(', ') : 'none (Population 0)'}.`, m.hidden ? m.hidden + ' good' + (m.hidden === 1 ? '' : 's') + ' had no quantity available.' : '']);
       html += `<div class="calc-block calc-row">
         <div class="calc-block-title">Purchase</div>
         <span id="buy-summary">0 tons selected</span>
