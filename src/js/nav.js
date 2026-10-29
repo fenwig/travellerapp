@@ -16,6 +16,9 @@ const NAV_GROUPS = [
     ['sell-cargo.html',            'Sell Cargo'],
     ['https://travellermap.com',   'Traveller Map', true]   // third value: opens in a new tab
   ]},
+  { id: 'campaign', label: 'Campaign', items: [
+    ['piracy-encounter.html', 'Piracy Encounter']
+  ]},
   { id: 'reference', label: 'Reference', items: [
     ['general-rules.html',        'General Rules'],
     ['combat.html',               'Combat'],

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Piracy Encounter — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <link rel="stylesheet" href="../css/calculators.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/nav.js" defer></script>
+</head>
+<body>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">PIRACY ENCOUNTER</h1>
+      <p class="calc-intro">Pirates of Drinax, Book 1, Chapter 3 (pp.13–23). <b>Step 1:</b> describe the system and find the prey. <b>Step 2:</b> enter the prey ship you decide on and build the encounter: morale, distance, travel times, quirks, complications, the first pirate hunter response, cargo and loot. Results are shown only on this screen and are kept in this browser, not shared with other players. Cargo uses the house rule: 40% common goods, 40% trade goods, 20% Imperium/Hierate goods.</p>
+      <div id="form"></div>
+      <div class="calc-actions">
+        <button class="btn-primary" onclick="findPrey()">Find Prey</button>
+        <button class="btn-outline" onclick="TC.reset()">Reset</button>
+      </div>
+      <div id="prey-out"></div>
+
+      <div id="ship-form"></div>
+      <div class="calc-actions">
+        <button class="btn-primary" onclick="buildEncounter()">Build Encounter</button>
+      </div>
+      <div id="enc-out"></div>
+      <div id="hunter-out"></div>
+      <div id="cargo-out"></div>
+      <div id="loot-out"></div>
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/trade-calc.js"></script>
+  <script src="../js/trade-goods.js"></script>
+  <script src="../js/piracy-data.js"></script>
+  <script>
+    const TRADE_CODES = [
+      ['Ag','Agricultural'], ['As','Asteroids'], ['Ba','Barren'], ['De','Desert'], ['Fl','Fluid Oceans'],
+      ['Ga','Garden'], ['Hi','High Population'], ['Ht','High Tech'], ['Ic','Ice-Capped'], ['In','Industrial'],
+      ['Lo','Low Population'], ['Lt','Low Tech'], ['Na','Non-Agricultural'], ['Ni','Non-Industrial'],
+      ['Po','Poor'], ['Ri','Rich'], ['Va','Vacuum'], ['Wa','Water World']
+    ];
+    const codeSelects = Array.from({ length: 5 }, (_, i) =>
+      `<select id="tc-${i}" style="width:165px"><option value="">—</option>${TRADE_CODES.map(c => `<option value="${c[0]}" title="${c[1]}">${c[0]} – ${c[1]}</option>`).join('')}</select>`
+    ).join('');
+    const AUTO = ['Auto', 'Yes', 'No'];
+
+    document.getElementById('form').innerHTML = `
+      ${TC.worldBlock('wld', 'System')}
+      <div class="calc-block calc-row" style="flex-wrap:wrap">
+        <div class="calc-block-title">Trade Codes</div>
+        <div class="calc-fields" style="flex-wrap:wrap">${codeSelects}</div>
+      </div>
+      <div class="calc-block calc-row">
+        <div class="calc-block-title">Not in the profile</div>
+        <div class="calc-fields">
+          <label>On the Imperium–Hierate trade route?<select id="f-route">${TC.opts(['No','Yes'], 'No')}</select></label>
+          <label>Capital or other key system?<select id="f-key">${TC.opts(['No','Yes'], 'No')}</select></label>
+          <label>Naval base<select id="f-naval">${TC.opts(['None','Within 6 parsecs','In this system'], 'None')}</select></label>
+        </div>
+      </div>
+      <details class="dm-detail" style="margin-bottom:8px"><summary>Adjust the automatic judgements (backwater, dangerous, high-traffic, secure)</summary>
+        <div class="calc-block calc-row" style="margin-top:6px">
+          <div class="calc-fields">
+            <label>Backwater<select id="o-backwater">${TC.opts(AUTO,'Auto')}</select></label>
+            <label>Dangerous<select id="o-dangerous">${TC.opts(AUTO,'Auto')}</select></label>
+            <label>High-traffic<select id="o-high">${TC.opts(AUTO,'Auto')}</select></label>
+            <label>Secure<select id="o-secure">${TC.opts(AUTO,'Auto')}</select></label>
+          </div>
+        </div>
+      </details>`;
+
+    document.getElementById('ship-form').innerHTML = `
+      <div class="calc-result-title" style="margin-top:20px">STEP 2 — THE PREY SHIP</div>
+      <div class="calc-block calc-row">
+        <div class="calc-block-title">Ship</div>
+        <div class="calc-fields">
+          <label>Type<input type="text" id="ship-type" placeholder="e.g. Far Trader" /></label>
+          <label>Tonnage<input type="number" id="ship-tons" min="0" value="200" /></label>
+          <label>Thrust<input type="number" id="ship-thrust" min="0" value="1" /></label>
+          <label>Cargo hold (tons)<input type="number" id="ship-hold" min="0" value="0" style="width:80px" /></label>
+          <label>Morale class<select id="mor-class"><option value="auto">Auto (by prey type)</option><option value="merchant">Merchant (1D+3)</option><option value="armed">Armed ship (1D+6)</option><option value="naval">Naval ship (1D+8)</option></select></label>
+        </div>
+      </div>
+      <div class="calc-block calc-row">
+        <div class="calc-block-title">Aboard</div>
+        <div class="calc-fields">
+          <label>Crew<input type="number" id="ship-crew" min="0" value="4" /></label>
+          <label>High passengers<input type="number" id="pass-high" min="0" value="0" /></label>
+          <label>Middle<input type="number" id="pass-mid" min="0" value="0" /></label>
+          <label>Low<input type="number" id="pass-low" min="0" value="0" /></label>
+          <label>Vehicles<input type="number" id="veh-count" min="0" value="0" /></label>
+          <label>Tons each<input type="number" id="veh-tons" min="0" value="0" /></label>
+        </div>
+      </div>`;
+
+    let enc = {};   // everything rolled for the current encounter (saved in this browser)
+
+    // ── helpers ──
+    const d66 = () => TC.d6() * 10 + TC.d6();
+    const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const goodById = id => TRADE_GOODS.find(g => g.id === id);
+    function fmtHours(h) {
+      if (h < 1) return Math.round(h * 60) + ' minutes';
+      return (Math.round(h * 10) / 10) + ' hours';
+    }
+    function ok(text) { return '<span style="color:#00ffaa">' + text + '</span>'; }
+    function bad(text) { return '<span style="color:#ff5a4a">' + text + '</span>'; }
+
+    // ── world factors ──
+    function encounterFlags() {
+      const w = TC.readWorld('wld');
+      const codes = new Set();
+      for (let i = 0; i < 5; i++) { const v = document.getElementById('tc-' + i).value; if (v) codes.add(v); }
+      const route = document.getElementById('f-route').value === 'Yes';
+      const capital = document.getElementById('f-key').value === 'Yes';
+      const naval = document.getElementById('f-naval').value;
+      const pick = (id, auto) => { const v = document.getElementById(id).value; return v === 'Yes' ? true : v === 'No' ? false : auto; };
+      const busy = ['Ht','Hi','In','Ag','Ri'].some(c => codes.has(c)) || route;
+      const backwater = pick('o-backwater', ['X','E'].includes(w.port) && !route);
+      const high = pick('o-high', ['A','B'].includes(w.port) && busy);
+      const dangerous = pick('o-dangerous', w.zone !== 'Green' || w.law <= 3);
+      const secure = pick('o-secure', (w.law >= 7 && w.tl >= 8) || naval !== 'None');
+      const navalHere = naval === 'In this system';
+      const first = [], second = [];
+      if (backwater) first.push(['Backwater system', -1]);
+      if (high) first.push(['High-traffic system', 1]);
+      if (capital) first.push(['Capital or other key system', 2]);
+      if (dangerous) second.push(['Dangerous world', -1]);
+      if (secure) second.push(['Secure world', 1]);
+      if (navalHere) second.push(['Naval base in the system', 2]);
+      const hunter = [];
+      if (backwater) hunter.push(['Backwater system', -1]);
+      if (dangerous) hunter.push(['Dangerous world', -1]);
+      if (high) hunter.push(['High-traffic system', 1]);
+      if (secure) hunter.push(['Secure world', 1]);
+      if (capital) hunter.push(['Capital or other key system', 2]);
+      if (navalHere) hunter.push(['Naval base in the system', 2]);
+      return { w, first, second, hunter, summary: [backwater && 'backwater', high && 'high-traffic', dangerous && 'dangerous', secure && 'secure', capital && 'key system', navalHere && 'naval base here']
+        .filter(Boolean).join(', ') || 'none of the special conditions' };
+    }
+
+    // ── Step 1: find the prey ──
+    function findPrey() {
+      const f = encounterFlags();
+      const dm1 = TC.sum(f.first.map(r => r[1])), dm2 = TC.sum(f.second.map(r => r[1]));
+      const a = TC.d6(), b = TC.d6();
+      const x = clamp(a + dm1, 0, 7), y = clamp(b + dm2, 0, 8);
+      const key = String(x) + String(y);
+      let raw = PREY_TABLE[key], type, extra = '', rich = false, convoy = null;
+
+      if (Array.isArray(raw)) {
+        const r = TC.d6();
+        type = r <= raw[2] ? 'None' : 'Naval Patrol';
+        extra = ' &nbsp;·&nbsp; 1D [' + r + '] → ' + (type === 'None' ? 'no encounter' : 'Naval Patrol');
+      } else type = raw;
+
+      if (type === 'Rich Freighter') {
+        const r = TC.d6();
+        rich = true;
+        type = r <= 3 ? 'Small Freighter' : r <= 5 ? 'Medium Freighter' : 'Heavy Freighter';
+        extra = ' &nbsp;·&nbsp; Rich Freighter: 1D [' + r + '] → ' + type + ' (cargo is rolled twice per item, keeping the more valuable)';
+      } else if (type === 'System Defence Boat') {
+        const r = TC.d6();
+        if (r === 6) type = 'Q-Ship';
+        extra = ' &nbsp;·&nbsp; 1D [' + r + '] → ' + (r === 6 ? 'a q-ship!' : 'a classic SDB');
+      } else if (type === 'Convoy') {
+        const n = TC.rollDice(2), count = TC.sum(n);
+        const kinds = { 'Medium Freighter': 0, 'Heavy Freighter': 0, 'Rich Freighter': 0, 'Armed escort': 0 };
+        for (let i = 0; i < count; i++) {
+          const r = TC.d6();
+          kinds[r <= 2 ? 'Medium Freighter' : r <= 4 ? 'Heavy Freighter' : r === 5 ? 'Rich Freighter' : 'Armed escort']++;
+        }
+        convoy = { count, kinds };
+        extra = ' &nbsp;·&nbsp; Convoy size 2D [' + n.join('+') + '] = ' + count + ' ships';
+      }
+
+      enc = { prey: { type, rich, convoy, key, dice: [a, b], dm1, dm2, rolls: extra, flags: f.summary, firstRows: f.first, secondRows: f.second, hunterRows: f.hunter } };
+      document.getElementById('enc-out').innerHTML = '';
+      document.getElementById('hunter-out').innerHTML = '';
+      document.getElementById('cargo-out').innerHTML = '';
+      document.getElementById('loot-out').innerHTML = '';
+
+      if (type !== 'None') {
+        const st = document.getElementById('ship-type');
+        if (!st.value || st.dataset.auto === '1') { st.value = type; st.dataset.auto = '1'; }
+        st.oninput = () => { st.dataset.auto = '0'; };
+      }
+      renderPrey();
+      TC.save();
+    }
+
+    function renderPrey() {
+      const p = enc.prey; if (!p) { document.getElementById('prey-out').innerHTML = ''; return; }
+      const rows = p.firstRows.map(r => r[0] + ' (first die): ' + TC.signed(r[1])).concat(p.secondRows.map(r => r[0] + ' (second die): ' + TC.signed(r[1])));
+      let html = '<div class="calc-result-title" style="margin-top:20px">STEP 1 — PREY ENCOUNTER</div><div class="calc-block">';
+      html += `<div class="calc-roll-line">D66 [${p.dice[0]}, ${p.dice[1]}] with DM ${TC.signed(p.dm1)} to the first die and ${TC.signed(p.dm2)} to the second = <b>${p.key}</b>${p.rolls}</div>`;
+      html += `<details class="dm-detail"><summary>Conditions applied (${p.flags})</summary>${rows.length ? rows.map(r => '<div>' + r + '</div>').join('') : '<div>No modifiers.</div>'}<div>Table results beyond its edge (first digit above 7, second above 8) use the last row or column.</div></details>`;
+      if (p.type === 'None') {
+        html += '<div class="calc-note" style="margin-top:10px"><b>No encounter.</b> There are no ships in the system the pirate has a chance of tackling right now, although this may change at any moment if a ship jumps in. Roll again later.</div>';
+      } else {
+        html += `<div class="calc-note" style="margin-top:10px"><b style="font-size:1.05rem">${p.type}</b>${p.rich ? ' <span class="good-badge">RICH FREIGHTER</span>' : ''}<br>${PREY_INFO[p.type] || ''}</div>`;
+        if (p.convoy) {
+          const k = p.convoy.kinds;
+          html += `<div class="calc-note"><b>Convoy:</b> ${Object.entries(k).filter(e => e[1]).map(e => e[1] + ' × ' + e[0]).join(', ')}. <span style="color:#4a9ab8">(The split between ship types is this app's own, as the book gives no table.)</span> Enter the single ship you attack in Step 2.</div>`;
+        }
+        if (['System Defence Boat', 'Q-Ship', 'Naval Patrol'].includes(p.type)) {
+          html += '<div class="calc-note" style="color:#ffb020">This is not normal prey. It is armed, and destroying a naval vessel guarantees the pirates will be hunted down.</div>';
+        }
+      }
+      html += '</div>';
+      document.getElementById('prey-out').innerHTML = html;
+    }
+
+    // ── Step 2: build the encounter ──
+    function buildEncounter() {
+      if (!enc.prey) { alert('Find the prey first (Step 1).'); return; }
+      if (enc.prey.type === 'None') { alert('Step 1 found no encounter. Roll again, or change the world and Find Prey.'); return; }
+      const f = encounterFlags();
+      const w = f.w;
+      const ship = {
+        type: document.getElementById('ship-type').value.trim() || enc.prey.type,
+        tons: TC.num('ship-tons'), thrust: TC.num('ship-thrust'), hold: TC.num('ship-hold'),
+        crew: TC.num('ship-crew'), high: TC.num('pass-high'), mid: TC.num('pass-mid'), low: TC.num('pass-low'),
+        vehicles: TC.num('veh-count'), vehTons: TC.num('veh-tons'),
+        world: document.getElementById('wld-name').value.trim()
+      };
+      enc.ship = ship;
+      enc.world = { size: w.size, name: ship.world };
+
+      // quirk and complication first (a Coward quirk changes the morale roll)
+      enc.quirks = []; enc.comps = [];
+      const q = d66(); enc.quirks.push(q);
+      const c = d66(); enc.comps.push(c);
+
+      // morale
+      const sel = document.getElementById('mor-class').value;
+      const cls = sel === 'auto' ? (PREY_MORALE[enc.prey.type] || 'merchant') : sel;
+      const md = TC.d6();
+      enc.mor = { cls, die: md, base: MORALE_CLASS[cls].base, adj: [], noSurrender: false };
+      applyQuirkEffects(q);
+
+      // distance, direction, transit
+      const dd = TC.rollDice(3), dirDie = TC.d6();
+      const diam = w.size === 0 ? 1000 : w.size * 1600;
+      enc.dist = { dice: dd, diam, km: TC.sum(dd) * diam };
+      enc.dir = { die: dirDie, text: dirDie <= 3 ? 'Heading towards the planet to land' : dirDie <= 5 ? 'Heading to the jump diameter limit' : 'Stationary, or heading elsewhere (a moon, another planet or another vessel)', kind: dirDie <= 3 ? 'down' : dirDie <= 5 ? 'up' : 'other' };
+
+      // hunter response (first roll)
+      enc.hunterRows = f.hunter;
+      enc.hunter = [];
+      rollHunter(true);
+
+      // cargo + loot
+      enc.lots = ship.hold > 0 ? makeCargo(ship.hold, enc.prey.rich) : [];
+      enc.hunterDone = true;
+
+      renderEncounter(); renderHunter(); renderCargo(); renderLoot();
+      TC.save();
+    }
+
+    function applyQuirkEffects(id) {
+      if (id === 11) {
+        const r = TC.d6();
+        enc.mor.adj.push({ label: 'Coward quirk: −1D [' + r + ']', delta: -r });
+      }
+      if (id === 15) enc.mor.noSurrender = true;
+    }
+    function morTotal() { return enc.mor.die + enc.mor.base + TC.sum(enc.mor.adj.map(a => a.delta)); }
+
+    function transit(size, thrust) {
+      if (!thrust) return null;
+      const diam = size === 0 ? 800 : size * 1600;       // the book's transit table uses an 80,000 km limit for Size 0
+      const d = 100 * diam * 1000, a = thrust * 9.8;      // metres, m/s²
+      return { limitKm: 100 * diam, up: Math.sqrt(2 * d / a) / 3600, down: 2 * Math.sqrt(d / a) / 3600 };
+    }
+
+    function renderEncounter() {
+      if (!enc.ship) { document.getElementById('enc-out').innerHTML = ''; return; }
+      const s = enc.ship, m = enc.mor, tr = transit(enc.world.size, s.thrust);
+      const mor = morTotal();
+      let html = '<div class="calc-result-title" style="margin-top:20px">THE ENCOUNTER</div>';
+
+      html += `<div class="calc-block"><div class="calc-block-title">Prey: ${esc(s.type)}</div><div class="calc-note" style="margin:0">
+        ${s.tons} tons · Thrust ${s.thrust} · ${s.crew} crew · passengers ${s.high} high / ${s.mid} middle / ${s.low} low · ${s.vehicles} vehicle${s.vehicles === 1 ? '' : 's'}${s.vehicles ? ' of ' + s.vehTons + ' tons' : ''} · cargo hold ${s.hold} tons</div></div>`;
+
+      html += `<div class="calc-block"><div class="calc-block-title">Morale (MOR)</div>
+        <div class="calc-roll-line">${MORALE_CLASS[m.cls].label}: 1D [${m.die}] + ${m.base}${m.adj.map(a => ' ' + a.label).join('')} = <b>MOR ${Math.max(0, mor)}</b></div>`;
+      if (m.noSurrender) html += '<div class="calc-note" style="margin-top:6px;color:#ffb020"><b>No Surrender:</b> this crew will not surrender under any circumstances. Ignore MOR.</div>';
+      else html += `<div class="calc-note" style="margin-top:6px">Demanding Surrender: Average (8+) Electronics (comms) check (1D × 10 seconds, SOC) with <b>DM−${Math.max(0, mor)}</b> (the target's current MOR). MOR drops by 1 for every critical hit, and by 1D for critical hits of Severity 4+. At MOR 0 the victim jumps out (if possible) or surrenders.</div>`;
+      html += '</div>';
+
+      html += `<div class="calc-block"><div class="calc-block-title">Distance, Direction and Travel Time</div>
+        <div class="calc-roll-line">Initial distance: 3D [${enc.dist.dice.join('+')}] = ${TC.sum(enc.dist.dice)} × ${enc.dist.diam.toLocaleString('en-US')} km (diameter of the mainworld) = <b>${enc.dist.km.toLocaleString('en-US')} km</b></div>
+        <div class="calc-roll-line">Direction of travel: 1D [${enc.dir.die}] → <b>${enc.dir.text}</b></div>`;
+      if (tr) {
+        const hl = k => enc.dir.kind === k ? ' style="color:#00ffaa"' : '';
+        html += `<div class="calc-roll-line">At Thrust ${s.thrust}, from the hundred-diameter jump limit (${tr.limitKm.toLocaleString('en-US')} km):</div>
+          <div class="calc-roll-line" style="padding-left:14px"><span${hl('down')}>Down to the planet's surface (with turnover): <b>${fmtHours(tr.down)}</b></span></div>
+          <div class="calc-roll-line" style="padding-left:14px"><span${hl('up')}>Out to the jump limit at full thrust: <b>${fmtHours(tr.up)}</b></span></div>
+          <div class="calc-note" style="margin-top:6px;color:#4a9ab8">Calculated from thrust and planet size, so it may differ slightly from the book's Jump Limit Transit table. An arriving ship appears outside the limit, so these are minimum times. If the ship is elsewhere in the system it can jump out immediately when threatened, if it has fuel. Jumping inside the limit is DM−4. A pirate with higher Thrust within 100,000 km makes escape very difficult.</div>`;
+      } else {
+        html += '<div class="calc-note" style="margin-top:6px;color:#ffb020">Enter a Thrust of 1 or more to get travel times.</div>';
+      }
+      html += '</div>';
+
+      html += `<div class="calc-block"><div class="calc-block-title">Prey Quirks</div>
+        ${enc.quirks.map(id => `<div class="good-row"><div class="good-main"><b>${id}: ${esc(PREY_QUIRKS[id][0])}</b></div><div class="calc-note" style="margin:2px 0 0">${esc(PREY_QUIRKS[id][1])}</div></div>`).join('')}
+        <div style="margin-top:6px"><button class="btn-outline" onclick="addQuirk()">Roll another quirk</button></div></div>`;
+
+      html += `<div class="calc-block"><div class="calc-block-title">Prey Complications</div>
+        ${enc.comps.map(id => `<div class="good-row"><div class="good-main"><b>${id}: ${esc(PREY_COMPLICATIONS[id][0])}</b></div><div class="calc-note" style="margin:2px 0 0">${esc(PREY_COMPLICATIONS[id][1])}</div></div>`).join('')}
+        <div style="margin-top:6px"><button class="btn-outline" onclick="addComplication()">Roll another complication</button></div></div>`;
+
+      document.getElementById('enc-out').innerHTML = html;
+    }
+
+    function addQuirk() {
+      const id = d66(); enc.quirks.push(id); applyQuirkEffects(id);
+      renderEncounter(); TC.save();
+    }
+    function addComplication() {
+      enc.comps.push(d66());
+      renderEncounter(); renderHunter(); TC.save();
+    }
+
+    // ── Pirate hunters ──
+    function hunterDMRows() {
+      const rows = (enc.hunterRows || []).slice();
+      if ((enc.comps || []).includes(41)) rows.push(['Rapid Reaction complication', 4]);
+      return rows;
+    }
+    function rollHunter(silent) {
+      const rows = hunterDMRows(), dm = TC.sum(rows.map(r => r[1]));
+      const dice = [TC.d6(), TC.d6()], total = TC.sum(dice) + dm;
+      const r = { dice, dm, total, text: hunterResponse(total), time: null };
+      const t = hunterTime(total);
+      if (t) {
+        const dd = TC.rollDice(t[0]);
+        const val = TC.sum(dd) * t[1] + t[2];
+        r.time = '1D [' + dd.join('+') + ']' + (t[1] > 1 ? ' × ' + t[1] : '') + (t[2] ? ' + ' + t[2] : '') + ' = ' + val + ' ' + t[3];
+      }
+      enc.hunter.push(r);
+      if (!silent) { renderHunter(); TC.save(); }
+    }
+    function renderHunter() {
+      const out = document.getElementById('hunter-out');
+      if (!enc.hunter) { out.innerHTML = ''; return; }
+      const rows = hunterDMRows();
+      let html = '<div class="calc-block"><div class="calc-block-title">Pirate Hunter Response</div>';
+      html += enc.hunter.map((r, i) => `<div class="good-row"><div class="calc-roll-line" style="margin:0">Roll ${i + 1}: 2D [${r.dice.join('+')}] ${TC.signed(r.dm)} = <b>${r.total}</b></div>
+        <div class="calc-note" style="margin:2px 0 0"><b>${r.text}</b>${r.time ? '<br>' + r.time : ''}</div></div>`).join('');
+      html += `<details class="dm-detail"><summary>Modifiers for the next roll (${TC.signed(TC.sum(rows.map(r => r[1])))})</summary>${rows.length ? rows.map(r => '<div>' + r[0] + ': <b>' + TC.signed(r[1]) + '</b></div>').join('') : '<div>No modifiers.</div>'}</details>`;
+      html += '<div class="calc-note" style="margin:6px 0 0">The first roll is made when the attack begins. Roll again each time the previous result says to (for instance "roll again in one hour").</div>';
+      html += '<div style="margin-top:6px"><button class="btn-outline" onclick="rollHunter()">Roll Hunter Response again</button></div></div>';
+      out.innerHTML = html;
+    }
+
+    // ── Cargo (house rule: 40% common, 40% trade goods, 20% Imperium/Hierate) ──
+    function goodInfo(id) {
+      if (id === 66) return { id: 66, name: 'Exotic Goods', price: 0, exotic: true, illegal: false, example: 'Alien relics, prototype technology, unique life, priceless treasures and so on. Consult with the Referee.' };
+      const g = goodById(id);
+      return { id, name: g.name, price: g.price, exotic: false, illegal: !!g.illegal, example: g.example };
+    }
+    // one roll, or two (keeping the more valuable) for a rich freighter
+    function rollGood(roller, rich, avoid) {
+      let tries = 0, g, note = '';
+      do {
+        const a = roller();
+        if (rich) {
+          const b = roller();
+          const ga = goodInfo(a), gb = goodInfo(b);
+          const pick = ga.exotic !== gb.exotic ? (ga.exotic ? gb : ga) : (gb.price > ga.price ? gb : ga);
+          g = Object.assign({}, pick); note = 'rolled ' + a + ' and ' + b + ', took ' + pick.id;
+        } else {
+          g = Object.assign({}, goodInfo(a)); note = 'rolled ' + a;
+        }
+        tries++;
+      } while (avoid && g.id === avoid && tries < 25);
+      g.note = note;
+      return g;
+    }
+    function split(total) {
+      const a = TC.d6(), b = TC.d6();
+      const first = Math.round(total * a / (a + b));
+      return { first, second: total - first, text: 'split 1D [' + a + '] : 1D [' + b + ']' };
+    }
+    function makeCargo(hold, rich) {
+      const pctDie = TC.d6();
+      const pct = Math.min(100, pctDie * 10 + 40);
+      const filled = Math.round(hold * pct / 100);
+      const common = Math.round(filled * 0.4), trade = Math.round(filled * 0.4), special = filled - common - trade;
+      const lots = [];
+      lots.meta = { hold, pct, pctDie, filled, common, trade, special };
+
+      const commonRoller = () => 10 + TC.d6();
+      const tradeRoller = () => (Math.floor(Math.random() * 5) + 2) * 10 + TC.d6();
+      const ihRoller = () => { const d = [TC.d6(), TC.d6()]; return IMPERIUM_HIERATE[TC.sum(d)]; };
+      const hiRoller = () => { const d = [TC.d6(), TC.d6()]; return HIERATE_IMPERIUM[TC.sum(d)]; };
+
+      const pair = (roller, tons, lot, label) => {
+        if (tons <= 0) return;
+        const g1 = rollGood(roller, rich), g2 = rollGood(roller, rich, g1.id);
+        const sp = split(tons);
+        [[g1, sp.first], [g2, sp.second]].forEach(([g, t]) => { if (t > 0) lots.push(Object.assign(g, { lot, label, tons: t, loaded: 0, splitText: sp.text })); });
+      };
+      pair(commonRoller, common, 'common', 'Common goods (40%)');
+      pair(tradeRoller, trade, 'trade', 'Trade goods (40%)');
+      if (special > 0) {
+        lots.push(Object.assign(rollGood(ihRoller, rich), { lot: 'special', label: 'Imperium → Hierate goods (20%)', tons: special, loaded: 0, splitText: '' }));
+        lots.push(Object.assign(rollGood(hiRoller, rich), { lot: 'special', label: 'Hierate → Imperium goods (20%)', tons: special, loaded: 0, splitText: '' }));
+      }
+      return Object.assign({ meta: lots.meta }, { items: lots });
+    }
+
+    function cargoRow(it, i) {
+      const left = it.tons - (it.loaded || 0);
+      const value = it.exotic ? null : it.price * it.tons;
+      return `<div class="good-row">
+        <div class="good-main"><b>${esc(it.name)}</b> (${it.id})
+          <span class="good-tons">${left} ton${left === 1 ? '' : 's'}</span>
+          ${it.exotic ? '<span class="good-badge" style="color:#ffb020">REFEREE</span>' : '<span>' + TC.cr(it.price) + ' per ton · <b>' + TC.cr(it.price * left) + '</b></span>'}
+          ${it.illegal ? '<span class="good-badge" style="color:#ff5a4a">ILLEGAL</span>' : ''}
+          ${it.loaded ? '<span class="good-badge">' + it.loaded + ' loaded</span>' : ''}
+          ${!it.exotic && left > 0 ? '<label class="good-buy">Take <input type="number" id="take-' + i + '" min="0" max="' + left + '" value="0" oninput="updateTakeTotals()" /> tons</label>' : ''}
+        </div>
+        <div class="good-ex">${esc(it.example)}</div>
+        <details class="dm-detail"><summary>How this was worked out</summary><div>${it.note}${it.splitText ? ' · ' + it.splitText : ''}</div></details>
+      </div>`;
+    }
+
+    function renderCargo() {
+      const out = document.getElementById('cargo-out');
+      const c = enc.lots;
+      if (!c || !c.items) { out.innerHTML = ''; return; }
+      const m = c.meta;
+      let html = '<div class="calc-result-title" style="margin-top:20px">CARGO</div>';
+      html += `<div class="calc-note">Hold of ${m.hold} tons, filled to 1D × 10 + 40% = 1D [${m.pctDie}] → <b>${m.pct}%</b> = <b>${m.filled} tons</b>: ${m.common} tons common goods, ${m.trade} tons trade goods, ${m.special} tons Imperium/Hierate goods. Values use each good's base price per ton${enc.prey.rich ? '; as a Rich Freighter, every item was rolled twice and the more valuable kept' : ''}.</div>`;
+      const sec = (title, lot, note) => {
+        const rows = c.items.map((it, i) => ({ it, i })).filter(x => x.it.lot === lot);
+        if (!rows.length) return '';
+        return `<div class="calc-block"><div class="calc-block-title">${title}</div>${note ? '<div class="calc-note">' + note + '</div>' : ''}${rows.map(x => cargoRow(x.it, x.i)).join('')}</div>`;
+      };
+      html += sec('Common Goods — 40% of the cargo', 'common');
+      html += sec('Trade Goods — 40% of the cargo', 'trade');
+      html += sec('Imperium / Hierate Goods — 20% of the cargo', 'special', `Two alternatives, one for each direction of trade. Each shows the full ${m.special} tons; take from one or split between them, up to ${m.special} tons in all.`);
+      if (!c.items.length) html += '<div class="calc-note">The hold is empty.</div>';
+      html += `<div class="calc-block calc-row">
+        <div class="calc-block-title">Loot the Cargo</div>
+        <span id="take-summary">0 tons selected</span>
+        <button class="btn-primary" onclick="loadStolen()">Load onto Active Ship</button>
+        <span id="load-msg" class="calc-note" style="margin:0">${enc.loadMsg || ''}</span>
+      </div>`;
+      out.innerHTML = html;
+    }
+
+    function takePicks() {
+      const items = (enc.lots && enc.lots.items) || [];
+      return items.map((it, i) => {
+        const el = document.getElementById('take-' + i);
+        const left = it.tons - (it.loaded || 0);
+        const n = el ? clamp(parseInt(el.value, 10) || 0, 0, left) : 0;
+        return { it, n };
+      }).filter(p => p.n > 0);
+    }
+    function updateTakeTotals() {
+      const picks = takePicks();
+      const tons = picks.reduce((t, p) => t + p.n, 0), val = picks.reduce((t, p) => t + p.n * p.it.price, 0);
+      document.getElementById('take-summary').innerHTML = '<b>' + tons + ' ton' + (tons === 1 ? '' : 's') + '</b> selected · worth <b>' + TC.cr(val) + '</b> <span style="color:#4a9ab8">(before the fence takes its share)</span>';
+    }
+    function loadMessage(text, good) {
+      enc.loadMsg = '<span style="color:' + (good ? '#00ffaa' : '#ff5a4a') + '">' + text + '</span>';
+      const el = document.getElementById('load-msg');
+      if (el) el.innerHTML = enc.loadMsg;
+      TC.save();
+    }
+    async function loadStolen() {
+      const picks = takePicks();
+      if (!picks.length) { loadMessage('Enter how many tons to take of at least one good first.', false); return; }
+      const total = picks.reduce((t, p) => t + p.n, 0);
+      const specialTaken = picks.filter(p => p.it.lot === 'special').reduce((t, p) => t + p.n, 0);
+      const specialLoaded = enc.lots.items.filter(i => i.lot === 'special').reduce((t, i) => t + (i.loaded || 0), 0);
+      if (specialTaken + specialLoaded > enc.lots.meta.special) {
+        loadMessage('The Imperium/Hierate goods are one lot of ' + enc.lots.meta.special + ' tons shared between the two directions. You selected more than that in total.', false); return;
+      }
+      try {
+        const ship = await TC.activeShip();
+        const { data: cargo, error: ce } = await supabaseClient.from('spacecraft_cargo').select('tonnage').eq('spacecraft_id', ship.id);
+        if (ce) throw ce;
+        const used = (cargo || []).reduce((t, r) => t + (parseFloat(r.tonnage) || 0), 0);
+        const free = (parseFloat(ship.cargo_max) || 0) - used;
+        if (total > free) {
+          loadMessage('Not enough cargo space on ' + ship.name + ': you selected ' + total + ' tons but only ' + Math.max(0, free) + ' tons are free (capacity ' + (ship.cargo_max || 0) + ', loaded ' + used + ').', false);
+          return;
+        }
+        const from = enc.ship.type + (enc.world.name ? ' at ' + enc.world.name : '');
+        const rows = picks.map(p => ({
+          spacecraft_id: ship.id,
+          description: p.it.name + ' (' + p.it.id + ') — stolen from ' + from,
+          tonnage: p.n,
+          trade_good_id: p.it.id, purchase_price: 0, base_price: p.it.price, origin_world: enc.world.name || null, illegal: !!p.it.illegal, stolen: true
+        }));
+        const { error } = await supabaseClient.from('spacecraft_cargo').insert(rows);
+        if (error) {
+          if (/column|schema cache/i.test(error.message)) throw new Error('The cargo table needs the stolen-cargo column. Run docs/stolen-cargo.sql in Supabase first.');
+          throw error;
+        }
+        const val = picks.reduce((t, p) => t + p.n * p.it.price, 0);
+        picks.forEach(p => { p.it.loaded = (p.it.loaded || 0) + p.n; });
+        enc.loadMsg = '<span style="color:#00ffaa">Loaded ' + total + ' ton' + (total === 1 ? '' : 's') + ' onto <b>' + ship.name + '</b>, worth ' + TC.cr(val) +
+          ' before fencing. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).</span>';
+        renderCargo();
+        TC.save();
+      } catch (e) { loadMessage('Could not load the cargo: ' + (e.message || e), false); }
+    }
+
+    // ── Other loot ──
+    function renderLoot() {
+      const out = document.getElementById('loot-out');
+      if (!enc.ship) { out.innerHTML = ''; return; }
+      const s = enc.ship;
+      const safe = Math.round(s.tons / 100 * LOOT.safePer100Tons);
+      const pass = s.high * LOOT.high + s.mid * LOOT.middle + s.low * LOOT.low;
+      const equip = s.crew * LOOT.perCrew;
+      const veh = s.vehicles * s.vehTons * LOOT.vehiclePerTon;
+      const row = (name, val, how, fence) => `<div class="good-row"><div class="good-main"><b>${name}</b> <span style="color:#00ffaa;font-weight:600">${TC.cr(val)}</span>${fence ? '<span class="good-badge">must be fenced</span>' : ''}</div><div class="good-ex">${how}</div></div>`;
+      let html = '<div class="calc-result-title" style="margin-top:20px">OTHER LOOT</div><div class="calc-block">';
+      html += row("Ship's safe (treasure)", safe, `Cr20,000 per 100 tons of ship (${s.tons} tons). Finding it takes a Difficult (10+) Recon check (1D hours, INT) per 100 tons of ship.`, false);
+      html += row('Passenger treasure', pass, `Cr10,000 per high, Cr5,000 per middle, Cr1,000 per low passenger. Looting takes 1D minutes per passenger (unless it is in the ship's safe).`, false);
+      html += row('Crew equipment', equip, `Cr1,000 per crew member. Takes 1D minutes per crew member.`, true);
+      html += row('Vehicles', veh, `${s.vehicles} × ${s.vehTons} tons at Cr250,000 per ton (a 20-ton launch is worth MCr5). Overriding security: Difficult (10+) Electronics (computers), 1D × 10 minutes. Flying it across: Average (8+) Pilot, 1D minutes.`, true);
+      const all = safe + pass;
+      html += `<div class="calc-note" style="margin-top:8px">Spendable immediately (safe + passenger treasure): <b>${TC.cr(all)}</b>. Equipment and vehicles total <b>${TC.cr(equip + veh)}</b> before the fence's share.</div></div>`;
+      out.innerHTML = html;
+    }
+
+    TC.persist('piracy', () => enc, v => { enc = v || {}; }, ['prey-out', 'enc-out', 'hunter-out', 'cargo-out', 'loot-out']);
+    TC.hereWorld('wld');
+  </script>
+</body>
+</html>
