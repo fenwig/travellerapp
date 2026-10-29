@@ -325,8 +325,7 @@
 
       // hunter response (first roll)
       enc.hunterRows = f.hunter;
-      enc.hunter = null;
-      if (!special) { enc.hunter = []; rollHunter(true); }
+      enc.hunter = special ? null : [];   // the first response is rolled when the referee presses Calls for Help
 
       // cargo + loot
       const safeN = Math.max(1, Math.ceil(ship.tons / 100)), safeDice = TC.rollDice(safeN);
@@ -508,13 +507,11 @@
 
       if (m) html += `<div class="calc-block"><div class="calc-block-title">Prey Quirks</div>
         ${enc.quirks.map(id => `<div class="good-row"><div class="good-main"><b>${esc(PREY_QUIRKS[id][0])}</b></div><div class="calc-note" style="margin:2px 0 0">${esc(PREY_QUIRKS[id][1])}</div></div>`).join('')}
-        ${TC.workings(['Rolled D66: ' + enc.quirks.join(', ')])}
-        <div style="margin-top:6px"><button class="btn-outline" onclick="addQuirk()">Roll another quirk</button></div></div>`;
+        ${TC.workings(['Rolled D66: ' + enc.quirks.join(', ')])}</div>`;
 
       if (m) html += `<div class="calc-block"><div class="calc-block-title">Prey Complications</div>
         ${enc.comps.map(id => `<div class="good-row"><div class="good-main"><b>${esc(PREY_COMPLICATIONS[id][0])}</b></div><div class="calc-note" style="margin:2px 0 0">${esc(PREY_COMPLICATIONS[id][1])}</div></div>`).join('')}
-        ${TC.workings(['Rolled D66: ' + enc.comps.join(', ')])}
-        <div style="margin-top:6px"><button class="btn-outline" onclick="addComplication()">Roll another complication</button></div></div>`;
+        ${TC.workings(['Rolled D66: ' + enc.comps.join(', ')])}</div>`;
 
       document.getElementById('enc-out').innerHTML = html;
     }
@@ -550,14 +547,6 @@
       h += L('The prey will ' + word + ' in <b>' + fmtSec(c.oppLeft) + '</b>.');
       return h + '</div>';
     }
-    function addQuirk() {
-      const id = d66(); enc.quirks.push(id); applyQuirkEffects(id);
-      renderEncounter(); TC.save();
-    }
-    function addComplication() {
-      enc.comps.push(d66());
-      renderEncounter(); renderHunter(); TC.save();
-    }
 
     // ── Pirate hunters ──
     function hunterDMRows() {
@@ -589,26 +578,29 @@
       enc.hunterThrust = Math.max(1, parseFloat(v) || 2);
       renderHunter(); TC.save();
     }
-    // travel time of the hunter from where it launches to the encounter (accelerate, flip, brake)
+    // time for the hunter to burn from where it launches to Very Long range (50,000 km) of the encounter
     function hunterTravel(r) {
       if (!r.launch) return { text: '', calc: '' };
       const t = enc.hunterThrust || 2;
-      const hrs = 2 * Math.sqrt(r.launch.km * 1000 / (t * 9.8)) / 3600;
+      const dm = Math.max(0, r.launch.km - 50000) * 1000;   // the players pick it up at Very Long range (50,000 km)
+      const hrs = Math.sqrt(2 * dm / (t * 9.8)) / 3600;
       let calc = 'Launches ' + r.launch.km.toLocaleString('en-US') + ' km from the encounter';
       if (r.launch.other !== undefined) calc += ' (closer than the ' + (r.launch.from === 'starport' ? 'jump limit' : 'starport') + ' at ' + r.launch.other.toLocaleString('en-US') + ' km)';
-      return { text: 'Launches from the <b>' + r.launch.from + '</b> and arrives in about <b>' + fmtHours(hrs) + '</b>.', calc: calc + '; hunter Thrust ' + t + '.' };
+      return { text: 'Launches from the <b>' + r.launch.from + '</b> and is picked up at <b>Very Long range</b> ' + (dm ? 'in about <b>' + fmtHours(hrs) + '</b>.' : '<b>as soon as it launches</b>.') + ', calc: calc + '; hunter Thrust ' + t + '; straight burn to 50,000 km from the encounter.' };
     }
     function renderHunter() {
       const out = document.getElementById('hunter-out');
-      if (!enc.hunter) { out.innerHTML = ''; return; }
+      if (!enc.hunter || !enc.ship) { out.innerHTML = ''; return; }
       const rows = hunterDMRows();
+      const first = enc.hunter.length === 0;
       let html = '<div class="calc-block"><div class="calc-block-title">Pirate Hunter Response</div>';
       html += '<div class="calc-fields" style="margin-bottom:8px"><label>Hunter thrust<input type="number" id="hunt-thrust" min="1" value="' + (enc.hunterThrust || 2) + '" onchange="setHunterThrust(this.value)" /></label></div>';
       html += enc.hunter.map((r, i) => { const tv = hunterTravel(r); return `<div class="good-row"><div class="calc-note" style="margin:0">Response ${i + 1}: <b>${r.text}</b>${r.time ? '<br>Response time: <b>' + r.time + '</b>.' : ''}${tv.text ? '<br>' + tv.text : ''}</div>
         ${TC.workings(['2D [' + r.dice.join('+') + '] ' + TC.signed(r.dm) + ' = ' + r.total, r.timeCalc, tv.calc])}</div>`; }).join('');
+      if (first) html += '<div class="calc-note" style="margin:0">Press Calls for Help when the prey sends out a distress call. The hunter response is rolled then, with the thrust above.</div>';
       html += TC.workings(['Modifiers for the next roll:'], rows);
-      html += '<div class="calc-note" style="margin:6px 0 0">The first roll is made when the attack begins. Roll again each time the previous result says to (for instance "roll again in one hour").</div>';
-      html += '<div style="margin-top:6px"><button class="btn-outline" onclick="rollHunter()">Roll Hunter Response again</button></div></div>';
+      if (!first) html += '<div class="calc-note" style="margin:6px 0 0">Times count from the moment the prey calls for help. Roll again each time the previous result says to (for instance "roll again in one hour").</div>';
+      html += '<div style="margin-top:6px"><button class="btn-outline" onclick="rollHunter()">' + (first ? 'Calls for Help' : 'Roll Hunter Response again') + '</button></div></div>';
       out.innerHTML = html;
     }
 
