@@ -236,6 +236,7 @@
         world: document.getElementById('wld-name').value.trim()
       };
       enc.ship = ship;
+      enc.reversed = false;
       enc.world = { size: w.size, name: ship.world };
 
       // quirk and complication first (a Coward quirk changes the morale roll)
@@ -425,6 +426,10 @@
                 : L(`<b style="color:#ff5a4a">The prey ${c.kind === 'in' ? 'lands' : 'jumps out'} ${fmtSec(-c.slack)} before the pirate is alongside.</b>`);
             }
           }
+          if (c.moving) {
+            html += '<div style="margin-top:8px"><button class="btn-outline" onclick="toggleReverse()">' + (enc.reversed ? 'Undo Reverse Course' : 'Reverse Course') + '</button></div>';
+            if (enc.reversed) html += reverseHtml(c, s.thrust, L);
+          }
         } else {
           html += L(`<b style="color:#ff5a4a">The pirate cannot reach Long range before the prey ${c.moving ? (c.kind === 'in' ? 'lands' : 'jumps out') : 'is gone'}.</b> There is no encounter.`);
         }
@@ -444,6 +449,37 @@
       document.getElementById('enc-out').innerHTML = html;
     }
 
+    // Ship Movement table (Core Rulebook p.166): thrust to move one band closer, applied in 6-minute rounds
+    function closeSteps(net, startKm) {
+      const bands = [['Long', 10, 'Medium'], ['Medium', 5, 'Short'], ['Short', 2, 'Close'], ['Close', 1, 'Adjacent']];
+      const startBand = startKm > 10000 ? 0 : startKm > 1250 ? 1 : startKm > 10 ? 2 : startKm > 1 ? 3 : 4;
+      const steps = []; let rounds = 0;
+      if (net > 0) for (let i = startBand; i < bands.length; i++) { rounds += bands[i][1] / net; steps.push({ reach: bands[i][2], rounds }); }
+      return { steps, boardMin: net > 0 ? rounds * 6 : null };
+    }
+    function toggleReverse() { enc.reversed = !enc.reversed; renderEncounter(); TC.save(); }
+    // The prey stops, turns around and heads for the opposite end. The pirate arrived from the jump limit side,
+    // so a prey that was heading in now flies towards the pirate (thrusts add), and one that was heading out is now running from it.
+    function reverseHtml(c, preyThrust, L) {
+      const nowOut = c.kind === 'in', net = nowOut ? c.pirateThrust + preyThrust : c.pirateThrust - preyThrust;
+      const brakeSec = Math.abs(c.rs.vq) / (preyThrust * G);
+      const cs = closeSteps(net, c.tRange === 0 ? c.sepKm : RANGE_LONG_KM);
+      const word = nowOut ? 'reach the jump limit' : 'land';
+      let h = '<div style="border-top:1px solid #0a4a60;margin-top:8px;padding-top:6px">';
+      h += L('<b>The prey reverses course.</b> It needs <b>' + fmtSec(brakeSec) + '</b> to stop and turn around, then heads ' + (nowOut ? 'back out towards the jump limit (and the pirate).' : 'back towards the planet (away from the pirate).') + ' The times below include the turnaround.');
+      if (net <= 0) h += L('<b style="color:#ff5a4a">The pirate cannot close the range.</b> The prey is at least as fast.');
+      else {
+        cs.steps.forEach(st => {
+          const min = st.rounds * 6 + brakeSec / 60, late = min * 60 > c.oppLeft;
+          h += '<div class="calc-roll-line" style="padding-left:14px"><span' + (late ? ' style="color:#ff5a4a"' : '') + '>' + (st.reach === 'Adjacent' ? '<b>Adjacent (boarding position)</b>' : st.reach + ' range') + ': <b>' + fmtHours(min / 60) + '</b>' + (late ? ' (after the prey has ' + (nowOut ? 'jumped' : 'landed') + ')' : '') + '</span></div>';
+        });
+        const slack = c.oppLeft - (cs.boardMin * 60 + brakeSec);
+        h += slack >= 0 ? L('Time to spare once alongside: <b style="color:#00ffaa">' + fmtSec(slack) + '</b>.')
+          : L('<b style="color:#ff5a4a">The prey ' + (nowOut ? 'jumps out' : 'lands') + ' ' + fmtSec(-slack) + ' before the pirate is alongside.</b>');
+      }
+      h += L('The prey will ' + word + ' in <b>' + fmtSec(c.oppLeft) + '</b>.');
+      return h + '</div>';
+    }
     function addQuirk() {
       const id = d66(); enc.quirks.push(id); applyQuirkEffects(id);
       renderEncounter(); TC.save();
