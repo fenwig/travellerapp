@@ -303,16 +303,20 @@
       enc.world = { size: w.size, name: ship.world };
 
       // quirk and complication first (a Coward quirk changes the morale roll)
-      enc.quirks = []; enc.comps = [];
-      const q = d66(); enc.quirks.push(q);
-      const c = d66(); enc.comps.push(c);
+      // (a special ship has its quirks, complications, morale and pirate hunter built into the scenario)
+      const special = !!enc.prey.special;
+      enc.quirks = []; enc.comps = []; enc.mor = null;
+      if (!special) {
+        const q = d66(); enc.quirks.push(q);
+        const c = d66(); enc.comps.push(c);
 
-      // morale
-      const sel = document.getElementById('mor-class').value;
-      const cls = sel === 'auto' ? (PREY_MORALE[enc.prey.type] || 'merchant') : sel;
-      const md = TC.d6();
-      enc.mor = { cls, die: md, base: MORALE_CLASS[cls].base, adj: [], noSurrender: false };
-      applyQuirkEffects(q);
+        // morale
+        const sel = document.getElementById('mor-class').value;
+        const cls = sel === 'auto' ? (PREY_MORALE[enc.prey.type] || 'merchant') : sel;
+        const md = TC.d6();
+        enc.mor = { cls, die: md, base: MORALE_CLASS[cls].base, adj: [], noSurrender: false };
+        applyQuirkEffects(q);
+      }
 
       // distance, direction, position, speed, travel times and intercept
       enc.chase = rollChase(w, ship, pirate);
@@ -321,8 +325,8 @@
 
       // hunter response (first roll)
       enc.hunterRows = f.hunter;
-      enc.hunter = [];
-      rollHunter(true);
+      enc.hunter = null;
+      if (!special) { enc.hunter = []; rollHunter(true); }
 
       // cargo + loot
       const safeN = Math.max(1, Math.ceil(ship.tons / 100)), safeDice = TC.rollDice(safeN);
@@ -450,17 +454,18 @@
     function renderEncounter() {
       if (!enc.ship) { document.getElementById('enc-out').innerHTML = ''; return; }
       const s = enc.ship, m = enc.mor;
-      const mor = morTotal();
+      const mor = m ? morTotal() : 0;
       let html = '<div class="calc-result-title" style="margin-top:20px">THE ENCOUNTER</div>';
 
       html += `<div class="calc-block"><div class="calc-block-title">Prey: ${esc(s.type)}</div><div class="calc-note" style="margin:0">
         ${s.tons} tons · Thrust ${s.thrust} · ${s.crew} crew · passengers ${s.high} high / ${s.mid} middle / ${s.low} low · ${s.vehicles} vehicle${s.vehicles === 1 ? '' : 's'}${s.vehicles ? ' of ' + s.vehTons + ' tons' : ''} · cargo hold ${s.hold} tons</div></div>`;
 
-      html += `<div class="calc-block"><div class="calc-block-title">Morale (MOR)</div>
+      if (m) html += `<div class="calc-block"><div class="calc-block-title">Morale (MOR)</div>
         <div class="calc-roll-line">The prey's morale is <b>MOR ${Math.max(0, mor)}</b>.</div>${TC.workings([MORALE_CLASS[m.cls].label + ': 1D [' + m.die + '] + ' + m.base + m.adj.map(a => ' ' + a.label).join('') + ' = ' + Math.max(0, mor)])}`;
-      if (m.noSurrender) html += '<div class="calc-note" style="margin-top:6px;color:#ffb020"><b>No Surrender:</b> this crew will not surrender under any circumstances. Ignore MOR.</div>';
+      if (!m) { /* special ship: morale is in the scenario */ }
+      else if (m.noSurrender) html += '<div class="calc-note" style="margin-top:6px;color:#ffb020"><b>No Surrender:</b> this crew will not surrender under any circumstances. Ignore MOR.</div>';
       else html += `<div class="calc-note" style="margin-top:6px">Demanding Surrender: Average (8+) Electronics (comms) check (1D × 10 seconds, SOC) with <b>DM−${Math.max(0, mor)}</b> (the target's current MOR). MOR drops by 1 for every critical hit, and by 1D for critical hits of Severity 4+. At MOR 0 the victim jumps out (if possible) or surrenders.</div>`;
-      html += '</div>';
+      if (m) html += '</div>';
 
       const c = enc.chase, km = n => Math.round(n).toLocaleString('en-US');
       const dirText = c.kind === 'in' ? 'heading towards the planet' : c.kind === 'out' ? 'heading out to the jump limit' : 'stationary';
@@ -501,12 +506,12 @@
       }
       html += '</div>';
 
-      html += `<div class="calc-block"><div class="calc-block-title">Prey Quirks</div>
+      if (m) html += `<div class="calc-block"><div class="calc-block-title">Prey Quirks</div>
         ${enc.quirks.map(id => `<div class="good-row"><div class="good-main"><b>${esc(PREY_QUIRKS[id][0])}</b></div><div class="calc-note" style="margin:2px 0 0">${esc(PREY_QUIRKS[id][1])}</div></div>`).join('')}
         ${TC.workings(['Rolled D66: ' + enc.quirks.join(', ')])}
         <div style="margin-top:6px"><button class="btn-outline" onclick="addQuirk()">Roll another quirk</button></div></div>`;
 
-      html += `<div class="calc-block"><div class="calc-block-title">Prey Complications</div>
+      if (m) html += `<div class="calc-block"><div class="calc-block-title">Prey Complications</div>
         ${enc.comps.map(id => `<div class="good-row"><div class="good-main"><b>${esc(PREY_COMPLICATIONS[id][0])}</b></div><div class="calc-note" style="margin:2px 0 0">${esc(PREY_COMPLICATIONS[id][1])}</div></div>`).join('')}
         ${TC.workings(['Rolled D66: ' + enc.comps.join(', ')])}
         <div style="margin-top:6px"><button class="btn-outline" onclick="addComplication()">Roll another complication</button></div></div>`;
