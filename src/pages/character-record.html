@@ -341,8 +341,8 @@
               <button class="btn btn-ghost view-only" id="edit-btn" onclick="enterEditMode()" style="display:none">Edit</button>
               <button class="btn btn-primary edit-only" onclick="saveAll()">Save</button>
               <button class="btn btn-ghost edit-only" onclick="cancelEdit()">Cancel</button>
+              <button class="btn btn-ghost edit-only" id="export-btn" onclick="exportCurrent('character', character.id, this)" title="Save this character as a file on your computer">Export</button>
             </div>
-            <button class="btn btn-ghost view-only" id="export-btn" onclick="exportCurrent('character', character.id, this)" style="display:none" title="Save this character as a file on your computer">Export</button>
           </div>
         </div>
 
@@ -747,10 +747,7 @@ async function loadCharacter() {
   character = data;
   isOwner   = (character.user_id === currentUser.id) || isGM(currentUser);
   document.getElementById('char-body').style.display = 'block';
-  if (isOwner) {
-    document.getElementById('edit-btn').style.display = 'inline-flex';
-    document.getElementById('export-btn').style.display = 'inline-flex';
-  }
+  if (isOwner) document.getElementById('edit-btn').style.display = 'inline-flex';
 
   renderHeader();
   renderStats();
