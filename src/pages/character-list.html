@@ -39,7 +39,9 @@
     .status-select option { background: #0a1a22; color: #b0d8e8; }
     .roster-thumb { display: inline-block; vertical-align: middle; width: 36px; height: 36px; margin-right: 10px;
       border-radius: 4px; border: 1px solid #0a4a60; background: #0d1520; }
-    .campaign-bar { display: flex; align-items: center; gap: 10px; margin: -4px 0 18px; }
+    .title-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 18px; }
+    .title-row .page-title { margin-bottom: 0; }
+    .campaign-bar { display: flex; align-items: center; gap: 10px; }
     .campaign-bar label { font-size: 0.7rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.08em; }
     .campaign-bar select { background: #080d12; border: 1px solid #0a4a60; color: #00e5ff; border-radius: 4px; padding: 6px 10px; font-size: 0.9rem; min-width: 220px; }
     .roster-empty td { color: #4a9ab8; font-size: 0.85rem; }
@@ -60,17 +62,19 @@
     </nav>
 
     <main class="page-main">
-      <h1 class="page-title">ROSTER</h1>
-      <div class="campaign-bar" id="campaign-bar" style="display:none">
-        <label for="campaign-select">Campaign</label>
-        <select id="campaign-select" onchange="switchCampaign(this.value)"></select>
+      <div class="title-row">
+        <h1 class="page-title">ROSTER</h1>
+        <div class="campaign-bar" id="campaign-bar" style="display:none">
+          <label for="campaign-select">Campaign</label>
+          <select id="campaign-select" onchange="switchCampaign(this.value)"></select>
+        </div>
+        <button class="btn-outline" id="new-campaign-btn" style="display:none" onclick="newCampaign()">+ New Campaign</button>
       </div>
 
       <div class="roster-section">
         <div class="roster-section-head">
           <div class="roster-section-title">Characters</div>
           <div style="display:flex; gap:10px;">
-            <button class="btn-outline" id="new-campaign-btn" style="display:none" onclick="newCampaign()">+ New Campaign</button>
             <button class="btn-outline" onclick="window.location.href='character-creation.html'">+ Character Creation</button>
             <button class="btn-outline" onclick="createCharacter()">+ Blank Character</button>
           </div>
