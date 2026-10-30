@@ -192,6 +192,7 @@
     .mag-reload:disabled { opacity: 0.4; cursor: not-allowed; }
     .sw-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
     .sw-actions .add-row-btn { margin-top: 0; }
+    .manual-warn { margin-top: 8px; padding: 6px 10px; border: 1px solid #b8860b; border-radius: 4px; background: rgba(184,134,11,0.12); color: #e6b84d; font-size: 0.78rem; }
     .cat-picker { border: 1px solid #0a4a60; border-radius: 4px; background: rgba(8,13,18,0.9); padding: 10px; margin-top: 8px; }
     body:not(.editing) .cat-picker { display: none !important; }
     .cat-picker-bar { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -449,8 +450,8 @@
               <tbody id="armour-tbody"></tbody>
             </table>
             <div class="sw-actions">
-              <button class="add-row-btn edit-only" onclick="addArmourRow()">+ Add Armour</button>
               <button class="add-row-btn edit-only" onclick="togglePicker('armour')">+ From Catalogue</button>
+              <button class="add-row-btn edit-only" onclick="manualAdd(this, () => addArmourRow())">+ Add Armour</button>
             </div>
             <div id="pk-armour" class="cat-picker" style="display:none"></div>
           </div>
@@ -466,8 +467,8 @@
               <tbody id="weapons-tbody"></tbody>
             </table>
             <div class="sw-actions">
-              <button class="add-row-btn edit-only" onclick="addWeaponRow()">+ Add Weapon</button>
               <button class="add-row-btn edit-only" onclick="togglePicker('weapons')">+ From Catalogue</button>
+              <button class="add-row-btn edit-only" onclick="manualAdd(this, () => addWeaponRow())">+ Add Weapon</button>
             </div>
             <div id="pk-weapons" class="cat-picker" style="display:none"></div>
           </div>
@@ -479,8 +480,8 @@
               <tbody id="equipment-tbody"></tbody>
             </table>
             <div class="sw-actions">
-              <button class="add-row-btn edit-only" onclick="addEquipmentRow()">+ Add Equipment</button>
               <button class="add-row-btn edit-only" onclick="togglePicker('equipment')">+ From Catalogue</button>
+              <button class="add-row-btn edit-only" onclick="manualAdd(this, () => addEquipmentRow())">+ Add Equipment</button>
             </div>
             <div id="pk-equipment" class="cat-picker" style="display:none"></div>
           </div>
@@ -502,8 +503,8 @@
               <tbody id="comms-tbody"></tbody>
             </table>
             <div class="sw-actions">
-              <button class="add-row-btn edit-only" onclick="addCommsRow()">+ Add Comms</button>
               <button class="add-row-btn edit-only" onclick="togglePicker('comms')">+ From Catalogue</button>
+              <button class="add-row-btn edit-only" onclick="manualAdd(this, () => addCommsRow())">+ Add Comms</button>
             </div>
             <div id="pk-comms" class="cat-picker" style="display:none"></div>
           </div>
@@ -526,8 +527,8 @@
               <tbody id="augments-tbody"></tbody>
             </table>
             <div class="sw-actions">
-              <button class="add-row-btn edit-only" onclick="addAugmentRow()">+ Add Augment</button>
               <button class="add-row-btn edit-only" onclick="togglePicker('augments')">+ From Catalogue</button>
+              <button class="add-row-btn edit-only" onclick="manualAdd(this, () => addAugmentRow())">+ Add Augment</button>
             </div>
             <div id="pk-augments" class="cat-picker" style="display:none"></div>
           </div>
@@ -1254,9 +1255,9 @@ function modsRowHtml(armourId, mods) {
   return `<tr class="mods-row ${mods.length ? '' : 'no-mods'}" data-for="${armourId}"><td colspan="8" class="mods-cell">
       <div class="mod-list"><div class="mod-head"><span></span><span>Modification</span><span>TL</span><span>Kg</span><span>Effect</span><span></span></div>${mods.map(modLineHtml).join('')}</div>
       <div class="mod-actions edit-only">
-        <button class="add-row-btn" onclick="addModLine('${armourId}')">+ Add Mod</button>
         <button class="add-row-btn" onclick="togglePicker('mods','${armourId}')">+ Mod from Catalogue</button>
         <button class="add-row-btn" onclick="togglePicker('bdmods','${armourId}')">+ Battle Dress Mod</button>
+        <button class="add-row-btn" onclick="manualAdd(this, () => addModLine('${armourId}'))">+ Add Mod</button>
       </div>
       <div id="pk-mods-${armourId}" class="cat-picker" style="display:none"></div>
       <div id="pk-bdmods-${armourId}" class="cat-picker" style="display:none"></div>
@@ -1372,13 +1373,14 @@ function renderWeapons(rows) {
         <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
         <td><input value="${escapeHtml(r.range||'')}" placeholder="Range" style="width:80px" /></td>
         <td><input value="${escapeHtml(r.damage||'')}" placeholder="Damage" style="width:70px" /></td>
-        <td><input type="number" value="${r.kg}" placeholder="0" step="0.01" style="width:55px" /></td>
+        <td><input type="number" value="${r.kg}" placeholder="0" step="0.01" style="width:55px" oninput="refreshQtyTotalFor(this.closest('tr'))" /></td>
         <td><input type="number" value="${r.magazine??''}" placeholder="Mag" style="width:50px" /></td>
         <td><input value="${escapeHtml(r.traits||'')}" placeholder="Traits" /></td>
         <td class="td-actions edit-only"><button class="skill-remove" onclick="removeWeaponRow('${r.id}',this)">✕</button></td>
-      </tr>${(r.magazine > 0) ? magRowHtml(r) : ''}`).join('')
+      </tr>${(r.magazine > 0) ? magRowHtml(r) : ''}${isQtyItem(r) ? qtyRowHtml(r.id, r.qty ?? 1, r.kg) : ''}`).join('')
     : none(8);
   document.querySelectorAll('#weapons-tbody tr.mag-row').forEach(refreshReloadBtn);
+  document.querySelectorAll('#weapons-tbody tr.qty-row').forEach(refreshQtyTotal);
 }
 
 function addWeaponRow(p) {
@@ -1392,19 +1394,85 @@ function addWeaponRow(p) {
     <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
     <td><input placeholder="Range" value="${escapeHtml(p.range||'')}" style="width:80px" /></td>
     <td><input placeholder="Damage" value="${escapeHtml(p.damage||'')}" style="width:70px" /></td>
-    <td><input type="number" placeholder="0" step="0.01" value="${p.kg??''}" style="width:55px" /></td>
+    <td><input type="number" placeholder="0" step="0.01" value="${p.kg??''}" style="width:55px" oninput="refreshQtyTotalFor(this.closest('tr'))" /></td>
     <td><input type="number" placeholder="Mag" value="${p.mag??''}" style="width:50px" /></td>
     <td><input placeholder="Traits" value="${escapeHtml(p.traits||'')}" /></td>
-    <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
+    <td class="td-actions edit-only"><button class="skill-remove" onclick="removeNewWeaponRow(this)">✕</button></td>`;
   tbody.appendChild(tr);
+  if (p.category === 'Grenade' || p.category === 'Explosive' || isQtyItem(p)) {
+    tr.insertAdjacentHTML('afterend', qtyRowHtml(tr.dataset.id, 1, p.kg));
+    refreshQtyTotal(tr.nextElementSibling);
+  }
   pendingWeapons.push({ action: 'add', tr });
+}
+
+function removeNewWeaponRow(btn) {
+  const tr = btn.closest('tr');
+  const q = tr.nextElementSibling;
+  if (q && q.classList.contains('qty-row')) q.remove();
+  tr.remove();
 }
 
 function removeWeaponRow(id, btn) {
   pendingWeapons.push({ action: 'delete', id });
+  const qty = document.querySelector(`#weapons-tbody tr.qty-row[data-for="${id}"]`);
+  if (qty) qty.remove();
   const ammo = document.querySelector(`#weapons-tbody tr.mag-row[data-for="${id}"]`);
   if (ammo) ammo.remove();
   btn.closest('tr').remove();
+}
+
+// ── Quantity (subline under grenades, explosives and other counted items) ──
+// Quantity saves the moment it changes; the total weight follows the quantity.
+function isQtyItem(r) {
+  return r.qty != null || /grenade|explosive|charge|TDX|nuke|fusion block|detonator/i.test(r.name || '');
+}
+
+function qtyRowHtml(id, qty, kg) {
+  return `<tr class="qty-row" data-for="${id}"><td colspan="8" class="mag-cell">
+      <span class="mag-arrow">↳</span>
+      <label>Quantity</label>
+      <span class="stepper">
+        <input type="number" min="0" value="${qty}" onchange="setQty('${id}',this.value)" />
+        <span class="stepper-btns">
+          <button type="button" class="stepper-btn" onclick="stepQty('${id}',1)">▲</button>
+          <button type="button" class="stepper-btn" onclick="stepQty('${id}',-1)">▼</button>
+        </span>
+      </span>
+      <label>Total</label><span class="qty-total"></span>
+    </td></tr>`;
+}
+
+function qtyRow(id) {
+  return document.querySelector(`#weapons-tbody tr.qty-row[data-for="${id}"]`);
+}
+
+function refreshQtyTotal(row) {
+  const main = document.querySelector(`#weapons-tbody tr[data-id="${row.dataset.for}"]`);
+  const kg = main ? parseFloat(main.querySelectorAll('input')[4].value) || 0 : 0;
+  const qty = parseInt(row.querySelector('input').value) || 0;
+  row.querySelector('.qty-total').textContent = (Math.round(kg * qty * 100) / 100) + ' kg';
+}
+
+function refreshQtyTotalFor(tr) {
+  const row = qtyRow(tr.dataset.id);
+  if (row) refreshQtyTotal(row);
+}
+
+function setQty(id, value) {
+  const row = qtyRow(id);
+  if (!row) return;
+  const v = Math.max(0, parseInt(value) || 0);
+  row.querySelector('input').value = v;
+  refreshQtyTotal(row);
+  if (String(id).startsWith('new-')) return;   // not saved yet: goes in with the row on Save
+  supabaseClient.from('character_weapons').update({ qty: v }).eq('id', id)
+    .then(({ error }) => { if (error) console.error('character_weapons qty update failed:', error.message); });
+}
+
+function stepQty(id, delta) {
+  const row = qtyRow(id);
+  if (row) setQty(id, (parseInt(row.querySelector('input').value) || 0) + delta);
 }
 
 // ── Ammunition (subline under weapons that have a magazine size) ──
@@ -1477,6 +1545,21 @@ function reloadWeapon(id) {
 
 // ── Weapons / armour catalogue dropdowns (data in js/gear-data.js) ──
 
+
+// Typing an item in by hand skips the catalogue stats, so ask first.
+function manualAdd(btn, add) {
+  add();
+  const bar = btn.parentElement;
+  let note = bar.nextElementSibling;
+  if (!note || !note.classList.contains('manual-warn')) {
+    note = document.createElement('div');
+    note.className = 'manual-warn';
+    note.textContent = 'Only add items manually if they are not in the catalogue. Items typed in by hand skip the catalogue stats and can cause errors.';
+    bar.after(note);
+  }
+  clearTimeout(note._t);
+  note._t = setTimeout(() => note.remove(), 10000);
+}
 
 // ── Catalogue pickers (data in js/gear-data.js) ──
 // One search-panel picker used by every "+ From Catalogue" button: type to search,
@@ -1827,8 +1910,8 @@ function renderComputerCard(c) {
       </div>
       <div id="sw-${c.id}" style="display:grid;gap:1px">${renderSoftwareList(c.id)}</div>
       <div class="sw-actions">
-        <button class="add-row-btn edit-only" onclick="addSoftwareRow('${c.id}')">+ Add Software</button>
         <button class="add-row-btn edit-only" onclick="togglePicker('software','${c.id}')">+ From Catalogue</button>
+        <button class="add-row-btn edit-only" onclick="manualAdd(this, () => addSoftwareRow('${c.id}'))">+ Add Software</button>
       </div>
       <div id="pk-software-${c.id}" class="cat-picker" style="display:none"></div>
     </div>`;
@@ -2192,6 +2275,11 @@ function clearPending() {
 }
 
 // ── Save ───────────────────────────────────────────────────
+function qtyLine(tr) {
+  const q = tr.nextElementSibling;
+  return q && q.classList.contains('qty-row') ? q : null;
+}
+
 async function saveAll() {
   const msg = document.getElementById('save-msg');
   msg.textContent = 'Saving…'; msg.className = 'save-msg';
@@ -2273,7 +2361,8 @@ async function saveAll() {
           character_id: character.id,
           name: i[0].value, tl: parseInt(i[1].value)||null, range: i[2].value||null,
           damage: i[3].value||null, kg: parseFloat(i[4].value)||0,
-          magazine: parseInt(i[5].value)||null, traits: i[6].value||null
+          magazine: parseInt(i[5].value)||null, traits: i[6].value||null,
+          ...(qtyLine(p.tr) ? { qty: parseInt(qtyLine(p.tr).querySelector('input').value) || 0 } : {})
         });
       }
     }
