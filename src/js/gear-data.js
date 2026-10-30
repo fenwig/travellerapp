@@ -125,3 +125,29 @@ const GEAR_SOFTWARE = [
   {"name":"Intellect/2","group":"Intellect","bw":2,"tl":13,"cost":"Cr50000","effect":"Improved Agent; can run Expert packages. Uses up to 2 skills at once."},
   {"name":"Intellect/3","group":"Intellect","bw":3,"tl":14,"cost":"Cr200000","effect":"Improved Agent; can run Expert packages. Uses up to 3 skills at once."}
 ];
+
+// Augments (Core p.106). Improvement text starting "STR +2" / "Protection +1" is read by the
+// Character Record to adjust that characteristic or armour total automatically.
+const GEAR_AUGMENTS = [
+  {"name":"Cognitive Augmentation","improvement":"INT +1","tl":12,"cost":"Cr500000"},
+  {"name":"Cognitive Augmentation","improvement":"INT +2","tl":14,"cost":"MCr1"},
+  {"name":"Cognitive Augmentation","improvement":"INT +3","tl":16,"cost":"MCr5"},
+  {"name":"Dexterity Augmentation","improvement":"DEX +1","tl":11,"cost":"Cr500000"},
+  {"name":"Dexterity Augmentation","improvement":"DEX +2","tl":12,"cost":"MCr1"},
+  {"name":"Dexterity Augmentation","improvement":"DEX +3","tl":15,"cost":"MCr5"},
+  {"name":"Endurance Augmentation","improvement":"END +1","tl":11,"cost":"Cr500000"},
+  {"name":"Endurance Augmentation","improvement":"END +2","tl":12,"cost":"MCr1"},
+  {"name":"Endurance Augmentation","improvement":"END +3","tl":15,"cost":"MCr5"},
+  {"name":"Strength Augmentation","improvement":"STR +1","tl":11,"cost":"Cr500000"},
+  {"name":"Strength Augmentation","improvement":"STR +2","tl":12,"cost":"MCr1"},
+  {"name":"Strength Augmentation","improvement":"STR +3","tl":15,"cost":"MCr5"},
+  {"name":"Enhanced Vision","improvement":"Binoculars, IR/Light Intensification","tl":13,"cost":"Cr25000"},
+  {"name":"Neural Comm","improvement":"Audio only","tl":10,"cost":"Cr1000"},
+  {"name":"Neural Comm","improvement":"Audio and visual, Computer/0","tl":12,"cost":"Cr5000"},
+  {"name":"Neural Comm","improvement":"Multiple forms of data, Computer/1","tl":14,"cost":"Cr20000"},
+  {"name":"Skill Augmentation","improvement":"Skill DM+1","tl":12,"cost":"Cr50000"},
+  {"name":"Subdermal Armour","improvement":"Protection +1","tl":10,"cost":"Cr50000"},
+  {"name":"Subdermal Armour","improvement":"Protection +3","tl":11,"cost":"Cr100000"},
+  {"name":"Wafer Jack","improvement":"Capacity Bandwidth/4","tl":12,"cost":"Cr10000"},
+  {"name":"Wafer Jack","improvement":"Capacity Bandwidth/8","tl":13,"cost":"Cr15000"}
+];

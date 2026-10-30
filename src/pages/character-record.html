@@ -457,12 +457,17 @@
             <div class="cr-section-title">Augments</div>
             <table class="gear-table">
               <thead><tr>
-                <th>Type</th><th class="col-narrow">TL</th><th>Improvement</th>
-                <th class="col-narrow">Bonus Target</th><th class="col-narrow">Bonus</th><th class="edit-only"></th>
+                <th>Augment</th><th class="col-narrow">TL</th><th>Effect / Improvement</th>
+                <th class="edit-only"></th>
               </tr></thead>
               <tbody id="augments-tbody"></tbody>
             </table>
-            <button class="add-row-btn edit-only" onclick="addAugmentRow()">+ Add Augment</button>
+            <div class="sw-actions">
+              <button class="add-row-btn edit-only" onclick="addAugmentRow()">+ Add Augment</button>
+              <select id="augment-catalogue" class="edit-only sw-catalogue" onchange="addAugmentFromCatalogue(this)">
+                <option value="">+ From Catalogue…</option>
+              </select>
+            </div>
           </div>
 
         </div>
@@ -1251,41 +1256,61 @@ function addFromCatalogue(kind, i) {
   if (kind === 'weapons') addWeaponRow(GEAR_WEAPONS[i]); else addArmourRow(GEAR_ARMOUR[i]);
 }
 
-const BONUS_TARGETS = ['', 'str', 'dex', 'end_stat', 'int_stat', 'edu', 'soc', 'armour'];
-const BONUS_TARGET_LABEL = { '': '—', str:'STR', dex:'DEX', end_stat:'END', int_stat:'INT', edu:'EDU', soc:'SOC', armour:'Armour' };
+// The improvement text drives the stat/armour bonus: "STR +2" raises STR by 2,
+// "Protection +1" adds 1 to the armour total. Anything else has no numeric effect.
+const AUGMENT_STAT_KEYS = { STR: 'str', DEX: 'dex', END: 'end_stat', INT: 'int_stat', EDU: 'edu', SOC: 'soc', PROTECTION: 'armour' };
 
-function bonusTargetOptions(selected) {
-  return BONUS_TARGETS.map(t => `<option value="${t}" ${t === (selected||'') ? 'selected' : ''}>${BONUS_TARGET_LABEL[t]}</option>`).join('');
+function parseAugmentBonus(text) {
+  const m = (text || '').trim().match(/^(STR|DEX|END|INT|EDU|SOC|Protection)\s*\+\s*(\d+)/i);
+  return m ? { target: AUGMENT_STAT_KEYS[m[1].toUpperCase()], value: parseInt(m[2]) } : null;
+}
+
+// Existing rows saved with a bonus the text doesn't describe (set before the
+// Bonus columns were removed) keep it, as long as their text is untouched.
+function augmentBonusFields(tr) {
+  const improvement = tr.querySelectorAll('input')[2].value;
+  const parsed = parseAugmentBonus(improvement);
+  if (parsed) return { bonus_target: parsed.target, bonus_value: parsed.value };
+  if (tr.dataset.bt && improvement === tr.dataset.orig) return { bonus_target: tr.dataset.bt, bonus_value: parseInt(tr.dataset.bv) || 0 };
+  return { bonus_target: null, bonus_value: 0 };
 }
 
 function renderAugments(rows) {
   document.getElementById('augments-tbody').innerHTML = rows.length
-    ? rows.map(r => `<tr data-id="${r.id}" class="existing-row">
-        <td><input value="${escapeHtml(r.type||'')}" placeholder="Type" /></td>
+    ? rows.map(r => `<tr data-id="${r.id}" data-bt="${r.bonus_target||''}" data-bv="${r.bonus_value||0}" data-orig="${escapeHtml(r.improvement||'')}" class="existing-row">
+        <td><input value="${escapeHtml(r.type||'')}" placeholder="Augment" /></td>
         <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
-        <td><input value="${escapeHtml(r.improvement||'')}" placeholder="Improvement" /></td>
-        <td><select>${bonusTargetOptions(r.bonus_target||'')}</select></td>
-        <td><input type="number" value="${r.bonus_value||0}" placeholder="0" style="width:45px" /></td>
+        <td><input value="${escapeHtml(r.improvement||'')}" placeholder="Effect / Improvement" /></td>
         <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingAugments','${r.id}',this)">✕</button></td>
       </tr>`).join('')
-    : none(6);
+    : none(4);
 }
 
-function addAugmentRow() {
+function addAugmentRow(p) {
+  p = p || {};
   const tbody = document.getElementById('augments-tbody');
   if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
   const tr = document.createElement('tr');
   tr.dataset.id = 'new-' + Date.now();
   tr.innerHTML = `
-    <td><input placeholder="Type" /></td>
-    <td><input type="number" placeholder="TL" style="width:45px" /></td>
-    <td><input placeholder="Improvement" /></td>
-    <td><select>${bonusTargetOptions('')}</select></td>
-    <td><input type="number" placeholder="0" style="width:45px" /></td>
+    <td><input placeholder="Augment" value="${escapeHtml(p.name||'')}" /></td>
+    <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
+    <td><input placeholder="Effect / Improvement" value="${escapeHtml(p.improvement||'')}" /></td>
     <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
   tbody.appendChild(tr);
   pendingAugments.push({ action: 'add', tr });
 }
+
+function addAugmentFromCatalogue(sel) {
+  const i = sel.value;
+  sel.value = '';
+  if (i !== '') addAugmentRow(GEAR_AUGMENTS[i]);
+}
+
+(function fillAugmentCatalogue() {
+  document.getElementById('augment-catalogue').insertAdjacentHTML('beforeend',
+    GEAR_AUGMENTS.map((a, i) => `<option value="${i}">${escapeHtml(a.name)} — ${escapeHtml(a.improvement)}, TL${a.tl}</option>`).join(''));
+})();
 
 function renderEquipment(rows) {
   document.getElementById('equipment-tbody').innerHTML = rows.length
@@ -1912,21 +1937,19 @@ async function saveAll() {
     for (const tr of document.querySelectorAll('#augments-tbody tr.existing-row')) {
       const id = tr.dataset.id; if (!id) continue;
       const i = tr.querySelectorAll('input');
-      const sel = tr.querySelector('select');
       await supabaseClient.from('character_augments').update({
         type: i[0].value, tl: parseInt(i[1].value)||null, improvement: i[2].value||null,
-        bonus_target: sel.value || null, bonus_value: parseInt(i[3].value)||0
+        ...augmentBonusFields(tr)
       }).eq('id', id);
     }
     for (const p of pendingAugments) {
       if (p.action === 'delete') { await supabaseClient.from('character_augments').delete().eq('id', p.id); }
       else {
         const i = p.tr.querySelectorAll('input');
-        const sel = p.tr.querySelector('select');
         if (i[0].value) await supabaseClient.from('character_augments').insert({
           character_id: character.id,
           type: i[0].value, tl: parseInt(i[1].value)||null, improvement: i[2].value||null,
-          bonus_target: sel.value || null, bonus_value: parseInt(i[3].value)||0
+          ...augmentBonusFields(p.tr)
         });
       }
     }
