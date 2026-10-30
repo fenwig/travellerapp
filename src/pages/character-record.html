@@ -188,7 +188,9 @@
     .eq-btn.on::after { content: '✓'; position: absolute; inset: 0; text-align: center; font-size: 12px; line-height: 14px; color: #00e5ff; }
     tr[data-eq="0"] > td > .eq-cell > input, tr[data-eq="0"] > td input, tr[data-eq="0"] .mod-bonus,
     tr[data-eq="0"] + tr.mods-row, tr[data-eq="0"] + tr.mag-row, tr[data-eq="0"] + tr.qty-row,
-    tr[data-eq="0"] + tr.mag-row + tr.qty-row { opacity: 0.45; }
+    tr[data-eq="0"] + tr.mag-row + tr.qty-row,
+    tr[data-eq="0"] + tr.wmods-row, tr[data-eq="0"] + tr.mag-row + tr.wmods-row, tr[data-eq="0"] + tr.qty-row + tr.wmods-row,
+    tr[data-eq="0"] + tr.mag-row + tr.qty-row + tr.wmods-row { opacity: 0.45; }
     .computer-card[data-eq="0"] > :not(.computer-head), .computer-card[data-eq="0"] .computer-head > :not(:first-child) { opacity: 0.45; }
     /* Ammunition subline under weapons */
     .mag-row td { border-bottom: 1px solid rgba(10,74,96,0.3); padding-top: 0; }
@@ -1309,9 +1311,15 @@ async function renderGear() {
     const { data: md } = await supabaseClient.from('character_armour_mods').select('*').in('armour_id', armourRows.map(r => r.id));
     armourMods = md || [];
   }
+  const weaponRows = w.data || [];
+  let weaponAccs = [];
+  if (weaponRows.length) {
+    const { data: wd } = await supabaseClient.from('character_weapon_accessories').select('*').in('weapon_id', weaponRows.map(r => r.id));
+    weaponAccs = wd || [];
+  }
   renderComms(comms.data || []);
   renderArmour(armourRows, armourMods);
-  renderWeapons(w.data || []);
+  renderWeapons(weaponRows, weaponAccs);
   characterAugments = aug.data || [];
   renderAugments(characterAugments);
   renderEquipment(eq.data || []);
@@ -1460,7 +1468,8 @@ function addArmourRow(p) {
   pendingArmour.push({ action: 'add', tr });
 }
 
-function renderWeapons(rows) {
+function renderWeapons(rows, accs) {
+  accs = accs || [];
   document.getElementById('weapons-tbody').innerHTML = rows.length
     ? rows.map(r => `<tr data-id="${r.id}" data-eq="${eqOn(r) ? 1 : 0}" class="existing-row">
         <td>${eqCell(eqOn(r), `<input value="${escapeHtml(r.name||'')}" placeholder="Name" />`)}</td>
@@ -1471,7 +1480,7 @@ function renderWeapons(rows) {
         <td><input type="number" value="${r.magazine??''}" placeholder="Mag" style="width:50px" /></td>
         <td><input value="${escapeHtml(r.traits||'')}" placeholder="Traits" /></td>
         <td class="td-actions edit-only"><button class="skill-remove" onclick="removeWeaponRow('${r.id}',this)">✕</button></td>
-      </tr>${(r.magazine > 0) ? magRowHtml(r) : ''}${isQtyItem(r) ? qtyRowHtml(r.id, r.qty ?? 1, r.kg) : ''}`).join('')
+      </tr>${(r.magazine > 0) ? magRowHtml(r) : ''}${isQtyItem(r) ? qtyRowHtml(r.id, r.qty ?? 1, r.kg) : ''}${wmodsRowHtml(r.id, accs.filter(a => a.weapon_id === r.id))}`).join('')
     : none(8);
   document.querySelectorAll('#weapons-tbody tr.mag-row').forEach(refreshReloadBtn);
   document.querySelectorAll('#weapons-tbody tr.qty-row').forEach(refreshQtyTotal);
@@ -1497,23 +1506,84 @@ function addWeaponRow(p) {
     tr.insertAdjacentHTML('afterend', qtyRowHtml(tr.dataset.id, 1, p.kg));
     refreshQtyTotal(tr.nextElementSibling);
   }
+  if (tbody.id === 'weapons-tbody') {
+    // accessories line goes after any quantity line
+    const tail = tr.nextElementSibling && tr.nextElementSibling.classList.contains('qty-row') ? tr.nextElementSibling : tr;
+    tail.insertAdjacentHTML('afterend', wmodsRowHtml(tr.dataset.id, []));
+  }
   pendingWeapons.push({ action: 'add', tr });
 }
 
+// Removes a not-yet-saved row together with every line that hangs under it (quantity, accessories).
 function removeNewWeaponRow(btn) {
   const tr = btn.closest('tr');
-  const q = tr.nextElementSibling;
-  if (q && q.classList.contains('qty-row')) q.remove();
+  let n = tr.nextElementSibling;
+  while (n && n.dataset.for === tr.dataset.id) { const next = n.nextElementSibling; n.remove(); n = next; }
   tr.remove();
 }
 
 function removeWeaponRow(id, btn) {
   pendingWeapons.push({ action: 'delete', id });
-  const qty = document.querySelector(`#weapons-tbody tr.qty-row[data-for="${id}"]`);
-  if (qty) qty.remove();
-  const ammo = document.querySelector(`#weapons-tbody tr.mag-row[data-for="${id}"]`);
-  if (ammo) ammo.remove();
+  document.querySelectorAll(`#weapons-tbody tr[data-for="${id}"]`).forEach(r => r.remove());
   btn.closest('tr').remove();
+}
+
+// ── Weapon accessories (sublines under each weapon; catalogue in js/gear-data.js) ──
+let pendingWeaponAccs = [];
+
+function wmodsRowHtml(weaponId, accs) {
+  return `<tr class="mods-row wmods-row ${accs.length ? '' : 'no-mods'}" data-for="${weaponId}"><td colspan="8" class="mods-cell">
+      <div class="mod-list"><div class="mod-head"><span></span><span>Accessory</span><span>TL</span><span>Kg</span><span>Effect</span><span></span></div>${accs.map(wmodLineHtml).join('')}</div>
+      <div class="mod-actions edit-only">
+        <button class="add-row-btn" onclick="togglePicker('wmods','${weaponId}')">+ Accessory from Catalogue</button>
+        <button class="add-row-btn" onclick="manualAdd(this, () => addWeaponAcc('${weaponId}'))">+ Add Accessory</button>
+      </div>
+      <div id="pk-wmods-${weaponId}" class="cat-picker" style="display:none"></div>
+    </td></tr>`;
+}
+
+function wmodLineHtml(m) {
+  return `<div class="mod-line" data-id="${m.id || 'new-' + Date.now() + Math.floor(Math.random() * 1000)}">
+      <span class="mod-arrow">↳</span>
+      <input value="${escapeHtml(m.name||'')}" placeholder="Accessory" />
+      <input type="number" value="${m.tl??''}" placeholder="TL" />
+      <input type="number" value="${m.kg??''}" placeholder="--" step="0.01" />
+      <input value="${escapeHtml(m.effect||'')}" placeholder="Effect" />
+      <button class="skill-remove edit-only" onclick="removeWeaponAcc(this)">✕</button>
+    </div>`;
+}
+
+function wmodsRowFor(weaponId) {
+  return document.querySelector(`#weapons-tbody tr.wmods-row[data-for="${weaponId}"]`);
+}
+
+function addWeaponAcc(weaponId, p) {
+  const row = wmodsRowFor(weaponId);
+  if (!row) return;
+  row.querySelector('.mod-list').insertAdjacentHTML('beforeend', wmodLineHtml(p ? { name: p.name, tl: p.tl, kg: p.kg, effect: p.effect } : {}));
+  row.classList.remove('no-mods');
+}
+
+function removeWeaponAcc(btn) {
+  const line = btn.closest('.mod-line');
+  const row = btn.closest('.mods-row');
+  const id = line.dataset.id;
+  if (!id.startsWith('new-')) pendingWeaponAccs.push({ action: 'delete', id });
+  line.remove();
+  if (!row.querySelector('.mod-line')) row.classList.add('no-mods');
+}
+
+async function saveWeaponAccessories(weaponId, rowEl) {
+  for (const line of rowEl.querySelectorAll('.mod-line')) {
+    const i = line.querySelectorAll('input');
+    if (!i[0].value) continue;
+    const fields = { name: i[0].value, tl: parseInt(i[1].value)||null, kg: parseFloat(i[2].value)||null, effect: i[3].value||null };
+    if (line.dataset.id.startsWith('new-')) {
+      await supabaseClient.from('character_weapon_accessories').insert({ weapon_id: weaponId, ...fields });
+    } else {
+      await supabaseClient.from('character_weapon_accessories').update(fields).eq('id', line.dataset.id);
+    }
+  }
 }
 
 // ── Quantity (subline under grenades, explosives and other counted items) ──
@@ -1704,6 +1774,12 @@ const PICKERS = {
     meta: it => ['TL' + it.tl, 'Computer/' + it.processor, it.kg != null ? it.kg + 'kg' : '', it.options],
     text: it => it.name + ' ' + (it.options || ''),
     pick: it => addComputerFromCatalogue(it)
+  },
+  wmods: {
+    items: () => GEAR_WEAPON_ACCESSORIES, group: null,
+    meta: it => ['TL' + it.tl, it.kg != null ? it.kg + 'kg' : '', it.effect],
+    text: it => it.name + ' ' + (it.effect || ''),
+    pick: (it, ctx) => addWeaponAcc(ctx, it)
   },
   software: {
     items: () => GEAR_SOFTWARE, group: 'group',
@@ -2423,7 +2499,7 @@ function cancelEdit() {
 }
 
 function clearPending() {
-  pendingArmour=[]; pendingArmourMods=[]; pendingWeapons=[]; pendingAugments=[]; pendingComms=[]; pendingComputers=[];
+  pendingArmour=[]; pendingArmourMods=[]; pendingWeaponAccs=[]; pendingWeapons=[]; pendingAugments=[]; pendingComms=[]; pendingComputers=[];
   pendingEquipment=[]; pendingCareers=[]; pendingWounds=[]; pendingAssociates=[]; pendingConnections=[];
 }
 
@@ -2496,6 +2572,9 @@ async function saveAll() {
     }
 
     // Weapons — update existing rows, then process adds/deletes
+    for (const m of pendingWeaponAccs) {
+      if (m.action === 'delete') await supabaseClient.from('character_weapon_accessories').delete().eq('id', m.id);
+    }
     for (const tr of document.querySelectorAll('#weapons-tbody tr.existing-row')) {
       const id = tr.dataset.id; if (!id) continue;
       const i = tr.querySelectorAll('input');
@@ -2504,19 +2583,25 @@ async function saveAll() {
         damage: i[3].value||null, kg: parseFloat(i[4].value)||0,
         magazine: parseInt(i[5].value)||null, traits: i[6].value||null
       }).eq('id', id);
+      const accRow = wmodsRowFor(id);
+      if (accRow) await saveWeaponAccessories(id, accRow);
     }
     for (const p of pendingWeapons) {
       if (p.action === 'delete') { await supabaseClient.from('character_weapons').delete().eq('id', p.id); }
       else {
         const i = p.tr.querySelectorAll('input');
-        if (p.tr.isConnected && i[0].value) await supabaseClient.from('character_weapons').insert({
-          character_id: character.id,
-          name: i[0].value, tl: parseInt(i[1].value)||null, range: i[2].value||null,
-          damage: i[3].value||null, kg: parseFloat(i[4].value)||0,
-          magazine: parseInt(i[5].value)||null, traits: i[6].value||null,
-          equipped: p.tr.dataset.eq !== '0',
-          ...(qtyLine(p.tr) ? { qty: parseInt(qtyLine(p.tr).querySelector('input').value) || 0 } : {})
-        });
+        if (p.tr.isConnected && i[0].value) {
+          const { data: newWeapon } = await supabaseClient.from('character_weapons').insert({
+            character_id: character.id,
+            name: i[0].value, tl: parseInt(i[1].value)||null, range: i[2].value||null,
+            damage: i[3].value||null, kg: parseFloat(i[4].value)||0,
+            magazine: parseInt(i[5].value)||null, traits: i[6].value||null,
+            equipped: p.tr.dataset.eq !== '0',
+            ...(qtyLine(p.tr) ? { qty: parseInt(qtyLine(p.tr).querySelector('input').value) || 0 } : {})
+          }).select().single();
+          const accRow = wmodsRowFor(p.tr.dataset.id);
+          if (newWeapon && accRow) await saveWeaponAccessories(newWeapon.id, accRow);
+        }
       }
     }
 

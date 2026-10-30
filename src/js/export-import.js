@@ -12,6 +12,7 @@ const EXPORT_CONFIG = {
       'character_augments', 'character_equipment', 'character_comms', 'character_computers', 'character_wounds', 'character_journal'],
     // tables whose new ids the next level needs
     grand: { character_armour: { table: 'character_armour_mods', fk: 'armour_id' },
+             character_weapons: { table: 'character_weapon_accessories', fk: 'weapon_id' },
              character_computers: { table: 'character_computer_software', fk: 'computer_id' } }
   },
   spacecraft: {
@@ -21,7 +22,7 @@ const EXPORT_CONFIG = {
     grand: {}
   }
 };
-const EXPORT_NEEDS_IDS = ['character_armour', 'character_computers', 'spacecraft_mounts', 'spacecraft_hired_crew'];
+const EXPORT_NEEDS_IDS = ['character_armour', 'character_weapons', 'character_computers', 'spacecraft_mounts', 'spacecraft_hired_crew'];
 
 function downloadJson(obj, filename) {
   const blob = new Blob([JSON.stringify(obj, null, 1)], { type: 'application/json' });

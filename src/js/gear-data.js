@@ -321,6 +321,41 @@ const GEAR_WEAPONS = [
 
 // Computer software (Core p.112). bw = Bandwidth, tl = Tech Level; effect text is paraphrased.
 // Database is listed "--" for Bandwidth in the book; stored as 0. Cost varies with size.
+const GEAR_WEAPON_ACCESSORIES = [
+  {"name":"Auxiliary Grenade Launcher","tl":7,"kg":1.5,"effect":"Single-shot grenade launcher under a rifle barrel; three Minor Actions to reload"},
+  {"name":"Auxiliary RAM Grenade Launcher","tl":8,"kg":1.5,"effect":"Single shot RAM grenade launcher"},
+  {"name":"Bandolier","tl":3,"kg":null,"effect":"Holds cartridges: 7 shotgun, 20 pistol, or 14 rifle"},
+  {"name":"Bayonet","tl":2,"kg":1,"effect":"Melee 2D; fixed to a rifle it makes a polearm (Melee (blade))"},
+  {"name":"Bipod","tl":4,"kg":1,"effect":"Can negate Bulky and Very Bulky traits"},
+  {"name":"Chaindrive Bayonet","tl":9,"kg":3,"effect":"Melee 4D, AP 4, Bulky; 30 minutes of battery"},
+  {"name":"FOF Safety","tl":9,"kg":null,"effect":"ID and protect tagged friends to 50 m + 2 tags"},
+  {"name":"FOF Tag","tl":9,"kg":null,"effect":"Additional tag"},
+  {"name":"Gyrostabiliser","tl":9,"kg":1,"effect":"Negates Bulky trait; non-Destructive only"},
+  {"name":"Heavy Tripod","tl":4,"kg":5,"effect":"Field use of vehicle weapons up to 0.25 tons"},
+  {"name":"High-capacity Magazine","tl":4,"kg":null,"effect":"Doubles magazine capacity (mass x2, cost x3)"},
+  {"name":"Holographic Sights","tl":10,"kg":0.5,"effect":"Scope + DM+1 to attack rolls beyond 50m"},
+  {"name":"Intelligent Weapon (Basic)","tl":11,"kg":null,"effect":"Adds Computer/0 to any weapon"},
+  {"name":"Intelligent Weapon (Improved)","tl":12,"kg":null,"effect":"Adds Computer/1 to any weapon"},
+  {"name":"Intelligent Weapon (Enhanced)","tl":13,"kg":null,"effect":"Adds Computer/2 to any weapon"},
+  {"name":"Intelligent Weapon (Advanced)","tl":15,"kg":null,"effect":"Adds Computer/3 to any weapon"},
+  {"name":"Laser Sight (red dot)","tl":8,"kg":null,"effect":"DM+1 to attack rolls within 50m"},
+  {"name":"Laser Sight (UV dot)","tl":10,"kg":null,"effect":"+Invisible UV laser dot"},
+  {"name":"P-HUD","tl":9,"kg":0.5,"effect":"DM+1 to all attack rolls for keyed weapons"},
+  {"name":"P-HUD (holographic)","tl":11,"kg":null,"effect":"+Holographic display"},
+  {"name":"Additional Weapon Key Module","tl":9,"kg":null,"effect":"Keys another weapon to a P-HUD; requires 1 hour to calibrate"},
+  {"name":"Psi-enhanced Targeting","tl":16,"kg":0.5,"effect":"Add PSI modifier to non-Auto attack rolls"},
+  {"name":"Scan Jammer","tl":8,"kg":null,"effect":"DM-4 to Electronics (sensors) checks to find the weapon"},
+  {"name":"Scope","tl":5,"kg":null,"effect":"Allows accurate shots at extreme ranges"},
+  {"name":"Scope (electronic)","tl":7,"kg":null,"effect":"+Low-light image and light enhancement"},
+  {"name":"Secure Weapon","tl":10,"kg":null,"effect":"Requires authentication before firing"},
+  {"name":"Shoulder Stock","tl":4,"kg":1,"effect":"Increase effective and long range by 25%"},
+  {"name":"Shoulder Stock (telescoping)","tl":9,"kg":0.5,"effect":"Increase effective and long range by 25%"},
+  {"name":"Smart Tracker","tl":11,"kg":null,"effect":"Allows DM+2 to attack rolls against a 'tagged' target (needs Intelligent Weapon)"},
+  {"name":"Suppressor","tl":8,"kg":null,"effect":"Adds Silent trait to non-automatic slug thrower"},
+  {"name":"X-Ray Outlining Aid (1m)","tl":9,"kg":null,"effect":"Removes cover DM up to 1m thick from target"},
+  {"name":"X-Ray Outlining Aid (3m)","tl":11,"kg":null,"effect":"+Barrier up to 3m thick"},
+];
+
 const GEAR_SOFTWARE = [
   {"name":"Interface","group":"Interface","bw":0,"tl":7,"cost":"Included","effect":"Displays data."},
   {"name":"Intelligent Interface","group":"Interface","bw":1,"tl":11,"cost":"Cr100","effect":"AI voice control and intelligent data display. Required to use Expert software."},
