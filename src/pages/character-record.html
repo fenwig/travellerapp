@@ -163,6 +163,12 @@
     .software-comments { font-size: 0.7rem; color: #4a9ab8; min-width: 0; }
     /* main.css gives every number input / select a 12px bottom margin, which pushes them out of line with text inputs */
     .gear-table input, .gear-table select, .software-row input, .computer-field input, .sw-catalogue, .cat-picker-bar select { margin-bottom: 0; }
+    /* Equipment: narrow Item column so Effect gets the room */
+    .equip-table { table-layout: fixed; }
+    .equip-table th:nth-child(1) { width: 170px; }
+    .equip-table th:nth-child(2) { width: 56px; }
+    .equip-table th:nth-child(3) { width: 80px; }
+    .equip-table th:nth-child(5) { width: 36px; }
     .sw-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
     .sw-actions .add-row-btn { margin-top: 0; }
     .sw-catalogue { width: auto; max-width: 200px; background: #080d12; border: 1px dashed #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 5px 8px; font-size: 0.78rem; }
@@ -434,7 +440,7 @@
 
           <div class="cr-section">
             <div class="cr-section-title">Equipment</div>
-            <table class="gear-table">
+            <table class="gear-table equip-table">
               <thead><tr><th>Item</th><th class="col-narrow">TL</th><th class="col-narrow">Kg</th><th>Effect</th><th class="edit-only"></th></tr></thead>
               <tbody id="equipment-tbody"></tbody>
             </table>
@@ -1256,7 +1262,7 @@ function addWeaponRow(p) {
 function openCatalogue(kind) {
   const box = document.getElementById('cat-picker-' + kind);
   if (box.style.display !== 'none') { box.style.display = 'none'; return; }
-  const cats = kind === 'weapons' ? [...new Set(GEAR_WEAPONS.map(w => w.category))] : [];
+  const cats = [...new Set((kind === 'weapons' ? GEAR_WEAPONS : GEAR_ARMOUR).map(x => x.category))];
   box.innerHTML = `<div class="cat-picker-bar">
       <input id="cat-q-${kind}" placeholder="Search…" oninput="renderCatalogue('${kind}')" />
       ${cats.length ? `<select id="cat-c-${kind}" onchange="renderCatalogue('${kind}')"><option value="">All types</option>${cats.map(c => `<option>${c}</option>`).join('')}</select>` : ''}
@@ -1273,11 +1279,11 @@ function renderCatalogue(kind) {
   const cat = cEl ? cEl.value : '';
   const list = kind === 'weapons' ? GEAR_WEAPONS : GEAR_ARMOUR;
   const hits = list.map((it, i) => ({ it, i })).filter(({ it }) =>
-    (!cat || it.category === cat) && (!q || (it.name + ' ' + (it.traits || '')).toLowerCase().includes(q)));
+    (!cat || it.category === cat) && (!q || (it.name + ' ' + (it.traits || '') + ' ' + (it.conditions || '')).toLowerCase().includes(q)));
   document.getElementById('cat-l-' + kind).innerHTML = hits.length ? hits.map(({ it, i }) => {
     const meta = kind === 'weapons'
       ? [it.tl != null ? 'TL' + it.tl : '', it.damage, it.range, it.cost].filter(Boolean).join(' · ')
-      : [it.tl != null ? 'TL' + it.tl : '', 'PRO +' + it.protection + (it.conditions ? ' ' + it.conditions : ''), it.cost].filter(Boolean).join(' · ');
+      : [it.tl != null ? 'TL' + it.tl : '', 'PRO +' + it.protection + (it.conditions ? ' (' + it.conditions + ')' : ''), it.skill, it.cost, it.source].filter(Boolean).join(' · ');
     return `<div class="cat-item" onclick="addFromCatalogue('${kind}',${i})"><span class="cat-item-name">${escapeHtml(it.name)}</span><span class="cat-item-meta">${escapeHtml(meta)}</span></div>`;
   }).join('') : '<div style="color:#4a9ab8;font-size:0.82rem;padding:6px">No matches</div>';
 }
