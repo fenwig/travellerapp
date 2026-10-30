@@ -15,3 +15,7 @@ node_modules/
 
 # Source PDFs — kept local only, not pushed to GitHub
 docs/sourcebooks/
+
+# Database backups and the key that makes them (contain private data)
+backups/
+tools/.env
