@@ -158,10 +158,11 @@
     .computer-field.cf-name input { width: 160px; color: #00e5ff; font-weight: 600; }
     .computer-options { width: 100%; min-height: 50px; background: rgba(13,21,32,0.5); border: 1px solid #0a4a60; border-radius: 5px; color: #b0d8e8; font-size: 0.82rem; padding: 8px; resize: vertical; outline: none; font-family: inherit; box-sizing: border-box; margin-bottom: 8px; }
     .computer-software-title { font-size: 0.62rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
-    .software-row { display: grid; grid-template-columns: 1fr 50px 40px 60px 1fr 20px; gap: 6px; align-items: center; padding: 1px 0; font-size: 0.74rem; line-height: 1.2; color: #b0d8e8; }
-    .software-comments { grid-column: 1 / -1; font-size: 0.7rem; color: #4a9ab8; padding-bottom: 4px; }
-    .software-comments:empty, .software-comments span:empty { display: none; }
-    .sw-catalogue { background: #080d12; border: 1px dashed #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 5px 8px; font-size: 0.78rem; margin-left: 6px; }
+    .software-row { display: grid; grid-template-columns: 1fr 50px 40px 1.6fr 60px 20px; gap: 6px; align-items: center; padding: 1px 0; font-size: 0.74rem; line-height: 1.2; color: #b0d8e8; }
+    .software-comments { font-size: 0.7rem; color: #4a9ab8; min-width: 0; }
+    .sw-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+    .sw-actions .add-row-btn { margin-top: 0; }
+    .sw-catalogue { width: auto; max-width: 200px; background: #080d12; border: 1px dashed #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 5px 8px; font-size: 0.78rem; }
     .software-row input[type="text"], .software-row input[type="number"] { width: 100%; background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; font-size: 0.74rem; outline: none; box-sizing: border-box; padding: 0; }
     .btn-small { background: transparent; border: 1px solid #0a4a60; color: #4a9ab8; border-radius: 3px; padding: 0 7px; font-size: 0.64rem; font-weight: 700; cursor: pointer; line-height: 1.5; }
     .btn-small:hover { border-color: #00e5ff; color: #00e5ff; }
@@ -1395,13 +1396,13 @@ function softwareRowHtml(computerId, s) {
         <span class="view-only">${s.tl ?? '—'}</span>
         <input type="number" class="edit-only" value="${s.tl ?? ''}" placeholder="TL" onchange="autoSaveSoftware('${computerId}','${s.id}','tl',parseInt(this.value)||null)" />
       </div>
-      <div><button class="btn-small" style="${s.active ? 'border-color:#00ffaa;color:#00ffaa' : ''}" onclick="toggleSoftwareActive('${computerId}','${s.id}')">${s.active ? 'ON' : 'OFF'}</button></div>
-      <div style="font-size:0.68rem;color:${s.note ? '#ff5a4a' : '#4a9ab8'}">${s.note || ''}</div>
-      <button class="skill-remove edit-only" onclick="deleteSoftware('${computerId}','${s.id}',this)">✕</button>
       <div class="software-comments">
         <span class="view-only">${escapeHtml(s.comments || '')}</span>
         <input type="text" class="edit-only" value="${escapeHtml(s.comments || '')}" placeholder="Notes / comments" onchange="autoSaveSoftware('${computerId}','${s.id}','comments',this.value)" />
+        ${s.note ? `<div style="font-size:0.68rem;color:#ff5a4a">${s.note}</div>` : ''}
       </div>
+      <div><button class="btn-small" style="${s.active ? 'border-color:#00ffaa;color:#00ffaa' : ''}" onclick="toggleSoftwareActive('${computerId}','${s.id}')">${s.active ? 'ON' : 'OFF'}</button></div>
+      <button class="skill-remove edit-only" onclick="deleteSoftware('${computerId}','${s.id}',this)">✕</button>
     </div>`;
 }
 
@@ -1461,12 +1462,14 @@ function renderComputerCard(c) {
       </div>
       <textarea class="computer-options" placeholder="Options (interface, remote access, agent, etc.)"
                 onchange="autoSaveComputer('${c.id}','options',this.value)">${c.options || ''}</textarea>
-      <div class="computer-software-title" style="display:grid;grid-template-columns:1fr 50px 40px 60px 1fr 20px;gap:6px">
-        <div>Name</div><div>BW</div><div>TL</div><div>Active</div><div>Note</div><div></div>
+      <div class="computer-software-title" style="display:grid;grid-template-columns:1fr 50px 40px 1.6fr 60px 20px;gap:6px">
+        <div>Name</div><div>BW</div><div>TL</div><div>Notes</div><div>Active</div><div></div>
       </div>
       <div id="sw-${c.id}" style="display:grid;gap:1px">${renderSoftwareList(c.id)}</div>
-      <button class="add-row-btn edit-only" onclick="addSoftwareRow('${c.id}')">+ Add Software</button>
-      ${softwareCatalogueSelect(c.id)}
+      <div class="sw-actions">
+        <button class="add-row-btn edit-only" onclick="addSoftwareRow('${c.id}')">+ Add Software</button>
+        ${softwareCatalogueSelect(c.id)}
+      </div>
     </div>`;
 }
 
