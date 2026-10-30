@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/supabase-config.js"></script>
   <script src="../js/portrait.js"></script>
+  <script src="../js/gear-data.js"></script>
   <script src="../js/skills-data.js"></script>
   <style>
     /* ── Header ── */
@@ -137,6 +138,15 @@
     .gear-table td.td-actions { width: 30px; text-align: center; }
     .add-row-btn { background: transparent; border: 1px dashed #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 5px 14px; font-size: 0.78rem; cursor: pointer; margin-top: 4px; transition: border-color 0.15s, color 0.15s; }
     .add-row-btn:hover { border-color: #00e5ff; color: #00e5ff; }
+    .cat-picker { border: 1px solid #0a4a60; border-radius: 4px; background: rgba(8,13,18,0.9); padding: 10px; margin-top: 8px; }
+    .cat-picker-bar { display: flex; gap: 8px; margin-bottom: 8px; }
+    .cat-picker-bar input, .cat-picker-bar select { background: #080d12; border: 1px solid #0a4a60; color: #b0d8e8; border-radius: 4px; padding: 5px 8px; font-size: 0.82rem; }
+    .cat-picker-bar input { flex: 1; }
+    .cat-picker-list { max-height: 260px; overflow-y: auto; }
+    .cat-item { display: flex; justify-content: space-between; gap: 12px; padding: 5px 8px; cursor: pointer; border-bottom: 1px solid rgba(10,74,96,0.3); font-size: 0.82rem; }
+    .cat-item:hover { background: rgba(0,229,255,0.08); }
+    .cat-item-name { color: #00e5ff; }
+    .cat-item-meta { color: #4a9ab8; font-size: 0.75rem; text-align: right; }
     .col-narrow { width: 56px; }
 
     /* ── Computers (Tech tab) ── */
@@ -396,6 +406,8 @@
               <tbody id="armour-tbody"></tbody>
             </table>
             <button class="add-row-btn edit-only" onclick="addArmourRow()">+ Add Armour</button>
+            <button class="add-row-btn edit-only" onclick="openCatalogue('armour')">+ From Catalogue</button>
+            <div id="cat-picker-armour" class="cat-picker edit-only" style="display:none"></div>
           </div>
 
           <div class="cr-section">
@@ -409,6 +421,8 @@
               <tbody id="weapons-tbody"></tbody>
             </table>
             <button class="add-row-btn edit-only" onclick="addWeaponRow()">+ Add Weapon</button>
+            <button class="add-row-btn edit-only" onclick="openCatalogue('weapons')">+ From Catalogue</button>
+            <div id="cat-picker-weapons" class="cat-picker edit-only" style="display:none"></div>
           </div>
 
           <div class="cr-section">
@@ -1146,18 +1160,19 @@ function renderArmour(rows) {
     : none(8);
 }
 
-function addArmourRow() {
+function addArmourRow(p) {
+  p = p || {};
   const tbody = document.getElementById('armour-tbody');
   if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
   const tr = document.createElement('tr');
   tr.dataset.id = 'new-' + Date.now();
   tr.innerHTML = `
-    <td><input placeholder="Type" /></td>
-    <td><input type="number" placeholder="0" style="width:50px" /></td>
-    <td><input placeholder="Conditions" /></td>
-    <td><input type="number" placeholder="0" style="width:50px" /></td>
-    <td><input type="number" placeholder="TL" style="width:45px" /></td>
-    <td><input type="number" placeholder="0" step="0.01" style="width:60px" /></td>
+    <td><input placeholder="Type" value="${escapeHtml(p.name||'')}" /></td>
+    <td><input type="number" placeholder="0" value="${p.protection??''}" style="width:50px" /></td>
+    <td><input placeholder="Conditions" value="${escapeHtml(p.conditions||'')}" /></td>
+    <td><input type="number" placeholder="0" value="${p.rad??''}" style="width:50px" /></td>
+    <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
+    <td><input type="number" placeholder="0" step="0.01" value="${p.kg??''}" style="width:60px" /></td>
     <td><input placeholder="Options" /></td>
     <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
   tbody.appendChild(tr);
@@ -1179,22 +1194,56 @@ function renderWeapons(rows) {
     : none(8);
 }
 
-function addWeaponRow() {
+function addWeaponRow(p) {
+  p = p || {};
   const tbody = document.getElementById('weapons-tbody');
   if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
   const tr = document.createElement('tr');
   tr.dataset.id = 'new-' + Date.now();
   tr.innerHTML = `
-    <td><input placeholder="Name" /></td>
-    <td><input type="number" placeholder="TL" style="width:45px" /></td>
-    <td><input placeholder="Range" style="width:80px" /></td>
-    <td><input placeholder="Damage" style="width:70px" /></td>
-    <td><input type="number" placeholder="0" step="0.01" style="width:55px" /></td>
-    <td><input type="number" placeholder="Mag" style="width:50px" /></td>
-    <td><input placeholder="Traits" /></td>
+    <td><input placeholder="Name" value="${escapeHtml(p.name||'')}" /></td>
+    <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
+    <td><input placeholder="Range" value="${escapeHtml(p.range||'')}" style="width:80px" /></td>
+    <td><input placeholder="Damage" value="${escapeHtml(p.damage||'')}" style="width:70px" /></td>
+    <td><input type="number" placeholder="0" step="0.01" value="${p.kg??''}" style="width:55px" /></td>
+    <td><input type="number" placeholder="Mag" value="${p.mag??''}" style="width:50px" /></td>
+    <td><input placeholder="Traits" value="${escapeHtml(p.traits||'')}" /></td>
     <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
   tbody.appendChild(tr);
   pendingWeapons.push({ action: 'add', tr });
+}
+
+// ── Gear catalogue picker (data in js/gear-data.js) ──
+function openCatalogue(kind) {
+  const box = document.getElementById('cat-picker-' + kind);
+  if (box.style.display !== 'none') { box.style.display = 'none'; return; }
+  const cats = kind === 'weapons' ? [...new Set(GEAR_WEAPONS.map(w => w.category))] : [];
+  box.innerHTML = `<div class="cat-picker-bar">
+      <input id="cat-q-${kind}" placeholder="Search…" oninput="renderCatalogue('${kind}')" />
+      ${cats.length ? `<select id="cat-c-${kind}" onchange="renderCatalogue('${kind}')"><option value="">All types</option>${cats.map(c => `<option>${c}</option>`).join('')}</select>` : ''}
+    </div><div class="cat-picker-list" id="cat-l-${kind}"></div>`;
+  box.style.display = 'block';
+  renderCatalogue(kind);
+  document.getElementById('cat-q-' + kind).focus();
+}
+
+function renderCatalogue(kind) {
+  const q = document.getElementById('cat-q-' + kind).value.trim().toLowerCase();
+  const cEl = document.getElementById('cat-c-' + kind);
+  const cat = cEl ? cEl.value : '';
+  const list = kind === 'weapons' ? GEAR_WEAPONS : GEAR_ARMOUR;
+  const hits = list.map((it, i) => ({ it, i })).filter(({ it }) =>
+    (!cat || it.category === cat) && (!q || (it.name + ' ' + (it.traits || '')).toLowerCase().includes(q)));
+  document.getElementById('cat-l-' + kind).innerHTML = hits.length ? hits.map(({ it, i }) => {
+    const meta = kind === 'weapons'
+      ? [it.tl != null ? 'TL' + it.tl : '', it.damage, it.range, it.cost].filter(Boolean).join(' · ')
+      : [it.tl != null ? 'TL' + it.tl : '', 'PRO +' + it.protection + (it.conditions ? ' ' + it.conditions : ''), it.cost].filter(Boolean).join(' · ');
+    return `<div class="cat-item" onclick="addFromCatalogue('${kind}',${i})"><span class="cat-item-name">${escapeHtml(it.name)}</span><span class="cat-item-meta">${escapeHtml(meta)}</span></div>`;
+  }).join('') : '<div style="color:#4a9ab8;font-size:0.82rem;padding:6px">No matches</div>';
+}
+
+function addFromCatalogue(kind, i) {
+  if (kind === 'weapons') addWeaponRow(GEAR_WEAPONS[i]); else addArmourRow(GEAR_ARMOUR[i]);
 }
 
 const BONUS_TARGETS = ['', 'str', 'dex', 'end_stat', 'int_stat', 'edu', 'soc', 'armour'];
