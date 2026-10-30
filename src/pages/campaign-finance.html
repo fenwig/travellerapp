@@ -333,7 +333,7 @@
                   <td class="l">${KIND[l.kind] || l.kind}${l.category && l.category !== 'General' ? ' · ' + esc(l.category) : ''}</td>
                   <td class="l">${esc(l.note || '')}${pl.length ? '<div class="cf-detail">→ ' + pl.map(p => esc(p.name || '') + ' ' + cr(p.amount)).join(', ') + '</div>' : ''}</td>
                   <td class="${l.amount >= 0 ? 'cf-pos' : 'cf-neg'}">${l.amount >= 0 ? '+' : ''}${cr(l.amount)}</td><td>${cr(l.balance_after)}</td>
-                  <td>${!rev && l.kind !== 'reverse' && l.category !== 'Maintenance Period' ? `<button class="btn-small" onclick="reverse('${l.id}')">Reverse</button>` : ''}</td></tr>`; }).join('')}
+                  <td>${!rev && l.kind !== 'reverse' && l.category !== 'Maintenance Period' && l.category !== 'Ship Expenses' ? `<button class="btn-small" onclick="reverse('${l.id}')">Reverse</button>` : ''}</td></tr>`; }).join('')}
               </tbody></table>` : '<div class="cf-sub">Nothing recorded yet.</div>'}
             </div>
           </div>

@@ -19,23 +19,37 @@
     .tt-controls input[type=number] { width: 80px; margin: 0; padding: 6px 8px; }
     .tt-controls label { color: #4a9ab8; font-size: 0.75rem; display: flex; align-items: center; gap: 6px; }
     .tt-sep { width: 1px; align-self: stretch; background: #0a4a60; margin: 0 4px; }
-    .tt-flag { border: 1px solid #ff5a4a; background: rgba(255,90,74,0.12); color: #ff8a7a; border-radius: 8px; padding: 12px 18px; margin-bottom: 14px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-    .tt-flag b { color: #ff5a4a; letter-spacing: 0.08em; }
+    .tt-flag { border: 1px solid #ff5a4a; background: rgba(255,90,74,0.12); color: #ff8a7a; border-radius: 8px; padding: 12px 18px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 2px; }
+    .tt-flag > b:first-child { color: #ff5a4a; letter-spacing: 0.08em; }
+    .tt-flag b { color: #ff5a4a; }
     .tt-ok { border: 1px solid #0a4a60; background: rgba(13,21,32,0.92); color: #4a9ab8; border-radius: 8px; padding: 10px 18px; margin-bottom: 14px; font-size: 0.88rem; }
-    .tt-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    .tt-table th { text-align: right; color: #4a9ab8; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; padding: 6px 10px; border-bottom: 1px solid #0a4a60; }
-    .tt-table th:first-child, .tt-table td:first-child { text-align: left; }
-    .tt-table td { text-align: right; padding: 5px 10px; border-bottom: 1px solid rgba(10,74,96,0.3); color: #b0d8e8; }
-    .tt-table tr.tt-total td { color: #00ffaa; font-weight: 700; border-top: 1px solid #00e5ff44; }
+    .tt-ok.good { border-color: #00ffaa55; color: #00ffaa; }
+    .tt-warn { border: 1px solid #ffb74a; background: rgba(255,183,74,0.1); color: #ffcf85; border-radius: 8px; padding: 9px 16px; margin-bottom: 14px; font-size: 0.85rem; }
+    .tt-note { color: #4a9ab8; font-size: 0.78rem; margin-top: 6px; }
+    .tt-ship { border: 1px solid #0a4a60; border-radius: 6px; margin-bottom: 8px; background: rgba(8,13,18,0.6); }
+    .tt-ship > summary { cursor: pointer; padding: 9px 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; list-style: none; }
+    .tt-ship > summary::-webkit-details-marker { display: none; }
+    .tt-ship > summary::before { content: '▸'; color: #4a9ab8; }
+    .tt-ship[open] > summary::before { content: '▾'; }
+    .tt-ship-name { color: #00e5ff; font-weight: 700; }
+    .tt-badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; border: 1px solid #0a4a60; color: #4a9ab8; }
+    .tt-badge.ok { color: #00ffaa; border-color: #00ffaa55; }
+    .tt-badge.bad { color: #ff8a7a; border-color: #ff5a4a88; background: rgba(255,90,74,0.1); }
+    .tt-badge.amt { color: #b0d8e8; }
+    .tt-body { padding: 4px 14px 12px; }
+    .tt-period { margin-top: 8px; }
+    .tt-period-title { color: #4a9ab8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 0; border-bottom: 1px solid #0a4a60; }
+    .tt-line { display: flex; align-items: center; gap: 10px; padding: 3px 0; font-size: 0.86rem; color: #b0d8e8; border-bottom: 1px solid rgba(10,74,96,0.2); cursor: pointer; }
+    .tt-line input { margin: 0; width: auto; }
+    .tt-line .amt { margin-left: auto; font-variant-numeric: tabular-nums; }
+    .tt-line.locked { color: #4a9ab8; cursor: default; }
+    .tt-line .lock { font-size: 0.7rem; color: #4a9ab8; }
+    .tt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 10px; }
+    .tt-actions .btn-outline { width: auto; padding: 7px 18px; font-size: 0.85rem; }
+    .tt-link { color: #00e5ff; font-size: 0.75rem; cursor: pointer; text-decoration: underline; margin-left: 10px; }
     .tt-log { font-size: 0.8rem; color: #4a9ab8; }
     .tt-log div { padding: 3px 0; border-bottom: 1px solid rgba(10,74,96,0.25); }
     .tt-log span { color: #b0d8e8; }
-    .tt-flag-text { display: flex; flex-direction: column; gap: 2px; }
-    .tt-flag-text b { letter-spacing: 0; }
-    .tt-flag-text > b:first-child { letter-spacing: 0.08em; }
-    .tt-pay { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-    .tt-pay input { width: 90px; margin: 0; padding: 6px 8px; }
-    .tt-pay .btn-outline { width: auto; padding: 7px 14px; font-size: 0.82rem; }
     .tt-msg { color: #ff5a4a; font-size: 0.85rem; }
   </style>
 </head>
@@ -65,9 +79,16 @@
     // The campaign calendar: 365-day years, 28-day maintenance periods. Time is stored as an absolute day
     // number (year x 365 + day - 1) so adding days is just addition.
     const YEAR_DAYS = 365, PERIOD_DAYS = 28, START_YEAR = 1105;
+    const KINDS = [['mortgage', 'Mortgage'], ['maintenance', 'Maintenance'], ['life_support', 'Life Support'],
+      ['salaries', 'Crew Salaries'], ['berthing', 'Berthing'], ['other', 'Other']];
+    const KIND_NAME = Object.fromEntries(KINDS);
     let currentUser = null, campaignId = null, campaignName = '';
-    let T = null;          // the campaign_time row
+    let T = null;                         // the campaign_time row
     let logRows = [], shipData = [], fund = 0;
+    let due = [];                         // unpaid charge lines for the whole campaign
+    let sel = new Set();                  // ticked charge ids
+    let openShips = new Set();            // ships whose drop-down is open
+    let notice = '';                      // message about the automatic life-support deduction
 
     const absOf = (y, d) => y * YEAR_DAYS + (d - 1);
     const dateOf = a => ({ year: Math.floor(a / YEAR_DAYS), day: a % YEAR_DAYS + 1 });
@@ -88,7 +109,7 @@
       if (!campaignId) { say('Campaigns are not set up yet.'); return; }
       campaignName = (list.find(c => c.id === campaignId) || {}).name || '';
       try { await loadAll(); }
-      catch (e) { say('Could not load the Time Tracker: ' + e.message + ' (Has docs/time-tracker.sql been run in Supabase?)'); }
+      catch (e) { say('Could not load the Time Tracker: ' + e.message + ' (Have docs/time-tracker.sql, docs/campaign-finance.sql and docs/period-charges.sql been run in Supabase?)'); }
     }
 
     function say(msg) { document.getElementById('tt-root').innerHTML = '<div class="tt-msg">' + esc(msg) + '</div>'; }
@@ -103,53 +124,96 @@
         if (ins.error) throw ins.error;
         T = ins.data;
       }
+      shipData = await loadShipExpenses(campaignId);
+      await ensureCharges();
+      await loadDue();
+      await autoLifeSupport();
       const lg = await supabaseClient.from('campaign_time_log').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: false }).limit(15);
       logRows = lg.data || [];
-      await loadShips();
+      const f = await supabaseClient.from('party_fund').select('balance').eq('campaign_id', campaignId);
+      fund = f.data && f.data[0] ? Number(f.data[0].balance) : 0;
       render();
     }
 
-    async function loadShips() {
-      shipData = await loadShipExpenses(campaignId);
-      const f = await supabaseClient.from('party_fund').select('balance').eq('campaign_id', campaignId);
-      fund = f.data && f.data[0] ? Number(f.data[0].balance) : 0;
+    // ── charges ──
+    // Each time a 28-day boundary passes, every active ship gets one charge line per expense (amounts as they stand
+    // today). The unique index means two people advancing time at once cannot create the same line twice.
+    async function ensureCharges() {
+      const through = T.charged_through_abs != null ? T.charged_through_abs : T.last_paid_abs;
+      const abs = curAbs(), periods = [];
+      for (let d = through + PERIOD_DAYS; d <= abs; d += PERIOD_DAYS) periods.push(d);
+      if (!periods.length) return;
+      const rows = [];
+      periods.forEach(d => shipData.forEach(r => {
+        const ex = r.ex;
+        [['mortgage', ex.mortgage], ['maintenance', ex.maintenance], ['life_support', ex.lifeSupport],
+          ['salaries', ex.salaries], ['berthing', ex.berthing], ['other', ex.other]].forEach(([kind, amount]) => {
+          if (amount > 0) rows.push({ campaign_id: campaignId, ship_id: r.ship.id, ship_name: r.ship.name, period_abs: d, kind, amount: Math.round(amount) });
+        });
+      }));
+      if (rows.length) {
+        const { error } = await supabaseClient.from('period_charges').upsert(rows, { onConflict: 'ship_id,period_abs,kind', ignoreDuplicates: true });
+        if (error) throw error;
+      }
+      const last = periods[periods.length - 1];
+      await supabaseClient.from('campaign_time').update({ charged_through_abs: last }).eq('campaign_id', campaignId);
+      T.charged_through_abs = last;
+      await logChange(periods.length + ' maintenance period' + (periods.length === 1 ? '' : 's') + ' came due — charges added', curAbs(), curAbs());
+    }
+
+    async function loadDue() {
+      const { data, error } = await supabaseClient.from('period_charges').select('*').eq('campaign_id', campaignId).eq('status', 'due').order('period_abs');
+      if (error) throw error;
+      due = data || [];
+      sel = new Set([...sel].filter(id => due.some(c => c.id === id && c.kind !== 'life_support')));
+    }
+
+    // Life support is taken from the party fund straight away. If the fund is short it stays due and is
+    // included with the next payment.
+    async function autoLifeSupport() {
+      notice = '';
+      const ls = due.filter(c => c.kind === 'life_support');
+      if (!ls.length) return;
+      const { data, error } = await supabaseClient.rpc('charges_pay', { p_campaign: campaignId, p_ids: ls.map(c => c.id), p_note: 'Life support (automatic)' });
+      if (error) { notice = 'Life support could not be taken automatically: ' + error.message; return; }
+      if (data && data.paid) {
+        await logChange('Life support paid automatically — ' + cr(data.total) + ' from the party fund', curAbs(), curAbs());
+        await loadDue();
+      }
+    }
+
+    const sumOf = rows => rows.reduce((n, c) => n + Number(c.amount), 0);
+    function paySelection() {
+      const picked = due.filter(c => sel.has(c.id));
+      const life = due.filter(c => c.kind === 'life_support');       // always included
+      return [...picked, ...life];
     }
 
     function render() {
-      const abs = curAbs(), since = abs - T.last_paid_abs;
-      const due = Math.max(0, Math.floor(since / PERIOD_DAYS));
-      const nextDue = T.last_paid_abs + PERIOD_DAYS;
+      const abs = curAbs(), since = abs - (T.charged_through_abs != null ? T.charged_through_abs : T.last_paid_abs);
+      const nextDue = (T.charged_through_abs != null ? T.charged_through_abs : T.last_paid_abs) + PERIOD_DAYS;
       const allTotal = shipData.reduce((n, r) => n + r.ex.total, 0);
+      const dueTotal = sumOf(due);
 
-      // Payments always clear the oldest balance first. "paid" is what has already gone toward the oldest open period.
-      const paid = Number(T.period_paid) || 0;
-      const owed = Math.max(0, due * allTotal - paid);
-      const previousOwed = Math.max(0, (due - 1) * allTotal - paid);   // everything older than "this period"
-      let flag;
-      if (due >= 1) {
-        const oldest = due === 1 ? Math.max(0, allTotal - paid) : null;
-        flag = `<div class="tt-flag"><div class="tt-flag-text">
-            <b>MAINTENANCE PERIOD DUE</b>
-            <div>This period <b>${cr(allTotal)}</b> across all active ships${due === 1 && paid ? ' — paid so far ' + cr(paid) + ', <b>' + cr(oldest) + '</b> still due' : ''}</div>
-            ${due > 1 ? `<div>${due - 1} previous period${due - 1 === 1 ? '' : 's'} <b>${cr(previousOwed)}</b> still due</div>` : ''}
-            <div class="tt-sub">Any new payments will remove the oldest balance first. Party fund: <b>${cr(fund)}</b></div>
-          </div>
-          <span class="tt-pay">
-            <button class="btn-outline" onclick="payAll()">Pay all due (${cr(owed)})</button>
-            <input type="number" id="tt-part" placeholder="Cr" min="1" />
-            <button class="btn-outline" onclick="payPart()">Pay part</button>
-            <button class="btn-outline" style="opacity:.7" onclick="markPaid()" title="Close the oldest period without taking any money from the fund">Mark paid (no payment)</button>
-          </span></div>`;
+      let banner;
+      if (due.length) {
+        const oldest = Math.min(...due.map(c => c.period_abs));
+        banner = `<div class="tt-flag"><b>PAYMENTS DUE</b>
+          <div>${cr(dueTotal)} outstanding across ${due.length} line${due.length === 1 ? '' : 's'} · oldest fell due <b>${fmtAbs(oldest)}</b></div>
+          <div class="tt-note" style="margin:0">Open a ship below, tick what you are paying, then Pay selected. Party fund: <b>${cr(fund)}</b></div></div>`;
       } else {
-        flag = `<div class="tt-ok">Next maintenance period due <b style="color:#00e5ff">${fmtAbs(nextDue)}</b> — in ${nextDue - abs} day${nextDue - abs === 1 ? '' : 's'}. Expected: ${cr(allTotal)} · Party fund: ${cr(fund)}</div>`;
+        banner = `<div class="tt-ok good">Everything is paid up. Next charges fall due <b style="color:#00e5ff">${fmtAbs(nextDue)}</b> — in ${nextDue - abs} day${nextDue - abs === 1 ? '' : 's'} (about ${cr(allTotal)}). Party fund: ${cr(fund)}</div>`;
       }
+
+      const ships = shipData.map(r => shipPanel(r)).join('') || '<div class="tt-sub">There are no active spacecraft in this campaign.</div>';
+      const payList = paySelection(), payTotal = sumOf(payList);
 
       document.getElementById('tt-root').innerHTML = `
         <div class="calc-block" style="max-width:1100px">
           <div class="calc-block-title">${esc(campaignName)} — Campaign Date</div>
           <div class="tt-date-row">
             <div class="tt-date">${fmtAbs(abs)}</div>
-            <div class="tt-sub">${since} day${since === 1 ? '' : 's'} since the last maintenance period closed</div>
+            <div class="tt-sub">${since} day${since === 1 ? '' : 's'} into the current 28-day period</div>
           </div>
           <div class="tt-controls">
             <button class="btn-outline" onclick="advance(1)">+1 day</button>
@@ -163,10 +227,16 @@
             <button class="btn-outline" onclick="setDate()">Set date</button>
           </div>
         </div>
-        ${flag}
+        ${notice ? '<div class="tt-warn">' + esc(notice) + '</div>' : ''}
+        ${banner}
         <div class="calc-block" style="max-width:1100px">
-          <div class="calc-block-title">Expenses — Active Ships</div>
-          ${shipData.length ? '<div class="tt-date" style="font-size:1.4rem">' + cr(allTotal) + '</div><div class="tt-sub">per 28-day period across ' + shipData.length + ' active ship' + (shipData.length === 1 ? '' : 's') + '. The breakdown is on the <a href="campaign-finance.html" style="color:#00e5ff">Campaign Finance</a> page.</div>' : '<div class="tt-sub">There are no active spacecraft in this campaign.</div>'}
+          <div class="calc-block-title">Ship expenses — active ships</div>
+          ${ships}
+          ${shipData.length ? `<div class="tt-actions">
+            <button class="btn-outline" onclick="paySelected()" ${payTotal > 0 ? '' : 'disabled'}>Pay selected (${cr(payTotal)})</button>
+            <span class="tt-sub">Life support is always included · Party fund: <b style="color:#00e5ff">${cr(fund)}</b></span>
+          </div>
+          <div class="tt-note">Payments clear what you tick from the party fund. Mortgage payments also reduce the ship's Mortgage Remaining. Figures are as they were when each period fell due.</div>` : ''}
         </div>
         <div class="calc-block" style="max-width:1100px">
           <div class="calc-block-title">Recent Changes</div>
@@ -175,6 +245,55 @@
         </div>`;
     }
 
+    // One collapsible panel per ship: badges in the title, the unpaid lines (oldest period first) inside.
+    function shipPanel(r) {
+      const lines = due.filter(c => c.ship_id === r.ship.id);
+      const count = k => lines.filter(c => c.kind === k).length;
+      const amt = k => sumOf(lines.filter(c => c.kind === k));
+      const badges = [];
+      if (!lines.length) badges.push('<span class="tt-badge ok">Up to date</span>');
+      else {
+        ['mortgage', 'maintenance'].forEach(k => {
+          if (count(k)) badges.push(`<span class="tt-badge bad">${KIND_NAME[k]}: ${count(k)} period${count(k) === 1 ? '' : 's'} behind · ${cr(amt(k))}</span>`);
+          else badges.push(`<span class="tt-badge ok">${KIND_NAME[k]} up to date</span>`);
+        });
+        const rest = sumOf(lines.filter(c => !['mortgage', 'maintenance'].includes(c.kind)));
+        if (rest) badges.push(`<span class="tt-badge amt">Other unpaid ${cr(rest)}</span>`);
+      }
+      const periods = [...new Set(lines.map(c => c.period_abs))].sort((a, b) => a - b);
+      const body = lines.length ? periods.map(p => `<div class="tt-period"><div class="tt-period-title">Fell due ${fmtAbs(p)}</div>
+          ${lines.filter(c => c.period_abs === p).sort((a, b) => KINDS.findIndex(k => k[0] === a.kind) - KINDS.findIndex(k => k[0] === b.kind)).map(c => c.kind === 'life_support'
+            ? `<div class="tt-line locked"><input type="checkbox" checked disabled /> ${KIND_NAME[c.kind]} <span class="lock">(always paid)</span><span class="amt">${cr(c.amount)}</span></div>`
+            : `<label class="tt-line"><input type="checkbox" ${sel.has(c.id) ? 'checked' : ''} onchange="toggle('${c.id}', this.checked)" /> ${KIND_NAME[c.kind]}<span class="amt">${cr(c.amount)}</span></label>`).join('')}
+        </div>`).join('') +
+        `<div style="margin-top:8px"><span class="tt-link" onclick="tickShip('${r.ship.id}', true)">Tick all for this ship</span><span class="tt-link" onclick="tickShip('${r.ship.id}', false)">Untick all</span></div>`
+        : `<div class="tt-sub" style="padding:8px 0">Nothing is owing. Each period this ship costs about ${cr(r.ex.total)}.</div>`;
+      return `<details class="tt-ship" ${openShips.has(r.ship.id) || lines.length ? 'open' : ''} data-ship="${r.ship.id}" ontoggle="shipToggled(this)">
+        <summary><span class="tt-ship-name">${esc(r.ship.name)}</span>${badges.join('')}<span class="tt-sub" style="margin-left:auto">${lines.length ? cr(sumOf(lines)) + ' due' : ''}</span></summary>
+        <div class="tt-body">${body}</div></details>`;
+    }
+
+    function shipToggled(el) { if (el.open) openShips.add(el.dataset.ship); else openShips.delete(el.dataset.ship); }
+    function toggle(id, on) { if (on) sel.add(id); else sel.delete(id); render(); }
+    function tickShip(shipId, on) {
+      due.filter(c => c.ship_id === shipId && c.kind !== 'life_support').forEach(c => { if (on) sel.add(c.id); else sel.delete(c.id); });
+      render();
+    }
+
+    async function paySelected() {
+      const list = paySelection();
+      if (!list.length) return;
+      const names = [...new Set(list.map(c => c.ship_name))].join(', ');
+      const { data, error } = await supabaseClient.rpc('charges_pay', {
+        p_campaign: campaignId, p_ids: list.map(c => c.id), p_note: 'Ship expenses — ' + names
+      });
+      if (error) { alert(error.message); return; }
+      sel = new Set();
+      await logChange('Paid ' + cr(data.total) + ' of ship expenses (' + data.paid + ' line' + (data.paid === 1 ? '' : 's') + ') from the party fund', curAbs(), curAbs());
+      await loadAll();
+    }
+
+    // ── the calendar ──
     // Always work from the latest saved date, since several people can use this at once.
     async function fresh() {
       const { data, error } = await supabaseClient.from('campaign_time').select('*').eq('campaign_id', campaignId);
@@ -211,59 +330,6 @@
       if (!y || !(d >= 1 && d <= YEAR_DAYS)) { alert('Enter a year and a day from 1 to 365.'); return; }
       try { await fresh(); } catch (e) { alert(e.message); return; }
       await saveAbs(absOf(y, d), 'Date set to Year ' + y + ', Day ' + pad3(d));
-    }
-
-    async function markPaid() {
-      try { await fresh(); } catch (e) { alert(e.message); return; }
-      const old = T.last_paid_abs;
-      const { error } = await supabaseClient.from('campaign_time').update({ last_paid_abs: old + PERIOD_DAYS, period_paid: 0 }).eq('campaign_id', campaignId);
-      if (error) { alert('Could not save: ' + error.message); return; }
-      await logChange('Maintenance period marked paid (closed ' + fmtAbs(old + PERIOD_DAYS) + ')', curAbs(), curAbs());
-      await loadAll();
-    }
-
-    // Pay maintenance out of the party fund. A payment clears the OLDEST balance first, then the next, and so on.
-    // Returns how many whole periods the amount closes and what is left over toward the next open one.
-    function planPayment(amount, total, due, paid) {
-      let left = amount, closed = 0, p = paid;
-      while (closed < due) {
-        const need = total - p;
-        if (left >= need) { left -= need; closed++; p = 0; }
-        else { p += left; left = 0; break; }
-      }
-      return { closed, newPaid: p, used: amount - left };
-    }
-    function currentDue() { return Math.max(0, Math.floor((curAbs() - T.last_paid_abs) / PERIOD_DAYS)); }
-    const periodTotal = () => shipData.reduce((n, r) => n + r.ex.total, 0);
-
-    async function pay(amount) {
-      try { await fresh(); } catch (e) { alert(e.message); return; }
-      const total = periodTotal(), due = currentDue(), paid = Number(T.period_paid) || 0;
-      if (due < 1 || total <= 0) { alert('There is nothing due.'); return; }
-      const owed = due * total - paid;
-      const a = Math.min(amount, owed);
-      if (a <= 0) { alert('Enter the amount to pay.'); return; }
-      const plan = planPayment(a, total, due, paid);
-      const { error } = await supabaseClient.rpc('party_apply', {
-        p_campaign: campaignId, p_kind: 'expense', p_category: 'Maintenance Period',
-        p_note: plan.closed ? 'Maintenance paid — ' + plan.closed + ' period' + (plan.closed === 1 ? '' : 's') + ' closed' : 'Part-payment of the maintenance period',
-        p_fund_delta: -a, p_players: [], p_details: { periods_closed: plan.closed }
-      });
-      if (error) { alert(error.message); return; }
-      const { error: e2 } = await supabaseClient.from('campaign_time')
-        .update({ last_paid_abs: T.last_paid_abs + plan.closed * PERIOD_DAYS, period_paid: plan.newPaid }).eq('campaign_id', campaignId);
-      if (e2) { alert('The money was taken from the fund but the period could not be updated: ' + e2.message); return; }
-      await logChange('Paid ' + cr(a) + ' from the party fund' + (plan.closed ? ' (' + plan.closed + ' period' + (plan.closed === 1 ? '' : 's') + ' closed)' : ' (part-payment)'), curAbs(), curAbs());
-      await loadAll();
-    }
-    async function payAll() {
-      try { await fresh(); } catch (e) { alert(e.message); return; }
-      await pay(currentDue() * periodTotal() - (Number(T.period_paid) || 0));
-    }
-    async function payPart() {
-      const a = Math.floor(parseFloat(document.getElementById('tt-part').value) || 0);
-      if (a <= 0) { alert('Enter the amount to pay.'); return; }
-      await pay(a);
     }
 
     async function doSignOut() {
