@@ -23,6 +23,10 @@
     .cf-side .calc-block, .cf-main > .calc-block { margin-bottom: 14px; }
     .cf-tick { display: flex; flex-direction: column; gap: 1px; }
     .cf-tick .cf-check { font-size: 0.8rem; color: #b0d8e8; padding: 1px 0; margin: 0; line-height: 1.25; }
+    .cf-mini td { padding: 2px 6px; font-size: 0.78rem; }
+    .cf-ships { margin-top: 8px; border-top: 1px solid #0a4a60; padding-top: 6px; font-size: 0.76rem; color: #4a9ab8; }
+    .cf-ships div { display: flex; justify-content: space-between; gap: 8px; padding: 1px 0; }
+    .cf-ships span:last-child { color: #b0d8e8; }
     .cf-pct { display: flex; flex-direction: column; gap: 8px; }
     .cf-pct label { flex-direction: row; align-items: center; justify-content: space-between; font-size: 0.8rem; }
     .cf-pct input { width: 80px; }
@@ -322,16 +326,6 @@
             </div>
 
             <div class="calc-block">
-              <div class="calc-block-title">Expenses per 28-day maintenance period — active ships</div>
-              ${shipData.length ? `<table class="cf-table"><thead><tr><th class="l">Expense</th>${shipData.map(r => '<th>' + esc(r.ship.name) + '</th>').join('')}${several ? '<th>All ships</th>' : ''}</tr></thead><tbody>
-                ${rows.map(([label, key]) => `<tr><td class="l">${label}</td>${shipData.map(r => '<td>' + cr(r.ex[key]) + '</td>').join('')}${several ? '<td>' + cr(shipData.reduce((n, r) => n + r.ex[key], 0)) + '</td>' : ''}</tr>`).join('')}
-                <tr class="cf-total"><td class="l">Total</td>${shipData.map(r => '<td>' + cr(r.ex.total) + '</td>').join('')}${several ? '<td>' + cr(allTotal) + '</td>' : ''}</tr>
-              </tbody></table>
-              <div class="cf-sub" style="margin-top:8px">From each ship's Finances tab (fuel not included). Pay the period from the <a href="time-tracker.html" style="color:#00e5ff">Time Tracker</a>.</div>`
-              : '<div class="cf-sub">There are no active spacecraft in this campaign.</div>'}
-            </div>
-
-            <div class="calc-block">
               <div class="calc-block-title">Ledger <span class="cf-sub" style="font-weight:400">(latest 500 entries)</span></div>
               ${ledger.length ? `<table class="cf-table"><thead><tr><th class="l">When</th><th class="l">By</th><th class="l">Entry</th><th class="l">Note</th><th>Fund</th><th>Balance</th><th></th></tr></thead><tbody>
                 ${ledger.map(l => { const pl = (l.details && l.details.players) || [], rev = !!l.reversed_by;
@@ -350,6 +344,16 @@
               ${actives.length ? `<div class="cf-tick">${actives.map(a => `<label class="cf-check"><input type="checkbox" ${ticked.has(a.id) ? 'checked' : ''} onchange="toggleTick('${a.id}', this.checked)" />${esc(a.name)}</label>`).join('')}</div>
               <div class="cf-sub" style="margin-top:6px">Ticked players share the next payout.</div>`
               : '<div class="cf-sub">No active characters. Set each player\'s character to Active on the Roster.</div>'}
+            </div>
+            <div class="calc-block">
+              <div class="calc-block-title">Expenses per 28 days</div>
+              ${shipData.length ? `<table class="cf-table cf-mini"><tbody>
+                ${rows.map(([label, key]) => `<tr><td class="l">${label}</td><td>${cr(shipData.reduce((n, r) => n + r.ex[key], 0))}</td></tr>`).join('')}
+                <tr class="cf-total"><td class="l">Total</td><td>${cr(allTotal)}</td></tr>
+              </tbody></table>
+              ${several ? '<div class="cf-ships">' + shipData.map(r => '<div><span>' + esc(r.ship.name) + '</span><span>' + cr(r.ex.total) + '</span></div>').join('') + '</div>' : ''}
+              <div class="cf-sub" style="margin-top:6px">Active ships, fuel not included. Pay it from the <a href="time-tracker.html" style="color:#00e5ff">Time Tracker</a>.</div>`
+              : '<div class="cf-sub">No active spacecraft in this campaign.</div>'}
             </div>
             <div class="calc-block">
               <div class="calc-block-title">Payout settings</div>
