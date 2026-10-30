@@ -8,7 +8,7 @@ const GEAR_ARMOUR = [
   {"name":"Cloth","protection":5,"conditions":"","rad":0,"tl":7,"kg":7,"cost":"Cr250","skill":"","category":"Core"},
   {"name":"Cloth (TL10)","protection":8,"conditions":"","rad":0,"tl":10,"kg":3,"cost":"Cr500","skill":"","category":"Core"},
   {"name":"Flak Jacket","protection":3,"conditions":"","rad":0,"tl":7,"kg":8,"cost":"Cr100","skill":"","category":"Core"},
-  {"name":"Reflec","protection":10,"conditions":"vs lasers only","rad":0,"tl":10,"kg":1,"cost":"Cr1,500","skill":"","category":"Core"},
+  {"name":"Reflec","protection":0,"conditions":"+10 vs lasers; DM-2 Stealth","rad":0,"tl":10,"kg":1,"cost":"Cr1,500","skill":"","category":"Core"},
   {"name":"Ablat","protection":1,"conditions":"+6 vs lasers","rad":0,"tl":9,"kg":2,"cost":"Cr75","skill":"","category":"Core"},
   {"name":"Combat Armour","protection":13,"conditions":"","rad":85,"tl":10,"kg":20,"cost":"Cr96,000","skill":"Vacc Suit 1","category":"Core"},
   {"name":"Combat Armour (TL12)","protection":17,"conditions":"","rad":145,"tl":12,"kg":16,"cost":"Cr88,000","skill":"Vacc Suit 0","category":"Core"},
