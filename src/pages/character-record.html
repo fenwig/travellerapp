@@ -1221,6 +1221,7 @@ function openCatalogue(kind) {
   box.innerHTML = `<div class="cat-picker-bar">
       <input id="cat-q-${kind}" placeholder="Search…" oninput="renderCatalogue('${kind}')" />
       ${cats.length ? `<select id="cat-c-${kind}" onchange="renderCatalogue('${kind}')"><option value="">All types</option>${cats.map(c => `<option>${c}</option>`).join('')}</select>` : ''}
+      <button class="skill-remove" title="Close" onclick="openCatalogue('${kind}')">✕</button>
     </div><div class="cat-picker-list" id="cat-l-${kind}"></div>`;
   box.style.display = 'block';
   renderCatalogue(kind);
