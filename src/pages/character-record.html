@@ -169,6 +169,20 @@
     .equip-table th:nth-child(2) { width: 56px; }
     .equip-table th:nth-child(3) { width: 80px; }
     .equip-table th:nth-child(5) { width: 36px; }
+    /* Armour modification sublines */
+    .mods-row td { border-bottom: 1px solid rgba(10,74,96,0.3); padding-top: 0; }
+    body:not(.editing) .mods-row.no-mods { display: none; }
+    .mods-cell { padding-left: 22px !important; }
+    .mod-line { display: grid; grid-template-columns: 16px minmax(120px, 1.3fr) 50px 60px 3fr 26px; gap: 8px; align-items: center; padding: 2px 0; font-size: 0.78rem; }
+    .mod-arrow { color: #4a9ab8; }
+    .mod-head { display: grid; grid-template-columns: 16px minmax(120px, 1.3fr) 50px 60px 3fr 26px; gap: 8px; font-size: 0.6rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 4px; }
+    .mods-row.no-mods .mod-head { display: none; }
+    .mod-line input { width: 100%; box-sizing: border-box; margin-bottom: 0; background: transparent; border: none; border-bottom: 1px solid transparent; color: #8fc5da; font-size: 0.78rem; padding: 1px 2px; outline: none; pointer-events: none; }
+    body.editing .mod-line input { border-bottom-color: #0a4a60; pointer-events: auto; }
+    .mod-actions { gap: 8px; align-items: center; padding: 3px 0 6px; }
+    .mod-actions .add-row-btn { margin-top: 0; }
+    .pro-cell { display: flex; align-items: center; gap: 4px; }
+    .mod-bonus { font-size: 0.68rem; color: #00ffaa; font-weight: 600; white-space: nowrap; }
     .sw-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
     .sw-actions .add-row-btn { margin-top: 0; }
     .sw-catalogue { width: auto; max-width: 200px; background: #080d12; border: 1px dashed #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 5px 8px; font-size: 0.78rem; }
@@ -631,6 +645,7 @@ let isOwner     = false;
 var pendingArmour     = [];
 var pendingWeapons    = [];
 var pendingAugments   = [];
+var pendingArmourMods = [];
 var pendingComms      = [];
 var pendingEquipment  = [];
 var pendingComputers  = [];
@@ -1177,8 +1192,14 @@ async function renderGear() {
     supabaseClient.from('character_equipment').select('*').eq('character_id', character.id),
     supabaseClient.from('character_comms').select('*').eq('character_id', character.id)
   ]);
+  const armourRows = a.data || [];
+  let armourMods = [];
+  if (armourRows.length) {
+    const { data: md } = await supabaseClient.from('character_armour_mods').select('*').in('armour_id', armourRows.map(r => r.id));
+    armourMods = md || [];
+  }
   renderComms(comms.data || []);
-  renderArmour(a.data || []);
+  renderArmour(armourRows, armourMods);
   renderWeapons(w.data || []);
   characterAugments = aug.data || [];
   renderAugments(characterAugments);
@@ -1187,40 +1208,153 @@ async function renderGear() {
 }
 
 function none(cols) {
-  return `<tr><td colspan="${cols}" style="color:#4a9ab8;font-size:0.82rem">None</td></tr>`;
+  return `<tr class="none-row"><td colspan="${cols}" style="color:#4a9ab8;font-size:0.82rem">None</td></tr>`;
 }
 
-function renderArmour(rows) {
+function renderArmour(rows, mods) {
+  mods = mods || [];
   document.getElementById('armour-tbody').innerHTML = rows.length
-    ? rows.map(r => `<tr data-id="${r.id}" class="existing-row">
+    ? rows.map(r => armourRowHtml(r) + modsRowHtml(r.id, mods.filter(m => m.armour_id === r.id))).join('')
+    : none(8);
+  rows.forEach(r => refreshArmourBonuses(r.id));
+}
+
+function armourRowHtml(r) {
+  return `<tr data-id="${r.id}" class="existing-row">
         <td><input value="${escapeHtml(r.type)}" placeholder="Type" /></td>
-        <td><input type="number" value="${r.protection}" placeholder="0" style="width:50px" /></td>
+        <td><div class="pro-cell"><input type="number" value="${r.protection}" placeholder="0" style="width:50px" /><span class="mod-bonus" data-bonus="prot"></span></div></td>
         <td><input value="${escapeHtml(r.conditions||'')}" placeholder="Conditions" /></td>
-        <td><input type="number" value="${r.rad}" placeholder="0" style="width:50px" /></td>
+        <td><div class="pro-cell"><input type="number" value="${r.rad}" placeholder="0" style="width:50px" /><span class="mod-bonus" data-bonus="rad"></span></div></td>
         <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
         <td><input type="number" value="${r.kg}" placeholder="0" step="0.01" style="width:60px" /></td>
         <td><input value="${escapeHtml(r.options||'')}" placeholder="Options" /></td>
-        <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingArmour','${r.id}',this)">✕</button></td>
-      </tr>`).join('')
-    : none(8);
+        <td class="td-actions edit-only"><button class="skill-remove" onclick="removeArmourRow('${r.id}',this)">✕</button></td>
+      </tr>`;
+}
+
+// ── Armour modifications (sublines under each armour row; data in js/gear-data.js) ──
+function modsRowHtml(armourId, mods) {
+  return `<tr class="mods-row ${mods.length ? '' : 'no-mods'}" data-for="${armourId}"><td colspan="8" class="mods-cell">
+      <div class="mod-list"><div class="mod-head"><span></span><span>Modification</span><span>TL</span><span>Kg</span><span>Effect</span><span></span></div>${mods.map(modLineHtml).join('')}</div>
+      <div class="mod-actions edit-only">
+        <button class="add-row-btn" onclick="addModLine('${armourId}')">+ Add Mod</button>
+        <select class="sw-catalogue" onchange="addModFromCatalogue('${armourId}',this)">${modCatalogueOptions()}</select>
+      </div>
+    </td></tr>`;
+}
+
+function modLineHtml(m) {
+  return `<div class="mod-line" data-id="${m.id || 'new-' + Date.now() + Math.floor(Math.random() * 1000)}" data-pb="${m.prot_bonus || 0}" data-rb="${m.rad_bonus || 0}">
+      <span class="mod-arrow">↳</span>
+      <input value="${escapeHtml(m.name||'')}" placeholder="Modification" />
+      <input type="number" value="${m.tl??''}" placeholder="TL" />
+      <input type="number" value="${m.kg??''}" placeholder="--" step="0.01" />
+      <input value="${escapeHtml(m.effect||'')}" placeholder="Effect" />
+      <button class="skill-remove edit-only" onclick="removeModLine(this)">✕</button>
+    </div>`;
+}
+
+let _modOptions = '';
+function modCatalogueOptions() {
+  if (!_modOptions) {
+    _modOptions = '<option value="">+ Mod from Catalogue…</option>' +
+      GEAR_ARMOUR_MODS.map((m, i) => `<option value="${i}">${escapeHtml(m.name)} — TL${m.tl}</option>`).join('');
+  }
+  return _modOptions;
+}
+
+function modsRowFor(armourId) {
+  return document.querySelector(`#armour-tbody tr.mods-row[data-for="${armourId}"]`);
+}
+
+function addModLine(armourId, p) {
+  const row = modsRowFor(armourId);
+  if (!row) return;
+  const m = p ? { name: p.name, tl: p.tl, kg: p.kg, effect: p.effect, prot_bonus: p.prot, rad_bonus: p.rad } : {};
+  row.querySelector('.mod-list').insertAdjacentHTML('beforeend', modLineHtml(m));
+  row.classList.remove('no-mods');
+  refreshArmourBonuses(armourId);
+}
+
+function addModFromCatalogue(armourId, sel) {
+  const i = sel.value;
+  sel.value = '';
+  if (i !== '') addModLine(armourId, GEAR_ARMOUR_MODS[i]);
+}
+
+function removeModLine(btn) {
+  const line = btn.closest('.mod-line');
+  const row = btn.closest('.mods-row');
+  const id = line.dataset.id;
+  if (!id.startsWith('new-')) pendingArmourMods.push({ action: 'delete', id });
+  line.remove();
+  if (!row.querySelector('.mod-line')) row.classList.add('no-mods');
+  refreshArmourBonuses(row.dataset.for);
+}
+
+// Numeric mod bonuses (e.g. Additional Padding +1 PRO, accessory pack +Rad) are shown next to the
+// armour's own PRO+ / RAD figure rather than overwriting it.
+function refreshArmourBonuses(armourId) {
+  const row = modsRowFor(armourId);
+  const tr = document.querySelector(`#armour-tbody tr[data-id="${armourId}"]`);
+  if (!row || !tr) return;
+  let prot = 0, rad = 0;
+  row.querySelectorAll('.mod-line').forEach(l => {
+    prot += parseInt(l.dataset.pb) || 0;
+    rad += parseInt(l.dataset.rb) || 0;
+  });
+  const show = (kind, v) => {
+    const el = tr.querySelector(`.mod-bonus[data-bonus="${kind}"]`);
+    if (!el) return;
+    el.textContent = v ? '+' + v : '';
+    el.title = v ? 'Bonus from modifications' : '';
+  };
+  show('prot', prot);
+  show('rad', rad);
+}
+
+function removeArmourRow(id, btn) {
+  if (!String(id).startsWith('new-')) pendingArmour.push({ action: 'delete', id });
+  const tr = btn.closest('tr');
+  const mods = modsRowFor(id);
+  if (mods) mods.remove();
+  tr.remove();
+}
+
+async function saveArmourMods(armourId, rowEl) {
+  for (const line of rowEl.querySelectorAll('.mod-line')) {
+    const i = line.querySelectorAll('input');
+    if (!i[0].value) continue;
+    const fields = {
+      name: i[0].value, tl: parseInt(i[1].value)||null, kg: parseFloat(i[2].value)||null,
+      effect: i[3].value||null,
+      prot_bonus: parseInt(line.dataset.pb)||0, rad_bonus: parseInt(line.dataset.rb)||0
+    };
+    if (line.dataset.id.startsWith('new-')) {
+      await supabaseClient.from('character_armour_mods').insert({ armour_id: armourId, ...fields });
+    } else {
+      await supabaseClient.from('character_armour_mods').update(fields).eq('id', line.dataset.id);
+    }
+  }
 }
 
 function addArmourRow(p) {
   p = p || {};
   const tbody = document.getElementById('armour-tbody');
-  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  if (tbody.querySelector('.none-row')) tbody.innerHTML = '';
   const tr = document.createElement('tr');
   tr.dataset.id = 'new-' + Date.now();
   tr.innerHTML = `
     <td><input placeholder="Type" value="${escapeHtml(p.name||'')}" /></td>
-    <td><input type="number" placeholder="0" value="${p.protection??''}" style="width:50px" /></td>
+    <td><div class="pro-cell"><input type="number" placeholder="0" value="${p.protection??''}" style="width:50px" /><span class="mod-bonus" data-bonus="prot"></span></div></td>
     <td><input placeholder="Conditions" value="${escapeHtml(p.conditions||'')}" /></td>
-    <td><input type="number" placeholder="0" value="${p.rad??''}" style="width:50px" /></td>
+    <td><div class="pro-cell"><input type="number" placeholder="0" value="${p.rad??''}" style="width:50px" /><span class="mod-bonus" data-bonus="rad"></span></div></td>
     <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
     <td><input type="number" placeholder="0" step="0.01" value="${p.kg??''}" style="width:60px" /></td>
     <td><input placeholder="Options" /></td>
-    <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
+    <td class="td-actions edit-only"><button class="skill-remove" onclick="removeArmourRow('${tr.dataset.id}',this)">✕</button></td>`;
   tbody.appendChild(tr);
+  tbody.insertAdjacentHTML('beforeend', modsRowHtml(tr.dataset.id, []));
   pendingArmour.push({ action: 'add', tr });
 }
 
@@ -1948,7 +2082,7 @@ function cancelEdit() {
 }
 
 function clearPending() {
-  pendingArmour=[]; pendingWeapons=[]; pendingAugments=[]; pendingComms=[]; pendingComputers=[];
+  pendingArmour=[]; pendingArmourMods=[]; pendingWeapons=[]; pendingAugments=[]; pendingComms=[]; pendingComputers=[];
   pendingEquipment=[]; pendingCareers=[]; pendingWounds=[]; pendingAssociates=[]; pendingConnections=[];
 }
 
@@ -1985,6 +2119,9 @@ async function saveAll() {
     if (error) throw error;
 
     // Armour — update existing rows, then process adds/deletes
+    for (const m of pendingArmourMods) {
+      if (m.action === 'delete') await supabaseClient.from('character_armour_mods').delete().eq('id', m.id);
+    }
     for (const tr of document.querySelectorAll('#armour-tbody tr.existing-row')) {
       const id = tr.dataset.id; if (!id) continue;
       const i = tr.querySelectorAll('input');
@@ -1993,17 +2130,23 @@ async function saveAll() {
         rad: parseInt(i[3].value)||0, tl: parseInt(i[4].value)||null,
         kg: parseFloat(i[5].value)||0, options: i[6].value||null
       }).eq('id', id);
+      const modsRow = modsRowFor(id);
+      if (modsRow) await saveArmourMods(id, modsRow);
     }
     for (const p of pendingArmour) {
       if (p.action === 'delete') { await supabaseClient.from('character_armour').delete().eq('id', p.id); }
       else {
         const i = p.tr.querySelectorAll('input');
-        if (i[0].value) await supabaseClient.from('character_armour').insert({
-          character_id: character.id,
-          type: i[0].value, protection: parseInt(i[1].value)||0, conditions: i[2].value||null,
-          rad: parseInt(i[3].value)||0, tl: parseInt(i[4].value)||null,
-          kg: parseFloat(i[5].value)||0, options: i[6].value||null
-        });
+        if (p.tr.isConnected && i[0].value) {
+          const { data: newArmour } = await supabaseClient.from('character_armour').insert({
+            character_id: character.id,
+            type: i[0].value, protection: parseInt(i[1].value)||0, conditions: i[2].value||null,
+            rad: parseInt(i[3].value)||0, tl: parseInt(i[4].value)||null,
+            kg: parseFloat(i[5].value)||0, options: i[6].value||null
+          }).select().single();
+          const modsRow = modsRowFor(p.tr.dataset.id);
+          if (newArmour && modsRow) await saveArmourMods(newArmour.id, modsRow);
+        }
       }
     }
 
@@ -2021,7 +2164,7 @@ async function saveAll() {
       if (p.action === 'delete') { await supabaseClient.from('character_weapons').delete().eq('id', p.id); }
       else {
         const i = p.tr.querySelectorAll('input');
-        if (i[0].value) await supabaseClient.from('character_weapons').insert({
+        if (p.tr.isConnected && i[0].value) await supabaseClient.from('character_weapons').insert({
           character_id: character.id,
           name: i[0].value, tl: parseInt(i[1].value)||null, range: i[2].value||null,
           damage: i[3].value||null, kg: parseFloat(i[4].value)||0,
@@ -2043,7 +2186,7 @@ async function saveAll() {
       if (p.action === 'delete') { await supabaseClient.from('character_augments').delete().eq('id', p.id); }
       else {
         const i = p.tr.querySelectorAll('input');
-        if (i[0].value) await supabaseClient.from('character_augments').insert({
+        if (p.tr.isConnected && i[0].value) await supabaseClient.from('character_augments').insert({
           character_id: character.id,
           type: i[0].value, tl: parseInt(i[1].value)||null, improvement: i[2].value||null,
           ...augmentBonusFields(p.tr)
@@ -2064,7 +2207,7 @@ async function saveAll() {
       if (p.action === 'delete') { await supabaseClient.from('character_comms').delete().eq('id', p.id); }
       else {
         const i = p.tr.querySelectorAll('input');
-        if (i[0].value) await supabaseClient.from('character_comms').insert({
+        if (p.tr.isConnected && i[0].value) await supabaseClient.from('character_comms').insert({
           character_id: character.id,
           name: i[0].value, tl: parseInt(i[1].value)||null, mass: parseFloat(i[2].value)||null,
           range: i[3].value||null, features: i[4].value||null
@@ -2100,7 +2243,7 @@ async function saveAll() {
       if (p.action === 'delete') { await supabaseClient.from('character_equipment').delete().eq('id', p.id); }
       else {
         const i = p.tr.querySelectorAll('input');
-        if (i[0].value) await supabaseClient.from('character_equipment').insert({
+        if (p.tr.isConnected && i[0].value) await supabaseClient.from('character_equipment').insert({
           character_id: character.id, type: i[0].value, tl: parseInt(i[1].value)||null, mass: parseFloat(i[2].value)||0,
           effect: i[3].value||null
         });
