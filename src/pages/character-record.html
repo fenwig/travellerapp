@@ -174,6 +174,18 @@
     .mod-actions .add-row-btn { margin-top: 0; }
     .pro-cell { display: flex; align-items: center; gap: 4px; }
     .mod-bonus { font-size: 0.68rem; color: #00ffaa; font-weight: 600; white-space: nowrap; }
+    /* Equipped switch */
+    .eq-cell { display: flex; align-items: center; gap: 8px; }
+    .eq-cell > input { flex: 1; min-width: 0; }
+    .eq-hint { display: inline-block; width: 46px; font-size: 0.55rem; letter-spacing: 0; white-space: nowrap; color: #4a9ab8; text-transform: uppercase; vertical-align: middle; }
+    .eq-btn { flex: none; position: relative; width: 38px; height: 20px; padding: 0; border-radius: 10px; border: 1px solid #0a4a60; background: #080d12; cursor: pointer; }
+    .eq-btn::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #4a9ab8; transition: left 0.15s; }
+    .eq-btn.on { border-color: #00e5ff; background: rgba(0,229,255,0.18); }
+    .eq-btn.on::after { left: 20px; background: #00e5ff; }
+    tr[data-eq="0"] > td > .eq-cell > input, tr[data-eq="0"] > td input, tr[data-eq="0"] .mod-bonus,
+    tr[data-eq="0"] + tr.mods-row, tr[data-eq="0"] + tr.mag-row, tr[data-eq="0"] + tr.qty-row,
+    tr[data-eq="0"] + tr.mag-row + tr.qty-row { opacity: 0.45; }
+    .computer-card[data-eq="0"] > :not(.computer-head), .computer-card[data-eq="0"] .computer-head > :not(:first-child) { opacity: 0.45; }
     /* Ammunition subline under weapons */
     .mag-row td { border-bottom: 1px solid rgba(10,74,96,0.3); padding-top: 0; }
     .mag-cell { padding-left: 22px !important; }
@@ -438,7 +450,7 @@
             <div class="cr-section-title">Armour</div>
             <table class="gear-table">
               <thead><tr>
-                <th>Type</th><th class="col-narrow">PRO+</th><th>Conditions</th>
+                <th><span class="eq-hint">Equipped</span>Type</th><th class="col-narrow">PRO+</th><th>Conditions</th>
                 <th class="col-narrow">RAD</th><th class="col-narrow">TL</th><th class="col-narrow">KG</th>
                 <th>Options</th><th class="edit-only"></th>
               </tr></thead>
@@ -455,7 +467,7 @@
             <div class="cr-section-title">Weapons</div>
             <table class="gear-table">
               <thead><tr>
-                <th>Name</th><th class="col-narrow">TL</th><th class="col-narrow">Range</th>
+                <th><span class="eq-hint">Equipped</span>Name</th><th class="col-narrow">TL</th><th class="col-narrow">Range</th>
                 <th class="col-narrow">Damage</th><th class="col-narrow">Kg</th><th class="col-narrow">Mag</th>
                 <th>Traits</th><th class="edit-only"></th>
               </tr></thead>
@@ -471,7 +483,7 @@
           <div class="cr-section">
             <div class="cr-section-title">Equipment</div>
             <table class="gear-table equip-table">
-              <thead><tr><th>Item</th><th class="col-narrow">TL</th><th class="col-narrow">Kg</th><th>Effect</th><th class="edit-only"></th></tr></thead>
+              <thead><tr><th><span class="eq-hint">Equipped</span>Item</th><th class="col-narrow">TL</th><th class="col-narrow">Kg</th><th>Effect</th><th class="edit-only"></th></tr></thead>
               <tbody id="equipment-tbody"></tbody>
             </table>
             <div class="sw-actions">
@@ -492,7 +504,7 @@
             <div class="cr-section-title">Communications</div>
             <table class="gear-table">
               <thead><tr>
-                <th>Device</th><th class="col-narrow">TL</th><th class="col-narrow">Mass</th>
+                <th><span class="eq-hint">Equipped</span>Device</th><th class="col-narrow">TL</th><th class="col-narrow">Mass</th>
                 <th class="col-narrow">Range</th><th>Features</th><th class="edit-only"></th>
               </tr></thead>
               <tbody id="comms-tbody"></tbody>
@@ -516,7 +528,7 @@
             <div class="cr-section-title">Augments</div>
             <table class="gear-table">
               <thead><tr>
-                <th>Augment</th><th class="col-narrow">TL</th><th>Effect / Improvement</th>
+                <th><span class="eq-hint">Equipped</span>Augment</th><th class="col-narrow">TL</th><th>Effect / Improvement</th>
                 <th class="edit-only"></th>
               </tr></thead>
               <tbody id="augments-tbody"></tbody>
@@ -934,12 +946,57 @@ function closeCropper() {
   document.getElementById('crop-modal').classList.remove('open');
 }
 
+// ── Equipped switch (armour, weapons, augments, comms, equipment, computers) ──
+// Equipped = the character has the item with them on this adventure. Unequipped items stay on the
+// sheet (dimmed) but give no protection or modifiers. The switch saves the moment it is clicked.
+const EQ_TABLES = {
+  'armour-tbody': 'character_armour', 'weapons-tbody': 'character_weapons', 'augments-tbody': 'character_augments',
+  'comms-tbody': 'character_comms', 'equipment-tbody': 'character_equipment'
+};
+function eqOn(r) { return !r || r.equipped !== false; }
+function eqBtn(on) {
+  return `<button type="button" class="eq-btn ${on ? 'on' : ''}" title="${on ? 'Equipped: carried on this adventure (click to leave it behind)' : 'Not equipped: not carried (click to equip)'}" onclick="toggleEquipped(this)"></button>`;
+}
+function eqCell(on, inner) { return `<div class="eq-cell">${eqBtn(on)}${inner}</div>`; }
+
+function toggleEquipped(btn) {
+  if (typeof isOwner !== 'undefined' && !isOwner) return;
+  const box = btn.closest('tr') || btn.closest('.computer-card');
+  const on = box.dataset.eq === '0';   // the new state
+  box.dataset.eq = on ? '1' : '0';
+  btn.classList.toggle('on', on);
+  btn.title = on ? 'Equipped: carried on this adventure (click to leave it behind)' : 'Not equipped: not carried (click to equip)';
+  const id = box.dataset.id;
+  const table = box.tagName === 'TR' ? EQ_TABLES[box.closest('tbody').id] : 'character_computers';
+  if (id && !String(id).startsWith('new-')) {
+    supabaseClient.from(table).update({ equipped: on }).eq('id', id)
+      .then(({ error }) => { if (error) console.error(table + ' equipped update failed:', error.message); });
+  }
+  if (table === 'character_armour') refreshArmourBonuses(id);
+  if (table === 'character_augments') {
+    const a = characterAugments.find(x => String(x.id) === String(id));
+    if (a) { a.equipped = on; refreshStatsKeepEdits(); }
+  }
+  if (table === 'character_computers') {
+    const c = techComputers.find(x => String(x.id) === String(id));
+    if (c) c.equipped = on;
+  }
+}
+
+// Redraw the characteristics (augment bonuses changed) without losing numbers typed in edit mode.
+function refreshStatsKeepEdits() {
+  const typed = {};
+  CHARS.forEach(c => { const el = document.getElementById('edit-' + c.key); if (el) typed[c.key] = el.value; });
+  renderStats();
+  CHARS.forEach(c => { const el = document.getElementById('edit-' + c.key); if (el && typed[c.key] !== undefined) el.value = typed[c.key]; });
+}
+
 // ── Stats ──────────────────────────────────────────────────
 let characterAugments = [];
 
 function augmentBonus(key) {
   return characterAugments
-    .filter(a => a.bonus_target === key)
+    .filter(a => a.bonus_target === key && a.equipped !== false)
     .reduce((sum, a) => sum + (a.bonus_value || 0), 0);
 }
 
@@ -1253,8 +1310,8 @@ function renderArmour(rows, mods) {
 }
 
 function armourRowHtml(r) {
-  return `<tr data-id="${r.id}" class="existing-row">
-        <td><input value="${escapeHtml(r.type)}" placeholder="Type" /></td>
+  return `<tr data-id="${r.id}" data-eq="${eqOn(r) ? 1 : 0}" class="existing-row">
+        <td>${eqCell(eqOn(r), `<input value="${escapeHtml(r.type)}" placeholder="Type" />`)}</td>
         <td><div class="pro-cell"><input type="number" value="${r.protection}" placeholder="0" style="width:50px" /><span class="mod-bonus" data-bonus="prot"></span></div></td>
         <td><input value="${escapeHtml(r.conditions||'')}" placeholder="Conditions" /></td>
         <td><div class="pro-cell"><input type="number" value="${r.rad}" placeholder="0" style="width:50px" /><span class="mod-bonus" data-bonus="rad"></span></div></td>
@@ -1322,7 +1379,8 @@ function refreshArmourBonuses(armourId) {
   const tr = document.querySelector(`#armour-tbody tr[data-id="${armourId}"]`);
   if (!row || !tr) return;
   let prot = 0, rad = 0;
-  row.querySelectorAll('.mod-line').forEach(l => {
+  const worn = tr.dataset.eq !== '0';   // mods only count while the armour is equipped
+  if (worn) row.querySelectorAll('.mod-line').forEach(l => {
     prot += parseInt(l.dataset.pb) || 0;
     rad += parseInt(l.dataset.rb) || 0;
   });
@@ -1368,7 +1426,7 @@ function addArmourRow(p) {
   const tr = document.createElement('tr');
   tr.dataset.id = 'new-' + Date.now();
   tr.innerHTML = `
-    <td><input placeholder="Type" value="${escapeHtml(p.name||'')}" /></td>
+    <td>${eqCell(true, `<input placeholder="Type" value="${escapeHtml(p.name||'')}" />`)}</td>
     <td><div class="pro-cell"><input type="number" placeholder="0" value="${p.protection??''}" style="width:50px" /><span class="mod-bonus" data-bonus="prot"></span></div></td>
     <td><input placeholder="Conditions" value="${escapeHtml(p.conditions||'')}" /></td>
     <td><div class="pro-cell"><input type="number" placeholder="0" value="${p.rad??''}" style="width:50px" /><span class="mod-bonus" data-bonus="rad"></span></div></td>
@@ -1383,8 +1441,8 @@ function addArmourRow(p) {
 
 function renderWeapons(rows) {
   document.getElementById('weapons-tbody').innerHTML = rows.length
-    ? rows.map(r => `<tr data-id="${r.id}" class="existing-row">
-        <td><input value="${escapeHtml(r.name||'')}" placeholder="Name" /></td>
+    ? rows.map(r => `<tr data-id="${r.id}" data-eq="${eqOn(r) ? 1 : 0}" class="existing-row">
+        <td>${eqCell(eqOn(r), `<input value="${escapeHtml(r.name||'')}" placeholder="Name" />`)}</td>
         <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
         <td><input value="${escapeHtml(r.range||'')}" placeholder="Range" style="width:80px" /></td>
         <td><input value="${escapeHtml(r.damage||'')}" placeholder="Damage" style="width:70px" /></td>
@@ -1405,7 +1463,7 @@ function addWeaponRow(p) {
   const tr = document.createElement('tr');
   tr.dataset.id = 'new-' + Date.now();
   tr.innerHTML = `
-    <td><input placeholder="Name" value="${escapeHtml(p.name||'')}" /></td>
+    <td>${eqCell(true, `<input placeholder="Name" value="${escapeHtml(p.name||'')}" />`)}</td>
     <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
     <td><input placeholder="Range" value="${escapeHtml(p.range||'')}" style="width:80px" /></td>
     <td><input placeholder="Damage" value="${escapeHtml(p.damage||'')}" style="width:70px" /></td>
@@ -1693,8 +1751,8 @@ function augmentBonusFields(tr) {
 
 function renderAugments(rows) {
   document.getElementById('augments-tbody').innerHTML = rows.length
-    ? rows.map(r => `<tr data-id="${r.id}" data-bt="${r.bonus_target||''}" data-bv="${r.bonus_value||0}" data-orig="${escapeHtml(r.improvement||'')}" class="existing-row">
-        <td><input value="${escapeHtml(r.type||'')}" placeholder="Augment" /></td>
+    ? rows.map(r => `<tr data-id="${r.id}" data-bt="${r.bonus_target||''}" data-bv="${r.bonus_value||0}" data-orig="${escapeHtml(r.improvement||'')}" data-eq="${eqOn(r) ? 1 : 0}" class="existing-row">
+        <td>${eqCell(eqOn(r), `<input value="${escapeHtml(r.type||'')}" placeholder="Augment" />`)}</td>
         <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
         <td><input value="${escapeHtml(r.improvement||'')}" placeholder="Effect / Improvement" /></td>
         <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingAugments','${r.id}',this)">✕</button></td>
@@ -1709,7 +1767,7 @@ function addAugmentRow(p) {
   const tr = document.createElement('tr');
   tr.dataset.id = 'new-' + Date.now();
   tr.innerHTML = `
-    <td><input placeholder="Augment" value="${escapeHtml(p.name||'')}" /></td>
+    <td>${eqCell(true, `<input placeholder="Augment" value="${escapeHtml(p.name||'')}" />`)}</td>
     <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
     <td><input placeholder="Effect / Improvement" value="${escapeHtml(p.improvement||'')}" /></td>
     <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
@@ -1721,8 +1779,8 @@ function addAugmentRow(p) {
 // ── Communications (Tech tab) ──
 function renderComms(rows) {
   document.getElementById('comms-tbody').innerHTML = rows.length
-    ? rows.map(r => `<tr data-id="${r.id}" class="existing-row">
-        <td><input value="${escapeHtml(r.name||'')}" placeholder="Device" /></td>
+    ? rows.map(r => `<tr data-id="${r.id}" data-eq="${eqOn(r) ? 1 : 0}" class="existing-row">
+        <td>${eqCell(eqOn(r), `<input value="${escapeHtml(r.name||'')}" placeholder="Device" />`)}</td>
         <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
         <td><input type="number" value="${r.mass??''}" placeholder="--" step="0.01" style="width:60px" /></td>
         <td><input value="${escapeHtml(r.range||'')}" placeholder="--" style="width:80px" /></td>
@@ -1739,7 +1797,7 @@ function addCommsRow(p) {
   const tr = document.createElement('tr');
   tr.dataset.id = 'new-' + Date.now();
   tr.innerHTML = `
-    <td><input placeholder="Device" value="${escapeHtml(p.name||'')}" /></td>
+    <td>${eqCell(true, `<input placeholder="Device" value="${escapeHtml(p.name||'')}" />`)}</td>
     <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
     <td><input type="number" placeholder="--" step="0.01" value="${p.mass??''}" style="width:60px" /></td>
     <td><input placeholder="--" value="${escapeHtml(p.range||'')}" style="width:80px" /></td>
@@ -1754,8 +1812,8 @@ function addCommsRow(p) {
 
 function renderEquipment(rows) {
   document.getElementById('equipment-tbody').innerHTML = rows.length
-    ? rows.map(r => `<tr data-id="${r.id}" class="existing-row">
-        <td><input value="${escapeHtml(r.type||'')}" placeholder="Item" /></td>
+    ? rows.map(r => `<tr data-id="${r.id}" data-eq="${eqOn(r) ? 1 : 0}" class="existing-row">
+        <td>${eqCell(eqOn(r), `<input value="${escapeHtml(r.type||'')}" placeholder="Item" />`)}</td>
         <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
         <td><input type="number" value="${r.mass??''}" placeholder="0" step="0.01" style="width:70px" /></td>
         <td><input value="${escapeHtml(r.effect||'')}" placeholder="Effect" /></td>
@@ -1771,7 +1829,7 @@ function addEquipmentRow(p) {
   const tr = document.createElement('tr');
   tr.dataset.id = 'new-' + Date.now();
   tr.innerHTML = `
-    <td><input placeholder="Item" value="${escapeHtml(p.name||'')}" /></td>
+    <td>${eqCell(true, `<input placeholder="Item" value="${escapeHtml(p.name||'')}" />`)}</td>
     <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
     <td><input type="number" placeholder="0" step="0.01" value="${p.kg??''}" style="width:70px" /></td>
     <td><input placeholder="Effect" value="${escapeHtml(p.effect||'')}" /></td>
@@ -1891,8 +1949,9 @@ function renderComputerCard(c) {
   const allocated = compAllocated(c.id);
 
   return `
-    <div class="computer-card" data-id="${c.id}">
+    <div class="computer-card" data-id="${c.id}" data-eq="${eqOn(c) ? 1 : 0}">
       <div class="computer-head">
+        <div class="computer-field" title="Equipped">${eqBtn(eqOn(c))}</div>
         <div class="computer-field cf-name">
           <label>Name</label>
           <input type="text" class="edit-only" value="${c.name}" onchange="autoSaveComputer('${c.id}','name',this.value)" />
@@ -2029,6 +2088,7 @@ function addComputer() {
   div.dataset.id = id;
   div.innerHTML = `
     <div class="computer-head">
+      <div class="computer-field">${eqBtn(true)}</div>
       <div class="computer-field cf-name"><label>Name</label><input type="text" value="New Computer" /></div>
       <div class="computer-field"><label>Processor</label><input type="number" value="0" /></div>
       <div class="computer-field"><label>Tech Level</label><input type="number" /></div>
@@ -2348,7 +2408,8 @@ async function saveAll() {
             character_id: character.id,
             type: i[0].value, protection: parseInt(i[1].value)||0, conditions: i[2].value||null,
             rad: parseInt(i[3].value)||0, tl: parseInt(i[4].value)||null,
-            kg: parseFloat(i[5].value)||0, options: i[6].value||null
+            kg: parseFloat(i[5].value)||0, options: i[6].value||null,
+            equipped: p.tr.dataset.eq !== '0'
           }).select().single();
           const modsRow = modsRowFor(p.tr.dataset.id);
           if (newArmour && modsRow) await saveArmourMods(newArmour.id, modsRow);
@@ -2375,6 +2436,7 @@ async function saveAll() {
           name: i[0].value, tl: parseInt(i[1].value)||null, range: i[2].value||null,
           damage: i[3].value||null, kg: parseFloat(i[4].value)||0,
           magazine: parseInt(i[5].value)||null, traits: i[6].value||null,
+          equipped: p.tr.dataset.eq !== '0',
           ...(qtyLine(p.tr) ? { qty: parseInt(qtyLine(p.tr).querySelector('input').value) || 0 } : {})
         });
       }
@@ -2396,7 +2458,8 @@ async function saveAll() {
         if (p.tr.isConnected && i[0].value) await supabaseClient.from('character_augments').insert({
           character_id: character.id,
           type: i[0].value, tl: parseInt(i[1].value)||null, improvement: i[2].value||null,
-          ...augmentBonusFields(p.tr)
+          ...augmentBonusFields(p.tr),
+          equipped: p.tr.dataset.eq !== '0'
         });
       }
     }
@@ -2417,7 +2480,8 @@ async function saveAll() {
         if (p.tr.isConnected && i[0].value) await supabaseClient.from('character_comms').insert({
           character_id: character.id,
           name: i[0].value, tl: parseInt(i[1].value)||null, mass: parseFloat(i[2].value)||null,
-          range: i[3].value||null, features: i[4].value||null
+          range: i[3].value||null, features: i[4].value||null,
+          equipped: p.tr.dataset.eq !== '0'
         });
       }
     }
@@ -2431,7 +2495,8 @@ async function saveAll() {
         const { error: compErr } = await supabaseClient.from('character_computers').insert({
           character_id: character.id,
           name: txt[0].value || 'Computer', processor: parseInt(txt[1].value)||0,
-          tl: parseInt(txt[2].value)||null, options: options || null
+          tl: parseInt(txt[2].value)||null, options: options || null,
+          equipped: p.div.dataset.eq !== '0'
         });
         if (compErr) throw compErr;
       }
@@ -2452,7 +2517,8 @@ async function saveAll() {
         const i = p.tr.querySelectorAll('input');
         if (p.tr.isConnected && i[0].value) await supabaseClient.from('character_equipment').insert({
           character_id: character.id, type: i[0].value, tl: parseInt(i[1].value)||null, mass: parseFloat(i[2].value)||0,
-          effect: i[3].value||null
+          effect: i[3].value||null,
+          equipped: p.tr.dataset.eq !== '0'
         });
       }
     }
