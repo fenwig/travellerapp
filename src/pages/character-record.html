@@ -80,6 +80,7 @@
     .stat-box { background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 6px; padding: 6px 2px; text-align: center; min-width: 0; }
     .stat-label { font-size: 0.62rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
     .stat-aug { font-size: 0.6rem; color: #00ffaa; font-weight: 600; margin-left: 3px; vertical-align: super; }
+    .stat-aug.neg { color: #ff5a4a; }
     .stat-value { font-size: 1.15rem; color: #00e5ff; font-weight: 700; line-height: 1; }
     .stat-dm    { font-size: 0.72rem; color: #b0d8e8; margin-top: 2px; font-weight: 600; }
     .stat-input { width: 32px; font-size: 1rem; color: #00e5ff; background: transparent; border: none; border-bottom: 1px solid #0a4a60; text-align: center; outline: none; }
@@ -176,13 +177,12 @@
     .pro-cell { display: flex; align-items: center; gap: 4px; }
     .mod-bonus { font-size: 0.68rem; color: #00ffaa; font-weight: 600; white-space: nowrap; }
     /* Equipped switch */
-    .eq-cell { display: flex; align-items: center; gap: 8px; }
+    .eq-cell { display: flex; align-items: center; gap: 6px; }
     .eq-cell > input { flex: 1; min-width: 0; }
-    .eq-hint { display: inline-block; width: 46px; font-size: 0.55rem; letter-spacing: 0; white-space: nowrap; color: #4a9ab8; text-transform: uppercase; vertical-align: middle; }
-    .eq-btn { flex: none; position: relative; width: 38px; height: 20px; padding: 0; border-radius: 10px; border: 1px solid #0a4a60; background: #080d12; cursor: pointer; }
-    .eq-btn::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #4a9ab8; transition: left 0.15s; }
+    .eq-hint { display: inline-block; width: 22px; font-size: 0.55rem; letter-spacing: 0; white-space: nowrap; color: #4a9ab8; text-transform: uppercase; vertical-align: middle; }
+    .eq-btn { flex: none; position: relative; width: 16px; height: 16px; padding: 0; border-radius: 3px; border: 1px solid #0a4a60; background: #080d12; cursor: pointer; }
     .eq-btn.on { border-color: #00e5ff; background: rgba(0,229,255,0.18); }
-    .eq-btn.on::after { left: 20px; background: #00e5ff; }
+    .eq-btn.on::after { content: '✓'; position: absolute; inset: 0; text-align: center; font-size: 12px; line-height: 14px; color: #00e5ff; }
     tr[data-eq="0"] > td > .eq-cell > input, tr[data-eq="0"] > td input, tr[data-eq="0"] .mod-bonus,
     tr[data-eq="0"] + tr.mods-row, tr[data-eq="0"] + tr.mag-row, tr[data-eq="0"] + tr.qty-row,
     tr[data-eq="0"] + tr.mag-row + tr.qty-row { opacity: 0.45; }
@@ -452,7 +452,7 @@
             <div class="cr-section-title">Armour</div>
             <table class="gear-table">
               <thead><tr>
-                <th><span class="eq-hint">Equipped</span>Type</th><th class="col-narrow">PRO+</th><th>Conditions</th>
+                <th><span class="eq-hint" title="Equipped">Eq</span>Type</th><th class="col-narrow">PRO+</th><th>Conditions</th>
                 <th class="col-narrow">RAD</th><th class="col-narrow">TL</th><th class="col-narrow">KG</th>
                 <th>Options</th><th class="edit-only"></th>
               </tr></thead>
@@ -469,7 +469,7 @@
             <div class="cr-section-title">Weapons</div>
             <table class="gear-table">
               <thead><tr>
-                <th><span class="eq-hint">Equipped</span>Name</th><th class="col-narrow">TL</th><th class="col-narrow">Range</th>
+                <th><span class="eq-hint" title="Equipped">Eq</span>Name</th><th class="col-narrow">TL</th><th class="col-narrow">Range</th>
                 <th class="col-narrow">Damage</th><th class="col-narrow">Kg</th><th class="col-narrow">Mag</th>
                 <th>Traits</th><th class="edit-only"></th>
               </tr></thead>
@@ -485,7 +485,7 @@
           <div class="cr-section">
             <div class="cr-section-title">Equipment</div>
             <table class="gear-table equip-table">
-              <thead><tr><th><span class="eq-hint">Equipped</span>Item</th><th class="col-narrow">TL</th><th class="col-narrow">Kg</th><th>Effect</th><th class="edit-only"></th></tr></thead>
+              <thead><tr><th><span class="eq-hint" title="Equipped">Eq</span>Item</th><th class="col-narrow">TL</th><th class="col-narrow">Kg</th><th>Effect</th><th class="edit-only"></th></tr></thead>
               <tbody id="equipment-tbody"></tbody>
             </table>
             <div class="sw-actions">
@@ -506,7 +506,7 @@
             <div class="cr-section-title">Communications</div>
             <table class="gear-table">
               <thead><tr>
-                <th><span class="eq-hint">Equipped</span>Device</th><th class="col-narrow">TL</th><th class="col-narrow">Mass</th>
+                <th><span class="eq-hint" title="Equipped">Eq</span>Device</th><th class="col-narrow">TL</th><th class="col-narrow">Mass</th>
                 <th class="col-narrow">Range</th><th>Features</th><th class="edit-only"></th>
               </tr></thead>
               <tbody id="comms-tbody"></tbody>
@@ -530,7 +530,7 @@
             <div class="cr-section-title">Augments</div>
             <table class="gear-table">
               <thead><tr>
-                <th><span class="eq-hint">Equipped</span>Augment</th><th class="col-narrow">TL</th><th>Effect / Improvement</th>
+                <th><span class="eq-hint" title="Equipped">Eq</span>Augment</th><th class="col-narrow">TL</th><th>Effect / Improvement</th>
                 <th class="edit-only"></th>
               </tr></thead>
               <tbody id="augments-tbody"></tbody>
@@ -960,7 +960,7 @@ const EQ_TABLES = {
 };
 function eqOn(r) { return !r || r.equipped !== false; }
 function eqBtn(on) {
-  return `<button type="button" class="eq-btn ${on ? 'on' : ''}" title="${on ? 'Equipped: carried on this adventure (click to leave it behind)' : 'Not equipped: not carried (click to equip)'}" onclick="toggleEquipped(this)"></button>`;
+  return `<button type="button" role="checkbox" aria-checked="${on}" class="eq-btn ${on ? 'on' : ''}" title="${on ? 'Equipped: carried on this adventure (click to leave it behind)' : 'Not equipped: not carried (click to equip)'}" onclick="toggleEquipped(this)"></button>`;
 }
 function eqCell(on, inner) { return `<div class="eq-cell">${eqBtn(on)}${inner}</div>`; }
 
@@ -970,6 +970,7 @@ function toggleEquipped(btn) {
   const on = box.dataset.eq === '0';   // the new state
   box.dataset.eq = on ? '1' : '0';
   btn.classList.toggle('on', on);
+  btn.setAttribute('aria-checked', on);
   btn.title = on ? 'Equipped: carried on this adventure (click to leave it behind)' : 'Not equipped: not carried (click to equip)';
   const id = box.dataset.id;
   const table = box.tagName === 'TR' ? EQ_TABLES[box.closest('tbody').id] : 'character_computers';
@@ -1001,8 +1002,8 @@ let characterAugments = [];
 
 function augmentBonus(key) {
   return characterAugments
-    .filter(a => a.bonus_target === key && a.equipped !== false)
-    .reduce((sum, a) => sum + (a.bonus_value || 0), 0);
+    .filter(a => a.equipped !== false)
+    .reduce((sum, a) => sum + augmentBonusList(a).filter(b => b.target === key).reduce((s, b) => s + b.value, 0), 0);
 }
 
 function rawStat(key) {
@@ -1029,7 +1030,7 @@ function renderStats() {
     const val     = rawStat(c.key);
     const current = currentStat(c.key);
     const aug     = augmentBonus(c.key);
-    const augTag  = aug ? `<span class="stat-aug" title="Includes augment bonus of ${aug}">+${aug}</span>` : '';
+    const augTag  = aug ? `<span class="stat-aug${aug < 0 ? ' neg' : ''}" title="Includes augment ${aug < 0 ? 'penalty' : 'bonus'} of ${aug}">${aug > 0 ? '+' : ''}${aug}</span>` : '';
     return `
       <div class="stat-box">
         <div class="stat-label">${c.label}</div>
@@ -1503,7 +1504,7 @@ function removeWeaponRow(id, btn) {
 // ── Quantity (subline under grenades, explosives and other counted items) ──
 // Quantity saves the moment it changes; the total weight follows the quantity.
 function isQtyItem(r) {
-  return r.qty != null || /grenade|explosive|charge|TDX|nuke|fusion block|detonator/i.test(r.name || '');
+  return r.qty != null || /grenade|explosive|charge|\bTDX\b|nuke|fusion block|detonator/i.test(r.name || '');
 }
 
 function qtyRowHtml(id, qty, kg) {
@@ -1663,7 +1664,7 @@ const PICKERS = {
     pick: it => addEquipmentRow(it)
   },
   augments: {
-    items: () => GEAR_AUGMENTS, group: null,
+    items: () => GEAR_AUGMENTS, group: 'category',
     meta: it => [it.improvement, 'TL' + it.tl, it.cost],
     text: it => it.name + ' ' + it.improvement,
     pick: it => addAugmentRow(it)
@@ -1738,6 +1739,22 @@ function pickFromCatalogue(uid, i) {
 // The improvement text drives the stat/armour bonus: "STR +2" raises STR by 2,
 // "Protection +1" adds 1 to the armour total. Anything else has no numeric effect.
 const AUGMENT_STAT_KEYS = { STR: 'str', DEX: 'dex', END: 'end_stat', INT: 'int_stat', EDU: 'edu', SOC: 'soc', PROTECTION: 'armour' };
+
+// Every "STR +1" / "END -1" style figure in an effect text (one augment can carry several).
+function parseAugmentBonuses(text) {
+  const out = [];
+  const re = /\b(STR|DEX|END|INT|EDU|SOC|Protection)\s*([+-])\s*(\d+)/gi;
+  let m;
+  while ((m = re.exec(text || ''))) out.push({ target: AUGMENT_STAT_KEYS[m[1].toUpperCase()], value: (m[2] === '-' ? -1 : 1) * parseInt(m[3]) });
+  return out;
+}
+
+// An augment's bonuses: read from its text; older rows with a saved bonus and no readable text keep it.
+function augmentBonusList(a) {
+  const list = parseAugmentBonuses(a.improvement);
+  if (list.length) return list;
+  return a.bonus_target ? [{ target: a.bonus_target, value: a.bonus_value || 0 }] : [];
+}
 
 function parseAugmentBonus(text) {
   const m = (text || '').trim().match(/^(STR|DEX|END|INT|EDU|SOC|Protection)\s*\+\s*(\d+)/i);
