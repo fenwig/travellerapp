@@ -84,10 +84,13 @@ const TC = {
   // If the ship has none set, the block stays editable. Returns { name, uwp } or null.
   async hereWorld(id) {
     try {
-      const { data, error } = await inCampaign(supabaseClient.from('spacecraft').select('current_world_name,current_world_uwp').eq('status', 'active'), await currentCampaignId());
-      const s = !error && data && data.length === 1 ? data[0] : null;
-      if (!s || !s.current_world_uwp) return null;
+      const s = await TC.activeShip().catch(() => null);
       const name = document.getElementById(id + '-name'), uwp = document.getElementById(id + '-uwp');
+      if (!s || !s.current_world_uwp) {
+        // no world on this ship (or the ship was just changed): make the block editable again
+        [name, uwp].forEach(el => { if (el) { el.readOnly = false; el.style.opacity = ''; el.title = ''; } });
+        return null;
+      }
       name.value = s.current_world_name || ''; uwp.value = s.current_world_uwp;
       [name, uwp].forEach(el => { el.readOnly = true; el.style.opacity = '0.75'; el.title = 'Set on the Spacecraft Record (Current World)'; });
       TC.uwpShow(id);
@@ -136,12 +139,52 @@ const TC = {
       '<div class="calc-actions" style="margin:0"><button class="btn-primary" id="' + p + '-btn" onclick="' + fn + '()">Transfer to Active Spacecraft</button>' +
       ' <span id="' + p + '-msg" class="calc-note" style="margin:0 0 0 10px"></span></div></div>';
   },
-  async activeShip() {
-    const { data, error } = await inCampaign(supabaseClient.from('spacecraft').select('id,name,cargo_max').eq('status', 'active'), await currentCampaignId());
+  // ── Which active ship the calculators work on (any number of ships can be Active) ──
+  _shipKey: null,
+  async activeShips() {
+    const cid = await currentCampaignId();
+    TC._shipKey = 'tc-ship-' + (cid || 'none');
+    const { data, error } = await inCampaign(supabaseClient.from('spacecraft')
+      .select('id,name,cargo_max,m_drive,current_world_name,current_world_uwp').eq('status', 'active').order('name'), cid);
     if (error) throw error;
-    if (!data || data.length === 0) throw new Error('There is no active spacecraft. Set one to Active on the Roster first.');
-    if (data.length > 1) throw new Error('More than one spacecraft is marked Active. Leave only one Active on the Roster.');
-    return data[0];
+    return data || [];
+  },
+  // The ship chosen in the dropdown (remembered in this browser), else the first active ship.
+  async activeShip() {
+    const ships = await TC.activeShips();
+    if (!ships.length) throw new Error('There is no active spacecraft. Set one to Active on the Roster first.');
+    let id = null;
+    try { id = localStorage.getItem(TC._shipKey); } catch (e) {}
+    return ships.find(s => s.id === id) || ships[0];
+  },
+  // Fill every <select class="ship-select"> on the page with the active ships, showing the chosen one.
+  async fillShipSelects() {
+    let ships = [], cur = null;
+    try { ships = await TC.activeShips(); cur = (await TC.activeShip()).id; } catch (e) {}
+    document.querySelectorAll('select.ship-select').forEach(sel => {
+      sel.innerHTML = ships.length
+        ? ships.map(s => '<option value="' + s.id + '"' + (s.id === cur ? ' selected' : '') + '>' + s.name + '</option>').join('')
+        : '<option value="">No active ship</option>';
+    });
+  },
+  async shipChosen(id, onChange) {
+    await TC.activeShips();
+    try { localStorage.setItem(TC._shipKey, id); } catch (e) {}
+    await TC.fillShipSelects();   // keeps every ship dropdown on the page in step
+    if (onChange) onChange();
+  },
+  // Ship dropdown under the page title; onChange runs after the choice changes.
+  async shipPicker(onChange) {
+    const host = document.querySelector('.page-main');
+    if (!host) return;
+    const bar = document.createElement('div');
+    bar.style.cssText = 'display:flex;align-items:center;gap:10px;margin:0 0 16px;';
+    bar.innerHTML = '<label style="font-size:0.7rem;color:#4a9ab8;text-transform:uppercase;letter-spacing:0.08em">Ship</label>' +
+      '<select class="ship-select" style="margin:0;width:auto;background:#080d12;border:1px solid #0a4a60;color:#00e5ff;border-radius:4px;padding:6px 10px;font-size:0.9rem;min-width:220px"></select>';
+    const title = host.querySelector('.page-title');
+    if (title) title.after(bar); else host.prepend(bar);
+    bar.querySelector('select').addEventListener('change', e => TC.shipChosen(e.target.value, onChange));
+    await TC.fillShipSelects();
   },
   xferMsg(text, ok, p) {
     const m = document.getElementById((p || 'xfer') + '-msg');

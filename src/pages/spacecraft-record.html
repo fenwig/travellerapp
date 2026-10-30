@@ -726,7 +726,7 @@ async function init() {
     session.user.user_metadata?.display_name || session.user.email;
 
   const { data:chars } = await inCampaign(supabaseClient
-    .from('characters').select('id,name,player_name,primary_role,secondary_role,onboard').eq('status','active'), await currentCampaignId());
+    .from('characters').select('id,user_id,name,player_name,primary_role,secondary_role,onboard_ship_id').eq('status','active'), await currentCampaignId());
   allCharacters = chars || [];
 
   await loadShip();
@@ -735,9 +735,15 @@ async function init() {
 async function loadShip() {
   const reqId = new URLSearchParams(window.location.search).get('id');
 
-  const { data } = reqId
-    ? await supabaseClient.from('spacecraft').select('*').eq('id', reqId).single()
-    : await inCampaign(supabaseClient.from('spacecraft').select('*').eq('status','active'), await currentCampaignId()).single();
+  let data;
+  if (reqId) {
+    ({ data } = await supabaseClient.from('spacecraft').select('*').eq('id', reqId).single());
+  } else {
+    // Several ships can be Active: open the one the player's own character is onboard, else the first.
+    const { data: { session: ses } } = await supabaseClient.auth.getSession();
+    const { data: list } = await inCampaign(supabaseClient.from('spacecraft').select('*').eq('status','active').order('name'), await currentCampaignId());
+    data = (list || []).find(s => allCharacters.some(c => c.user_id === ses.user.id && c.onboard_ship_id === s.id)) || (list || [])[0] || null;
+  }
 
   if (!data) {
     document.getElementById('no-ship-msg').style.display = 'block';
@@ -1281,7 +1287,7 @@ function renderFinance() {
   const s = ship;
   const fuelCost      = (s.fuel_max || 0) * 500;
   const maintenance   = Math.round((parseFloat(s.purchase_value)||0) * 1000000 / 12000);
-  const onboardCount  = allCharacters.filter(c => c.onboard).length;
+  const onboardCount  = allCharacters.filter(c => c.onboard_ship_id === s.id).length;
   const personCount   = onboardCount + hiredCrewCount + passengerCount;
   const lifeStaterooms = (s.staterooms || 0) * 1000;
   const lifePersons    = personCount * 1000;
@@ -1481,7 +1487,7 @@ async function renderCrew() {
   // Only characters marked "onboard" on the roster are offered as
   // assignable crew — together with hired NPCs, that's the pool of who's
   // actually here to take a role.
-  const onboardChars = allCharacters.filter(c => c.onboard);
+  const onboardChars = allCharacters.filter(c => c.onboard_ship_id === ship.id);
   const charOpts = onboardChars.map(c => `<option value="char:${c.id}">${c.name}</option>`).join('');
   const npcOpts  = hired.map(h => `<option value="npc:${h.id}">${h.name} (NPC)</option>`).join('');
   const allOpts  = `<option value="">— Unassigned —</option>${charOpts}${npcOpts}`;
@@ -1526,7 +1532,7 @@ async function renderCrew() {
       ${c.player_name ? `<span style="color:#4a9ab8;"> — ${c.player_name}</span>` : ''}
       ${c.primary_role || c.secondary_role ? `<span style="color:#4a9ab8;"> (${[c.primary_role, c.secondary_role].filter(Boolean).join(' / ')})</span>` : ''}
     </div>`).join('')
-  : '<div style="color:#4a9ab8;font-size:0.85rem;padding:6px 0">No characters marked onboard — toggle them on the roster.</div>';
+  : '<div style="color:#4a9ab8;font-size:0.85rem;padding:6px 0">No characters onboard this ship — set their ship on the roster.</div>';
 
   // Hired crew
   const hiredList = document.getElementById('hired-crew-list');
@@ -1562,7 +1568,7 @@ function addCrewSlot(role) {
   div.dataset.rowId = '';
 
   // Build fresh options
-  const charOpts = allCharacters.filter(c => c.onboard).map(c => `<option value="char:${c.id}">${c.name}</option>`).join('');
+  const charOpts = allCharacters.filter(c => c.onboard_ship_id === ship.id).map(c => `<option value="char:${c.id}">${c.name}</option>`).join('');
 
   div.innerHTML = `
     <div class="crew-role-label">${role} ${n}</div>
@@ -1628,17 +1634,6 @@ async function saveAll() {
 
   try {
     const newStatus = gi('ei-status');
-
-    // Check one-active rule
-    if (newStatus === 'active' && ship.status !== 'active') {
-      const { data:others } = await inCampaign(supabaseClient
-        .from('spacecraft').select('id,name').eq('status','active').neq('id',ship.id), ship.campaign_id);
-      if (others && others.length > 0) {
-        msg.textContent = `Error: "${others[0].name}" is already active. Set it to Reserve first.`;
-        msg.className = 'save-msg err';
-        return;
-      }
-    }
 
     const powerExtra = Array.from({length:5},(_,i) => ({
       label: document.getElementById(`ei-pex-label-${i}`)?.value || '',
@@ -1776,11 +1771,6 @@ async function saveAll() {
 // ── Create new ship ───────────────────────────────────────
 async function createNewShip() {
   const cid = await currentCampaignId();
-  const { data:active } = await inCampaign(supabaseClient.from('spacecraft').select('id').eq('status','active'), cid);
-  if (active && active.length > 0) {
-    alert('Another ship is already active. Set it to Reserve before creating a new active ship.');
-    return;
-  }
   const { data, error } = await supabaseClient.from('spacecraft')
     .insert({ ...(cid ? { campaign_id: cid } : {}), name:'New Ship', ship_class:'Unknown', status:'active', streamlined_status:'Streamlined' })
     .select().single();

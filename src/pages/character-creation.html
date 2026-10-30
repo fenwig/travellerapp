@@ -10859,7 +10859,7 @@
       await logCreation(summary);
       // Only one active character per player — archive any other active
       // characters this user owns before activating this one.
-      await inCampaign(supabaseClient.from('characters').update({ status: 'archived', onboard: false })
+      await inCampaign(supabaseClient.from('characters').update({ status: 'archived', onboard: false, onboard_ship_id: null })
         .eq('user_id', draft.user_id || currentUser.id).eq('status', 'active').neq('id', draft.id), draft.campaign_id);
       await supabaseClient.from('characters').update({ status: 'active' }).eq('id', draft.id);
       await logCreation('Character creation complete — activated.');

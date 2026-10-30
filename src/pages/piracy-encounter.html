@@ -67,7 +67,7 @@
         <div class="calc-block-title">Pirate ship</div>
         <div class="calc-fields">
           <label>Thrust (M-drive)<input type="number" id="pirate-thrust" min="0" value="2" /></label>
-          <span class="calc-note" style="margin:0">Taken from the active spacecraft's M-drive each time you build; used only if there is no single active ship.</span>
+          <span class="calc-note" style="margin:0">Taken from the selected ship's M-drive each time you build (pick the ship at the top of the page).</span>
         </div>
       </div>
       <details class="dm-detail" style="margin-bottom:8px"><summary>Adjust the automatic judgements (backwater, dangerous, high-traffic, secure)</summary>
@@ -357,12 +357,10 @@
     const RANGE_LONG_KM = 25000;   // Long range in the space combat rules: where the encounter proper begins
     async function getPirateThrust() {
       try {
-        const { data, error } = await inCampaign(supabaseClient.from('spacecraft').select('name,m_drive').eq('status', 'active'), await currentCampaignId());
-        if (!error && data && data.length === 1) {
-          const t = data[0].m_drive || 0;
-          document.getElementById('pirate-thrust').value = t;
-          return { thrust: t, name: data[0].name };
-        }
+        const s = await TC.activeShip();
+        const t = s.m_drive || 0;
+        document.getElementById('pirate-thrust').value = t;
+        return { thrust: t, name: s.name };
       } catch (e) {}
       return { thrust: TC.num('pirate-thrust'), name: '' };
     }
@@ -698,10 +696,13 @@
       html += `<div class="calc-block calc-row">
         <div class="calc-block-title">Loot the Cargo</div>
         <span id="take-summary">0 tons selected</span>
-        <button class="btn-primary" onclick="loadStolen()">Load onto Active Ship</button>
+        <label style="font-size:0.75rem;color:#4a9ab8">Onto</label>
+        <select class="ship-select" style="margin:0;width:auto;background:#080d12;border:1px solid #0a4a60;color:#00e5ff;border-radius:4px;padding:6px 10px;font-size:0.85rem" onchange="TC.shipChosen(this.value, getPirateThrust)"></select>
+        <button class="btn-primary" onclick="loadStolen()">Load Cargo onto Ship</button>
         <span id="load-msg" class="calc-note" style="margin:0">${enc.loadMsg || ''}</span>
       </div>`;
       out.innerHTML = html;
+      TC.fillShipSelects();
     }
 
     function takePicks() {
@@ -785,6 +786,8 @@
     TC.persist('piracy', () => enc, v => { enc = v || {}; }, ['prey-out', 'enc-out', 'hunter-out', 'cargo-out', 'loot-out']);
     TC.hereWorld('wld');
     getPirateThrust();
+    TC.shipPicker(() => { TC.hereWorld('wld'); getPirateThrust(); });
+    TC.fillShipSelects();
   </script>
 </body>
 </html>

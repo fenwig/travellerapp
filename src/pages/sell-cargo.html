@@ -390,12 +390,14 @@
 
     updateFindLabels();
     TC.persist('sell', () => sell, v => { sell = v || { buyer: null, offers: null, msg: '' }; }, ['step1', 'step2']);
-    TC.hereWorld('dst').then(here => {
+    function showHere() { return TC.hereWorld('dst').then(here => {
       const el = document.getElementById('here-note');
       el.innerHTML = here
         ? 'Selling at <b>' + (here.name || 'unnamed world') + ' (' + here.uwp + ')</b>, the ship\'s Current World. If you have jumped, update it on the <a href="spacecraft-record.html" style="color:#00e5ff">Spacecraft Record</a> before selling.'
         : '<span style="color:#ffb74a">The active ship has no Current World set.</span> Set it on the <a href="spacecraft-record.html" style="color:#00e5ff">Spacecraft Record</a> before selling, or enter the world below.';
-    });
+    }); }
+    showHere();
+    TC.shipPicker(showHere);
     updateFindLabels();
     syncOffersButton();
   </script>

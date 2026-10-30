@@ -31,7 +31,8 @@
     .status-sold      { background: rgba(176,216,232,0.10); color: #b0d8e8; border: 1px solid #b0d8e844; }
     .status-destroyed { background: rgba(255,90,74,0.12);  color: #ff5a4a; border: 1px solid #ff5a4a44; }
     .status-stolen    { background: rgba(255,90,74,0.12);  color: #ff5a4a; border: 1px solid #ff5a4a44; }
-    .onboard-check { width: 18px; height: 18px; accent-color: #00e5ff; cursor: pointer; }
+    .onboard-select { margin: 0; background: #080d12; border: 1px solid #0a4a60; color: #b0d8e8; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; min-width: 140px; max-width: 200px; }
+    .onboard-select:disabled { opacity: 0.45; }
     .status-select {
       border: none; cursor: pointer; font-family: inherit;
       -webkit-appearance: none; -moz-appearance: none; appearance: none;
@@ -126,6 +127,7 @@
   <script>
     let currentUser = null;
     let campaignId = null;
+    let campaignShips = [];
     const STATUS_OPTIONS = ['active', 'reserve', 'archived', 'deceased', 'other'];
     const SPACECRAFT_STATUS_OPTIONS = ['active', 'reserve', 'destroyed', 'sold', 'stolen', 'other'];
 
@@ -174,8 +176,10 @@
     async function loadCharacters() {
       const { data, error } = await inCampaign(supabaseClient
         .from('characters')
-        .select('id,portrait_url,portrait_crop,name,player_name,species,primary_role,secondary_role,status,onboard,user_id'), campaignId)
+        .select('id,portrait_url,portrait_crop,name,player_name,species,primary_role,secondary_role,status,onboard_ship_id,user_id'), campaignId)
         .order('name');
+      const { data: shipRows } = await inCampaign(supabaseClient.from('spacecraft').select('id,name').order('name'), campaignId);
+      campaignShips = shipRows || [];
 
       const tbody = document.getElementById('char-tbody');
       if (error || !data || data.length === 0) {
@@ -198,9 +202,11 @@
                 ${STATUS_OPTIONS.map(s => `<option value="${s}" ${(c.status||'active') === s ? 'selected' : ''}>${statusLabel(s)}</option>`).join('')}
               </select>`
             : `<span class="status-badge status-${c.status||'active'}" onclick="openCharacter('${c.id}', '${c.status}')">${statusLabel(c.status)}</span>`}</td>
-          <td><input type="checkbox" class="onboard-check" ${c.onboard ? 'checked' : ''} ${canManage && (c.status || 'active') === 'active' ? '' : 'disabled'}
-                title="${(c.status || 'active') === 'active' ? '' : 'Only the active character can be marked onboard'}"
-                onclick="event.stopPropagation()" onchange="toggleOnboard('${c.id}', this.checked)" /></td>
+          <td onclick="event.stopPropagation()"><select class="onboard-select" ${canManage && (c.status || 'active') === 'active' ? '' : 'disabled'}
+                title="${(c.status || 'active') === 'active' ? 'Which ship this character is aboard' : 'Only the active character can be put onboard'}"
+                onchange="setOnboard('${c.id}', this.value)">
+              <option value="">—</option>${campaignShips.map(s => `<option value="${s.id}" ${c.onboard_ship_id === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+            </select></td>
           <td onclick="event.stopPropagation()">
             <span class="delete-cell" data-id="${c.id}">
               ${canManage ? `<button class="btn-outline-danger" onclick="confirmDelete(this, 'char')">Delete</button>` : ''}
@@ -235,15 +241,6 @@
     }
 
     async function changeSpacecraftStatus(id, newStatus) {
-      if (newStatus === 'active') {
-        const { data: others } = await inCampaign(supabaseClient.from('spacecraft')
-          .select('id,name').eq('status', 'active').neq('id', id), campaignId);
-        if (others && others.length > 0) {
-          alert('"' + others[0].name + '" is already the active spacecraft. Set it to Reserve first.');
-          await loadSpacecraft();
-          return;
-        }
-      }
       const { error } = await supabaseClient.from('spacecraft').update({ status: newStatus }).eq('id', id);
       if (error) alert('Could not change status: ' + error.message);
       await loadSpacecraft();
@@ -253,6 +250,7 @@
       const { error } = await supabaseClient.from('spacecraft').delete().eq('id', id);
       if (error) { alert('Error: ' + error.message); return; }
       await loadSpacecraft();
+      await loadCharacters();
     }
 
     function openCharacter(id, status) {
@@ -263,8 +261,8 @@
       }
     }
 
-    async function toggleOnboard(id, val) {
-      await supabaseClient.from('characters').update({ onboard: val }).eq('id', id);
+    async function setOnboard(id, shipId) {
+      await supabaseClient.from('characters').update({ onboard_ship_id: shipId || null, onboard: !!shipId }).eq('id', id);
     }
 
     async function changeStatus(id, newStatus) {
@@ -273,12 +271,12 @@
         // other active character(s) first.
         const { data: row } = await supabaseClient.from('characters').select('user_id,campaign_id').eq('id', id).single();
         if (row) {
-          await inCampaign(supabaseClient.from('characters').update({ status: 'archived', onboard: false })
+          await inCampaign(supabaseClient.from('characters').update({ status: 'archived', onboard: false, onboard_ship_id: null })
             .eq('user_id', row.user_id).eq('status', 'active').neq('id', id), row.campaign_id);
         }
         await supabaseClient.from('characters').update({ status: 'active' }).eq('id', id);
       } else {
-        await supabaseClient.from('characters').update({ status: newStatus, onboard: false }).eq('id', id);
+        await supabaseClient.from('characters').update({ status: newStatus, onboard: false, onboard_ship_id: null }).eq('id', id);
       }
       await loadCharacters();
     }
@@ -286,7 +284,7 @@
     async function createCharacter() {
       // Only one active character per player — archive any other active
       // characters this user owns before this new one becomes active.
-      await inCampaign(supabaseClient.from('characters').update({ status: 'archived', onboard: false })
+      await inCampaign(supabaseClient.from('characters').update({ status: 'archived', onboard: false, onboard_ship_id: null })
         .eq('user_id', currentUser.id).eq('status', 'active'), campaignId);
       const { data, error } = await supabaseClient.from('characters')
         .insert({
