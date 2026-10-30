@@ -180,3 +180,45 @@ const GEAR_COMMS = [
   {"name":"Bug","tl":13,"mass":null,"range":"--","features":"Audio/Visual/Data/Bioscan"},
   {"name":"Bug","tl":15,"mass":null,"range":"--","features":"Audio/Visual/Data/Bioscan/Computer/1"}
 ];
+
+// General equipment: sensors (Core p.116), survival gear (p.118), toolkits (p.120, p.123).
+// kg is null where the book gives "--".
+const GEAR_EQUIPMENT = [
+  {"name":"Binoculars","group":"Sensors","tl":3,"kg":1},
+  {"name":"Binoculars","group":"Sensors","tl":8,"kg":1},
+  {"name":"Binoculars","group":"Sensors","tl":12,"kg":1},
+  {"name":"Bioscanner","group":"Sensors","tl":15,"kg":3.5},
+  {"name":"Densitometer","group":"Sensors","tl":14,"kg":5},
+  {"name":"EM Probe","group":"Sensors","tl":10,"kg":1},
+  {"name":"Geiger Counter","group":"Sensors","tl":5,"kg":2},
+  {"name":"Geiger Counter","group":"Sensors","tl":10,"kg":null},
+  {"name":"IR Goggles","group":"Sensors","tl":6,"kg":null},
+  {"name":"Light Intensifier Goggles","group":"Sensors","tl":7,"kg":1},
+  {"name":"Light Intensifier Goggles","group":"Sensors","tl":9,"kg":null},
+  {"name":"NAS (Neural Activity Scanner)","group":"Sensors","tl":15,"kg":10},
+  {"name":"Artificial Gill","group":"Survival Gear","tl":8,"kg":4},
+  {"name":"Breather Mask","group":"Survival Gear","tl":8,"kg":null},
+  {"name":"Breather Mask","group":"Survival Gear","tl":10,"kg":null},
+  {"name":"Climbing Kit","group":"Survival Gear","tl":4,"kg":4},
+  {"name":"Climbing Kit","group":"Survival Gear","tl":8,"kg":2},
+  {"name":"Environment Suit","group":"Survival Gear","tl":8,"kg":1},
+  {"name":"Filter Mask","group":"Survival Gear","tl":7,"kg":null},
+  {"name":"Grav Belt","group":"Survival Gear","tl":12,"kg":6},
+  {"name":"Habitat Module","group":"Survival Gear","tl":8,"kg":1000},
+  {"name":"Habitat Module","group":"Survival Gear","tl":10,"kg":500},
+  {"name":"Portable Fusion Generator","group":"Survival Gear","tl":10,"kg":20},
+  {"name":"Radiation Suit","group":"Survival Gear","tl":6,"kg":10},
+  {"name":"Rescue Bubble","group":"Survival Gear","tl":9,"kg":2},
+  {"name":"Respirator","group":"Survival Gear","tl":6,"kg":null},
+  {"name":"Respirator","group":"Survival Gear","tl":10,"kg":null},
+  {"name":"Tent","group":"Survival Gear","tl":3,"kg":6},
+  {"name":"Tent","group":"Survival Gear","tl":7,"kg":5},
+  {"name":"Electronics Toolkit","group":"Toolkits","tl":7,"kg":2},
+  {"name":"Engineering Toolkit","group":"Toolkits","tl":12,"kg":12},
+  {"name":"Forensics Toolkit","group":"Toolkits","tl":8,"kg":12},
+  {"name":"Mechanical Toolkit","group":"Toolkits","tl":5,"kg":12},
+  {"name":"Scientific Toolkit","group":"Toolkits","tl":5,"kg":8},
+  {"name":"Surveying Toolkit","group":"Toolkits","tl":6,"kg":12},
+  {"name":"Science Toolkit (speciality)","group":"Toolkits","tl":12,"kg":8},
+  {"name":"Science Expert Package","group":"Toolkits","tl":12,"kg":1}
+];
