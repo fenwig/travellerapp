@@ -178,7 +178,7 @@
         .from('characters')
         .select('id,portrait_url,portrait_crop,name,player_name,species,primary_role,secondary_role,status,onboard_ship_id,user_id'), campaignId)
         .order('name');
-      const { data: shipRows } = await inCampaign(supabaseClient.from('spacecraft').select('id,name').order('name'), campaignId);
+      const { data: shipRows } = await inCampaign(supabaseClient.from('spacecraft').select('id,name').eq('status', 'active').order('name'), campaignId);
       campaignShips = shipRows || [];
 
       const tbody = document.getElementById('char-tbody');
@@ -244,6 +244,7 @@
       const { error } = await supabaseClient.from('spacecraft').update({ status: newStatus }).eq('id', id);
       if (error) alert('Could not change status: ' + error.message);
       await loadSpacecraft();
+      await loadCharacters();
     }
 
     async function deleteSpacecraft(id) {
