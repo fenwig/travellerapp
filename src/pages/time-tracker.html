@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Time Tracker — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <link rel="stylesheet" href="../css/calculators.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/nav.js" defer></script>
+  <style>
+    .tt-wrap { max-width: 1100px; }
+    .tt-date-row { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; margin-bottom: 4px; }
+    .tt-date { font-size: 1.9rem; font-weight: 700; color: #00e5ff; letter-spacing: 0.06em; }
+    .tt-sub { color: #4a9ab8; font-size: 0.85rem; }
+    .tt-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 12px; }
+    .tt-controls .btn-outline { width: auto; padding: 7px 16px; font-size: 0.85rem; }
+    .tt-controls input[type=number] { width: 80px; margin: 0; padding: 6px 8px; }
+    .tt-controls label { color: #4a9ab8; font-size: 0.75rem; display: flex; align-items: center; gap: 6px; }
+    .tt-sep { width: 1px; align-self: stretch; background: #0a4a60; margin: 0 4px; }
+    .tt-flag { border: 1px solid #ff5a4a; background: rgba(255,90,74,0.12); color: #ff8a7a; border-radius: 8px; padding: 12px 18px; margin-bottom: 14px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .tt-flag b { color: #ff5a4a; letter-spacing: 0.08em; }
+    .tt-ok { border: 1px solid #0a4a60; background: rgba(13,21,32,0.92); color: #4a9ab8; border-radius: 8px; padding: 10px 18px; margin-bottom: 14px; font-size: 0.88rem; }
+    .tt-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .tt-table th { text-align: right; color: #4a9ab8; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; padding: 6px 10px; border-bottom: 1px solid #0a4a60; }
+    .tt-table th:first-child, .tt-table td:first-child { text-align: left; }
+    .tt-table td { text-align: right; padding: 5px 10px; border-bottom: 1px solid rgba(10,74,96,0.3); color: #b0d8e8; }
+    .tt-table tr.tt-total td { color: #00ffaa; font-weight: 700; border-top: 1px solid #00e5ff44; }
+    .tt-log { font-size: 0.8rem; color: #4a9ab8; }
+    .tt-log div { padding: 3px 0; border-bottom: 1px solid rgba(10,74,96,0.25); }
+    .tt-log span { color: #b0d8e8; }
+    .tt-msg { color: #ff5a4a; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">TIME TRACKER</h1>
+      <div class="tt-wrap" id="tt-root"><div class="tt-sub">Loading…</div></div>
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/ship-expenses.js"></script>
+  <script>
+    // The campaign calendar: 365-day years, 28-day maintenance periods. Time is stored as an absolute day
+    // number (year x 365 + day - 1) so adding days is just addition.
+    const YEAR_DAYS = 365, PERIOD_DAYS = 28, START_YEAR = 1105;
+    let currentUser = null, campaignId = null, campaignName = '';
+    let T = null;          // the campaign_time row
+    let logRows = [], shipData = [];
+
+    const absOf = (y, d) => y * YEAR_DAYS + (d - 1);
+    const dateOf = a => ({ year: Math.floor(a / YEAR_DAYS), day: a % YEAR_DAYS + 1 });
+    const pad3 = n => String(n).padStart(3, '0');
+    const fmtAbs = a => { const d = dateOf(a); return 'Year ' + d.year + ', Day ' + pad3(d.day); };
+    const cr = n => 'Cr' + Math.round(n).toLocaleString();
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const curAbs = () => absOf(T.year, T.day);
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = '../../index.html'; return; }
+      currentUser = session.user;
+      document.getElementById('sidebar-user').textContent = currentUser.user_metadata?.display_name || currentUser.email;
+
+      const list = await loadCampaigns();
+      campaignId = await currentCampaignId();
+      if (!campaignId) { say('Campaigns are not set up yet.'); return; }
+      campaignName = (list.find(c => c.id === campaignId) || {}).name || '';
+      try { await loadAll(); }
+      catch (e) { say('Could not load the Time Tracker: ' + e.message + ' (Has docs/time-tracker.sql been run in Supabase?)'); }
+    }
+
+    function say(msg) { document.getElementById('tt-root').innerHTML = '<div class="tt-msg">' + esc(msg) + '</div>'; }
+
+    async function loadAll() {
+      let { data, error } = await supabaseClient.from('campaign_time').select('*').eq('campaign_id', campaignId);
+      if (error) throw error;
+      T = data && data[0];
+      if (!T) {
+        const ins = await supabaseClient.from('campaign_time')
+          .insert({ campaign_id: campaignId, year: START_YEAR, day: 1, last_paid_abs: absOf(START_YEAR, 1) }).select().single();
+        if (ins.error) throw ins.error;
+        T = ins.data;
+      }
+      const lg = await supabaseClient.from('campaign_time_log').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: false }).limit(15);
+      logRows = lg.data || [];
+      await loadShips();
+      render();
+    }
+
+    async function loadShips() {
+      const { data: ships, error } = await supabaseClient.from('spacecraft').select('*').eq('campaign_id', campaignId).eq('status', 'active').order('name');
+      if (error) throw error;
+      shipData = await Promise.all((ships || []).map(async s => {
+        const [chars, hired, pass] = await Promise.all([
+          supabaseClient.from('characters').select('id').eq('onboard_ship_id', s.id).eq('status', 'active'),
+          supabaseClient.from('spacecraft_hired_crew').select('id').eq('spacecraft_id', s.id),
+          supabaseClient.from('spacecraft_passengers').select('*').eq('spacecraft_id', s.id)
+        ]);
+        const passengers = (pass.data || []).reduce((n, r) =>
+          n + (r.high_passage || 0) + (r.middle_passage || 0) + (r.basic_passage || 0) + (r.working_passage || 0) + (r.low_passage || 0), 0);
+        return { ship: s, ex: shipExpenses(s, { onboard: (chars.data || []).length, hired: (hired.data || []).length, passengers }) };
+      }));
+    }
+
+    function render() {
+      const abs = curAbs(), since = abs - T.last_paid_abs;
+      const due = Math.max(0, Math.floor(since / PERIOD_DAYS));
+      const nextDue = T.last_paid_abs + PERIOD_DAYS;
+      const allTotal = shipData.reduce((n, r) => n + r.ex.total, 0);
+
+      let flag;
+      if (due >= 1) {
+        flag = `<div class="tt-flag"><b>MAINTENANCE PERIOD DUE${due > 1 ? ' — ' + due + ' PERIODS OVERDUE' : ''}</b>
+          <span>${due > 1 ? due + ' × ' + cr(allTotal) + ' = ' + cr(due * allTotal) + ' across all active ships. ' : cr(allTotal) + ' across all active ships. '}Pay it from the ship records, then mark it paid.</span>
+          <button class="btn-outline" onclick="markPaid()">Mark one period paid</button></div>`;
+      } else {
+        flag = `<div class="tt-ok">Next maintenance period due <b style="color:#00e5ff">${fmtAbs(nextDue)}</b> — in ${nextDue - abs} day${nextDue - abs === 1 ? '' : 's'}.</div>`;
+      }
+
+      const rows = [['Mortgage Payment', 'mortgage'], ['Maintenance', 'maintenance'], ['Life Support', 'lifeSupport'],
+        ['Crew Salaries', 'salaries'], ['Berthing', 'berthing'], ['Other', 'other']];
+      const expenses = shipData.length ? `
+        <table class="tt-table">
+          <thead><tr><th>Expense (per 28-day period)</th>${shipData.map(r => '<th>' + esc(r.ship.name) + '</th>').join('')}${shipData.length > 1 ? '<th>All ships</th>' : ''}</tr></thead>
+          <tbody>
+            ${rows.map(([label, key]) => `<tr><td>${label}</td>${shipData.map(r => '<td>' + cr(r.ex[key]) + '</td>').join('')}${shipData.length > 1 ? '<td>' + cr(shipData.reduce((n, r) => n + r.ex[key], 0)) + '</td>' : ''}</tr>`).join('')}
+            <tr class="tt-total"><td>Total</td>${shipData.map(r => '<td>' + cr(r.ex.total) + '</td>').join('')}${shipData.length > 1 ? '<td>' + cr(allTotal) + '</td>' : ''}</tr>
+          </tbody>
+        </table>
+        <div class="tt-sub" style="margin-top:8px">Taken from each active ship's Finance &amp; Cargo tab. Fuel is not included.</div>`
+        : '<div class="tt-sub">There are no active spacecraft in this campaign. Set a ship to Active on the Roster.</div>';
+
+      document.getElementById('tt-root').innerHTML = `
+        <div class="calc-block" style="max-width:1100px">
+          <div class="calc-block-title">${esc(campaignName)} — Campaign Date</div>
+          <div class="tt-date-row">
+            <div class="tt-date">${fmtAbs(abs)}</div>
+            <div class="tt-sub">${since} day${since === 1 ? '' : 's'} since the last maintenance period closed</div>
+          </div>
+          <div class="tt-controls">
+            <button class="btn-outline" onclick="advance(1)">+1 day</button>
+            <button class="btn-outline" onclick="advance(7)">+7 days</button>
+            <button class="btn-outline" onclick="advance(28)">+28 days</button>
+            <label>Days <input type="number" id="tt-custom" value="1" /></label>
+            <button class="btn-outline" onclick="advance(parseInt(document.getElementById('tt-custom').value) || 0)">Advance</button>
+            <span class="tt-sep"></span>
+            <label>Year <input type="number" id="tt-set-year" value="${T.year}" /></label>
+            <label>Day <input type="number" id="tt-set-day" value="${T.day}" min="1" max="365" /></label>
+            <button class="btn-outline" onclick="setDate()">Set date</button>
+          </div>
+        </div>
+        ${flag}
+        <div class="calc-block" style="max-width:1100px">
+          <div class="calc-block-title">Expenses — Active Ships</div>
+          ${expenses}
+        </div>
+        <div class="calc-block" style="max-width:1100px">
+          <div class="calc-block-title">Recent Changes</div>
+          <div class="tt-log">${logRows.length ? logRows.map(l =>
+            `<div>${new Date(l.created_at).toLocaleString()} — <span>${esc(l.user_name || 'someone')}</span>: ${esc(l.note)}${l.to_abs != null ? ' (now ' + fmtAbs(l.to_abs) + ')' : ''}</div>`).join('') : 'Nothing yet.'}</div>
+        </div>`;
+    }
+
+    // Always work from the latest saved date, since several people can use this at once.
+    async function fresh() {
+      const { data, error } = await supabaseClient.from('campaign_time').select('*').eq('campaign_id', campaignId);
+      if (error || !data || !data[0]) throw error || new Error('The campaign date is missing.');
+      T = data[0];
+      return T;
+    }
+
+    async function logChange(note, from, to) {
+      await supabaseClient.from('campaign_time_log').insert({
+        campaign_id: campaignId, user_id: currentUser.id,
+        user_name: currentUser.user_metadata?.display_name || currentUser.email, note, from_abs: from, to_abs: to
+      });
+    }
+
+    async function saveAbs(newAbs, note) {
+      const old = curAbs();
+      const d = dateOf(newAbs);
+      const { error } = await supabaseClient.from('campaign_time')
+        .update({ year: d.year, day: d.day, updated_at: new Date().toISOString(), updated_by: currentUser.id }).eq('campaign_id', campaignId);
+      if (error) { alert('Could not save the date: ' + error.message); return; }
+      await logChange(note, old, newAbs);
+      await loadAll();
+    }
+
+    async function advance(n) {
+      if (!n) return;
+      try { await fresh(); } catch (e) { alert(e.message); return; }
+      await saveAbs(curAbs() + n, (n > 0 ? 'Advanced ' : 'Moved back ') + Math.abs(n) + ' day' + (Math.abs(n) === 1 ? '' : 's'));
+    }
+
+    async function setDate() {
+      const y = parseInt(document.getElementById('tt-set-year').value), d = parseInt(document.getElementById('tt-set-day').value);
+      if (!y || !(d >= 1 && d <= YEAR_DAYS)) { alert('Enter a year and a day from 1 to 365.'); return; }
+      try { await fresh(); } catch (e) { alert(e.message); return; }
+      await saveAbs(absOf(y, d), 'Date set to Year ' + y + ', Day ' + pad3(d));
+    }
+
+    async function markPaid() {
+      try { await fresh(); } catch (e) { alert(e.message); return; }
+      const old = T.last_paid_abs;
+      const { error } = await supabaseClient.from('campaign_time').update({ last_paid_abs: old + PERIOD_DAYS }).eq('campaign_id', campaignId);
+      if (error) { alert('Could not save: ' + error.message); return; }
+      await logChange('Maintenance period marked paid (closed ' + fmtAbs(old + PERIOD_DAYS) + ')', curAbs(), curAbs());
+      await loadAll();
+    }
+
+    async function doSignOut() {
+      await supabaseClient.auth.signOut();
+      window.location.href = '../../index.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>

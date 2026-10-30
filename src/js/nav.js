@@ -26,6 +26,7 @@ const NAV_GROUPS = [
     ['trade.html',                'Trade']
   ]},
   { id: 'campaign', label: 'Campaign', items: [
+    ['time-tracker.html',     'Time Tracker'],
     ['piracy-encounter.html', 'Piracy Encounter']
   ]}
 ];

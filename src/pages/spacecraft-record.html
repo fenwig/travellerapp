@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/supabase-config.js"></script>
+  <script src="../js/ship-expenses.js"></script>
   <script src="../js/export-import.js"></script>
   <style>
     /* ── Header ── */
@@ -1289,14 +1290,16 @@ function moveTip(e) {
 function renderFinance() {
   const s = ship;
   const fuelCost      = (s.fuel_max || 0) * 500;
-  const maintenance   = Math.round((parseFloat(s.purchase_value)||0) * 1000000 / 12000);
   const onboardCount  = allCharacters.filter(c => c.onboard_ship_id === s.id).length;
-  const personCount   = onboardCount + hiredCrewCount + passengerCount;
+  // the same figures the Time Tracker uses (js/ship-expenses.js)
+  const ex = shipExpenses(s, { onboard: onboardCount, hired: hiredCrewCount, passengers: passengerCount });
+  const personCount   = ex.persons;
+  const maintenance   = ex.maintenance;
   const lifeStaterooms = (s.staterooms || 0) * 1000;
   const lifePersons    = personCount * 1000;
-  const lifeBase       = lifeStaterooms + lifePersons;
+  const lifeBase       = ex.lifeSupport;
   const mortgageVal   = parseFloat(s.mortgage_value) || 0;
-  const mortgagePmt   = Math.round(mortgageVal * 1000000 / 240);
+  const mortgagePmt   = ex.mortgage;
 
   const total = mortgagePmt+lifeBase+fuelCost+maintenance+(s.fin_salaries||0)+(s.fin_berthing||0)+(s.fin_other||0);
 
