@@ -289,7 +289,6 @@ const GEAR_ARMOUR_MODS = [
   {"name":"Automedikit, Improved","tl":11,"kg":null,"cost":"Cr7500","effect":"Basic features plus combat drug injection on command","prot":0,"rad":0,"source":"CSC"},
   {"name":"Automedikit, Enhanced","tl":12,"kg":null,"cost":"Cr10000","effect":"TL12 medikit equivalent","prot":0,"rad":0,"source":"CSC"},
   {"name":"Automedikit, Advanced","tl":14,"kg":null,"cost":"Cr15000","effect":"TL14 medikit equivalent","prot":0,"rad":0,"source":"CSC"},
-  {"name":"Medkit","tl":10,"kg":null,"cost":"","effect":"Applies First Aid if END 0; Fast Drug on command","prot":0,"rad":0,"source":"Core"},
   {"name":"Medikit","tl":11,"kg":null,"cost":"","effect":"Applies First Aid if END 0; Fast Drug and combat drugs on command","prot":0,"rad":0,"source":"Core"},
   {"name":"Body Camera","tl":8,"kg":null,"cost":"Cr50","effect":"2D video recorder and transmitter; 72 hours storage","prot":0,"rad":0,"source":"CSC"},
   {"name":"Body Camera (TL10)","tl":10,"kg":null,"cost":"Cr150","effect":"Unlimited storage","prot":0,"rad":0,"source":"CSC"},
