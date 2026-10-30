@@ -93,6 +93,9 @@
 
     /* ── Section headings ── */
     .cr-section { margin-bottom: 22px; }
+    /* seven tabs: tighter buttons, wrap on narrow windows */
+    .tab-nav { flex-wrap: wrap; }
+    .tab-nav .tab-btn { padding: 10px 18px; white-space: nowrap; }
     .cr-section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: #4a9ab8; border-bottom: 1px solid #0a4a60; padding-bottom: 5px; margin-bottom: 10px; }
 
     /* ── Skills ── */
@@ -344,6 +347,7 @@
         <!-- ── Tabs ── -->
         <div class="tab-nav">
           <button class="tab-btn active" onclick="showTab('stats', this)">Stats &amp; Skills</button>
+          <button class="tab-btn" onclick="showTab('combat', this)">Weapons &amp; Armour</button>
           <button class="tab-btn" onclick="showTab('gear', this)">Equipment</button>
           <button class="tab-btn" onclick="showTab('tech', this)">Tech</button>
           <button class="tab-btn" onclick="showTab('career', this)">Career &amp; Associates</button>
@@ -444,9 +448,9 @@
         </div>
 
         <!-- ══════════════════════════════════════
-             TAB 2 — EQUIPMENT
+             TAB — WEAPONS & ARMOUR
         ══════════════════════════════════════ -->
-        <div id="tab-gear" class="tab-content" style="display:none">
+        <div id="tab-combat" class="tab-content" style="display:none">
 
           <div class="cr-section">
             <div class="cr-section-title">Armour</div>
@@ -481,6 +485,13 @@
             </div>
             <div id="pk-weapons" class="cat-picker" style="display:none"></div>
           </div>
+
+        </div>
+
+        <!-- ══════════════════════════════════════
+             TAB 2 — EQUIPMENT
+        ══════════════════════════════════════ -->
+        <div id="tab-gear" class="tab-content" style="display:none">
 
           <div class="cr-section">
             <div class="cr-section-title">Equipment</div>
