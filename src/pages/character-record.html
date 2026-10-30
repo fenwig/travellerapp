@@ -1663,8 +1663,8 @@ const PICKERS = {
   },
   equipment: {
     items: () => GEAR_EQUIPMENT, group: 'group',
-    meta: it => ['TL' + it.tl, it.kg != null ? it.kg + 'kg' : ''],
-    text: it => it.name,
+    meta: it => ['TL' + it.tl, it.kg != null ? it.kg + 'kg' : '', it.effect],
+    text: it => it.name + ' ' + (it.effect || ''),
     pick: it => addEquipmentRow(it)
   },
   augments: {
