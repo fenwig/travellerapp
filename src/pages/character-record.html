@@ -1507,6 +1507,11 @@ function removeWeaponRow(id, btn) {
 
 // ── Quantity (subline under grenades, explosives and other counted items) ──
 // Quantity saves the moment it changes; the total weight follows the quantity.
+// Drugs and bandages are counted too.
+function isEquipQtyItem(p) {
+  return p.qty != null || p.group === 'Drugs' || /^Adhesive Bandages/i.test(p.name || p.type || '');
+}
+
 function isQtyItem(r) {
   return r.qty != null || /grenade|explosive|charge|\bTDX\b|nuke|fusion block|detonator/i.test(r.name || '');
 }
@@ -1527,14 +1532,16 @@ function qtyRowHtml(id, qty, kg) {
 }
 
 function qtyRow(id) {
-  return document.querySelector(`#weapons-tbody tr.qty-row[data-for="${id}"]`);
+  return document.querySelector(`tr.qty-row[data-for="${id}"]`);
 }
 
 function refreshQtyTotal(row) {
-  const main = document.querySelector(`#weapons-tbody tr[data-id="${row.dataset.for}"]`);
-  const kg = main ? parseFloat(main.querySelectorAll('input')[4].value) || 0 : 0;
+  const main = document.querySelector(`tr[data-id="${row.dataset.for}"]`);
+  // the weight box is the 5th input on a weapon row and the 3rd on an equipment row
+  const kgIndex = main && main.closest('tbody').id === 'equipment-tbody' ? 2 : 4;
+  const kg = main ? parseFloat(main.querySelectorAll('input')[kgIndex].value) || 0 : 0;
   const qty = parseInt(row.querySelector('input').value) || 0;
-  row.querySelector('.qty-total').textContent = (Math.round(kg * qty * 100) / 100) + ' kg';
+  row.querySelector('.qty-total').textContent = kg ? (Math.round(kg * qty * 100) / 100) + ' kg' : '—';
 }
 
 function refreshQtyTotalFor(tr) {
@@ -1549,8 +1556,10 @@ function setQty(id, value) {
   row.querySelector('input').value = v;
   refreshQtyTotal(row);
   if (String(id).startsWith('new-')) return;   // not saved yet: goes in with the row on Save
-  supabaseClient.from('character_weapons').update({ qty: v }).eq('id', id)
-    .then(({ error }) => { if (error) console.error('character_weapons qty update failed:', error.message); });
+  const main = document.querySelector(`tr[data-id="${id}"]`);
+  const table = main && main.closest('tbody').id === 'equipment-tbody' ? 'character_equipment' : 'character_weapons';
+  supabaseClient.from(table).update({ qty: v }).eq('id', id)
+    .then(({ error }) => { if (error) console.error(table + ' qty update failed:', error.message); });
 }
 
 function stepQty(id, delta) {
@@ -1847,26 +1856,31 @@ function renderEquipment(rows) {
     ? rows.map(r => `<tr data-id="${r.id}" data-eq="${eqOn(r) ? 1 : 0}" class="existing-row">
         <td>${eqCell(eqOn(r), `<input value="${escapeHtml(r.type||'')}" placeholder="Item" />`)}</td>
         <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
-        <td><input type="number" value="${r.mass??''}" placeholder="0" step="0.01" style="width:70px" /></td>
+        <td><input type="number" value="${r.mass??''}" placeholder="0" step="0.01" style="width:70px" oninput="refreshQtyTotalFor(this.closest('tr'))" /></td>
         <td><input value="${escapeHtml(r.effect||'')}" placeholder="Effect" /></td>
         <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingEquipment','${r.id}',this)">✕</button></td>
-      </tr>`).join('')
+      </tr>${r.qty != null ? qtyRowHtml(r.id, r.qty, r.mass) : ''}`).join('')
     : none(5);
+  document.querySelectorAll('#equipment-tbody tr.qty-row').forEach(refreshQtyTotal);
 }
 
 function addEquipmentRow(p) {
   p = p || {};
   const tbody = document.getElementById('equipment-tbody');
-  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  if (tbody.querySelector('.none-row')) tbody.innerHTML = '';
   const tr = document.createElement('tr');
   tr.dataset.id = 'new-' + Date.now();
   tr.innerHTML = `
     <td>${eqCell(true, `<input placeholder="Item" value="${escapeHtml(p.name||'')}" />`)}</td>
     <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
-    <td><input type="number" placeholder="0" step="0.01" value="${p.kg??''}" style="width:70px" /></td>
+    <td><input type="number" placeholder="0" step="0.01" value="${p.kg??''}" style="width:70px" oninput="refreshQtyTotalFor(this.closest('tr'))" /></td>
     <td><input placeholder="Effect" value="${escapeHtml(p.effect||'')}" /></td>
-    <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
+    <td class="td-actions edit-only"><button class="skill-remove" onclick="removeNewWeaponRow(this)">✕</button></td>`;
   tbody.appendChild(tr);
+  if (isEquipQtyItem(p)) {
+    tr.insertAdjacentHTML('afterend', qtyRowHtml(tr.dataset.id, 1, p.kg));
+    refreshQtyTotal(tr.nextElementSibling);
+  }
   pendingEquipment.push({ action: 'add', tr });
 }
 
@@ -1874,6 +1888,8 @@ function addEquipmentRow(p) {
 
 function queueDelete(pendingArr, id, btn) {
   window[pendingArr].push({ action: 'delete', id });
+  const q = document.querySelector(`tr.qty-row[data-for="${id}"]`);
+  if (q) q.remove();
   btn.closest('tr').remove();
 }
 
@@ -2569,7 +2585,8 @@ async function saveAll() {
         if (p.tr.isConnected && i[0].value) await supabaseClient.from('character_equipment').insert({
           character_id: character.id, type: i[0].value, tl: parseInt(i[1].value)||null, mass: parseFloat(i[2].value)||0,
           effect: i[3].value||null,
-          equipped: p.tr.dataset.eq !== '0'
+          equipped: p.tr.dataset.eq !== '0',
+          ...(qtyLine(p.tr) ? { qty: parseInt(qtyLine(p.tr).querySelector('input').value) || 0 } : {})
         });
       }
     }
