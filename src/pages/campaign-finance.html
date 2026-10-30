@@ -14,13 +14,28 @@
     .cf-fund { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
     .cf-balance { font-size: 2.1rem; font-weight: 700; color: #00ffaa; letter-spacing: 0.04em; }
     .cf-sub { color: #4a9ab8; font-size: 0.82rem; }
-    .cf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; margin-bottom: 14px; }
+    .cf-wrap .calc-block { max-width: none; }
+    .cf-top { margin-bottom: 14px; padding: 10px 18px; }
+    .cf-top .cf-fund { gap: 18px; }
+    .cf-top .cf-balance { font-size: 1.8rem; }
+    .cf-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 14px; align-items: start; max-width: 1500px; }
+    .cf-main, .cf-side { min-width: 0; }
+    .cf-side .calc-block, .cf-main > .calc-block { margin-bottom: 14px; }
+    .cf-tick { display: flex; flex-direction: column; gap: 1px; }
+    .cf-tick .cf-check { font-size: 0.8rem; color: #b0d8e8; padding: 1px 0; margin: 0; line-height: 1.25; }
+    .cf-pct { display: flex; flex-direction: column; gap: 8px; }
+    .cf-pct label { flex-direction: row; align-items: center; justify-content: space-between; font-size: 0.8rem; }
+    .cf-pct input { width: 80px; }
+    .cf-pct .cf-btn { align-self: flex-start; }
+    @media (max-width: 1000px) { .cf-layout { grid-template-columns: 1fr; } }
+    .cf-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
     .cf-grid .calc-block { margin-bottom: 0; }
+    @media (max-width: 1400px) { .cf-grid { grid-template-columns: 1fr; } }
     .cf-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; }
     .cf-row label { display: flex; flex-direction: column; gap: 3px; font-size: 0.72rem; color: #4a9ab8; }
-    .cf-row input, .cf-row select { margin: 0; padding: 6px 8px; width: 130px; }
-    .cf-row select { width: 200px; }
-    .cf-row input.cf-wide { width: 200px; }
+    .cf-row input, .cf-row select { margin: 0; padding: 6px 8px; width: 100px; }
+    .cf-row select { width: 170px; }
+    .cf-row input.cf-wide { width: 150px; }
     .cf-row .btn-outline, .cf-btn { width: auto; padding: 7px 16px; font-size: 0.85rem; }
     .cf-preview { color: #4a9ab8; font-size: 0.8rem; margin-top: 8px; min-height: 1.1em; }
     .cf-msg { margin: 0 0 14px; padding: 9px 14px; border-radius: 6px; font-size: 0.85rem; display: none; max-width: 1100px; }
@@ -254,115 +269,97 @@
       document.getElementById('cf-root').innerHTML = `
         <div id="cf-msg" class="cf-msg"></div>
 
-        <div class="calc-block">
-          <div class="calc-block-title">${esc(campaignName)} — Party Fund</div>
-          <div class="cf-fund"><div class="cf-balance">${cr(fund)}</div>
-            <div class="cf-sub">Shared by the whole party. It cannot go below zero.</div></div>
+        <div class="calc-block cf-top">
+          <div class="cf-fund"><span class="cf-sub" style="text-transform:uppercase;letter-spacing:0.08em">${esc(campaignName)} — Party Fund</span>
+            <span class="cf-balance">${cr(fund)}</span>
+            <span class="cf-sub">Shared by the whole party. It cannot go below zero.</span></div>
         </div>
 
-        <div class="calc-block">
-          <div class="calc-block-title">Who's here — active players <span class="cf-sub" style="font-weight:400">(untick anyone to leave them out of the next payout)</span></div>
-          ${actives.length ? `<table class="cf-table"><thead><tr><th class="l"></th><th class="l">Character</th><th class="l">Player</th><th>Cash on hand</th></tr></thead><tbody>
-            ${actives.map(a => `<tr><td class="l"><input type="checkbox" ${ticked.has(a.id) ? 'checked' : ''} onchange="toggleTick('${a.id}', this.checked)" /></td><td class="l">${esc(a.name)}</td><td class="l">${esc(a.player_name || '')}</td><td>${cr(a.cash_on_hand || 0)}</td></tr>`).join('')}
-          </tbody></table>` : '<div class="cf-sub">No active characters in this campaign. Set each player\'s character to Active on the Roster.</div>'}
-        </div>
+        <div class="cf-layout">
+          <div class="cf-main">
+            <div class="cf-grid">
+              <div class="calc-block">
+                <div class="calc-block-title">Deposit</div>
+                <div class="cf-row"><label>Amount (Cr)<input type="number" id="cf-dep-amt" min="1" /></label>
+                  <label>Note<input class="cf-wide" id="cf-dep-note" placeholder="what is it for" /></label>
+                  <button class="btn-outline cf-btn" onclick="deposit()">Deposit</button></div>
+              </div>
+              <div class="calc-block">
+                <div class="calc-block-title">Income — passenger, freight, mission</div>
+                <div class="cf-row"><label>Type<select id="cf-in-type" onchange="previewIncome()">${INCOME_TYPES.map(([t, col]) => `<option value="${t}">${t} (${settings[col]}% to fund)</option>`).join('')}</select></label>
+                  <label>Amount received (Cr)<input type="number" id="cf-in-amt" min="1" oninput="previewIncome()" /></label>
+                  <label>Note<input class="cf-wide" id="cf-in-note" placeholder="optional" /></label>
+                  <button class="btn-outline cf-btn" onclick="recordIncome()">Record</button></div>
+                <div class="cf-preview" id="cf-in-prev"></div>
+              </div>
+              <div class="calc-block">
+                <div class="calc-block-title">Withdraw</div>
+                <div class="cf-row"><label>Amount (Cr)<input type="number" id="cf-wd-amt" min="1" /></label>
+                  <label>Note<input class="cf-wide" id="cf-wd-note" placeholder="what is it for" /></label>
+                  <button class="btn-outline cf-btn" onclick="withdraw()">Withdraw</button></div>
+              </div>
+              <div class="calc-block">
+                <div class="calc-block-title">Disbursement — fund to players</div>
+                <div class="cf-row"><label>Total from fund (Cr)<input type="number" id="cf-ds-amt" min="1" oninput="previewDisburse()" /></label>
+                  <label>To<select id="cf-ds-to" onchange="previewDisburse()"><option value="ALL">All ticked players</option>${actives.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('')}</select></label>
+                  <label>Note<input class="cf-wide" id="cf-ds-note" placeholder="optional" /></label>
+                  <button class="btn-outline cf-btn" onclick="disburse()">Disburse</button></div>
+                <div class="cf-preview" id="cf-ds-prev"></div>
+              </div>
+            </div>
 
-        <div class="cf-grid">
-          <div class="calc-block">
-            <div class="calc-block-title">Deposit</div>
-            <div class="cf-row"><label>Amount (Cr)<input type="number" id="cf-dep-amt" min="1" /></label>
-              <label>Note<input class="cf-wide" id="cf-dep-note" placeholder="what is it for" /></label>
-              <button class="btn-outline cf-btn" onclick="deposit()">Deposit</button></div>
+            <div class="calc-block">
+              <div class="calc-block-title">Cargo sales waiting to be banked</div>
+              ${unbanked.length ? `
+                <div class="cf-row" style="margin-bottom:8px"><label>Bank the<select id="cf-bank-basis"><option value="profit">profit (after the cost of the goods)</option><option value="net">net proceeds (gross less broker fee)</option></select></label>
+                  <button class="btn-outline cf-btn" onclick="bankAll()">Bank all</button>
+                  <span class="cf-sub">Uses the Cargo % in Payout settings: that share goes to the fund, the rest to the ticked players.</span></div>
+                <table class="cf-table"><thead><tr><th class="l">Sold</th><th class="l">Ship</th><th class="l">Good</th><th>Tons</th><th>Gross</th><th>Broker fee</th><th>Cost of goods</th><th>Profit</th><th></th></tr></thead><tbody>
+                ${unbanked.map(r => { const cost = (Number(r.purchase_price) || 0) * (Number(r.tons) || 0), profit = (Number(r.gross) || 0) - (Number(r.broker_fee) || 0) - cost;
+                  return `<tr><td class="l">${new Date(r.sold_at).toLocaleDateString()}</td><td class="l">${esc(r.shipName)}</td><td class="l">${esc(r.good_name)}${r.sold_world ? ' · ' + esc(r.sold_world) : ''}</td><td>${r.tons}</td><td>${cr(r.gross || 0)}</td><td>${cr(r.broker_fee || 0)}</td><td>${cr(cost)}</td><td class="${profit >= 0 ? 'cf-pos' : 'cf-neg'}">${cr(profit)}</td>
+                  <td><button class="btn-small" onclick="bank('${r.id}')">Bank</button> <button class="btn-small" onclick="dismissSale('${r.id}')" title="Clear it without moving any money">Dismiss</button></td></tr>`; }).join('')}
+              </tbody></table>` : '<div class="cf-sub">Every logged cargo sale has been banked.</div>'}
+            </div>
+
+            <div class="calc-block">
+              <div class="calc-block-title">Expenses per 28-day maintenance period — active ships</div>
+              ${shipData.length ? `<table class="cf-table"><thead><tr><th class="l">Expense</th>${shipData.map(r => '<th>' + esc(r.ship.name) + '</th>').join('')}${several ? '<th>All ships</th>' : ''}</tr></thead><tbody>
+                ${rows.map(([label, key]) => `<tr><td class="l">${label}</td>${shipData.map(r => '<td>' + cr(r.ex[key]) + '</td>').join('')}${several ? '<td>' + cr(shipData.reduce((n, r) => n + r.ex[key], 0)) + '</td>' : ''}</tr>`).join('')}
+                <tr class="cf-total"><td class="l">Total</td>${shipData.map(r => '<td>' + cr(r.ex.total) + '</td>').join('')}${several ? '<td>' + cr(allTotal) + '</td>' : ''}</tr>
+              </tbody></table>
+              <div class="cf-sub" style="margin-top:8px">From each ship's Finances tab (fuel not included). Pay the period from the <a href="time-tracker.html" style="color:#00e5ff">Time Tracker</a>.</div>`
+              : '<div class="cf-sub">There are no active spacecraft in this campaign.</div>'}
+            </div>
+
+            <div class="calc-block">
+              <div class="calc-block-title">Ledger <span class="cf-sub" style="font-weight:400">(latest 500 entries)</span></div>
+              ${ledger.length ? `<table class="cf-table"><thead><tr><th class="l">When</th><th class="l">By</th><th class="l">Entry</th><th class="l">Note</th><th>Fund</th><th>Balance</th><th></th></tr></thead><tbody>
+                ${ledger.map(l => { const pl = (l.details && l.details.players) || [], rev = !!l.reversed_by;
+                  return `<tr class="${rev ? 'cf-rev' : ''}"><td class="l">${new Date(l.created_at).toLocaleString()}</td><td class="l">${esc(l.user_name || '')}</td>
+                  <td class="l">${KIND[l.kind] || l.kind}${l.category && l.category !== 'General' ? ' · ' + esc(l.category) : ''}</td>
+                  <td class="l">${esc(l.note || '')}${pl.length ? '<div class="cf-detail">→ ' + pl.map(p => esc(p.name || '') + ' ' + cr(p.amount)).join(', ') + '</div>' : ''}</td>
+                  <td class="${l.amount >= 0 ? 'cf-pos' : 'cf-neg'}">${l.amount >= 0 ? '+' : ''}${cr(l.amount)}</td><td>${cr(l.balance_after)}</td>
+                  <td>${!rev && l.kind !== 'reverse' && l.category !== 'Maintenance Period' ? `<button class="btn-small" onclick="reverse('${l.id}')">Reverse</button>` : ''}</td></tr>`; }).join('')}
+              </tbody></table>` : '<div class="cf-sub">Nothing recorded yet.</div>'}
+            </div>
           </div>
-          <div class="calc-block">
-            <div class="calc-block-title">Withdraw</div>
-            <div class="cf-row"><label>Amount (Cr)<input type="number" id="cf-wd-amt" min="1" /></label>
-              <label>Note<input class="cf-wide" id="cf-wd-note" placeholder="what is it for" /></label>
-              <button class="btn-outline cf-btn" onclick="withdraw()">Withdraw</button></div>
+
+          <div class="cf-side">
+            <div class="calc-block">
+              <div class="calc-block-title">Player payouts</div>
+              ${actives.length ? `<div class="cf-tick">${actives.map(a => `<label class="cf-check"><input type="checkbox" ${ticked.has(a.id) ? 'checked' : ''} onchange="toggleTick('${a.id}', this.checked)" />${esc(a.name)}</label>`).join('')}</div>
+              <div class="cf-sub" style="margin-top:6px">Ticked players share the next payout.</div>`
+              : '<div class="cf-sub">No active characters. Set each player\'s character to Active on the Roster.</div>'}
+            </div>
+            <div class="calc-block">
+              <div class="calc-block-title">Payout settings</div>
+              <div class="cf-sub" style="margin-bottom:8px">% to the party fund. The rest is shared equally among ticked players.</div>
+              <div class="cf-pct">${INCOME_TYPES.map(([t, col]) => `<label>${t} %<input type="number" id="cf-set-${col}" min="0" max="100" value="${settings[col]}" /></label>`).join('')}
+                <button class="btn-outline cf-btn" onclick="saveSettings()">Save</button></div>
+            </div>
           </div>
-        </div>
-
-        <div class="cf-grid">
-          <div class="calc-block">
-            <div class="calc-block-title">Disbursement — fund to players</div>
-            <div class="cf-row"><label>Total from fund (Cr)<input type="number" id="cf-ds-amt" min="1" oninput="previewDisburse()" /></label>
-              <label>To<select id="cf-ds-to" onchange="previewDisburse()"><option value="ALL">All ticked players</option>${actives.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('')}</select></label>
-              <label>Note<input class="cf-wide" id="cf-ds-note" placeholder="optional" /></label>
-              <button class="btn-outline cf-btn" onclick="disburse()">Disburse</button></div>
-            <div class="cf-preview" id="cf-ds-prev"></div>
-          </div>
-          <div class="calc-block">
-            <div class="calc-block-title">Record income — passenger, freight, mission</div>
-            <div class="cf-row"><label>Type<select id="cf-in-type" onchange="previewIncome()">${INCOME_TYPES.map(([t, col]) => `<option value="${t}">${t} (${settings[col]}% to fund)</option>`).join('')}</select></label>
-              <label>Amount received (Cr)<input type="number" id="cf-in-amt" min="1" oninput="previewIncome()" /></label>
-              <label>Note<input class="cf-wide" id="cf-in-note" placeholder="optional" /></label>
-              <button class="btn-outline cf-btn" onclick="recordIncome()">Record</button></div>
-            <div class="cf-preview" id="cf-in-prev"></div>
-          </div>
-        </div>
-
-        <div class="calc-block">
-          <div class="calc-block-title">Cargo sales waiting to be banked</div>
-          ${unbanked.length ? `
-            <div class="cf-row" style="margin-bottom:8px"><label>Bank the<select id="cf-bank-basis"><option value="profit">profit (after the cost of the goods)</option><option value="net">net proceeds (gross less broker fee)</option></select></label>
-              <button class="btn-outline cf-btn" onclick="bankAll()">Bank all</button>
-              <span class="cf-sub">Uses the Cargo % below: that share goes to the fund, the rest to the ticked players.</span></div>
-            <table class="cf-table"><thead><tr><th class="l">Sold</th><th class="l">Ship</th><th class="l">Good</th><th>Tons</th><th>Gross</th><th>Broker fee</th><th>Cost of goods</th><th>Profit</th><th></th></tr></thead><tbody>
-            ${unbanked.map(r => { const cost = (Number(r.purchase_price) || 0) * (Number(r.tons) || 0), profit = (Number(r.gross) || 0) - (Number(r.broker_fee) || 0) - cost;
-              return `<tr><td class="l">${new Date(r.sold_at).toLocaleDateString()}</td><td class="l">${esc(r.shipName)}</td><td class="l">${esc(r.good_name)}${r.sold_world ? ' · ' + esc(r.sold_world) : ''}</td><td>${r.tons}</td><td>${cr(r.gross || 0)}</td><td>${cr(r.broker_fee || 0)}</td><td>${cr(cost)}</td><td class="${profit >= 0 ? 'cf-pos' : 'cf-neg'}">${cr(profit)}</td>
-              <td><button class="btn-small" onclick="bank('${r.id}')">Bank</button> <button class="btn-small" onclick="dismissSale('${r.id}')" title="Clear it without moving any money">Dismiss</button></td></tr>`; }).join('')}
-          </tbody></table>` : '<div class="cf-sub">Every logged cargo sale has been banked.</div>'}
-        </div>
-
-        <div class="calc-block">
-          <div class="calc-block-title">Payout settings — % to the party fund (the rest is shared equally among ticked active players)</div>
-          <div class="cf-row cf-pct">${INCOME_TYPES.map(([t, col]) => `<label>${t} %<input type="number" id="cf-set-${col}" min="0" max="100" value="${settings[col]}" /></label>`).join('')}
-            <button class="btn-outline cf-btn" onclick="saveSettings()">Save</button></div>
-        </div>
-
-        <div class="calc-block">
-          <div class="calc-block-title">Expenses per 28-day maintenance period — active ships</div>
-          ${shipData.length ? `<table class="cf-table"><thead><tr><th class="l">Expense</th>${shipData.map(r => '<th>' + esc(r.ship.name) + '</th>').join('')}${several ? '<th>All ships</th>' : ''}</tr></thead><tbody>
-            ${rows.map(([label, key]) => `<tr><td class="l">${label}</td>${shipData.map(r => '<td>' + cr(r.ex[key]) + '</td>').join('')}${several ? '<td>' + cr(shipData.reduce((n, r) => n + r.ex[key], 0)) + '</td>' : ''}</tr>`).join('')}
-            <tr class="cf-total"><td class="l">Total</td>${shipData.map(r => '<td>' + cr(r.ex.total) + '</td>').join('')}${several ? '<td>' + cr(allTotal) + '</td>' : ''}</tr>
-          </tbody></table>
-          <div class="cf-sub" style="margin-top:8px">From each ship's Finances tab (fuel not included). Pay the period from the <a href="time-tracker.html" style="color:#00e5ff">Time Tracker</a>.</div>`
-          : '<div class="cf-sub">There are no active spacecraft in this campaign.</div>'}
-        </div>
-
-        <div class="calc-block">
-          <div class="calc-block-title">By category</div>
-          ${categoryReport()}
-        </div>
-
-        <div class="calc-block">
-          <div class="calc-block-title">Ledger <span class="cf-sub" style="font-weight:400">(latest 500 entries)</span></div>
-          ${ledger.length ? `<table class="cf-table"><thead><tr><th class="l">When</th><th class="l">By</th><th class="l">Entry</th><th class="l">Note</th><th>Fund</th><th>Balance</th><th></th></tr></thead><tbody>
-            ${ledger.map(l => { const pl = (l.details && l.details.players) || [], rev = !!l.reversed_by;
-              return `<tr class="${rev ? 'cf-rev' : ''}"><td class="l">${new Date(l.created_at).toLocaleString()}</td><td class="l">${esc(l.user_name || '')}</td>
-              <td class="l">${KIND[l.kind] || l.kind}${l.category && l.category !== 'General' ? ' · ' + esc(l.category) : ''}</td>
-              <td class="l">${esc(l.note || '')}${pl.length ? '<div class="cf-detail">→ ' + pl.map(p => esc(p.name || '') + ' ' + cr(p.amount)).join(', ') + '</div>' : ''}</td>
-              <td class="${l.amount >= 0 ? 'cf-pos' : 'cf-neg'}">${l.amount >= 0 ? '+' : ''}${cr(l.amount)}</td><td>${cr(l.balance_after)}</td>
-              <td>${!rev && l.kind !== 'reverse' && l.category !== 'Maintenance Period' ? `<button class="btn-small" onclick="reverse('${l.id}')">Reverse</button>` : ''}</td></tr>`; }).join('')}
-          </tbody></table>` : '<div class="cf-sub">Nothing recorded yet.</div>'}
         </div>`;
       previewDisburse(); previewIncome();
-    }
-
-    // Totals by category, leaving out reversed entries and the reversals themselves.
-    function categoryReport() {
-      const by = {};
-      ledger.filter(l => !l.reversed_by && l.kind !== 'reverse').forEach(l => {
-        const c = l.category || 'General';
-        const row = by[c] || (by[c] = { into: 0, out: 0, players: 0 });
-        if (l.amount >= 0) row.into += Number(l.amount); else row.out += -Number(l.amount);
-        ((l.details && l.details.players) || []).forEach(p => { if (p.amount > 0) row.players += Number(p.amount); });
-      });
-      const cats = Object.keys(by).sort();
-      if (!cats.length) return '<div class="cf-sub">Nothing recorded yet.</div>';
-      return `<table class="cf-table"><thead><tr><th class="l">Category</th><th>Into the fund</th><th>Out of the fund</th><th>Paid to players</th></tr></thead><tbody>
-        ${cats.map(c => `<tr><td class="l">${esc(c)}</td><td class="cf-pos">${cr(by[c].into)}</td><td class="cf-neg">${cr(by[c].out)}</td><td>${cr(by[c].players)}</td></tr>`).join('')}
-      </tbody></table>`;
     }
 
     async function doSignOut() {
