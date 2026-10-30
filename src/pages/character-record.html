@@ -365,15 +365,10 @@
                   <div class="view-only finance-value" id="disp-debt">0</div>
                   <input class="finance-input edit-only" type="number" id="edit-debt" value="0" />
                 </div>
-                <div class="finance-box">
+                <div class="finance-box" title="Set by SOC (Core Rulebook p.98). Not charged while living aboard ship.">
                   <div class="finance-label">Living Costs</div>
-                  <div class="view-only finance-value" id="disp-living">0</div>
-                  <input class="finance-input edit-only" type="number" id="edit-living" value="0" />
-                </div>
-                <div class="finance-box">
-                  <div class="finance-label">Ship Payment</div>
-                  <div class="view-only finance-value" id="disp-ship-pay">0</div>
-                  <input class="finance-input edit-only" type="number" id="edit-ship-pay" value="0" />
+                  <div class="finance-value" id="disp-living">0</div>
+                  <div id="living-tier" style="font-size:0.72rem;color:#4a9ab8;margin-top:2px"></div>
                 </div>
               </div>
             </div>
@@ -1197,8 +1192,28 @@ function renderFinances() {
   set('cash',     character.cash_on_hand);
   set('pension',  character.pension); // view-only — no edit-pension input
   set('debt',     character.debt);
-  set('living',   character.living_costs, ' Cr/mo');
-  set('ship-pay', character.ship_payment, ' Cr/mo');
+  // Living costs follow the character's SOC (Standards of Living table, Core Rulebook p.98)
+  const tier = livingStandard(character.soc);
+  document.getElementById('disp-living').textContent = tier.cost.toLocaleString() + (tier.plus ? '+' : '') + ' Cr/mo';
+  document.getElementById('living-tier').textContent = tier.name + ' (SOC ' + (character.soc ?? 0) + ')';
+}
+
+// Highest standard of living at or below the SOC score.
+const LIVING_STANDARDS = [
+  { soc: 2,  name: 'Very Poor',        cost: 400 },
+  { soc: 4,  name: 'Poor',             cost: 800 },
+  { soc: 5,  name: 'Low',              cost: 1000 },
+  { soc: 6,  name: 'Average',          cost: 1200 },
+  { soc: 7,  name: 'Good',             cost: 1500 },
+  { soc: 8,  name: 'High',             cost: 2000 },
+  { soc: 10, name: 'Very High',        cost: 2500 },
+  { soc: 12, name: 'Rich',             cost: 5000 },
+  { soc: 14, name: 'Very Rich',        cost: 12000 },
+  { soc: 15, name: 'Ludicrously Rich', cost: 20000, plus: true }
+];
+function livingStandard(soc) {
+  const s = parseInt(soc) || 0;
+  return [...LIVING_STANDARDS].reverse().find(t => s >= t.soc) || LIVING_STANDARDS[0];
 }
 
 // ── Gear ───────────────────────────────────────────────────
@@ -2298,8 +2313,6 @@ async function saveAll() {
     // by the Character Creation wizard (career pensions) and shouldn't be
     // hand-edited on the record afterward.
     update.debt                      = parseInt(document.getElementById('edit-debt').value)       || 0;
-    update.living_costs              = parseInt(document.getElementById('edit-living').value)     || 0;
-    update.ship_payment              = parseInt(document.getElementById('edit-ship-pay').value)   || 0;
     update.training_skill            = document.getElementById('edit-train-skill').value    || null;
     update.training_specialty        = document.getElementById('edit-train-specialty').value || null;
     update.training_weeks_complete   = parseInt(document.getElementById('edit-train-weeks').value)   || 0;
