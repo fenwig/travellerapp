@@ -709,7 +709,7 @@ async function loadCharacter() {
   let query = supabaseClient.from('characters').select('*');
   query = reqId
     ? query.eq('id', reqId)
-    : query.eq('user_id', currentUser.id).eq('status', 'active');
+    : inCampaign(query.eq('user_id', currentUser.id).eq('status', 'active'), await currentCampaignId());
 
   const { data, error } = await query.single();
 

@@ -84,7 +84,7 @@ const TC = {
   // If the ship has none set, the block stays editable. Returns { name, uwp } or null.
   async hereWorld(id) {
     try {
-      const { data, error } = await supabaseClient.from('spacecraft').select('current_world_name,current_world_uwp').eq('status', 'active');
+      const { data, error } = await inCampaign(supabaseClient.from('spacecraft').select('current_world_name,current_world_uwp').eq('status', 'active'), await currentCampaignId());
       const s = !error && data && data.length === 1 ? data[0] : null;
       if (!s || !s.current_world_uwp) return null;
       const name = document.getElementById(id + '-name'), uwp = document.getElementById(id + '-uwp');
@@ -137,7 +137,7 @@ const TC = {
       ' <span id="' + p + '-msg" class="calc-note" style="margin:0 0 0 10px"></span></div></div>';
   },
   async activeShip() {
-    const { data, error } = await supabaseClient.from('spacecraft').select('id,name,cargo_max').eq('status', 'active');
+    const { data, error } = await inCampaign(supabaseClient.from('spacecraft').select('id,name,cargo_max').eq('status', 'active'), await currentCampaignId());
     if (error) throw error;
     if (!data || data.length === 0) throw new Error('There is no active spacecraft. Set one to Active on the Roster first.');
     if (data.length > 1) throw new Error('More than one spacecraft is marked Active. Leave only one Active on the Roster.');

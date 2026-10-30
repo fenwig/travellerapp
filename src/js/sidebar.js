@@ -5,6 +5,7 @@ supabaseClient.auth.getSession().then(({ data: { session } }) => {
     el.title = 'Click to edit display name';
     el.style.cursor = 'pointer';
     el.addEventListener('click', () => editDisplayName(session.user, el));
+    showCampaignName(el);
   }
 });
 
@@ -32,4 +33,18 @@ async function editDisplayName(user, el) {
   if (charError) {
     alert('Display name updated, but could not update it on your existing characters: ' + charError.message);
   }
+}
+
+// Small "Campaign: name" line under the user name (change campaign on the Roster).
+async function showCampaignName(userEl) {
+  const list = await loadCampaigns();
+  const id = await currentCampaignId();
+  const c = list.find(x => x.id === id);
+  if (!c) return;
+  const div = document.createElement('div');
+  div.className = 'sidebar-campaign';
+  div.textContent = 'Campaign: ' + c.name;
+  div.title = 'Change campaign on the Roster';
+  div.style.cssText = 'font-size:0.68rem;color:#4a9ab8;margin-top:4px;letter-spacing:0.04em;';
+  userEl.after(div);
 }

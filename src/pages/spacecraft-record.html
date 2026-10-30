@@ -725,8 +725,8 @@ async function init() {
   document.getElementById('sidebar-user').textContent =
     session.user.user_metadata?.display_name || session.user.email;
 
-  const { data:chars } = await supabaseClient
-    .from('characters').select('id,name,player_name,primary_role,secondary_role,onboard').eq('status','active');
+  const { data:chars } = await inCampaign(supabaseClient
+    .from('characters').select('id,name,player_name,primary_role,secondary_role,onboard').eq('status','active'), await currentCampaignId());
   allCharacters = chars || [];
 
   await loadShip();
@@ -737,7 +737,7 @@ async function loadShip() {
 
   const { data } = reqId
     ? await supabaseClient.from('spacecraft').select('*').eq('id', reqId).single()
-    : await supabaseClient.from('spacecraft').select('*').eq('status','active').single();
+    : await inCampaign(supabaseClient.from('spacecraft').select('*').eq('status','active'), await currentCampaignId()).single();
 
   if (!data) {
     document.getElementById('no-ship-msg').style.display = 'block';
@@ -1631,8 +1631,8 @@ async function saveAll() {
 
     // Check one-active rule
     if (newStatus === 'active' && ship.status !== 'active') {
-      const { data:others } = await supabaseClient
-        .from('spacecraft').select('id,name').eq('status','active').neq('id',ship.id);
+      const { data:others } = await inCampaign(supabaseClient
+        .from('spacecraft').select('id,name').eq('status','active').neq('id',ship.id), ship.campaign_id);
       if (others && others.length > 0) {
         msg.textContent = `Error: "${others[0].name}" is already active. Set it to Reserve first.`;
         msg.className = 'save-msg err';
@@ -1775,13 +1775,14 @@ async function saveAll() {
 
 // ── Create new ship ───────────────────────────────────────
 async function createNewShip() {
-  const { data:active } = await supabaseClient.from('spacecraft').select('id').eq('status','active');
+  const cid = await currentCampaignId();
+  const { data:active } = await inCampaign(supabaseClient.from('spacecraft').select('id').eq('status','active'), cid);
   if (active && active.length > 0) {
     alert('Another ship is already active. Set it to Reserve before creating a new active ship.');
     return;
   }
   const { data, error } = await supabaseClient.from('spacecraft')
-    .insert({ name:'New Ship', ship_class:'Unknown', status:'active', streamlined_status:'Streamlined' })
+    .insert({ ...(cid ? { campaign_id: cid } : {}), name:'New Ship', ship_class:'Unknown', status:'active', streamlined_status:'Streamlined' })
     .select().single();
   if (error) { alert('Error: ' + error.message); return; }
   ship = data; critHits = ship.critical_hits || {};

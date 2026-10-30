@@ -357,7 +357,7 @@
     const RANGE_LONG_KM = 25000;   // Long range in the space combat rules: where the encounter proper begins
     async function getPirateThrust() {
       try {
-        const { data, error } = await supabaseClient.from('spacecraft').select('name,m_drive').eq('status', 'active');
+        const { data, error } = await inCampaign(supabaseClient.from('spacecraft').select('name,m_drive').eq('status', 'active'), await currentCampaignId());
         if (!error && data && data.length === 1) {
           const t = data[0].m_drive || 0;
           document.getElementById('pirate-thrust').value = t;

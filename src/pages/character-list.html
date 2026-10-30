@@ -39,6 +39,9 @@
     .status-select option { background: #0a1a22; color: #b0d8e8; }
     .roster-thumb { display: inline-block; vertical-align: middle; width: 36px; height: 36px; margin-right: 10px;
       border-radius: 4px; border: 1px solid #0a4a60; background: #0d1520; }
+    .campaign-bar { display: flex; align-items: center; gap: 10px; margin: -4px 0 18px; }
+    .campaign-bar label { font-size: 0.7rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.08em; }
+    .campaign-bar select { background: #080d12; border: 1px solid #0a4a60; color: #00e5ff; border-radius: 4px; padding: 6px 10px; font-size: 0.9rem; min-width: 220px; }
     .roster-empty td { color: #4a9ab8; font-size: 0.85rem; }
   </style>
   <script src="../js/nav.js" defer></script>
@@ -58,11 +61,16 @@
 
     <main class="page-main">
       <h1 class="page-title">ROSTER</h1>
+      <div class="campaign-bar" id="campaign-bar" style="display:none">
+        <label for="campaign-select">Campaign</label>
+        <select id="campaign-select" onchange="switchCampaign(this.value)"></select>
+      </div>
 
       <div class="roster-section">
         <div class="roster-section-head">
           <div class="roster-section-title">Characters</div>
           <div style="display:flex; gap:10px;">
+            <button class="btn-outline" id="new-campaign-btn" style="display:none" onclick="newCampaign()">+ New Campaign</button>
             <button class="btn-outline" onclick="window.location.href='character-creation.html'">+ Character Creation</button>
             <button class="btn-outline" onclick="createCharacter()">+ Blank Character</button>
           </div>
@@ -113,6 +121,7 @@
   <script src="../js/portrait.js"></script>
   <script>
     let currentUser = null;
+    let campaignId = null;
     const STATUS_OPTIONS = ['active', 'reserve', 'archived', 'deceased', 'other'];
     const SPACECRAFT_STATUS_OPTIONS = ['active', 'reserve', 'destroyed', 'sold', 'stolen', 'other'];
 
@@ -123,8 +132,34 @@
       document.getElementById('sidebar-user').textContent =
         currentUser.user_metadata?.display_name || currentUser.email;
 
+      await initCampaignBar();
       await loadCharacters();
       await loadSpacecraft();
+    }
+
+    async function initCampaignBar() {
+      const list = await loadCampaigns();
+      campaignId = await currentCampaignId();
+      if (list.length) {
+        document.getElementById('campaign-select').innerHTML = list.map(c =>
+          `<option value="${c.id}" ${c.id === campaignId ? 'selected' : ''}>${c.name}</option>`).join('');
+        document.getElementById('campaign-bar').style.display = 'flex';
+        if (isGM(currentUser)) document.getElementById('new-campaign-btn').style.display = '';
+      }
+    }
+
+    async function switchCampaign(id) {
+      setCampaignId(id);
+      window.location.reload();
+    }
+
+    async function newCampaign() {
+      const name = prompt('Name of the new campaign:');
+      if (!name || !name.trim()) return;
+      const { data, error } = await supabaseClient.from('campaigns').insert({ name: name.trim() }).select().single();
+      if (error) { alert('Could not create the campaign: ' + error.message); return; }
+      setCampaignId(data.id);
+      window.location.reload();
     }
 
     function statusLabel(s) {
@@ -133,9 +168,9 @@
     }
 
     async function loadCharacters() {
-      const { data, error } = await supabaseClient
+      const { data, error } = await inCampaign(supabaseClient
         .from('characters')
-        .select('id,portrait_url,portrait_crop,name,player_name,species,primary_role,secondary_role,status,onboard,user_id')
+        .select('id,portrait_url,portrait_crop,name,player_name,species,primary_role,secondary_role,status,onboard,user_id'), campaignId)
         .order('name');
 
       const tbody = document.getElementById('char-tbody');
@@ -197,8 +232,8 @@
 
     async function changeSpacecraftStatus(id, newStatus) {
       if (newStatus === 'active') {
-        const { data: others } = await supabaseClient.from('spacecraft')
-          .select('id,name').eq('status', 'active').neq('id', id);
+        const { data: others } = await inCampaign(supabaseClient.from('spacecraft')
+          .select('id,name').eq('status', 'active').neq('id', id), campaignId);
         if (others && others.length > 0) {
           alert('"' + others[0].name + '" is already the active spacecraft. Set it to Reserve first.');
           await loadSpacecraft();
@@ -232,10 +267,10 @@
       if (newStatus === 'active') {
         // Only one active character per player — archive this player's
         // other active character(s) first.
-        const { data: row } = await supabaseClient.from('characters').select('user_id').eq('id', id).single();
+        const { data: row } = await supabaseClient.from('characters').select('user_id,campaign_id').eq('id', id).single();
         if (row) {
-          await supabaseClient.from('characters').update({ status: 'archived', onboard: false })
-            .eq('user_id', row.user_id).eq('status', 'active').neq('id', id);
+          await inCampaign(supabaseClient.from('characters').update({ status: 'archived', onboard: false })
+            .eq('user_id', row.user_id).eq('status', 'active').neq('id', id), row.campaign_id);
         }
         await supabaseClient.from('characters').update({ status: 'active' }).eq('id', id);
       } else {
@@ -247,10 +282,11 @@
     async function createCharacter() {
       // Only one active character per player — archive any other active
       // characters this user owns before this new one becomes active.
-      await supabaseClient.from('characters').update({ status: 'archived', onboard: false })
-        .eq('user_id', currentUser.id).eq('status', 'active');
+      await inCampaign(supabaseClient.from('characters').update({ status: 'archived', onboard: false })
+        .eq('user_id', currentUser.id).eq('status', 'active'), campaignId);
       const { data, error } = await supabaseClient.from('characters')
         .insert({
+          ...(campaignId ? { campaign_id: campaignId } : {}),
           user_id: currentUser.id,
           name: 'New Character',
           player_name: currentUser.user_metadata?.display_name || currentUser.email,
@@ -263,9 +299,9 @@
     }
 
     async function loadSpacecraft() {
-      const { data, error } = await supabaseClient
+      const { data, error } = await inCampaign(supabaseClient
         .from('spacecraft')
-        .select('id,name,ship_class,status')
+        .select('id,name,ship_class,status'), campaignId)
         .order('name');
 
       const tbody = document.getElementById('ship-tbody');
@@ -298,7 +334,7 @@
 
     async function createSpacecraft() {
       const { data, error } = await supabaseClient.from('spacecraft')
-        .insert({ name: 'New Ship', ship_class: 'Unknown', status: 'reserve', streamlined_status: 'Streamlined' })
+        .insert({ ...(campaignId ? { campaign_id: campaignId } : {}), name: 'New Ship', ship_class: 'Unknown', status: 'reserve', streamlined_status: 'Streamlined' })
         .select().single();
       if (error) { alert('Error: ' + error.message); return; }
       openSpacecraft(data.id);

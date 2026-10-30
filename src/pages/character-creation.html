@@ -10859,8 +10859,8 @@
       await logCreation(summary);
       // Only one active character per player — archive any other active
       // characters this user owns before activating this one.
-      await supabaseClient.from('characters').update({ status: 'archived', onboard: false })
-        .eq('user_id', draft.user_id || currentUser.id).eq('status', 'active').neq('id', draft.id);
+      await inCampaign(supabaseClient.from('characters').update({ status: 'archived', onboard: false })
+        .eq('user_id', draft.user_id || currentUser.id).eq('status', 'active').neq('id', draft.id), draft.campaign_id);
       await supabaseClient.from('characters').update({ status: 'active' }).eq('id', draft.id);
       await logCreation('Character creation complete — activated.');
       window.location.href = 'character-record.html?id=' + draft.id;
@@ -10883,8 +10883,10 @@
 
       if (!id) {
         // Starting fresh — create a draft character and move into the wizard.
+        const cid = await currentCampaignId();
         const { data, error } = await supabaseClient.from('characters')
           .insert({
+            ...(cid ? { campaign_id: cid } : {}),
             user_id: currentUser.id,
             player_name: currentUser.user_metadata?.display_name || currentUser.email,
             name: 'New Traveller',
