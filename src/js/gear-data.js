@@ -278,20 +278,18 @@ const GEAR_EQUIPMENT = [
   {"name":"Science Expert Package","group":"Toolkits","tl":12,"kg":1}
 ];
 
-// Armour modifications: Central Supply Catalog "General Modifications" (printed pp.20-27), plus the
-// Core armour medkit/medikit. prot / rad are numeric bonuses the Character Record adds to the armour's
-// PRO+ / RAD; conditional bonuses (e.g. "+10 vs lasers") stay in the effect text only.
+// Armour modifications: Central Supply Catalog "General Modifications" (printed pp.20-27).
+// prot / rad are numeric bonuses the Character Record adds to the armour's PRO+ / RAD; conditional bonuses (e.g. "+10 vs lasers") stay in the effect text only.
 const GEAR_ARMOUR_MODS = [
   {"name":"Additional Padding","tl":1,"kg":5,"cost":"Cr50","effect":"Protection +1; DM-1 to DEX checks","prot":1,"rad":0,"source":"CSC"},
   {"name":"Auto Helmet","tl":12,"kg":null,"cost":"Cr10000","effect":"Helmet collapses into a collar and deploys automatically","prot":0,"rad":0,"source":"CSC"},
   {"name":"Auto Protect Kit","tl":12,"kg":null,"cost":"Cr20000","effect":"Automatically deploys helmet, gloves and boots","prot":0,"rad":0,"source":"CSC"},
-  {"name":"Automedikit, Basic","tl":10,"kg":null,"cost":"Cr5000","effect":"Automatic First Aid at END 0; Fast Drug injector","prot":0,"rad":0,"source":"CSC"},
-  {"name":"Automedikit, Improved","tl":11,"kg":null,"cost":"Cr7500","effect":"Basic features plus combat drug injection on command","prot":0,"rad":0,"source":"CSC"},
-  {"name":"Automedikit, Enhanced","tl":12,"kg":null,"cost":"Cr10000","effect":"TL12 medikit equivalent","prot":0,"rad":0,"source":"CSC"},
-  {"name":"Automedikit, Advanced","tl":14,"kg":null,"cost":"Cr15000","effect":"TL14 medikit equivalent","prot":0,"rad":0,"source":"CSC"},
-  {"name":"Medikit","tl":11,"kg":null,"cost":"","effect":"Applies First Aid if END 0; Fast Drug and combat drugs on command","prot":0,"rad":0,"source":"Core"},
+  {"name":"Automedikit, Basic","tl":10,"kg":null,"cost":"Cr5000","effect":"Automatic First Aid at END 0; Fast Drug (Hibernation) injector on command or if life support fails","prot":0,"rad":0,"source":"CSC"},
+  {"name":"Automedikit, Improved","tl":11,"kg":null,"cost":"Cr7500","effect":"Automatic First Aid at END 0; Fast Drug injector; combat drugs and metabolic accelerators injected on command","prot":0,"rad":0,"source":"CSC"},
+  {"name":"Automedikit, Enhanced","tl":12,"kg":null,"cost":"Cr10000","effect":"Automatic First Aid at END 0 (TL12 medikit equivalent); Fast Drug injector; combat drugs and metabolic accelerators on command","prot":0,"rad":0,"source":"CSC"},
+  {"name":"Automedikit, Advanced","tl":14,"kg":null,"cost":"Cr15000","effect":"Automatic First Aid at END 0 (TL14 medikit equivalent); Fast Drug injector; combat drugs and metabolic accelerators on command","prot":0,"rad":0,"source":"CSC"},
   {"name":"Body Camera","tl":8,"kg":null,"cost":"Cr50","effect":"2D video recorder and transmitter; 72 hours storage","prot":0,"rad":0,"source":"CSC"},
-  {"name":"Body Camera (TL10)","tl":10,"kg":null,"cost":"Cr150","effect":"Unlimited storage","prot":0,"rad":0,"source":"CSC"},
+  {"name":"Body Camera (TL10)","tl":10,"kg":null,"cost":"Cr150","effect":"2D video recorder and transmitter; unlimited storage","prot":0,"rad":0,"source":"CSC"},
   {"name":"Camouflage, Basic","tl":3,"kg":null,"cost":"Cr25","effect":"DM+2 to suitable Stealth checks beyond 100m","prot":0,"rad":0,"source":"CSC"},
   {"name":"Camouflage, Heavy","tl":3,"kg":3,"cost":"Cr200","effect":"DM+3 (DM+4 if stationary) to suitable Stealth checks; no DM vs infrared or thermal","prot":0,"rad":0,"source":"CSC"},
   {"name":"Chameleon, Full Motion","tl":12,"kg":null,"cost":"Cr10000","effect":"DM+3 to Stealth checks beyond 20m","prot":0,"rad":0,"source":"CSC"},
@@ -313,7 +311,7 @@ const GEAR_ARMOUR_MODS = [
   {"name":"Gyro-Stabiliser Rig, Improved","tl":11,"kg":2,"cost":"Cr5000","effect":"Removes penalty for Very Bulky weapons","prot":0,"rad":0,"source":"CSC"},
   {"name":"Hands-Free Cuff","tl":8,"kg":1,"cost":"Cr500","effect":"Holds up to two 1kg items","prot":0,"rad":0,"source":"CSC"},
   {"name":"Helmet Lights","tl":6,"kg":null,"cost":"Cr10","effect":"Flashlight illumination in front of the user","prot":0,"rad":0,"source":"CSC"},
-  {"name":"Helmet Lights (voice activated)","tl":8,"kg":null,"cost":"Cr20","effect":"Helmet lights with voice control","prot":0,"rad":0,"source":"CSC"},
+  {"name":"Helmet Lights (voice activated)","tl":8,"kg":null,"cost":"Cr20","effect":"Flashlight illumination in front of the user; voice control","prot":0,"rad":0,"source":"CSC"},
   {"name":"Life Support Belt, Basic","tl":10,"kg":2,"cost":"Cr3000","effect":"1 hour life support","prot":0,"rad":0,"source":"CSC"},
   {"name":"Life Support Belt, Improved","tl":12,"kg":2,"cost":"Cr4000","effect":"2 hours life support","prot":0,"rad":0,"source":"CSC"},
   {"name":"Life Support Belt, Advanced","tl":15,"kg":1,"cost":"Cr5000","effect":"2 hours life support; up to 3 wearable","prot":0,"rad":0,"source":"CSC"},
