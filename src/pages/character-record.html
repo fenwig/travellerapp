@@ -183,6 +183,22 @@
     .mod-actions .add-row-btn { margin-top: 0; }
     .pro-cell { display: flex; align-items: center; gap: 4px; }
     .mod-bonus { font-size: 0.68rem; color: #00ffaa; font-weight: 600; white-space: nowrap; }
+    /* Ammunition subline under weapons */
+    .mag-row td { border-bottom: 1px solid rgba(10,74,96,0.3); padding-top: 0; }
+    .mag-cell { padding-left: 22px !important; }
+    .mag-cell > * { vertical-align: middle; }
+    .mag-cell label { font-size: 0.65rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 6px 0 14px; }
+    .mag-arrow { color: #4a9ab8; }
+    .mag-size { color: #4a9ab8; font-size: 0.78rem; margin-left: 6px; }
+    .mag-cell .stepper { display: inline-flex; align-items: center; gap: 3px; }
+    .mag-cell .stepper input[type=number] { width: 64px; margin: 0; padding: 3px 8px; text-align: center; font-size: 0.9rem; -moz-appearance: textfield; }
+    .mag-cell .stepper input[type=number]::-webkit-inner-spin-button,
+    .mag-cell .stepper input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .stepper-btns { display: flex; flex-direction: column; gap: 1px; }
+    .stepper-btn { background: transparent; border: 1px solid #00e5ff; color: #00e5ff; font-size: 0.55rem; line-height: 1; padding: 0 3px; cursor: pointer; border-radius: 2px; }
+    .stepper-btn:hover { background: rgba(0,229,255,0.12); }
+    .mag-reload { margin-left: 16px; }
+    .mag-reload:disabled { opacity: 0.4; cursor: not-allowed; }
     .sw-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
     .sw-actions .add-row-btn { margin-top: 0; }
     .sw-catalogue { width: auto; max-width: 200px; background: #080d12; border: 1px dashed #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 5px 8px; font-size: 0.78rem; }
@@ -1371,15 +1387,16 @@ function renderWeapons(rows) {
         <td><input type="number" value="${r.kg}" placeholder="0" step="0.01" style="width:55px" /></td>
         <td><input type="number" value="${r.magazine??''}" placeholder="Mag" style="width:50px" /></td>
         <td><input value="${escapeHtml(r.traits||'')}" placeholder="Traits" /></td>
-        <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingWeapons','${r.id}',this)">✕</button></td>
-      </tr>`).join('')
+        <td class="td-actions edit-only"><button class="skill-remove" onclick="removeWeaponRow('${r.id}',this)">✕</button></td>
+      </tr>${(r.magazine > 0) ? magRowHtml(r) : ''}`).join('')
     : none(8);
+  document.querySelectorAll('#weapons-tbody tr.mag-row').forEach(refreshReloadBtn);
 }
 
 function addWeaponRow(p) {
   p = p || {};
   const tbody = document.getElementById('weapons-tbody');
-  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  if (tbody.querySelector('.none-row')) tbody.innerHTML = '';
   const tr = document.createElement('tr');
   tr.dataset.id = 'new-' + Date.now();
   tr.innerHTML = `
@@ -1393,6 +1410,81 @@ function addWeaponRow(p) {
     <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
   tbody.appendChild(tr);
   pendingWeapons.push({ action: 'add', tr });
+}
+
+function removeWeaponRow(id, btn) {
+  pendingWeapons.push({ action: 'delete', id });
+  const ammo = document.querySelector(`#weapons-tbody tr.mag-row[data-for="${id}"]`);
+  if (ammo) ammo.remove();
+  btn.closest('tr').remove();
+}
+
+// ── Ammunition (subline under weapons that have a magazine size) ──
+// These three numbers save the moment they change, with no Edit/Save needed.
+function magRowHtml(r) {
+  const size = r.magazine;
+  const cur = Math.min(size, r.current_mag ?? size);
+  const stepper = (field, val) => `
+    <span class="stepper">
+      <input type="number" min="0" ${field === 'current_mag' ? `max="${size}"` : ''} value="${val}" data-field="${field}"
+             onchange="setAmmo('${r.id}','${field}',this.value)" />
+      <span class="stepper-btns">
+        <button type="button" class="stepper-btn" onclick="stepAmmo('${r.id}','${field}',1)">▲</button>
+        <button type="button" class="stepper-btn" onclick="stepAmmo('${r.id}','${field}',-1)">▼</button>
+      </span>
+    </span>`;
+  return `<tr class="mag-row" data-for="${r.id}" data-size="${size}"><td colspan="8" class="mag-cell">
+      <span class="mag-arrow">↳</span>
+      <label>Current Mag</label>${stepper('current_mag', cur)}<span class="mag-size">/ ${size}</span>
+      <label>Mags Equipped</label>${stepper('mags_equipped', r.mags_equipped || 0)}
+      <label>Additional Mags</label>${stepper('mags_additional', r.mags_additional || 0)}
+      <button type="button" class="btn-small mag-reload" onclick="reloadWeapon('${r.id}')">Reload</button>
+    </td></tr>`;
+}
+
+function ammoRow(id) {
+  return document.querySelector(`#weapons-tbody tr.mag-row[data-for="${id}"]`);
+}
+
+function ammoInput(row, field) {
+  return row.querySelector(`input[data-field="${field}"]`);
+}
+
+function refreshReloadBtn(row) {
+  const size = parseInt(row.dataset.size) || 0;
+  const cur = parseInt(ammoInput(row, 'current_mag').value) || 0;
+  const eq = parseInt(ammoInput(row, 'mags_equipped').value) || 0;
+  const btn = row.querySelector('.mag-reload');
+  btn.disabled = eq < 1 || cur >= size;
+  btn.title = eq < 1 ? 'No mags equipped' : cur >= size ? 'Magazine is already full' : 'Swap in a fresh magazine';
+}
+
+function setAmmo(id, field, value) {
+  const row = ammoRow(id);
+  if (!row) return;
+  const size = parseInt(row.dataset.size) || 0;
+  let v = Math.max(0, parseInt(value) || 0);
+  if (field === 'current_mag') v = Math.min(size, v);
+  ammoInput(row, field).value = v;
+  refreshReloadBtn(row);
+  supabaseClient.from('character_weapons').update({ [field]: v }).eq('id', id)
+    .then(({ error }) => { if (error) console.error('character_weapons ammo update failed:', error.message); });
+}
+
+function stepAmmo(id, field, delta) {
+  const row = ammoRow(id);
+  if (!row) return;
+  setAmmo(id, field, (parseInt(ammoInput(row, field).value) || 0) + delta);
+}
+
+// Reload: fresh full magazine, one fewer equipped mag. Needs a mag on the body.
+function reloadWeapon(id) {
+  const row = ammoRow(id);
+  if (!row) return;
+  const eq = parseInt(ammoInput(row, 'mags_equipped').value) || 0;
+  if (eq < 1) return;
+  setAmmo(id, 'mags_equipped', eq - 1);
+  setAmmo(id, 'current_mag', parseInt(row.dataset.size) || 0);
 }
 
 // ── Gear catalogue picker (data in js/gear-data.js) ──
