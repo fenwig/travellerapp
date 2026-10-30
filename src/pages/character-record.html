@@ -153,7 +153,7 @@
     .software-row { display: grid; grid-template-columns: 1fr 50px 40px 1.6fr 60px 20px; gap: 6px; align-items: center; padding: 1px 0; font-size: 0.74rem; line-height: 1.2; color: #b0d8e8; }
     .software-comments { font-size: 0.7rem; color: #4a9ab8; min-width: 0; }
     /* main.css gives every number input / select a 12px bottom margin, which pushes them out of line with text inputs */
-    .gear-table input, .gear-table select, .software-row input, .computer-field input, .sw-catalogue { margin-bottom: 0; }
+    .gear-table input, .gear-table select, .software-row input, .computer-field input { margin-bottom: 0; }
     /* Equipment: narrow Item column so Effect gets the room */
     .equip-table { table-layout: fixed; }
     .equip-table th:nth-child(1) { width: 170px; }
@@ -192,7 +192,16 @@
     .mag-reload:disabled { opacity: 0.4; cursor: not-allowed; }
     .sw-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
     .sw-actions .add-row-btn { margin-top: 0; }
-    .sw-catalogue { width: auto; max-width: 200px; background: #080d12; border: 1px dashed #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 5px 8px; font-size: 0.78rem; }
+    .cat-picker { border: 1px solid #0a4a60; border-radius: 4px; background: rgba(8,13,18,0.9); padding: 10px; margin-top: 8px; }
+    body:not(.editing) .cat-picker { display: none !important; }
+    .cat-picker-bar { display: flex; gap: 8px; margin-bottom: 8px; }
+    .cat-picker-bar input, .cat-picker-bar select { margin-bottom: 0; background: #080d12; border: 1px solid #0a4a60; color: #b0d8e8; border-radius: 4px; padding: 5px 8px; font-size: 0.82rem; width: auto; }
+    .cat-picker-bar input { flex: 1; }
+    .cat-picker-list { max-height: 260px; overflow-y: auto; }
+    .cat-item { display: flex; justify-content: space-between; gap: 12px; padding: 5px 8px; cursor: pointer; border-bottom: 1px solid rgba(10,74,96,0.3); font-size: 0.82rem; }
+    .cat-item:hover { background: rgba(0,229,255,0.08); }
+    .cat-item-name { color: #00e5ff; white-space: nowrap; }
+    .cat-item-meta { color: #4a9ab8; font-size: 0.75rem; text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .software-row input[type="text"], .software-row input[type="number"] { width: 100%; background: transparent; border: none; border-bottom: 1px solid #0a4a60; color: #b0d8e8; font-size: 0.74rem; outline: none; box-sizing: border-box; padding: 0; }
     .btn-small { background: transparent; border: 1px solid #0a4a60; color: #4a9ab8; border-radius: 3px; padding: 0 7px; font-size: 0.64rem; font-weight: 700; cursor: pointer; line-height: 1.5; }
     .btn-small:hover { border-color: #00e5ff; color: #00e5ff; }
@@ -441,10 +450,9 @@
             </table>
             <div class="sw-actions">
               <button class="add-row-btn edit-only" onclick="addArmourRow()">+ Add Armour</button>
-              <select id="armour-catalogue" class="edit-only sw-catalogue" onchange="addGearFromCatalogue('armour',this)">
-                <option value="">+ From Catalogue…</option>
-              </select>
+              <button class="add-row-btn edit-only" onclick="togglePicker('armour')">+ From Catalogue</button>
             </div>
+            <div id="pk-armour" class="cat-picker" style="display:none"></div>
           </div>
 
           <div class="cr-section">
@@ -459,10 +467,9 @@
             </table>
             <div class="sw-actions">
               <button class="add-row-btn edit-only" onclick="addWeaponRow()">+ Add Weapon</button>
-              <select id="weapons-catalogue" class="edit-only sw-catalogue" onchange="addGearFromCatalogue('weapons',this)">
-                <option value="">+ From Catalogue…</option>
-              </select>
+              <button class="add-row-btn edit-only" onclick="togglePicker('weapons')">+ From Catalogue</button>
             </div>
+            <div id="pk-weapons" class="cat-picker" style="display:none"></div>
           </div>
 
           <div class="cr-section">
@@ -473,10 +480,9 @@
             </table>
             <div class="sw-actions">
               <button class="add-row-btn edit-only" onclick="addEquipmentRow()">+ Add Equipment</button>
-              <select id="equipment-catalogue" class="edit-only sw-catalogue" onchange="addEquipmentFromCatalogue(this)">
-                <option value="">+ From Catalogue…</option>
-              </select>
+              <button class="add-row-btn edit-only" onclick="togglePicker('equipment')">+ From Catalogue</button>
             </div>
+            <div id="pk-equipment" class="cat-picker" style="display:none"></div>
           </div>
 
         </div>
@@ -497,10 +503,9 @@
             </table>
             <div class="sw-actions">
               <button class="add-row-btn edit-only" onclick="addCommsRow()">+ Add Comms</button>
-              <select id="comms-catalogue" class="edit-only sw-catalogue" onchange="addCommsFromCatalogue(this)">
-                <option value="">+ From Catalogue…</option>
-              </select>
+              <button class="add-row-btn edit-only" onclick="togglePicker('comms')">+ From Catalogue</button>
             </div>
+            <div id="pk-comms" class="cat-picker" style="display:none"></div>
           </div>
 
           <div class="cr-section">
@@ -522,10 +527,9 @@
             </table>
             <div class="sw-actions">
               <button class="add-row-btn edit-only" onclick="addAugmentRow()">+ Add Augment</button>
-              <select id="augment-catalogue" class="edit-only sw-catalogue" onchange="addAugmentFromCatalogue(this)">
-                <option value="">+ From Catalogue…</option>
-              </select>
+              <button class="add-row-btn edit-only" onclick="togglePicker('augments')">+ From Catalogue</button>
             </div>
+            <div id="pk-augments" class="cat-picker" style="display:none"></div>
           </div>
 
         </div>
@@ -1251,9 +1255,11 @@ function modsRowHtml(armourId, mods) {
       <div class="mod-list"><div class="mod-head"><span></span><span>Modification</span><span>TL</span><span>Kg</span><span>Effect</span><span></span></div>${mods.map(modLineHtml).join('')}</div>
       <div class="mod-actions edit-only">
         <button class="add-row-btn" onclick="addModLine('${armourId}')">+ Add Mod</button>
-        <select class="sw-catalogue" onchange="addModFromCatalogue('${armourId}',this)">${modCatalogueOptions()}</select>
-        <select class="sw-catalogue" onchange="addModFromCatalogue('${armourId}',this,'bd')">${modCatalogueOptions('bd')}</select>
+        <button class="add-row-btn" onclick="togglePicker('mods','${armourId}')">+ Mod from Catalogue</button>
+        <button class="add-row-btn" onclick="togglePicker('bdmods','${armourId}')">+ Battle Dress Mod</button>
       </div>
+      <div id="pk-mods-${armourId}" class="cat-picker" style="display:none"></div>
+      <div id="pk-bdmods-${armourId}" class="cat-picker" style="display:none"></div>
     </td></tr>`;
 }
 
@@ -1268,16 +1274,6 @@ function modLineHtml(m) {
     </div>`;
 }
 
-const _modOptions = {};
-function modCatalogueOptions(which) {
-  const bd = which === 'bd';
-  if (!_modOptions[which || 'gen']) {
-    const list = bd ? GEAR_BATTLE_DRESS_MODS : GEAR_ARMOUR_MODS;
-    _modOptions[which || 'gen'] = `<option value="">${bd ? '+ Battle Dress Mod…' : '+ Mod from Catalogue…'}</option>` +
-      list.map((m, i) => `<option value="${i}">${escapeHtml(m.name)} — TL${m.tl}</option>`).join('');
-  }
-  return _modOptions[which || 'gen'];
-}
 
 function modsRowFor(armourId) {
   return document.querySelector(`#armour-tbody tr.mods-row[data-for="${armourId}"]`);
@@ -1292,11 +1288,6 @@ function addModLine(armourId, p) {
   refreshArmourBonuses(armourId);
 }
 
-function addModFromCatalogue(armourId, sel, which) {
-  const i = sel.value;
-  sel.value = '';
-  if (i !== '') addModLine(armourId, (which === 'bd' ? GEAR_BATTLE_DRESS_MODS : GEAR_ARMOUR_MODS)[i]);
-}
 
 function removeModLine(btn) {
   const line = btn.closest('.mod-line');
@@ -1485,25 +1476,102 @@ function reloadWeapon(id) {
 }
 
 // ── Weapons / armour catalogue dropdowns (data in js/gear-data.js) ──
-function fillGearCatalogue(kind) {
-  const list = kind === 'weapons' ? GEAR_WEAPONS : GEAR_ARMOUR;
-  const groups = {};
-  list.forEach((it, i) => (groups[it.category] = groups[it.category] || []).push({ it, i }));
-  const label = it => kind === 'weapons'
-    ? [it.name, [it.tl != null ? 'TL' + it.tl : '', it.damage, it.range].filter(Boolean).join(', ')].filter(Boolean).join(' — ')
-    : it.name + ' — ' + [it.tl != null ? 'TL' + it.tl : '', 'PRO +' + it.protection].filter(Boolean).join(', ') + (it.source === 'CSC' ? ' (CSC)' : '');
-  document.getElementById(kind + '-catalogue').insertAdjacentHTML('beforeend',
-    Object.keys(groups).map(g => `<optgroup label="${g}">${groups[g].map(({ it, i }) =>
-      `<option value="${i}">${escapeHtml(label(it))}</option>`).join('')}</optgroup>`).join(''));
-}
-fillGearCatalogue('armour');
-fillGearCatalogue('weapons');
 
-function addGearFromCatalogue(kind, sel) {
-  const i = sel.value;
-  sel.value = '';
-  if (i === '') return;
-  if (kind === 'weapons') addWeaponRow(GEAR_WEAPONS[i]); else addArmourRow(GEAR_ARMOUR[i]);
+
+// ── Catalogue pickers (data in js/gear-data.js) ──
+// One search-panel picker used by every "+ From Catalogue" button: type to search,
+// optional type filter, ✕ (or the button again) to close. The panel stays open so
+// several items can be added in a row.
+const PICKERS = {
+  armour: {
+    items: () => GEAR_ARMOUR, group: 'category',
+    meta: it => [it.tl != null ? 'TL' + it.tl : '', 'PRO +' + it.protection + (it.conditions ? ' (' + it.conditions + ')' : ''), it.options, it.skill, it.cost, it.source],
+    text: it => it.name + ' ' + (it.conditions || '') + ' ' + (it.options || ''),
+    pick: it => addArmourRow(it)
+  },
+  weapons: {
+    items: () => GEAR_WEAPONS, group: 'category',
+    meta: it => [it.tl != null ? 'TL' + it.tl : '', it.damage, it.range, it.cost],
+    text: it => it.name + ' ' + (it.traits || ''),
+    pick: it => addWeaponRow(it)
+  },
+  equipment: {
+    items: () => GEAR_EQUIPMENT, group: 'group',
+    meta: it => ['TL' + it.tl, it.kg != null ? it.kg + 'kg' : ''],
+    text: it => it.name,
+    pick: it => addEquipmentRow(it)
+  },
+  augments: {
+    items: () => GEAR_AUGMENTS, group: null,
+    meta: it => [it.improvement, 'TL' + it.tl, it.cost],
+    text: it => it.name + ' ' + it.improvement,
+    pick: it => addAugmentRow(it)
+  },
+  comms: {
+    items: () => GEAR_COMMS, group: 'name',
+    meta: it => ['TL' + it.tl, it.mass != null ? it.mass + 'kg' : '', it.range !== '--' ? it.range : '', it.features],
+    text: it => it.name + ' ' + (it.features || ''),
+    pick: it => addCommsRow(it)
+  },
+  software: {
+    items: () => GEAR_SOFTWARE, group: 'group',
+    meta: it => ['BW ' + it.bw, 'TL' + it.tl, it.cost, it.effect],
+    text: it => it.name + ' ' + (it.effect || ''),
+    pick: (it, ctx) => addSoftwareRow(ctx, it)
+  },
+  mods: {
+    items: () => GEAR_ARMOUR_MODS, group: null,
+    meta: it => ['TL' + it.tl, it.kg != null ? it.kg + 'kg' : '', it.cost, it.effect],
+    text: it => it.name + ' ' + (it.effect || ''),
+    pick: (it, ctx) => addModLine(ctx, it)
+  },
+  bdmods: {
+    items: () => GEAR_BATTLE_DRESS_MODS, group: null,
+    meta: it => ['TL' + it.tl, it.cost, it.effect],
+    text: it => it.name + ' ' + (it.effect || ''),
+    pick: (it, ctx) => addModLine(ctx, it)
+  }
+};
+
+function pickerUid(kind, ctx) { return kind + (ctx ? '-' + ctx : ''); }
+
+function togglePicker(kind, ctx) {
+  const uid = pickerUid(kind, ctx);
+  const box = document.getElementById('pk-' + uid);
+  if (!box) return;
+  if (box.style.display !== 'none') { box.style.display = 'none'; return; }
+  const cfg = PICKERS[kind];
+  const cats = cfg.group ? [...new Set(cfg.items().map(x => x[cfg.group]))] : [];
+  box.dataset.kind = kind;
+  box.dataset.ctx = ctx || '';
+  box.innerHTML = `<div class="cat-picker-bar">
+      <input id="pk-q-${uid}" placeholder="Search…" oninput="renderPicker('${uid}')" />
+      ${cats.length ? `<select id="pk-c-${uid}" onchange="renderPicker('${uid}')"><option value="">All types</option>${cats.map(c => `<option>${escapeHtml(c)}</option>`).join('')}</select>` : ''}
+      <button class="skill-remove" title="Close" onclick="togglePicker('${kind}'${ctx ? `,'${ctx}'` : ''})">✕</button>
+    </div><div class="cat-picker-list" id="pk-l-${uid}"></div>`;
+  box.style.display = 'block';
+  renderPicker(uid);
+  document.getElementById('pk-q-' + uid).focus();
+}
+
+function renderPicker(uid) {
+  const box = document.getElementById('pk-' + uid);
+  const cfg = PICKERS[box.dataset.kind];
+  const q = document.getElementById('pk-q-' + uid).value.trim().toLowerCase();
+  const cEl = document.getElementById('pk-c-' + uid);
+  const cat = cEl ? cEl.value : '';
+  const hits = cfg.items().map((it, i) => ({ it, i })).filter(({ it }) =>
+    (!cat || it[cfg.group] === cat) && (!q || cfg.text(it).toLowerCase().includes(q)));
+  document.getElementById('pk-l-' + uid).innerHTML = hits.length ? hits.map(({ it, i }) => {
+    const meta = cfg.meta(it).filter(Boolean).join(' · ');
+    return `<div class="cat-item" title="${escapeHtml(meta)}" onclick="pickFromCatalogue('${uid}',${i})"><span class="cat-item-name">${escapeHtml(it.name)}</span><span class="cat-item-meta">${escapeHtml(meta)}</span></div>`;
+  }).join('') : '<div style="color:#4a9ab8;font-size:0.82rem;padding:6px">No matches</div>';
+}
+
+function pickFromCatalogue(uid, i) {
+  const box = document.getElementById('pk-' + uid);
+  const cfg = PICKERS[box.dataset.kind];
+  cfg.pick(cfg.items()[i], box.dataset.ctx);
 }
 
 // The improvement text drives the stat/armour bonus: "STR +2" raises STR by 2,
@@ -1551,11 +1619,6 @@ function addAugmentRow(p) {
   pendingAugments.push({ action: 'add', tr });
 }
 
-function addAugmentFromCatalogue(sel) {
-  const i = sel.value;
-  sel.value = '';
-  if (i !== '') addAugmentRow(GEAR_AUGMENTS[i]);
-}
 
 // ── Communications (Tech tab) ──
 function renderComms(rows) {
@@ -1588,21 +1651,8 @@ function addCommsRow(p) {
   pendingComms.push({ action: 'add', tr });
 }
 
-function addCommsFromCatalogue(sel) {
-  const i = sel.value;
-  sel.value = '';
-  if (i !== '') addCommsRow(GEAR_COMMS[i]);
-}
 
-(function fillCommsCatalogue() {
-  document.getElementById('comms-catalogue').insertAdjacentHTML('beforeend',
-    GEAR_COMMS.map((c, i) => `<option value="${i}">${escapeHtml(c.name)} — TL${c.tl}${c.mass != null ? ', ' + c.mass + 'kg' : ''}${c.range !== '--' ? ', ' + escapeHtml(c.range) : ''}${c.features ? ', ' + escapeHtml(c.features.split(';')[0]) : ''}</option>`).join(''));
-})();
 
-(function fillAugmentCatalogue() {
-  document.getElementById('augment-catalogue').insertAdjacentHTML('beforeend',
-    GEAR_AUGMENTS.map((a, i) => `<option value="${i}">${escapeHtml(a.name)} — ${escapeHtml(a.improvement)}, TL${a.tl}</option>`).join(''));
-})();
 
 function renderEquipment(rows) {
   document.getElementById('equipment-tbody').innerHTML = rows.length
@@ -1632,19 +1682,7 @@ function addEquipmentRow(p) {
   pendingEquipment.push({ action: 'add', tr });
 }
 
-function addEquipmentFromCatalogue(sel) {
-  const i = sel.value;
-  sel.value = '';
-  if (i !== '') addEquipmentRow(GEAR_EQUIPMENT[i]);
-}
 
-(function fillEquipmentCatalogue() {
-  const groups = {};
-  GEAR_EQUIPMENT.forEach((e, i) => (groups[e.group] = groups[e.group] || []).push({ e, i }));
-  document.getElementById('equipment-catalogue').insertAdjacentHTML('beforeend',
-    Object.keys(groups).map(g => `<optgroup label="${g}">${groups[g].map(({ e, i }) =>
-      `<option value="${i}">${escapeHtml(e.name)} — TL${e.tl}${e.kg != null ? ', ' + e.kg + 'kg' : ''}</option>`).join('')}</optgroup>`).join(''));
-})();
 
 function queueDelete(pendingArr, id, btn) {
   window[pendingArr].push({ action: 'delete', id });
@@ -1742,21 +1780,7 @@ function softwareRowHtml(computerId, s) {
     </div>`;
 }
 
-function addSoftwareFromCatalogue(computerId, sel) {
-  const i = sel.value;
-  sel.value = '';
-  if (i !== '') addSoftwareRow(computerId, GEAR_SOFTWARE[i]);
-}
 
-function softwareCatalogueSelect(computerId) {
-  const groups = {};
-  GEAR_SOFTWARE.forEach((s, i) => (groups[s.group] = groups[s.group] || []).push({ s, i }));
-  return `<select class="edit-only sw-catalogue" onchange="addSoftwareFromCatalogue('${computerId}',this)">
-    <option value="">+ From Catalogue…</option>
-    ${Object.keys(groups).map(g => `<optgroup label="${g}">${groups[g].map(({ s, i }) =>
-      `<option value="${i}">${escapeHtml(s.name)} — BW ${s.bw}, TL${s.tl}</option>`).join('')}</optgroup>`).join('')}
-  </select>`;
-}
 
 function renderSoftwareList(computerId) {
   const rows = techSoftware[computerId] || [];
@@ -1804,8 +1828,9 @@ function renderComputerCard(c) {
       <div id="sw-${c.id}" style="display:grid;gap:1px">${renderSoftwareList(c.id)}</div>
       <div class="sw-actions">
         <button class="add-row-btn edit-only" onclick="addSoftwareRow('${c.id}')">+ Add Software</button>
-        ${softwareCatalogueSelect(c.id)}
+        <button class="add-row-btn edit-only" onclick="togglePicker('software','${c.id}')">+ From Catalogue</button>
       </div>
+      <div id="pk-software-${c.id}" class="cat-picker" style="display:none"></div>
     </div>`;
 }
 
