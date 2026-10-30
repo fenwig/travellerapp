@@ -84,18 +84,18 @@ const GEAR_WEAPONS = [
   {"name":"TDX","category":"Explosive","tl":12,"range":"","damage":"4D","kg":null,"mag":null,"traits":"Blast 15","cost":"Cr1,000","notes":"Gravity-polarised — explodes only along the horizontal axis"},
   {"name":"Chemical Charge","category":"Explosive","tl":6,"range":"","damage":"4D","kg":null,"mag":null,"traits":"Blast 3","cost":"Cr300","notes":"Two-polymer system — D3 round delay between mixing and detonation; concentrated blast"},
   {"name":"Pocket Nuke","category":"Explosive","tl":12,"range":"","damage":"6DD","kg":null,"mag":null,"traits":"Blast 1000, Radiation","cost":"Cr250,000","notes":"Briefcase-sized — too large for grenade launchers. Illegal almost everywhere. Multiple units don't stack Damage or Blast."},
-  {"name":"Frag","category":"Grenade","tl":6,"range":"","damage":"5D","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr30","notes":"shrapnel, kills and cripples in area"},
-  {"name":"Stun","category":"Grenade","tl":7,"range":"","damage":"3D","kg":null,"mag":null,"traits":"Stun, Blast 9","cost":"Cr30","notes":"incapacitates rather than kills"},
-  {"name":"Smoke","category":"Grenade","tl":6,"range":"","damage":"","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr15","notes":"DM-2 to all attacks through cloud; IR vision bypasses it; lasts 1D×3 rounds"},
-  {"name":"Thermal Smoke","category":"Grenade","tl":7,"range":"","damage":"","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr30","notes":"DM-2 to attacks; hot particles also block IR vision"},
-  {"name":"Incendiary","category":"Grenade","tl":6,"range":"","damage":"4D","kg":null,"mag":null,"traits":"Fire trait","cost":"Cr30","notes":"fuel mixture ignites and continues burning"},
-  {"name":"Plasma","category":"Grenade","tl":10,"range":"","damage":"8D","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr50","notes":"microsecond burst of pure energy; vaporises targets"},
-  {"name":"EMP","category":"Grenade","tl":9,"range":"","damage":"","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr100","notes":"shuts down unshielded electronics for 1D minutes; permanently fries electronics 2+ TL lower"},
-  {"name":"Aerosol","category":"Grenade","tl":9,"range":"","damage":"","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr15","notes":"diffuses laser attacks (–10 damage through cloud); blocks laser comms; lasts 1D×3 rounds"},
-  {"name":"Chemical (incapacitating)","category":"Grenade","tl":7,"range":"","damage":"1D Stun","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr40","notes":"gas cloud; END check (10+) each round without sealed suit or respirator"},
-  {"name":"Chemical (lethal)","category":"Grenade","tl":8,"range":"","damage":"1D","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr60","notes":"gas cloud; lethal toxin, END check (12+). Banned at Law Level 1+."},
-  {"name":"Tranq Gas","category":"Grenade","tl":8,"range":"","damage":"","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr40","notes":"gas cloud; END check (10+) or unconscious each round without sealed suit"},
-  {"name":"Neurotoxin","category":"Grenade","tl":9,"range":"","damage":"1D INT","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr75","notes":"neurological damage; END check (12+). Banned at Law Level 1+."}
+  {"name":"Frag Grenade","category":"Grenade","tl":6,"range":"","damage":"5D","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr30","notes":"shrapnel, kills and cripples in area"},
+  {"name":"Stun Grenade","category":"Grenade","tl":7,"range":"","damage":"3D","kg":null,"mag":null,"traits":"Stun, Blast 9","cost":"Cr30","notes":"incapacitates rather than kills"},
+  {"name":"Smoke Grenade","category":"Grenade","tl":6,"range":"","damage":"","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr15","notes":"DM-2 to all attacks through cloud; IR vision bypasses it; lasts 1D×3 rounds"},
+  {"name":"Thermal Smoke Grenade","category":"Grenade","tl":7,"range":"","damage":"","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr30","notes":"DM-2 to attacks; hot particles also block IR vision"},
+  {"name":"Incendiary Grenade","category":"Grenade","tl":6,"range":"","damage":"4D","kg":null,"mag":null,"traits":"Fire trait","cost":"Cr30","notes":"fuel mixture ignites and continues burning"},
+  {"name":"Plasma Grenade","category":"Grenade","tl":10,"range":"","damage":"8D","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr50","notes":"microsecond burst of pure energy; vaporises targets"},
+  {"name":"EMP Grenade","category":"Grenade","tl":9,"range":"","damage":"","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr100","notes":"shuts down unshielded electronics for 1D minutes; permanently fries electronics 2+ TL lower"},
+  {"name":"Aerosol Grenade","category":"Grenade","tl":9,"range":"","damage":"","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr15","notes":"diffuses laser attacks (–10 damage through cloud); blocks laser comms; lasts 1D×3 rounds"},
+  {"name":"Chemical Grenade (incapacitating)","category":"Grenade","tl":7,"range":"","damage":"1D Stun","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr40","notes":"gas cloud; END check (10+) each round without sealed suit or respirator"},
+  {"name":"Chemical Grenade (lethal)","category":"Grenade","tl":8,"range":"","damage":"1D","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr60","notes":"gas cloud; lethal toxin, END check (12+). Banned at Law Level 1+."},
+  {"name":"Tranq Gas Grenade","category":"Grenade","tl":8,"range":"","damage":"","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr40","notes":"gas cloud; END check (10+) or unconscious each round without sealed suit"},
+  {"name":"Neurotoxin Grenade","category":"Grenade","tl":9,"range":"","damage":"1D INT","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr75","notes":"neurological damage; END check (12+). Banned at Law Level 1+."}
 ];
 
 // Computer software (Core p.112). bw = Bandwidth, tl = Tech Level; effect text is paraphrased.
