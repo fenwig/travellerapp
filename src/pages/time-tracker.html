@@ -30,6 +30,9 @@
     .tt-log { font-size: 0.8rem; color: #4a9ab8; }
     .tt-log div { padding: 3px 0; border-bottom: 1px solid rgba(10,74,96,0.25); }
     .tt-log span { color: #b0d8e8; }
+    .tt-pay { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .tt-pay input { width: 90px; margin: 0; padding: 6px 8px; }
+    .tt-pay .btn-outline { width: auto; padding: 7px 14px; font-size: 0.82rem; }
     .tt-msg { color: #ff5a4a; font-size: 0.85rem; }
   </style>
 </head>
@@ -61,7 +64,7 @@
     const YEAR_DAYS = 365, PERIOD_DAYS = 28, START_YEAR = 1105;
     let currentUser = null, campaignId = null, campaignName = '';
     let T = null;          // the campaign_time row
-    let logRows = [], shipData = [];
+    let logRows = [], shipData = [], fund = 0;
 
     const absOf = (y, d) => y * YEAR_DAYS + (d - 1);
     const dateOf = a => ({ year: Math.floor(a / YEAR_DAYS), day: a % YEAR_DAYS + 1 });
@@ -104,18 +107,9 @@
     }
 
     async function loadShips() {
-      const { data: ships, error } = await supabaseClient.from('spacecraft').select('*').eq('campaign_id', campaignId).eq('status', 'active').order('name');
-      if (error) throw error;
-      shipData = await Promise.all((ships || []).map(async s => {
-        const [chars, hired, pass] = await Promise.all([
-          supabaseClient.from('characters').select('id').eq('onboard_ship_id', s.id).eq('status', 'active'),
-          supabaseClient.from('spacecraft_hired_crew').select('id').eq('spacecraft_id', s.id),
-          supabaseClient.from('spacecraft_passengers').select('*').eq('spacecraft_id', s.id)
-        ]);
-        const passengers = (pass.data || []).reduce((n, r) =>
-          n + (r.high_passage || 0) + (r.middle_passage || 0) + (r.basic_passage || 0) + (r.working_passage || 0) + (r.low_passage || 0), 0);
-        return { ship: s, ex: shipExpenses(s, { onboard: (chars.data || []).length, hired: (hired.data || []).length, passengers }) };
-      }));
+      shipData = await loadShipExpenses(campaignId);
+      const f = await supabaseClient.from('party_fund').select('balance').eq('campaign_id', campaignId);
+      fund = f.data && f.data[0] ? Number(f.data[0].balance) : 0;
     }
 
     function render() {
@@ -124,27 +118,20 @@
       const nextDue = T.last_paid_abs + PERIOD_DAYS;
       const allTotal = shipData.reduce((n, r) => n + r.ex.total, 0);
 
+      const paid = Number(T.period_paid) || 0, remaining = Math.max(0, allTotal - paid);
       let flag;
       if (due >= 1) {
         flag = `<div class="tt-flag"><b>MAINTENANCE PERIOD DUE${due > 1 ? ' — ' + due + ' PERIODS OVERDUE' : ''}</b>
-          <span>${due > 1 ? due + ' × ' + cr(allTotal) + ' = ' + cr(due * allTotal) + ' across all active ships. ' : cr(allTotal) + ' across all active ships. '}Pay it from the ship records, then mark it paid.</span>
-          <button class="btn-outline" onclick="markPaid()">Mark one period paid</button></div>`;
+          <span>This period: ${cr(allTotal)} across all active ships${paid ? ' · paid so far ' + cr(paid) + ' · still owing ' + cr(remaining) : ''}${due > 1 ? ' (' + (due - 1) + ' more period' + (due - 1 === 1 ? '' : 's') + ' after this)' : ''}. Party fund: <b>${cr(fund)}</b></span>
+          <span class="tt-pay">
+            <button class="btn-outline" onclick="payFull()">Pay full (${cr(remaining)})</button>
+            <input type="number" id="tt-part" placeholder="Cr" min="1" />
+            <button class="btn-outline" onclick="payPart()">Pay part</button>
+            <button class="btn-outline" style="opacity:.7" onclick="markPaid()" title="Close the period without taking any money from the fund">Mark paid (no payment)</button>
+          </span></div>`;
       } else {
-        flag = `<div class="tt-ok">Next maintenance period due <b style="color:#00e5ff">${fmtAbs(nextDue)}</b> — in ${nextDue - abs} day${nextDue - abs === 1 ? '' : 's'}.</div>`;
+        flag = `<div class="tt-ok">Next maintenance period due <b style="color:#00e5ff">${fmtAbs(nextDue)}</b> — in ${nextDue - abs} day${nextDue - abs === 1 ? '' : 's'}. Expected: ${cr(allTotal)} · Party fund: ${cr(fund)}${paid ? ' · already paid toward it: ' + cr(paid) : ''}</div>`;
       }
-
-      const rows = [['Mortgage Payment', 'mortgage'], ['Maintenance', 'maintenance'], ['Life Support', 'lifeSupport'],
-        ['Crew Salaries', 'salaries'], ['Berthing', 'berthing'], ['Other', 'other']];
-      const expenses = shipData.length ? `
-        <table class="tt-table">
-          <thead><tr><th>Expense (per 28-day period)</th>${shipData.map(r => '<th>' + esc(r.ship.name) + '</th>').join('')}${shipData.length > 1 ? '<th>All ships</th>' : ''}</tr></thead>
-          <tbody>
-            ${rows.map(([label, key]) => `<tr><td>${label}</td>${shipData.map(r => '<td>' + cr(r.ex[key]) + '</td>').join('')}${shipData.length > 1 ? '<td>' + cr(shipData.reduce((n, r) => n + r.ex[key], 0)) + '</td>' : ''}</tr>`).join('')}
-            <tr class="tt-total"><td>Total</td>${shipData.map(r => '<td>' + cr(r.ex.total) + '</td>').join('')}${shipData.length > 1 ? '<td>' + cr(allTotal) + '</td>' : ''}</tr>
-          </tbody>
-        </table>
-        <div class="tt-sub" style="margin-top:8px">Taken from each active ship's Finances tab. Fuel is not included.</div>`
-        : '<div class="tt-sub">There are no active spacecraft in this campaign. Set a ship to Active on the Roster.</div>';
 
       document.getElementById('tt-root').innerHTML = `
         <div class="calc-block" style="max-width:1100px">
@@ -168,9 +155,10 @@
         ${flag}
         <div class="calc-block" style="max-width:1100px">
           <div class="calc-block-title">Expenses — Active Ships</div>
-          ${expenses}
+          ${shipData.length ? '<div class="tt-date" style="font-size:1.4rem">' + cr(allTotal) + '</div><div class="tt-sub">per 28-day period across ' + shipData.length + ' active ship' + (shipData.length === 1 ? '' : 's') + '. The breakdown is on the <a href="campaign-finance.html" style="color:#00e5ff">Campaign Finance</a> page.</div>' : '<div class="tt-sub">There are no active spacecraft in this campaign.</div>'}
         </div>
         <div class="calc-block" style="max-width:1100px">
+          <div class="calc-block-title">Recent Changes</div>        <div class="calc-block" style="max-width:1100px">
           <div class="calc-block-title">Recent Changes</div>
           <div class="tt-log">${logRows.length ? logRows.map(l =>
             `<div>${new Date(l.created_at).toLocaleString()} — <span>${esc(l.user_name || 'someone')}</span>: ${esc(l.note)}${l.to_abs != null ? ' (now ' + fmtAbs(l.to_abs) + ')' : ''}</div>`).join('') : 'Nothing yet.'}</div>
@@ -218,10 +206,40 @@
     async function markPaid() {
       try { await fresh(); } catch (e) { alert(e.message); return; }
       const old = T.last_paid_abs;
-      const { error } = await supabaseClient.from('campaign_time').update({ last_paid_abs: old + PERIOD_DAYS }).eq('campaign_id', campaignId);
+      const { error } = await supabaseClient.from('campaign_time').update({ last_paid_abs: old + PERIOD_DAYS, period_paid: 0 }).eq('campaign_id', campaignId);
       if (error) { alert('Could not save: ' + error.message); return; }
       await logChange('Maintenance period marked paid (closed ' + fmtAbs(old + PERIOD_DAYS) + ')', curAbs(), curAbs());
       await loadAll();
+    }
+
+    // Pay the maintenance period out of the party fund. Paying the whole remainder closes the period.
+    async function spend(amount, closes) {
+      try { await fresh(); } catch (e) { alert(e.message); return; }
+      const label = fmtAbs(T.last_paid_abs + PERIOD_DAYS);
+      const { error } = await supabaseClient.rpc('party_apply', {
+        p_campaign: campaignId, p_kind: 'expense', p_category: 'Maintenance Period',
+        p_note: (closes ? 'Maintenance period paid' : 'Part-payment of the maintenance period') + ' (due ' + label + ')',
+        p_fund_delta: -amount, p_players: [], p_details: { period_due: label }
+      });
+      if (error) { alert(error.message); return; }
+      const upd = closes ? { last_paid_abs: T.last_paid_abs + PERIOD_DAYS, period_paid: 0 } : { period_paid: (Number(T.period_paid) || 0) + amount };
+      const { error: e2 } = await supabaseClient.from('campaign_time').update(upd).eq('campaign_id', campaignId);
+      if (e2) { alert('The money was taken from the fund but the period could not be updated: ' + e2.message); return; }
+      await logChange((closes ? 'Paid the maintenance period' : 'Part-paid the maintenance period') + ' — ' + cr(amount) + ' from the party fund', curAbs(), curAbs());
+      await loadAll();
+    }
+    const periodTotal = () => shipData.reduce((n, r) => n + r.ex.total, 0);
+    async function payFull() {
+      await fresh();
+      const remaining = Math.max(0, periodTotal() - (Number(T.period_paid) || 0));
+      await spend(remaining, true);
+    }
+    async function payPart() {
+      const a = Math.floor(parseFloat(document.getElementById('tt-part').value) || 0);
+      if (a <= 0) { alert('Enter the amount to pay.'); return; }
+      await fresh();
+      const remaining = Math.max(0, periodTotal() - (Number(T.period_paid) || 0));
+      await spend(Math.min(a, remaining), a >= remaining);
     }
 
     async function doSignOut() {
