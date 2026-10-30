@@ -172,7 +172,7 @@ const GEAR_COMMS = [
   {"name":"Mobile Comm","tl":6,"mass":null,"range":"--","features":"Audio only; planetary network"},
   {"name":"Mobile Comm","tl":8,"mass":null,"range":"--","features":"Audio and visual, Computer/0; planetary network"},
   {"name":"Mobile Comm","tl":10,"mass":null,"range":"--","features":"Multiple forms of data, Computer/1; planetary network"},
-  {"name":"Commdot","tl":10,"mass":null,"range":"--","features":"Hands-free mic/speaker relay to a linked comm; range a few metres"},
+  {"name":"Commdot","tl":10,"mass":null,"range":"--","features":"Hands-free mic/speaker relay to a linked comm"},
   {"name":"Bug","tl":5,"mass":null,"range":"--","features":"Audio only"},
   {"name":"Bug","tl":7,"mass":null,"range":"--","features":"Audio or Visual"},
   {"name":"Bug","tl":9,"mass":null,"range":"--","features":"Audio or Visual or Data"},
