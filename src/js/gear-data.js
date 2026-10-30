@@ -97,3 +97,31 @@ const GEAR_WEAPONS = [
   {"name":"Tranq Gas","category":"Grenade","tl":8,"range":"","damage":"","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr40","notes":"gas cloud; END check (10+) or unconscious each round without sealed suit"},
   {"name":"Neurotoxin","category":"Grenade","tl":9,"range":"","damage":"1D INT","kg":null,"mag":null,"traits":"Blast 9","cost":"Cr75","notes":"neurological damage; END check (12+). Banned at Law Level 1+."}
 ];
+
+// Computer software (Core p.112). bw = Bandwidth, tl = Tech Level; effect text is paraphrased.
+// Database is listed "--" for Bandwidth in the book; stored as 0. Cost varies with size.
+const GEAR_SOFTWARE = [
+  {"name":"Interface","group":"Interface","bw":0,"tl":7,"cost":"Included","effect":"Displays data."},
+  {"name":"Intelligent Interface","group":"Interface","bw":1,"tl":11,"cost":"Cr100","effect":"AI voice control and intelligent data display. Required to use Expert software."},
+  {"name":"Security/0","group":"Security","bw":0,"tl":8,"cost":"Included","effect":"Bypass needs an Average (8+) Electronics (computers) check."},
+  {"name":"Security/1","group":"Security","bw":1,"tl":10,"cost":"Cr200","effect":"Bypass needs a Difficult (10+) Electronics (computers) check."},
+  {"name":"Security/2","group":"Security","bw":2,"tl":11,"cost":"Cr1000","effect":"Bypass needs a Very Difficult (12+) Electronics (computers) check."},
+  {"name":"Security/3","group":"Security","bw":3,"tl":12,"cost":"Cr20000","effect":"Bypass needs a Formidable (14+) Electronics (computers) check."},
+  {"name":"Intrusion/1","group":"Intrusion","bw":1,"tl":10,"cost":"Cr1000","effect":"Aids hacking: DM+1. Often illegal."},
+  {"name":"Intrusion/2","group":"Intrusion","bw":2,"tl":11,"cost":"Cr10000","effect":"Aids hacking: DM+2. Often illegal."},
+  {"name":"Intrusion/3","group":"Intrusion","bw":3,"tl":13,"cost":"Cr100000","effect":"Aids hacking: DM+3. Often illegal."},
+  {"name":"Intrusion/4","group":"Intrusion","bw":4,"tl":15,"cost":"MCr1","effect":"Aids hacking: DM+4. Often illegal."},
+  {"name":"Expert/1","group":"Expert","bw":1,"tl":11,"cost":"Cr1000","effect":"Mimics a skill (name it here) at level 0. INT/EDU checks only; DM+1 if you already have the skill."},
+  {"name":"Expert/2","group":"Expert","bw":2,"tl":12,"cost":"Cr10000","effect":"Mimics a skill (name it here) at level 1. INT/EDU checks only; DM+1 if you already have the skill."},
+  {"name":"Expert/3","group":"Expert","bw":3,"tl":13,"cost":"Cr100000","effect":"Mimics a skill (name it here) at level 2. INT/EDU checks only; DM+1 if you already have the skill."},
+  {"name":"Translator/0","group":"Translator","bw":0,"tl":9,"cost":"Cr50","effect":"Near-real-time language translation."},
+  {"name":"Translator/1","group":"Translator","bw":1,"tl":10,"cost":"Cr500","effect":"Real-time translation with a good grasp of nuance."},
+  {"name":"Database","group":"Database","bw":0,"tl":7,"cost":"Cr10–Cr10000","effect":"Store of information on one topic, searched with Electronics (computers) or an Agent. Cost varies with size."},
+  {"name":"Agent/0","group":"Agent","bw":0,"tl":11,"cost":"Cr500","effect":"Carries out assigned tasks with Electronics (computers) 0."},
+  {"name":"Agent/1","group":"Agent","bw":1,"tl":12,"cost":"Cr2000","effect":"Carries out assigned tasks with Electronics (computers) 1."},
+  {"name":"Agent/2","group":"Agent","bw":2,"tl":13,"cost":"Cr100000","effect":"Carries out assigned tasks with Electronics (computers) 2."},
+  {"name":"Agent/3","group":"Agent","bw":3,"tl":14,"cost":"Cr250000","effect":"Carries out assigned tasks with Electronics (computers) 3."},
+  {"name":"Intellect/1","group":"Intellect","bw":1,"tl":12,"cost":"Cr2000","effect":"Improved Agent; can run Expert packages. Uses 1 skill at a time."},
+  {"name":"Intellect/2","group":"Intellect","bw":2,"tl":13,"cost":"Cr50000","effect":"Improved Agent; can run Expert packages. Uses up to 2 skills at once."},
+  {"name":"Intellect/3","group":"Intellect","bw":3,"tl":14,"cost":"Cr200000","effect":"Improved Agent; can run Expert packages. Uses up to 3 skills at once."}
+];
