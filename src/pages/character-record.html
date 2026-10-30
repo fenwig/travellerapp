@@ -435,7 +435,7 @@
           <div class="cr-section">
             <div class="cr-section-title">Equipment</div>
             <table class="gear-table">
-              <thead><tr><th>Item</th><th class="col-narrow">TL</th><th class="col-narrow">Kg</th><th class="edit-only"></th></tr></thead>
+              <thead><tr><th>Item</th><th class="col-narrow">TL</th><th class="col-narrow">Kg</th><th>Effect</th><th class="edit-only"></th></tr></thead>
               <tbody id="equipment-tbody"></tbody>
             </table>
             <div class="sw-actions">
@@ -1390,9 +1390,10 @@ function renderEquipment(rows) {
         <td><input value="${escapeHtml(r.type||'')}" placeholder="Item" /></td>
         <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
         <td><input type="number" value="${r.mass??''}" placeholder="0" step="0.01" style="width:70px" /></td>
+        <td><input value="${escapeHtml(r.effect||'')}" placeholder="Effect" /></td>
         <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingEquipment','${r.id}',this)">✕</button></td>
       </tr>`).join('')
-    : none(4);
+    : none(5);
 }
 
 function addEquipmentRow(p) {
@@ -1405,6 +1406,7 @@ function addEquipmentRow(p) {
     <td><input placeholder="Item" value="${escapeHtml(p.name||'')}" /></td>
     <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
     <td><input type="number" placeholder="0" step="0.01" value="${p.kg??''}" style="width:70px" /></td>
+    <td><input placeholder="Effect" value="${escapeHtml(p.effect||'')}" /></td>
     <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
   tbody.appendChild(tr);
   pendingEquipment.push({ action: 'add', tr });
@@ -2084,7 +2086,8 @@ async function saveAll() {
       const id = tr.dataset.id; if (!id) continue;
       const i = tr.querySelectorAll('input');
       await supabaseClient.from('character_equipment').update({
-        type: i[0].value, tl: parseInt(i[1].value)||null, mass: parseFloat(i[2].value)||0
+        type: i[0].value, tl: parseInt(i[1].value)||null, mass: parseFloat(i[2].value)||0,
+        effect: i[3].value||null
       }).eq('id', id);
     }
     for (const p of pendingEquipment) {
@@ -2092,7 +2095,8 @@ async function saveAll() {
       else {
         const i = p.tr.querySelectorAll('input');
         if (i[0].value) await supabaseClient.from('character_equipment').insert({
-          character_id: character.id, type: i[0].value, tl: parseInt(i[1].value)||null, mass: parseFloat(i[2].value)||0
+          character_id: character.id, type: i[0].value, tl: parseInt(i[1].value)||null, mass: parseFloat(i[2].value)||0,
+          effect: i[3].value||null
         });
       }
     }
