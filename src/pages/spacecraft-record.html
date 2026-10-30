@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../css/reference.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/supabase-config.js"></script>
+  <script src="../js/export-import.js"></script>
   <style>
     /* ── Header ── */
     .ship-header { display:flex; align-items:flex-start; gap:24px; background:rgba(13,21,32,0.92); border:1px solid #0a4a60; border-radius:8px; padding:20px 24px; margin-bottom:18px; flex-wrap:wrap; }
@@ -267,7 +268,10 @@
               <option value="other">Other</option>
             </select>
           </div>
-          <button class="btn btn-ghost view-only" id="edit-btn" onclick="enterEditMode()" style="display:none">Edit</button>
+          <div class="view-only" style="display:flex;flex-direction:column;gap:8px;align-items:stretch">
+            <button class="btn btn-ghost" id="edit-btn" onclick="enterEditMode()" style="display:none">Edit</button>
+            <button class="btn btn-ghost" id="export-btn" onclick="exportCurrent('spacecraft', ship.id, this)" style="display:none" title="Save this spacecraft as a file on your computer">Export</button>
+          </div>
           <button class="btn btn-primary edit-only" onclick="saveAll()">Save</button>
           <button class="btn btn-ghost edit-only" onclick="cancelEdit()">Cancel</button>
         </div>
@@ -756,6 +760,7 @@ async function loadShip() {
   document.getElementById('no-ship-msg').style.display = 'none';
   document.getElementById('ship-body').style.display   = 'block';
   document.getElementById('edit-btn').style.display    = 'inline-flex';
+  document.getElementById('export-btn').style.display  = 'inline-flex';
 
   renderHeader();
   renderSpecs();
@@ -1779,6 +1784,7 @@ async function createNewShip() {
   document.getElementById('no-ship-msg').style.display = 'none';
   document.getElementById('ship-body').style.display   = 'block';
   document.getElementById('edit-btn').style.display    = 'inline-flex';
+  document.getElementById('export-btn').style.display  = 'inline-flex';
   mountRows = []; weaponSlotRows = [];
   renderHeader(); renderSpecs();
   renderSoftware([]); renderSensors([]); renderSystems([]); renderMounts([]);

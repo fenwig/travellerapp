@@ -31,6 +31,7 @@
     .status-sold      { background: rgba(176,216,232,0.10); color: #b0d8e8; border: 1px solid #b0d8e844; }
     .status-destroyed { background: rgba(255,90,74,0.12);  color: #ff5a4a; border: 1px solid #ff5a4a44; }
     .status-stolen    { background: rgba(255,90,74,0.12);  color: #ff5a4a; border: 1px solid #ff5a4a44; }
+    #char-table td:nth-child(6) .status-select, #char-table td:nth-child(6) .status-badge { min-width: 92px; white-space: nowrap; }
     .onboard-select { margin: 0; background: #080d12; border: 1px solid #0a4a60; color: #b0d8e8; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; min-width: 140px; max-width: 200px; }
     .onboard-select:disabled { opacity: 0.45; }
     .status-select {
@@ -78,6 +79,8 @@
           <div style="display:flex; gap:10px;">
             <button class="btn-outline" onclick="window.location.href='character-creation.html'">+ Character Creation</button>
             <button class="btn-outline" onclick="createCharacter()">+ Blank Character</button>
+            <button class="btn-outline" onclick="document.getElementById('import-character').click()">+ Import Character</button>
+            <input type="file" id="import-character" accept=".json,application/json" style="display:none" onchange="importFromFile('character', this)" />
           </div>
         </div>
         <table class="ref-table roster-table" id="char-table">
@@ -102,7 +105,11 @@
       <div class="roster-section">
         <div class="roster-section-head">
           <div class="roster-section-title">Spacecraft</div>
-          <button class="btn-outline" onclick="createSpacecraft()">+ New Spacecraft</button>
+          <div style="display:flex; gap:10px;">
+            <button class="btn-outline" onclick="createSpacecraft()">+ New Spacecraft</button>
+            <button class="btn-outline" onclick="document.getElementById('import-spacecraft').click()">+ Import Spacecraft</button>
+            <input type="file" id="import-spacecraft" accept=".json,application/json" style="display:none" onchange="importFromFile('spacecraft', this)" />
+          </div>
         </div>
         <table class="ref-table roster-table" id="ship-table">
           <thead>
@@ -124,6 +131,7 @@
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/portrait.js"></script>
+  <script src="../js/export-import.js"></script>
   <script>
     let currentUser = null;
     let campaignId = null;
@@ -151,6 +159,22 @@
           `<option value="${c.id}" ${c.id === campaignId ? 'selected' : ''}>${c.name}</option>`).join('');
         document.getElementById('campaign-bar').style.display = 'flex';
         if (isGM(currentUser)) document.getElementById('new-campaign-btn').style.display = '';
+      }
+    }
+
+    // Import a character or spacecraft from a file made by Export. Always creates a new Reserve record.
+    async function importFromFile(kind, input) {
+      const f = input.files && input.files[0];
+      input.value = '';
+      if (!f) return;
+      try {
+        if (f.size > 5 * 1024 * 1024) throw new Error('That file is too large to be an export.');
+        const obj = JSON.parse(await f.text());
+        const res = await importRecord(kind, obj, currentUser.id, campaignId);
+        await (kind === 'character' ? loadCharacters() : loadSpacecraft());
+        alert('Imported "' + (res.name || kind) + '" as a new ' + kind + ' (status Reserve) in this campaign.');
+      } catch (e) {
+        alert('Import failed: ' + (e instanceof SyntaxError ? 'that file is not valid JSON.' : e.message));
       }
     }
 

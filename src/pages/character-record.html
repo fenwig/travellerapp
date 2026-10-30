@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/supabase-config.js"></script>
   <script src="../js/portrait.js"></script>
+  <script src="../js/export-import.js"></script>
   <script src="../js/gear-data.js"></script>
   <script src="../js/skills-data.js"></script>
   <style>
@@ -336,6 +337,7 @@
               <button class="btn btn-primary edit-only" onclick="saveAll()">Save</button>
               <button class="btn btn-ghost edit-only" onclick="cancelEdit()">Cancel</button>
             </div>
+            <button class="btn btn-ghost view-only" id="export-btn" onclick="exportCurrent('character', character.id, this)" style="display:none" title="Save this character as a file on your computer">Export</button>
           </div>
         </div>
 
@@ -728,7 +730,10 @@ async function loadCharacter() {
   character = data;
   isOwner   = (character.user_id === currentUser.id) || isGM(currentUser);
   document.getElementById('char-body').style.display = 'block';
-  if (isOwner) document.getElementById('edit-btn').style.display = 'inline-flex';
+  if (isOwner) {
+    document.getElementById('edit-btn').style.display = 'inline-flex';
+    document.getElementById('export-btn').style.display = 'inline-flex';
+  }
 
   renderHeader();
   renderStats();
