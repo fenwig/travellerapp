@@ -457,6 +457,23 @@
           </div>
 
           <div class="cr-section">
+            <div class="cr-section-title">Communications</div>
+            <table class="gear-table">
+              <thead><tr>
+                <th>Device</th><th class="col-narrow">TL</th><th class="col-narrow">Mass</th>
+                <th class="col-narrow">Range</th><th>Features</th><th class="edit-only"></th>
+              </tr></thead>
+              <tbody id="comms-tbody"></tbody>
+            </table>
+            <div class="sw-actions">
+              <button class="add-row-btn edit-only" onclick="addCommsRow()">+ Add Comms</button>
+              <select id="comms-catalogue" class="edit-only sw-catalogue" onchange="addCommsFromCatalogue(this)">
+                <option value="">+ From Catalogue…</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="cr-section">
             <div class="cr-section-title">Augments</div>
             <table class="gear-table">
               <thead><tr>
@@ -603,6 +620,7 @@ let isOwner     = false;
 var pendingArmour     = [];
 var pendingWeapons    = [];
 var pendingAugments   = [];
+var pendingComms      = [];
 var pendingEquipment  = [];
 var pendingComputers  = [];
 var pendingCareers    = [];
@@ -1141,12 +1159,14 @@ function renderFinances() {
 
 // ── Gear ───────────────────────────────────────────────────
 async function renderGear() {
-  const [a, w, aug, eq] = await Promise.all([
+  const [a, w, aug, eq, comms] = await Promise.all([
     supabaseClient.from('character_armour').select('*').eq('character_id', character.id),
     supabaseClient.from('character_weapons').select('*').eq('character_id', character.id),
     supabaseClient.from('character_augments').select('*').eq('character_id', character.id),
-    supabaseClient.from('character_equipment').select('*').eq('character_id', character.id)
+    supabaseClient.from('character_equipment').select('*').eq('character_id', character.id),
+    supabaseClient.from('character_comms').select('*').eq('character_id', character.id)
   ]);
+  renderComms(comms.data || []);
   renderArmour(a.data || []);
   renderWeapons(w.data || []);
   characterAugments = aug.data || [];
@@ -1311,6 +1331,48 @@ function addAugmentFromCatalogue(sel) {
   sel.value = '';
   if (i !== '') addAugmentRow(GEAR_AUGMENTS[i]);
 }
+
+// ── Communications (Tech tab) ──
+function renderComms(rows) {
+  document.getElementById('comms-tbody').innerHTML = rows.length
+    ? rows.map(r => `<tr data-id="${r.id}" class="existing-row">
+        <td><input value="${escapeHtml(r.name||'')}" placeholder="Device" /></td>
+        <td><input type="number" value="${r.tl??''}" placeholder="TL" style="width:45px" /></td>
+        <td><input type="number" value="${r.mass??''}" placeholder="--" step="0.01" style="width:60px" /></td>
+        <td><input value="${escapeHtml(r.range||'')}" placeholder="--" style="width:80px" /></td>
+        <td><input value="${escapeHtml(r.features||'')}" placeholder="Features" /></td>
+        <td class="td-actions edit-only"><button class="skill-remove" onclick="queueDelete('pendingComms','${r.id}',this)">✕</button></td>
+      </tr>`).join('')
+    : none(6);
+}
+
+function addCommsRow(p) {
+  p = p || {};
+  const tbody = document.getElementById('comms-tbody');
+  if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+  const tr = document.createElement('tr');
+  tr.dataset.id = 'new-' + Date.now();
+  tr.innerHTML = `
+    <td><input placeholder="Device" value="${escapeHtml(p.name||'')}" /></td>
+    <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
+    <td><input type="number" placeholder="--" step="0.01" value="${p.mass??''}" style="width:60px" /></td>
+    <td><input placeholder="--" value="${escapeHtml(p.range||'')}" style="width:80px" /></td>
+    <td><input placeholder="Features" value="${escapeHtml(p.features||'')}" /></td>
+    <td class="td-actions edit-only"><button class="skill-remove" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+  pendingComms.push({ action: 'add', tr });
+}
+
+function addCommsFromCatalogue(sel) {
+  const i = sel.value;
+  sel.value = '';
+  if (i !== '') addCommsRow(GEAR_COMMS[i]);
+}
+
+(function fillCommsCatalogue() {
+  document.getElementById('comms-catalogue').insertAdjacentHTML('beforeend',
+    GEAR_COMMS.map((c, i) => `<option value="${i}">${escapeHtml(c.name)} — TL${c.tl}${c.mass != null ? ', ' + c.mass + 'kg' : ''}${c.range !== '--' ? ', ' + escapeHtml(c.range) : ''}${c.features ? ', ' + escapeHtml(c.features.split(';')[0]) : ''}</option>`).join(''));
+})();
 
 (function fillAugmentCatalogue() {
   document.getElementById('augment-catalogue').insertAdjacentHTML('beforeend',
@@ -1856,7 +1918,7 @@ function cancelEdit() {
 }
 
 function clearPending() {
-  pendingArmour=[]; pendingWeapons=[]; pendingAugments=[]; pendingComputers=[];
+  pendingArmour=[]; pendingWeapons=[]; pendingAugments=[]; pendingComms=[]; pendingComputers=[];
   pendingEquipment=[]; pendingCareers=[]; pendingWounds=[]; pendingAssociates=[]; pendingConnections=[];
 }
 
@@ -1955,6 +2017,27 @@ async function saveAll() {
           character_id: character.id,
           type: i[0].value, tl: parseInt(i[1].value)||null, improvement: i[2].value||null,
           ...augmentBonusFields(p.tr)
+        });
+      }
+    }
+
+    // Communications — update existing rows, then process adds/deletes
+    for (const tr of document.querySelectorAll('#comms-tbody tr.existing-row')) {
+      const id = tr.dataset.id; if (!id) continue;
+      const i = tr.querySelectorAll('input');
+      await supabaseClient.from('character_comms').update({
+        name: i[0].value, tl: parseInt(i[1].value)||null, mass: parseFloat(i[2].value)||null,
+        range: i[3].value||null, features: i[4].value||null
+      }).eq('id', id);
+    }
+    for (const p of pendingComms) {
+      if (p.action === 'delete') { await supabaseClient.from('character_comms').delete().eq('id', p.id); }
+      else {
+        const i = p.tr.querySelectorAll('input');
+        if (i[0].value) await supabaseClient.from('character_comms').insert({
+          character_id: character.id,
+          name: i[0].value, tl: parseInt(i[1].value)||null, mass: parseFloat(i[2].value)||null,
+          range: i[3].value||null, features: i[4].value||null
         });
       }
     }

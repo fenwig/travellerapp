@@ -151,3 +151,32 @@ const GEAR_AUGMENTS = [
   {"name":"Wafer Jack","improvement":"Capacity Bandwidth/4","tl":12,"cost":"Cr10000"},
   {"name":"Wafer Jack","improvement":"Capacity Bandwidth/8","tl":13,"cost":"Cr15000"}
 ];
+
+// Communications (Core p.108-109). mass is kg, null where the book gives "--";
+// range "--" means the book lists none. Features holds the computer rating and any extra notes.
+const GEAR_COMMS = [
+  {"name":"Radio Transceiver","tl":5,"mass":20,"range":"5km","features":""},
+  {"name":"Radio Transceiver","tl":5,"mass":70,"range":"50km","features":""},
+  {"name":"Radio Transceiver","tl":5,"mass":150,"range":"500km","features":""},
+  {"name":"Radio Transceiver","tl":5,"mass":300,"range":"5,000km","features":""},
+  {"name":"Radio Transceiver","tl":8,"mass":null,"range":"50km","features":""},
+  {"name":"Radio Transceiver","tl":9,"mass":null,"range":"500km","features":""},
+  {"name":"Radio Transceiver","tl":9,"mass":null,"range":"2,500km","features":"Computer/0"},
+  {"name":"Radio Transceiver","tl":10,"mass":null,"range":"500km","features":"Computer/0"},
+  {"name":"Radio Transceiver","tl":12,"mass":1,"range":"10,000km","features":"Computer/0"},
+  {"name":"Radio Transceiver","tl":13,"mass":null,"range":"1,000km","features":"Computer/1"},
+  {"name":"Radio Transceiver","tl":14,"mass":null,"range":"3,000km","features":"Computer/1"},
+  {"name":"Laser Transceiver","tl":9,"mass":1.5,"range":"500km","features":"Computer/0"},
+  {"name":"Laser Transceiver","tl":11,"mass":0.5,"range":"500km","features":"Computer/0"},
+  {"name":"Laser Transceiver","tl":13,"mass":null,"range":"500km","features":"Computer/1"},
+  {"name":"Mobile Comm","tl":6,"mass":null,"range":"--","features":"Audio only; planetary network"},
+  {"name":"Mobile Comm","tl":8,"mass":null,"range":"--","features":"Audio and visual, Computer/0; planetary network"},
+  {"name":"Mobile Comm","tl":10,"mass":null,"range":"--","features":"Multiple forms of data, Computer/1; planetary network"},
+  {"name":"Commdot","tl":10,"mass":null,"range":"--","features":"Hands-free mic/speaker relay to a linked comm; range a few metres"},
+  {"name":"Bug","tl":5,"mass":null,"range":"--","features":"Audio only"},
+  {"name":"Bug","tl":7,"mass":null,"range":"--","features":"Audio or Visual"},
+  {"name":"Bug","tl":9,"mass":null,"range":"--","features":"Audio or Visual or Data"},
+  {"name":"Bug","tl":11,"mass":null,"range":"--","features":"Audio/Visual/Data"},
+  {"name":"Bug","tl":13,"mass":null,"range":"--","features":"Audio/Visual/Data/Bioscan"},
+  {"name":"Bug","tl":15,"mass":null,"range":"--","features":"Audio/Visual/Data/Bioscan/Computer/1"}
+];
