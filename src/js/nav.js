@@ -6,7 +6,6 @@ const NAV_GROUPS = [
     ['character-record.html',   'Character Record'],
     ['spacecraft-record.html',  'Spacecraft Record'],
     ['character-list.html',     'Roster'],
-    ['character-creation.html', 'Character Creation'],
     ['creation-codex.html',     'Creation Codex']
   ]},
   { id: 'tools', label: 'Player Tools', items: [
