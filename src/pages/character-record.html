@@ -1239,6 +1239,7 @@ function modsRowHtml(armourId, mods) {
       <div class="mod-actions edit-only">
         <button class="add-row-btn" onclick="addModLine('${armourId}')">+ Add Mod</button>
         <select class="sw-catalogue" onchange="addModFromCatalogue('${armourId}',this)">${modCatalogueOptions()}</select>
+        <select class="sw-catalogue" onchange="addModFromCatalogue('${armourId}',this,'bd')">${modCatalogueOptions('bd')}</select>
       </div>
     </td></tr>`;
 }
@@ -1254,13 +1255,15 @@ function modLineHtml(m) {
     </div>`;
 }
 
-let _modOptions = '';
-function modCatalogueOptions() {
-  if (!_modOptions) {
-    _modOptions = '<option value="">+ Mod from Catalogue…</option>' +
-      GEAR_ARMOUR_MODS.map((m, i) => `<option value="${i}">${escapeHtml(m.name)} — TL${m.tl}</option>`).join('');
+const _modOptions = {};
+function modCatalogueOptions(which) {
+  const bd = which === 'bd';
+  if (!_modOptions[which || 'gen']) {
+    const list = bd ? GEAR_BATTLE_DRESS_MODS : GEAR_ARMOUR_MODS;
+    _modOptions[which || 'gen'] = `<option value="">${bd ? '+ Battle Dress Mod…' : '+ Mod from Catalogue…'}</option>` +
+      list.map((m, i) => `<option value="${i}">${escapeHtml(m.name)} — TL${m.tl}</option>`).join('');
   }
-  return _modOptions;
+  return _modOptions[which || 'gen'];
 }
 
 function modsRowFor(armourId) {
@@ -1276,10 +1279,10 @@ function addModLine(armourId, p) {
   refreshArmourBonuses(armourId);
 }
 
-function addModFromCatalogue(armourId, sel) {
+function addModFromCatalogue(armourId, sel, which) {
   const i = sel.value;
   sel.value = '';
-  if (i !== '') addModLine(armourId, GEAR_ARMOUR_MODS[i]);
+  if (i !== '') addModLine(armourId, (which === 'bd' ? GEAR_BATTLE_DRESS_MODS : GEAR_ARMOUR_MODS)[i]);
 }
 
 function removeModLine(btn) {
@@ -1351,7 +1354,7 @@ function addArmourRow(p) {
     <td><div class="pro-cell"><input type="number" placeholder="0" value="${p.rad??''}" style="width:50px" /><span class="mod-bonus" data-bonus="rad"></span></div></td>
     <td><input type="number" placeholder="TL" value="${p.tl??''}" style="width:45px" /></td>
     <td><input type="number" placeholder="0" step="0.01" value="${p.kg??''}" style="width:60px" /></td>
-    <td><input placeholder="Options" /></td>
+    <td><input placeholder="Options" value="${escapeHtml(p.options||'')}" /></td>
     <td class="td-actions edit-only"><button class="skill-remove" onclick="removeArmourRow('${tr.dataset.id}',this)">✕</button></td>`;
   tbody.appendChild(tr);
   tbody.insertAdjacentHTML('beforeend', modsRowHtml(tr.dataset.id, []));
@@ -1417,7 +1420,7 @@ function renderCatalogue(kind) {
   document.getElementById('cat-l-' + kind).innerHTML = hits.length ? hits.map(({ it, i }) => {
     const meta = kind === 'weapons'
       ? [it.tl != null ? 'TL' + it.tl : '', it.damage, it.range, it.cost].filter(Boolean).join(' · ')
-      : [it.tl != null ? 'TL' + it.tl : '', 'PRO +' + it.protection + (it.conditions ? ' (' + it.conditions + ')' : ''), it.skill, it.cost, it.source].filter(Boolean).join(' · ');
+      : [it.tl != null ? 'TL' + it.tl : '', 'PRO +' + it.protection + (it.conditions ? ' (' + it.conditions + ')' : ''), it.options, it.skill, it.cost, it.source].filter(Boolean).join(' · ');
     return `<div class="cat-item" onclick="addFromCatalogue('${kind}',${i})"><span class="cat-item-name">${escapeHtml(it.name)}</span><span class="cat-item-meta">${escapeHtml(meta)}</span></div>`;
   }).join('') : '<div style="color:#4a9ab8;font-size:0.82rem;padding:6px">No matches</div>';
 }
