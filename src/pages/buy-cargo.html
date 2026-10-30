@@ -374,7 +374,7 @@
         const cost = picks.reduce((t, p) => t + p.n * p.i.price, 0);
         picks.forEach(p => { p.i.bought = (p.i.bought || 0) + p.n; });
         trade.loadMsg = '<span style="color:#00ffaa">Loaded ' + total + ' ton' + (total === 1 ? '' : 's') + ' onto <b>' + ship.name + '</b> for ' + TC.cr(cost) +
-          '. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).</span>';
+          '. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Cargo &amp; Passengers tab).</span>';
         renderGoods();
         TC.save();
       } catch (e) { loadMessage('Could not load the cargo: ' + (e.message || e), false); }

@@ -143,7 +143,7 @@
             <tr class="tt-total"><td>Total</td>${shipData.map(r => '<td>' + cr(r.ex.total) + '</td>').join('')}${shipData.length > 1 ? '<td>' + cr(allTotal) + '</td>' : ''}</tr>
           </tbody>
         </table>
-        <div class="tt-sub" style="margin-top:8px">Taken from each active ship's Finance &amp; Cargo tab. Fuel is not included.</div>`
+        <div class="tt-sub" style="margin-top:8px">Taken from each active ship's Finances tab. Fuel is not included.</div>`
         : '<div class="tt-sub">There are no active spacecraft in this campaign. Set a ship to Active on the Roster.</div>';
 
       document.getElementById('tt-root').innerHTML = `

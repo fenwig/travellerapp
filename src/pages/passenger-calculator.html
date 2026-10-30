@@ -124,7 +124,7 @@
         });
         if (error) throw error;
         TC.xferDone();
-        TC.xferMsg('Added ' + pax + ' passenger' + (pax === 1 ? '' : 's') + ' to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).', true);
+        TC.xferMsg('Added ' + pax + ' passenger' + (pax === 1 ? '' : 's') + ' to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Cargo &amp; Passengers tab).', true);
       } catch (e) { TC.xferMsg('Transfer failed: ' + (e.message || e), false); }
     }
 

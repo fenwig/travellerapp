@@ -160,7 +160,7 @@
         if (error) throw error;
         const tons = picked.reduce((s, l) => s + l.tons, 0);
         TC.xferDone('ft');
-        TC.xferMsg('Added ' + picked.length + ' lot' + (picked.length === 1 ? '' : 's') + ' (' + tons + ' tons) to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).', true, 'ft');
+        TC.xferMsg('Added ' + picked.length + ' lot' + (picked.length === 1 ? '' : 's') + ' (' + tons + ' tons) to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Cargo &amp; Passengers tab).', true, 'ft');
       } catch (e) { TC.xferMsg('Transfer failed: ' + (e.message || e), false, 'ft'); }
     }
 
@@ -220,7 +220,7 @@
         });
         if (error) throw error;
         TC.xferDone('ml');
-        TC.xferMsg('Added mail (' + mailCount * 5 + ' tons) to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).', true, 'ml');
+        TC.xferMsg('Added mail (' + mailCount * 5 + ' tons) to <b>' + ship.name + '</b>. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Cargo &amp; Passengers tab).', true, 'ml');
       } catch (e) { TC.xferMsg('Transfer failed: ' + (e.message || e), false, 'ml'); }
     }
     TC.persist('freight', () => ({ lots, rate, mailCount }), v => { lots = v.lots || []; rate = v.rate || 0; mailCount = v.mailCount || 0; });

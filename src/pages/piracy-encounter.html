@@ -756,7 +756,7 @@
         const val = picks.reduce((t, p) => t + p.n * p.it.price, 0);
         picks.forEach(p => { p.it.loaded = (p.it.loaded || 0) + p.n; });
         enc.loadMsg = '<span style="color:#00ffaa">Loaded ' + total + ' ton' + (total === 1 ? '' : 's') + ' onto <b>' + ship.name + '</b>, worth ' + TC.cr(val) +
-          ' before fencing. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Finance &amp; Cargo tab).</span>';
+          ' before fencing. <a href="spacecraft-record.html" style="color:#00e5ff">View Spacecraft Record</a> (Cargo &amp; Passengers tab).</span>';
         renderCargo();
         TC.save();
       } catch (e) { loadMessage('Could not load the cargo: ' + (e.message || e), false); }

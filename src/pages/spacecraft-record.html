@@ -282,7 +282,8 @@
         <button class="tab-btn active" onclick="showTab('specs',this)">Specs &amp; Tech</button>
         <button class="tab-btn" onclick="showTab('weapons',this)">Weapons</button>
         <button class="tab-btn" onclick="showTab('damage',this)">Damage</button>
-        <button class="tab-btn" onclick="showTab('finance',this)">Finance &amp; Cargo</button>
+        <button class="tab-btn" onclick="showTab('finance',this)">Finances</button>
+        <button class="tab-btn" onclick="showTab('cargo',this)">Cargo &amp; Passengers</button>
         <button class="tab-btn" onclick="showTab('crew',this)">Crew</button>
         <button class="tab-btn" onclick="showTab('notes',this)">Notes</button>
       </div>
@@ -332,7 +333,7 @@
               <div class="mc-row" style="font-size:1.3rem;font-weight:600">
                 <span class="view-only" id="sv-cargo-max-mc">0</span><input class="edit-only" type="number" id="ei-cargo-max" min="0" step="0.5" value="0" oninput="syncCargoMax()" style="width:72px" />
                 <span style="color:#4a9ab8"> / </span>
-                <span id="sv-cargo-cur" title="Total of all cargo entries on Finance &amp; Cargo tab">0</span>
+                <span id="sv-cargo-cur" title="Total of all cargo entries on the Cargo &amp; Passengers tab">0</span>
               </div>
             </div>
           </div>
@@ -575,6 +576,20 @@
           </div>
         </div>
 
+
+        <div class="cr-section" id="trade-log-section" style="display:none">
+          <div class="cr-section-title">Cargo Sales Record</div>
+          <table class="gear-table">
+            <thead><tr><th>Date</th><th>Good</th><th>Tons</th><th>Bought</th><th>Sold</th><th>Gross</th><th>Broker fee</th><th>Profit</th><th></th></tr></thead>
+            <tbody id="trade-log-tbody"></tbody>
+          </table>
+          <div style="font-size:0.78rem;color:#4a9ab8;margin-top:6px">Total profit: <span id="trade-log-total" style="color:#00ffaa;font-weight:600">Cr0</span></div>
+        </div>
+      </div><!-- /tab-finance -->
+
+      <!-- ══════════════════ TAB — CARGO & PASSENGERS ══════════════════ -->
+      <div id="tab-cargo" class="tab-content" style="display:none">
+
         <div class="cr-section">
           <div class="cr-section-title">
             Cargo &nbsp;—&nbsp; Max:
@@ -597,7 +612,7 @@
           <button class="add-row-btn" onclick="addPassengerRow()">+ Add Booking</button>
         </div>
 
-      </div><!-- /tab-finance -->
+      </div><!-- /tab-cargo -->
 
       <!-- ══════════════════ TAB 4 — CREW ══════════════════ -->
       <div id="tab-crew" class="tab-content" style="display:none">
@@ -631,15 +646,6 @@
         <div class="cr-section">
           <div class="cr-section-title">Notes</div>
           <textarea class="notes-textarea" id="ei-notes" style="min-height:200px" onchange="autoSaveText('notes', this.value)" placeholder="Ship history, background, quirks..."></textarea>
-        </div>
-
-        <div class="cr-section" id="trade-log-section" style="display:none">
-          <div class="cr-section-title">Cargo Sales Record</div>
-          <table class="gear-table">
-            <thead><tr><th>Date</th><th>Good</th><th>Tons</th><th>Bought</th><th>Sold</th><th>Gross</th><th>Broker fee</th><th>Profit</th><th></th></tr></thead>
-            <tbody id="trade-log-tbody"></tbody>
-          </table>
-          <div style="font-size:0.78rem;color:#4a9ab8;margin-top:6px">Total profit: <span id="trade-log-total" style="color:#00ffaa;font-weight:600">Cr0</span></div>
         </div>
       </div>
 
