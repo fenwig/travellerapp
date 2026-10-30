@@ -141,11 +141,12 @@
     .notes-textarea:focus { border-color:#00e5ff; }
 
     /* ── Finance ── */
-    .finance-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-bottom:12px; }
-    .finance-box { background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:6px; padding:10px 14px; }
-    .finance-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#4a9ab8; margin-bottom:4px; }
-    .finance-value { font-size:1.05rem; color:#00e5ff; font-weight:600; }
-    .finance-input { background:transparent; border:none; border-bottom:1px solid #0a4a60; color:#00e5ff; font-size:1rem; font-weight:600; width:100%; outline:none; }
+    /* compact: label on the left, figure on the right, one line per expense */
+    .finance-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:6px 10px; margin-bottom:10px; }
+    .finance-box { display:flex; justify-content:space-between; align-items:baseline; gap:10px; background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:5px; padding:5px 10px; }
+    .finance-label { font-size:0.66rem; text-transform:uppercase; letter-spacing:0.07em; color:#4a9ab8; margin-bottom:0; white-space:nowrap; }
+    .finance-value { font-size:0.95rem; color:#00e5ff; font-weight:600; text-align:right; }
+    .finance-box .finance-input { box-sizing:border-box; height:22px; background:transparent; border:none; border-bottom:1px solid #0a4a60; color:#00e5ff; font-size:0.95rem; font-weight:600; width:90px; text-align:right; margin:0; padding:0 2px; outline:none; border-radius:0; }
     .finance-calc  { font-size:0.75rem; color:#4a9ab8; margin-top:3px; }
     .finance-total { background:rgba(0,229,255,0.06); border:1px solid #00e5ff44; }
     .finance-total .finance-value { color:#00ffaa; }
@@ -1297,7 +1298,7 @@ function renderFinance() {
   const mortgageVal   = parseFloat(s.mortgage_value) || 0;
   const mortgagePmt   = Math.round(mortgageVal * 1000000 / 240);
 
-  const total = mortgagePmt+lifeBase+fuelCost+maintenance+(s.fin_salaries||0)+(s.fin_other||0);
+  const total = mortgagePmt+lifeBase+fuelCost+maintenance+(s.fin_salaries||0)+(s.fin_berthing||0)+(s.fin_other||0);
 
   document.getElementById('finance-grid').innerHTML = `
     <div class="finance-box">
@@ -1320,6 +1321,11 @@ function renderFinance() {
       <div class="finance-label">Crew Salaries</div>
       <div class="finance-value view-only" id="fv-salaries">${(s.fin_salaries||0).toLocaleString()}</div>
       <input class="finance-input edit-only" type="number" id="fi-salaries" value="${s.fin_salaries||0}" />
+    </div>
+    <div class="finance-box">
+      <div class="finance-label">Berthing</div>
+      <div class="finance-value view-only" id="fv-berthing">${(s.fin_berthing||0).toLocaleString()}</div>
+      <input class="finance-input edit-only" type="number" id="fi-berthing" value="${s.fin_berthing||0}" />
     </div>
     <div class="finance-box">
       <div class="finance-label">Other</div>
@@ -1678,6 +1684,7 @@ async function saveAll() {
       notes:          gi('ei-notes'),
       mortgage_value: parseFloat(gi('ei-mortgage-value')) || 0,
       fin_salaries:   gn('fi-salaries'),
+      fin_berthing:   gn('fi-berthing'),
       fin_other:      gn('fi-other')
     };
 
