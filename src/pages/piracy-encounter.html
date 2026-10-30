@@ -205,7 +205,7 @@
     // ── prey ship from the ship list ──
     // Crew share staterooms two to a room; High passengers take 1 room, Middle 2 per room; Low use their own berths.
     async function usedSpecialNames() {
-      const { data, error } = await supabaseClient.from('special_ships_used').select('name');
+      const { data, error } = await inCampaign(supabaseClient.from('special_ships_used').select('name'), await currentCampaignId());
       if (error) throw error;
       return new Set(data.map(r => r.name));
     }
@@ -226,8 +226,10 @@
       }
     }
     async function setSpecialUsed(name, on) {
+      // each campaign has its own used list
+      const cid = await currentCampaignId();
       const q = supabaseClient.from('special_ships_used');
-      const { error } = on ? await q.upsert({ name }) : await q.delete().eq('name', name);
+      const { error } = on ? await q.upsert({ name, campaign_id: cid }, { onConflict: 'campaign_id,name' }) : await inCampaign(q.delete().eq('name', name), cid);
       if (error) throw error;
     }
     async function unuseSpecial() {
