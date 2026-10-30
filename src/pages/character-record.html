@@ -78,6 +78,7 @@
     .char-stats-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
     .stat-box { background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 6px; padding: 6px 2px; text-align: center; min-width: 0; }
     .stat-label { font-size: 0.62rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+    .stat-aug { font-size: 0.6rem; color: #00ffaa; font-weight: 600; margin-left: 3px; vertical-align: super; }
     .stat-value { font-size: 1.15rem; color: #00e5ff; font-weight: 700; line-height: 1; }
     .stat-dm    { font-size: 0.72rem; color: #b0d8e8; margin-top: 2px; font-weight: 600; }
     .stat-input { width: 32px; font-size: 1rem; color: #00e5ff; background: transparent; border: none; border-bottom: 1px solid #0a4a60; text-align: center; outline: none; }
@@ -160,6 +161,8 @@
     .computer-software-title { font-size: 0.62rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
     .software-row { display: grid; grid-template-columns: 1fr 50px 40px 1.6fr 60px 20px; gap: 6px; align-items: center; padding: 1px 0; font-size: 0.74rem; line-height: 1.2; color: #b0d8e8; }
     .software-comments { font-size: 0.7rem; color: #4a9ab8; min-width: 0; }
+    /* main.css gives every number input / select a 12px bottom margin, which pushes them out of line with text inputs */
+    .gear-table input, .gear-table select, .software-row input, .computer-field input, .sw-catalogue, .cat-picker-bar select { margin-bottom: 0; }
     .sw-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
     .sw-actions .add-row-btn { margin-top: 0; }
     .sw-catalogue { width: auto; max-width: 200px; background: #080d12; border: 1px dashed #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 5px 8px; font-size: 0.78rem; }
@@ -906,17 +909,19 @@ function renderStats() {
   grid.innerHTML = CHARS.map(c => {
     const val     = rawStat(c.key);
     const current = currentStat(c.key);
+    const aug     = augmentBonus(c.key);
+    const augTag  = aug ? `<span class="stat-aug" title="Includes augment bonus of ${aug}">+${aug}</span>` : '';
     return `
       <div class="stat-box">
         <div class="stat-label">${c.label}</div>
         <div class="stat-dm" id="dm-${c.key}">${charDM(effectiveStat(c))}</div>
-        <div class="stat-value view-only" id="disp-${c.key}">${val}</div>
+        <div class="stat-value view-only" id="disp-${c.key}">${val + aug}${augTag}</div>
         <input class="stat-input edit-only" type="number" id="edit-${c.key}" value="${val}" min="0" max="15" />
         <div class="stat-injury-row">
           <div class="stat-injury-label">${c.injuryLabel}</div>
           <div class="stat-injury-ctrl">
             <button class="injury-btn" onclick="adjustInjury('${c.key}',-1)">▼</button>
-            <span class="injury-val" id="injury-${c.key}">${current}</span>
+            <span class="injury-val" id="injury-${c.key}">${current + aug}</span>
             <button class="injury-btn" onclick="adjustInjury('${c.key}',1)">▲</button>
           </div>
         </div>
