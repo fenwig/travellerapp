@@ -139,15 +139,6 @@
     .gear-table td.td-actions { width: 30px; text-align: center; }
     .add-row-btn { background: transparent; border: 1px dashed #0a4a60; color: #4a9ab8; border-radius: 4px; padding: 5px 14px; font-size: 0.78rem; cursor: pointer; margin-top: 4px; transition: border-color 0.15s, color 0.15s; }
     .add-row-btn:hover { border-color: #00e5ff; color: #00e5ff; }
-    .cat-picker { border: 1px solid #0a4a60; border-radius: 4px; background: rgba(8,13,18,0.9); padding: 10px; margin-top: 8px; }
-    .cat-picker-bar { display: flex; gap: 8px; margin-bottom: 8px; }
-    .cat-picker-bar input, .cat-picker-bar select { background: #080d12; border: 1px solid #0a4a60; color: #b0d8e8; border-radius: 4px; padding: 5px 8px; font-size: 0.82rem; }
-    .cat-picker-bar input { flex: 1; }
-    .cat-picker-list { max-height: 260px; overflow-y: auto; }
-    .cat-item { display: flex; justify-content: space-between; gap: 12px; padding: 5px 8px; cursor: pointer; border-bottom: 1px solid rgba(10,74,96,0.3); font-size: 0.82rem; }
-    .cat-item:hover { background: rgba(0,229,255,0.08); }
-    .cat-item-name { color: #00e5ff; }
-    .cat-item-meta { color: #4a9ab8; font-size: 0.75rem; text-align: right; }
     .col-narrow { width: 56px; }
 
     /* ── Computers (Tech tab) ── */
@@ -162,7 +153,7 @@
     .software-row { display: grid; grid-template-columns: 1fr 50px 40px 1.6fr 60px 20px; gap: 6px; align-items: center; padding: 1px 0; font-size: 0.74rem; line-height: 1.2; color: #b0d8e8; }
     .software-comments { font-size: 0.7rem; color: #4a9ab8; min-width: 0; }
     /* main.css gives every number input / select a 12px bottom margin, which pushes them out of line with text inputs */
-    .gear-table input, .gear-table select, .software-row input, .computer-field input, .sw-catalogue, .cat-picker-bar select { margin-bottom: 0; }
+    .gear-table input, .gear-table select, .software-row input, .computer-field input, .sw-catalogue { margin-bottom: 0; }
     /* Equipment: narrow Item column so Effect gets the room */
     .equip-table { table-layout: fixed; }
     .equip-table th:nth-child(1) { width: 170px; }
@@ -448,9 +439,12 @@
               </tr></thead>
               <tbody id="armour-tbody"></tbody>
             </table>
-            <button class="add-row-btn edit-only" onclick="addArmourRow()">+ Add Armour</button>
-            <button class="add-row-btn edit-only" onclick="openCatalogue('armour')">+ From Catalogue</button>
-            <div id="cat-picker-armour" class="cat-picker edit-only" style="display:none"></div>
+            <div class="sw-actions">
+              <button class="add-row-btn edit-only" onclick="addArmourRow()">+ Add Armour</button>
+              <select id="armour-catalogue" class="edit-only sw-catalogue" onchange="addGearFromCatalogue('armour',this)">
+                <option value="">+ From Catalogue…</option>
+              </select>
+            </div>
           </div>
 
           <div class="cr-section">
@@ -463,9 +457,12 @@
               </tr></thead>
               <tbody id="weapons-tbody"></tbody>
             </table>
-            <button class="add-row-btn edit-only" onclick="addWeaponRow()">+ Add Weapon</button>
-            <button class="add-row-btn edit-only" onclick="openCatalogue('weapons')">+ From Catalogue</button>
-            <div id="cat-picker-weapons" class="cat-picker edit-only" style="display:none"></div>
+            <div class="sw-actions">
+              <button class="add-row-btn edit-only" onclick="addWeaponRow()">+ Add Weapon</button>
+              <select id="weapons-catalogue" class="edit-only sw-catalogue" onchange="addGearFromCatalogue('weapons',this)">
+                <option value="">+ From Catalogue…</option>
+              </select>
+            </div>
           </div>
 
           <div class="cr-section">
@@ -1487,37 +1484,25 @@ function reloadWeapon(id) {
   setAmmo(id, 'current_mag', parseInt(row.dataset.size) || 0);
 }
 
-// ── Gear catalogue picker (data in js/gear-data.js) ──
-function openCatalogue(kind) {
-  const box = document.getElementById('cat-picker-' + kind);
-  if (box.style.display !== 'none') { box.style.display = 'none'; return; }
-  const cats = [...new Set((kind === 'weapons' ? GEAR_WEAPONS : GEAR_ARMOUR).map(x => x.category))];
-  box.innerHTML = `<div class="cat-picker-bar">
-      <input id="cat-q-${kind}" placeholder="Search…" oninput="renderCatalogue('${kind}')" />
-      ${cats.length ? `<select id="cat-c-${kind}" onchange="renderCatalogue('${kind}')"><option value="">All types</option>${cats.map(c => `<option>${c}</option>`).join('')}</select>` : ''}
-      <button class="skill-remove" title="Close" onclick="openCatalogue('${kind}')">✕</button>
-    </div><div class="cat-picker-list" id="cat-l-${kind}"></div>`;
-  box.style.display = 'block';
-  renderCatalogue(kind);
-  document.getElementById('cat-q-' + kind).focus();
-}
-
-function renderCatalogue(kind) {
-  const q = document.getElementById('cat-q-' + kind).value.trim().toLowerCase();
-  const cEl = document.getElementById('cat-c-' + kind);
-  const cat = cEl ? cEl.value : '';
+// ── Weapons / armour catalogue dropdowns (data in js/gear-data.js) ──
+function fillGearCatalogue(kind) {
   const list = kind === 'weapons' ? GEAR_WEAPONS : GEAR_ARMOUR;
-  const hits = list.map((it, i) => ({ it, i })).filter(({ it }) =>
-    (!cat || it.category === cat) && (!q || (it.name + ' ' + (it.traits || '') + ' ' + (it.conditions || '')).toLowerCase().includes(q)));
-  document.getElementById('cat-l-' + kind).innerHTML = hits.length ? hits.map(({ it, i }) => {
-    const meta = kind === 'weapons'
-      ? [it.tl != null ? 'TL' + it.tl : '', it.damage, it.range, it.cost].filter(Boolean).join(' · ')
-      : [it.tl != null ? 'TL' + it.tl : '', 'PRO +' + it.protection + (it.conditions ? ' (' + it.conditions + ')' : ''), it.options, it.skill, it.cost, it.source].filter(Boolean).join(' · ');
-    return `<div class="cat-item" onclick="addFromCatalogue('${kind}',${i})"><span class="cat-item-name">${escapeHtml(it.name)}</span><span class="cat-item-meta">${escapeHtml(meta)}</span></div>`;
-  }).join('') : '<div style="color:#4a9ab8;font-size:0.82rem;padding:6px">No matches</div>';
+  const groups = {};
+  list.forEach((it, i) => (groups[it.category] = groups[it.category] || []).push({ it, i }));
+  const label = it => kind === 'weapons'
+    ? [it.name, [it.tl != null ? 'TL' + it.tl : '', it.damage, it.range].filter(Boolean).join(', ')].filter(Boolean).join(' — ')
+    : it.name + ' — ' + [it.tl != null ? 'TL' + it.tl : '', 'PRO +' + it.protection].filter(Boolean).join(', ') + (it.source === 'CSC' ? ' (CSC)' : '');
+  document.getElementById(kind + '-catalogue').insertAdjacentHTML('beforeend',
+    Object.keys(groups).map(g => `<optgroup label="${g}">${groups[g].map(({ it, i }) =>
+      `<option value="${i}">${escapeHtml(label(it))}</option>`).join('')}</optgroup>`).join(''));
 }
+fillGearCatalogue('armour');
+fillGearCatalogue('weapons');
 
-function addFromCatalogue(kind, i) {
+function addGearFromCatalogue(kind, sel) {
+  const i = sel.value;
+  sel.value = '';
+  if (i === '') return;
   if (kind === 'weapons') addWeaponRow(GEAR_WEAPONS[i]); else addArmourRow(GEAR_ARMOUR[i]);
 }
 
