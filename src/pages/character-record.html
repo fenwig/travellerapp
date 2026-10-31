@@ -132,6 +132,17 @@
     .training-value { color: #b0d8e8; font-size: 0.9rem; }
     .training-select, .training-input { background: #0d1520; border: 1px solid #0a4a60; border-radius: 4px; color: #b0d8e8; padding: 4px 8px; font-size: 0.85rem; outline: none; }
     .training-number { width: 60px; }
+    .train-actions { margin-top: 10px; padding: 10px 14px; border: 1px solid #0a4a60; border-radius: 6px; background: rgba(13,21,32,0.7); }
+    .train-goal { color: #b0d8e8; font-size: 0.88rem; margin-bottom: 8px; }
+    .train-goal b { color: #00e5ff; }
+    .train-note { color: #4a9ab8; font-size: 0.78rem; margin-top: 6px; }
+    .train-ok { color: #00ffaa; font-size: 0.85rem; margin-bottom: 8px; }
+    .train-warn { color: #ffb74a; font-size: 0.85rem; }
+    .train-weeks { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+    .train-pip { width: 22px; height: 10px; border: 1px solid #0a4a60; border-radius: 2px; background: #080d12; }
+    .train-pip.on { background: #00e5ff; border-color: #00e5ff; }
+    .train-wk { margin-left: 8px; color: #4a9ab8; font-size: 0.8rem; }
+    .train-btn { padding: 5px 14px; font-size: 0.82rem; width: auto; }
 
     /* ── Gear tables ── */
     .gear-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 6px; }
@@ -425,7 +436,7 @@
               <div class="training-field">
                 <div class="training-label">Skill</div>
                 <div class="training-value view-only" id="disp-train-skill">—</div>
-                <select class="training-select edit-only" id="edit-train-skill" onchange="populateTrainSpecialty()">
+                <select class="training-select edit-only" id="edit-train-skill" onchange="onTrainSkillChange()">
                   <option value="">— None —</option>
                 </select>
               </div>
@@ -435,16 +446,17 @@
                 <select class="training-select edit-only" id="edit-train-specialty"></select>
               </div>
               <div class="training-field">
-                <div class="training-label">Weeks Complete</div>
+                <div class="training-label">Weeks (of 8)</div>
                 <div class="training-value view-only" id="disp-train-weeks">0</div>
                 <input class="training-select training-number edit-only" type="number" id="edit-train-weeks" min="0" value="0" />
               </div>
               <div class="training-field">
-                <div class="training-label">Periods Complete</div>
+                <div class="training-label">Study Periods Passed</div>
                 <div class="training-value view-only" id="disp-train-periods">0</div>
                 <input class="training-select training-number edit-only" type="number" id="edit-train-periods" min="0" value="0" />
               </div>
             </div>
+            <div class="train-actions view-only" id="train-actions"></div>
           </div>
 
         </div>
@@ -1245,10 +1257,26 @@ function addSkill() {
 }
 
 // ── Training ───────────────────────────────────────────────
+// Core Rulebook p.55: a Study Period is 8 full weeks. Then an Average (8+) EDU check: success earns one passed
+// period, failure earns nothing. Raising a skill to level N needs N passed periods; a new skill at level 0 needs one.
+const TRAIN_WEEKS = 8;
+
+function onTrainSkillChange() {
+  const sel = document.getElementById('edit-train-skill');
+  if (sel.value === 'Jack-of-All-Trades') {
+    alert('Jack-of-All-Trades can never be learned or improved by training.');
+    sel.value = '';
+  }
+  // a different skill starts a fresh course of study
+  document.getElementById('edit-train-weeks').value = 0;
+  document.getElementById('edit-train-periods').value = 0;
+  populateTrainSpecialty();
+}
+
 function renderTraining() {
   document.getElementById('disp-train-skill').textContent    = character.training_skill       || '—';
   document.getElementById('disp-train-specialty').textContent= character.training_specialty    || '—';
-  document.getElementById('disp-train-weeks').textContent    = character.training_weeks_complete   ?? 0;
+  document.getElementById('disp-train-weeks').textContent    = (character.training_weeks_complete ?? 0) + ' / ' + TRAIN_WEEKS;
   document.getElementById('disp-train-periods').textContent  = character.training_periods_complete ?? 0;
   document.getElementById('edit-train-skill').value          = character.training_skill       || '';
   document.getElementById('edit-train-weeks').value          = character.training_weeks_complete   ?? 0;
@@ -1257,6 +1285,90 @@ function renderTraining() {
     populateTrainSpecialty();
     document.getElementById('edit-train-specialty').value = character.training_specialty || '';
   }
+  renderTrainActions();
+}
+
+function trainInfo() {
+  const name = character.training_skill;
+  if (!name) return null;
+  const spec = character.training_specialty || null;
+  const key = spec ? name + '|' + spec : name;
+  const skills = character.skills || {};
+  const cur = skills[key];
+  const onSheet = !!cur, level = onSheet ? (parseInt(cur.level) || 0) : null;
+  const total = Object.values(skills).reduce((s, x) => s + (parseInt(x.level) || 0), 0);
+  const max = 3 * ((character.int_stat ?? 7) + (character.edu ?? 7));
+  return { name, spec, key, onSheet, level, target: onSheet ? level + 1 : 0, needed: onSheet ? level + 1 : 1, total, max, atCap: total >= max };
+}
+
+function trainDmText(t) {
+  const dm = k => charDM(effectiveStat({ key: k }));
+  return t.name === 'Athletics'
+    ? 'Athletics uses a physical characteristic instead of EDU, any one of: STR ' + dm('str') + ' · DEX ' + dm('dex') + ' · END ' + dm('end_stat')
+    : 'EDU ' + dm('edu');
+}
+
+function renderTrainActions() {
+  const el = document.getElementById('train-actions');
+  if (!el) return;
+  const t = trainInfo();
+  if (!t) { el.innerHTML = '<div class="train-note">No skill chosen. Pick one in Edit mode to start training.</div>'; return; }
+  const label = t.name + (t.spec ? ' (' + t.spec + ')' : '');
+  if (t.name === 'Jack-of-All-Trades') {
+    el.innerHTML = '<div class="train-warn">Jack-of-All-Trades can never be learned or improved by training. Choose another skill in Edit mode.</div>';
+    return;
+  }
+  const weeks = character.training_weeks_complete || 0, periods = character.training_periods_complete || 0;
+  const dis = isOwner ? '' : ' disabled';
+  const goal = t.onSheet ? 'Raising <b>' + label + '</b> from level ' + t.level + ' to ' + t.target : 'Learning <b>' + label + '</b> at level 0';
+  const need = t.needed + ' successful Study Period' + (t.needed === 1 ? '' : 's') + ' needed · <b>' + periods + '</b> passed';
+  let body;
+  if (t.onSheet && t.atCap) {
+    body = '<div class="train-warn">At the skill limit (' + t.total + ' of ' + t.max + ' levels). Once you have this many, new skills can only be learned at level 0, so ' + label + ' cannot be raised.</div>';
+  } else if (periods >= t.needed) {
+    body = '<div class="train-ok">Training complete.</div><button class="btn btn-primary train-btn" onclick="finishTraining()"' + dis + '>' +
+      (t.onSheet ? 'Raise ' + label + ' to level ' + t.target : 'Add ' + label + ' at level 0') + '</button>';
+  } else if (weeks >= TRAIN_WEEKS) {
+    body = '<div class="train-ok">Study Period finished. Roll an Average (8+) check: 2D + DM. ' + trainDmText(t) + '</div>' +
+      '<button class="btn btn-primary train-btn" onclick="trainResult(true)"' + dis + '>Check passed</button> ' +
+      '<button class="btn btn-ghost train-btn" onclick="trainResult(false)"' + dis + '>Check failed</button>';
+  } else {
+    const pips = Array.from({ length: TRAIN_WEEKS }, (_, i) => '<span class="train-pip' + (i < weeks ? ' on' : '') + '"></span>').join('');
+    body = '<div class="train-weeks">' + pips + '<span class="train-wk">' + weeks + ' of ' + TRAIN_WEEKS + ' weeks</span></div>' +
+      '<button class="btn btn-primary train-btn" onclick="trainWeek(1)"' + dis + '>+1 week</button> ' +
+      '<button class="btn btn-ghost train-btn" onclick="trainWeek(-1)"' + dis + ' title="Take a week back off">−1 week</button>' +
+      '<div class="train-note">Count only full weeks (8 hours a day). A week that is interrupted does not count.</div>';
+  }
+  el.innerHTML = '<div class="train-goal">' + goal + ' — ' + need + '</div>' + body;
+}
+
+async function trainSave(patch) {
+  Object.assign(character, patch);
+  const { error } = await supabaseClient.from('characters').update(patch).eq('id', character.id);
+  if (error) alert('Could not save training: ' + error.message);
+  renderTraining();
+}
+function trainWeek(d) {
+  trainSave({ training_weeks_complete: Math.max(0, Math.min(TRAIN_WEEKS, (character.training_weeks_complete || 0) + d)) });
+}
+// The 8-week Study Period is over: a pass counts toward the next level, a fail only resets the weeks.
+function trainResult(passed) {
+  trainSave(passed
+    ? { training_weeks_complete: 0, training_periods_complete: (character.training_periods_complete || 0) + 1 }
+    : { training_weeks_complete: 0 });
+}
+// Training is done: put the skill on the sheet (new at level 0, or one level higher) and clear the tracker.
+async function finishTraining() {
+  const t = trainInfo();
+  if (!t || (t.onSheet && t.atCap)) return;
+  if (!character.skills) character.skills = {};
+  character.skills[t.key] = { name: t.name, specialty: t.spec, level: t.onSheet ? t.target : 0 };
+  const patch = { skills: character.skills, training_skill: null, training_specialty: null, training_weeks_complete: 0, training_periods_complete: 0 };
+  Object.assign(character, patch);
+  const { error } = await supabaseClient.from('characters').update(patch).eq('id', character.id);
+  if (error) alert('Could not save the skill: ' + error.message);
+  renderSkills();
+  renderTraining();
 }
 
 // ── Finances ───────────────────────────────────────────────
