@@ -44,6 +44,10 @@
     /* ── Max/Current pairs ── */
     .mc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-bottom:12px; }
     .mc-box { background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:6px; padding:10px 14px; }
+    /* title and figures on one line */
+    .mc-box.mc-inline { display:flex; align-items:center; gap:12px; padding:6px 14px; }
+    .mc-box.mc-inline .mc-label { margin-bottom:0; white-space:nowrap; min-width:92px; }
+    .mc-box.mc-inline .mc-row { font-size:1.1rem !important; }
     .mc-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:#4a9ab8; margin-bottom:6px; }
     .mc-row { display:flex; gap:10px; align-items:center; }
     .mc-sub { font-size:0.68rem; color:#4a9ab8; width:50px; flex-shrink:0; }
@@ -312,7 +316,7 @@
             </div>
           </div>
           <div class="mc-grid">
-            <div class="mc-box">
+            <div class="mc-box mc-inline">
               <div class="mc-label">Hull Points</div>
               <div class="mc-row" style="font-size:1.3rem;font-weight:600">
                 <span class="view-only" id="sv-hull-max2">0</span><span class="edit-only" id="ei-hull-max-calc2" title="25% of hull tonnage">0</span>
@@ -320,7 +324,7 @@
                 <span id="sv-hull-cur2">0</span>
               </div>
             </div>
-            <div class="mc-box">
+            <div class="mc-box mc-inline">
               <div class="mc-label">Armour</div>
               <div class="mc-row" style="font-size:1.3rem;font-weight:600">
                 <span class="view-only" id="sv-arm-max2">0</span><input class="edit-only" type="number" id="ei-arm-max" value="0" style="width:72px" />
@@ -328,7 +332,7 @@
                 <span id="sv-arm-cur2">0</span>
               </div>
             </div>
-            <div class="mc-box">
+            <div class="mc-box mc-inline">
               <div class="mc-label">Cargo (tons)</div>
               <div class="mc-row" style="font-size:1.3rem;font-weight:600">
                 <span class="view-only" id="sv-cargo-max-mc">0</span><input class="edit-only" type="number" id="ei-cargo-max" min="0" step="0.5" value="0" oninput="syncCargoMax()" style="width:72px" />
