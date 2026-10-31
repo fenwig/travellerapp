@@ -233,7 +233,7 @@
             <div><span>Maintenance Period Expenses:</span><span id="hdr-maintenance-period" style="color:#00ffaa;font-weight:600">0 cr</span></div>
           </div>
           <div class="ship-meta edit-only" style="margin-top:6px;gap:8px 16px;align-items:center">
-            <div><span>TL:</span><input class="ship-meta-input" type="number" id="ei-tl" min="1" max="15" style="width:45px" /></div>
+            <div><span>TL:</span><input class="ship-meta-input" type="number" id="ei-tl" min="1" max="15" style="width:72px" /></div>
             <div><select class="ship-meta-select" id="ei-streamlined">
               <option value="Streamlined">Streamlined</option>
               <option value="Partially Streamlined">Partially Streamlined</option>
@@ -315,7 +315,7 @@
               <input class="spec-input edit-only" type="number" id="ei-lowberths" min="0" />
             </div>
           </div>
-          <div class="mc-grid">
+          <div class="mc-grid" style="grid-template-columns:1fr 1fr 1.8fr">
             <div class="mc-box mc-inline">
               <div class="mc-label">Hull Points</div>
               <div class="mc-row" style="font-size:1.3rem;font-weight:600">
@@ -335,7 +335,7 @@
             <div class="mc-box mc-inline">
               <div class="mc-label">Cargo (tons)</div>
               <div class="mc-row" style="font-size:1.3rem;font-weight:600">
-                <span class="view-only" id="sv-cargo-max-mc">0</span><input class="edit-only" type="number" id="ei-cargo-max" min="0" step="0.5" value="0" oninput="syncCargoMax()" style="width:72px" />
+                <span class="view-only" id="sv-cargo-max-mc">0</span><input class="edit-only" type="number" id="ei-cargo-max" min="0" step="0.5" value="0" oninput="syncCargoMax()" style="width:110px" />
                 <span style="color:#4a9ab8"> / </span>
                 <span id="sv-cargo-cur" title="Total of all cargo entries on the Cargo &amp; Passengers tab">0</span>
               </div>
@@ -1311,7 +1311,8 @@ function renderFinance() {
   const mortgageVal   = parseFloat(s.mortgage_value) || 0;
   const mortgagePmt   = ex.mortgage;
 
-  const total = mortgagePmt+lifeBase+fuelCost+maintenance+(s.fin_salaries||0)+(s.fin_berthing||0)+(s.fin_other||0);
+  // fuel is bought when needed, so it is not part of the per-period total (same figure as the Time Tracker)
+  const total = ex.total;
 
   document.getElementById('finance-grid').innerHTML = `
     <div class="finance-box">
@@ -1323,8 +1324,8 @@ function renderFinance() {
       <div class="finance-value" title="${s.staterooms||0} staterooms × Cr1,000 (Cr${lifeStaterooms.toLocaleString()}) + Cr1,000 × ${personCount} aboard (${onboardCount} characters, ${hiredCrewCount} hired crew, ${passengerCount} passengers) = Cr${lifePersons.toLocaleString()}">${lifeBase.toLocaleString()}</div>
     </div>
     <div class="finance-box">
-      <div class="finance-label">Fuel (full tank)</div>
-      <div class="finance-value" title="${s.fuel_max||0} tons × Cr500">${fuelCost.toLocaleString()}</div>
+      <div class="finance-label">Fuel (not in total)</div>
+      <div class="finance-value" title="${s.fuel_max||0} tons × Cr500 to fill the tank (not included in the period total)">${fuelCost.toLocaleString()}</div>
     </div>
     <div class="finance-box">
       <div class="finance-label">Maintenance</div>
