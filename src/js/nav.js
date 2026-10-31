@@ -15,6 +15,11 @@ const NAV_GROUPS = [
     ['sell-cargo.html',            'Sell Cargo'],
     ['https://travellermap.com',   'Traveller Map', true]   // third value: opens in a new tab
   ]},
+  { id: 'campaign', label: 'Campaign', items: [
+    ['time-tracker.html',     'Time Tracker'],
+    ['campaign-finance.html', 'Campaign Finance'],
+    ['piracy-encounter.html', 'Piracy Encounter']
+  ]},
   { id: 'reference', label: 'Reference', items: [
     ['general-rules.html',        'General Rules'],
     ['combat.html',               'Combat'],
@@ -24,12 +29,8 @@ const NAV_GROUPS = [
     ['equipment.html',            'Equipment'],
     ['weapons-armor.html',        'Weapons & Armor'],
     ['trade.html',                'Trade']
-  ]},
-  { id: 'campaign', label: 'Campaign', items: [
-    ['time-tracker.html',     'Time Tracker'],
-    ['campaign-finance.html', 'Campaign Finance'],
-    ['piracy-encounter.html', 'Piracy Encounter']
   ]}
+
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
