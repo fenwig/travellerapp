@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attitudes — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <link rel="stylesheet" href="../css/calculators.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/nav.js" defer></script>
+  <style>
+    .at-wrap .calc-block { max-width: none; margin-bottom: 14px; }
+    .at-sub { color: #4a9ab8; font-size: 0.82rem; }
+    .at-layout { display: grid; grid-template-columns: 7fr 4fr; gap: 14px; align-items: start; max-width: 1500px; }
+    .at-main, .at-side { min-width: 0; }
+    @media (max-width: 1100px) { .at-layout { grid-template-columns: 1fr; } }
+    .at-msg { margin: 0 0 14px; padding: 9px 14px; border-radius: 6px; font-size: 0.85rem; display: none; }
+    .at-msg.err { display: block; border: 1px solid #ff5a4a; background: rgba(255,90,74,0.12); color: #ff8a7a; }
+    .at-msg.ok { display: block; border: 1px solid #00ffaa66; background: rgba(0,255,170,0.08); color: #00ffaa; }
+    .at-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    .at-table th { text-align: left; color: #4a9ab8; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; padding: 5px 8px; border-bottom: 1px solid #0a4a60; }
+    .at-table td { padding: 4px 8px; border-bottom: 1px solid rgba(10,74,96,0.3); color: #b0d8e8; vertical-align: middle; }
+    .at-table th.c, .at-table td.c { text-align: center; }
+    .at-table tr.at-sector td { color: #00e5ff; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.74rem; background: rgba(0,229,255,0.05); }
+    .at-table select, .at-table input { margin: 0; padding: 3px 6px; font-size: 0.8rem; }
+    .at-table select { width: 120px; }
+    .at-table input.at-note { width: 100%; min-width: 120px; }
+    .at-table tr.at-cur td { background: rgba(0,255,170,0.05); }
+    .at-pill { display: inline-block; padding: 1px 9px; border-radius: 10px; font-size: 0.74rem; border: 1px solid; }
+    .at-Haven      { color: #00ffaa; border-color: #00ffaa88; }
+    .at-Friendly   { color: #7dffc8; border-color: #7dffc888; }
+    .at-Tolerant   { color: #00e5ff; border-color: #00e5ff88; }
+    .at-Neutral    { color: #b0d8e8; border-color: #b0d8e888; }
+    .at-Suspicious { color: #ffd166; border-color: #ffd16688; }
+    .at-Unfriendly { color: #ff9a5a; border-color: #ff9a5a88; }
+    .at-Hostile    { color: #ff6a5a; border-color: #ff6a5a88; }
+    .at-counts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .at-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; }
+    .at-row label { display: flex; flex-direction: column; gap: 3px; font-size: 0.72rem; color: #4a9ab8; }
+    .at-row input, .at-row select { margin: 0; padding: 6px 8px; width: 120px; }
+    .at-row input.at-wide { width: 200px; }
+    .at-btn { width: auto; padding: 7px 16px; font-size: 0.85rem; }
+    .at-stand { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .at-power { border: 1px solid #0a4a60; border-radius: 6px; padding: 8px 12px; }
+    .at-power .at-name { color: #4a9ab8; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .at-power .at-val { font-size: 1.9rem; font-weight: 700; color: #00ffaa; line-height: 1.1; }
+    .at-power .at-val.neg { color: #ff8a7a; }
+    .at-power .at-band { color: #00e5ff; font-size: 0.82rem; font-weight: 700; }
+    .at-power .at-eff { color: #4a9ab8; font-size: 0.74rem; margin-top: 2px; }
+    .at-inc { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+    .at-inc label { flex-direction: row; align-items: center; gap: 6px; font-size: 0.8rem; color: #b0d8e8; }
+    .at-inc input[type=checkbox] { width: auto; margin: 0; }
+    .at-inc input[type=number] { width: 54px; padding: 2px 4px; }
+    .at-calc { color: #4a9ab8; font-size: 0.8rem; margin-top: 8px; min-height: 1.1em; }
+    .at-pos { color: #00ffaa; } .at-neg { color: #ff8a7a; }
+    .at-mini td, .at-mini th { padding: 2px 6px; font-size: 0.76rem; }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">ATTITUDES</h1>
+      <div class="at-wrap" id="at-root"><div class="at-sub">Loading…</div></div>
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/drinax-ports.js"></script>
+  <script>
+    let currentUser = null, userName = '', gm = false, campaignId = null, campaignName = '';
+    let ports = [], standing = {}, log = [], rolled = null;
+
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+    const d6 = () => Math.floor(Math.random() * 6) + 1;
+    const sgn = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = '../../index.html'; return; }
+      currentUser = session.user;
+      gm = isGM(currentUser);
+      userName = currentUser.user_metadata?.display_name || currentUser.email;
+      document.getElementById('sidebar-user').textContent = userName;
+      const list = await loadCampaigns();
+      campaignId = await currentCampaignId();
+      if (!campaignId) { document.getElementById('at-root').innerHTML = '<div class="at-sub">Campaigns are not set up yet.</div>'; return; }
+      campaignName = (list.find(c => c.id === campaignId) || {}).name || '';
+      await loadAll();
+    }
+
+    async function loadAll() {
+      try {
+        const p = await supabaseClient.from('port_attitudes').select('*').eq('campaign_id', campaignId).order('sector').order('hex');
+        if (p.error) throw p.error;
+        ports = p.data || [];
+        const s = await supabaseClient.from('standing').select('*').eq('campaign_id', campaignId);
+        if (s.error) throw s.error;
+        standing = { Imperium: STANDING_START.Imperium, Hierate: STANDING_START.Hierate };
+        (s.data || []).forEach(r => { standing[r.power] = r.value; });
+        const l = await supabaseClient.from('attitude_log').select('*').eq('campaign_id', campaignId).order('created_at', { ascending: false }).limit(200);
+        log = l.data || [];
+        render();
+      } catch (e) {
+        document.getElementById('at-root').innerHTML = '<div class="at-msg err">Could not load Attitudes: ' + esc(e.message) + ' (Has docs/attitudes.sql been run in Supabase?)</div>';
+      }
+    }
+
+    function flash(text, ok) {
+      const el = document.getElementById('at-msg');
+      if (!el) return;
+      el.textContent = text; el.className = 'at-msg ' + (ok ? 'ok' : 'err');
+      if (ok) setTimeout(() => { if (el.textContent === text) el.className = 'at-msg'; }, 4000);
+    }
+    async function writeLog(kind, subject, oldV, newV, note, details) {
+      await supabaseClient.from('attitude_log').insert({ campaign_id: campaignId, user_name: userName, kind, subject,
+        old_value: String(oldV), new_value: String(newV), note: note || null, details: details || {} });
+    }
+
+    // ── ports ──
+    async function setAttitude(id, level) {
+      const p = ports.find(x => x.id === id); if (!p || p.attitude === level) return;
+      const note = prompt('Why did ' + p.world + ' change from ' + p.attitude + ' to ' + level + '? (optional)');
+      if (note === null) return render();
+      const { error } = await supabaseClient.from('port_attitudes').update({ attitude: level, updated_at: new Date().toISOString() }).eq('id', id);
+      if (error) { await loadAll(); return flash(error.message, false); }
+      await writeLog('port', p.world, p.attitude, level, note);
+      await loadAll(); flash(p.world + ' is now ' + level + '.', true);
+    }
+    async function saveNote(id, text) {
+      const p = ports.find(x => x.id === id); if (!p || (p.note || '') === text) return;
+      const { error } = await supabaseClient.from('port_attitudes').update({ note: text || null }).eq('id', id);
+      if (error) return flash(error.message, false);
+      p.note = text;
+    }
+    async function loadBook() {
+      if (!confirm('Load the ' + DRINAX_PORTS.length + ' worlds from Appendix 2 with their starting attitudes? Worlds already in the list are left alone.')) return;
+      const have = new Set(ports.map(p => p.world));
+      const rows = DRINAX_PORTS.filter(r => !have.has(r[1])).map(r => ({ campaign_id: campaignId, sector: r[0], world: r[1], hex: r[2], attitude: r[3] }));
+      if (!rows.length) return flash('Every Appendix 2 world is already listed.', false);
+      const { error } = await supabaseClient.from('port_attitudes').insert(rows);
+      if (error) return flash(error.message, false);
+      await loadAll(); flash('Loaded ' + rows.length + ' worlds.', true);
+    }
+    async function addPort() {
+      const world = val('at-new-world').trim(); if (!world) return flash('Enter a world name.', false);
+      const row = { campaign_id: campaignId, sector: val('at-new-sector').trim() || 'Other', world, hex: val('at-new-hex').trim() || null, attitude: val('at-new-att') };
+      const { error } = await supabaseClient.from('port_attitudes').insert(row);
+      if (error) return flash(error.message.includes('duplicate') ? world + ' is already listed.' : error.message, false);
+      await writeLog('port', world, '—', row.attitude, 'Added to the list');
+      await loadAll(); flash(world + ' added.', true);
+    }
+    async function removePort(id) {
+      const p = ports.find(x => x.id === id); if (!p || !confirm('Remove ' + p.world + ' from the list?')) return;
+      const { error } = await supabaseClient.from('port_attitudes').delete().eq('id', id);
+      if (error) return flash(error.message, false);
+      await loadAll();
+    }
+    function lawHelp() {
+      const law = parseInt(val('at-law'), 10);
+      document.getElementById('at-law-out').textContent = isNaN(law) ? '' : 'Law Level ' + law + ' starts at ' + attitudeFromLaw(law) + '.';
+    }
+
+    // ── standing ──
+    async function setStanding(power, value, note, details) {
+      const old = standing[power];
+      const { error } = await supabaseClient.from('standing').upsert({ campaign_id: campaignId, power, value, updated_at: new Date().toISOString() }, { onConflict: 'campaign_id,power' });
+      if (error) return flash(error.message, false);
+      await writeLog('standing', power, old, value, note, details);
+      await loadAll(); flash(power + ' Standing is now ' + value + '.', true);
+    }
+    function rollIncidents() {
+      const power = val('at-in-power'), parts = []; let total = 0;
+      STANDING_INCIDENTS.forEach(inc => {
+        const el = document.getElementById('at-inc-' + inc.id);
+        if (!el || !el.checked) return;
+        if (inc.count) {
+          const n = Math.max(1, parseInt(val('at-inc-n'), 10) || 1);
+          total += inc.flat * n; parts.push({ id: inc.id, label: 'Cargo theft x' + n, value: inc.flat * n });
+        } else {
+          const dice = Array.from({ length: inc.dice }, d6), sum = dice.reduce((a, b) => a + b, 0) * inc.sign;
+          total += sum; parts.push({ id: inc.id, label: inc.label.split(' (')[0], dice, value: sum });
+        }
+      });
+      if (!parts.length) { rolled = null; return flash('Tick at least one incident.', false); }
+      rolled = { power, total, parts };
+      document.getElementById('at-in-adj').value = total;
+      showRoll();
+    }
+    function showRoll() {
+      const el = document.getElementById('at-roll-out'); if (!el) return;
+      if (!rolled) { el.textContent = ''; return; }
+      el.innerHTML = rolled.parts.map(p => esc(p.label) + (p.dice ? ' [' + p.dice.join(',') + ']' : '') + ' <b class="' + (p.value >= 0 ? 'at-pos' : 'at-neg') + '">' + sgn(p.value) + '</b>').join(' · ')
+        + ' → total <b class="' + (rolled.total >= 0 ? 'at-pos' : 'at-neg') + '">' + sgn(rolled.total) + '</b>';
+    }
+    async function applyIncidents() {
+      const power = val('at-in-power'), adj = parseInt(val('at-in-adj'), 10);
+      if (isNaN(adj) || adj === 0) return flash('Roll the incidents or type an adjustment first.', false);
+      const note = val('at-in-note').trim() || (rolled ? rolled.parts.map(p => p.label).join(', ') : 'Manual adjustment');
+      await setStanding(power, standing[power] + adj, note, { change: adj, rolled: rolled && rolled.power === power ? rolled.parts : null });
+      rolled = null;
+    }
+    async function monthPassed() {
+      const msgs = [];
+      for (const power of ['Imperium', 'Hierate']) {
+        const start = STANDING_START[power], v = standing[power];
+        if (v === start) continue;
+        await setStanding(power, v + (v < start ? 1 : -1), 'A month with nothing of consequence (drifts toward ' + start + ')');
+        msgs.push(power);
+      }
+      if (!msgs.length) flash('Both Standings are already at their starting values.', false);
+    }
+
+    // ── drawing ──
+    function pill(level) { return '<span class="at-pill at-' + level + '">' + level + '</span>'; }
+    function render() {
+      const counts = {}; PORT_LEVELS.forEach(l => { counts[l] = 0; }); ports.forEach(p => { if (counts[p.attitude] != null) counts[p.attitude]++; });
+      const bySector = {}; ports.forEach(p => { (bySector[p.sector] = bySector[p.sector] || []).push(p); });
+      const sectors = Object.keys(bySector);
+      const lvlOpts = sel => PORT_LEVELS.map(l => `<option ${l === sel ? 'selected' : ''}>${l}</option>`).join('');
+      const ro = gm ? '' : 'disabled';
+
+      const standBlock = ['Imperium', 'Hierate'].map(pw => {
+        const v = standing[pw], b = standingBand(v);
+        return `<div class="at-power"><div class="at-name">${pw === 'Imperium' ? 'Third Imperium' : 'Aslan Hierate'}</div>
+          <div class="at-val ${v < 0 ? 'neg' : ''}">${v}</div><div class="at-band">${b[1]}</div><div class="at-eff">${esc(b[2])}</div></div>`;
+      }).join('');
+
+      document.getElementById('at-root').innerHTML = `
+        <div id="at-msg" class="at-msg"></div>
+        <div class="at-sub" style="margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">${esc(campaignName)} — Pirates of Drinax${gm ? '' : ' · view only (the GM edits)'}</div>
+
+        <div class="at-layout">
+          <div class="at-main">
+            <div class="calc-block">
+              <div class="calc-block-title">Port attitudes</div>
+              <div class="at-counts" style="margin-bottom:10px">${PORT_LEVELS.map(l => `<span>${pill(l)} ${counts[l]}</span>`).join('')}</div>
+              ${ports.length ? `<table class="at-table"><thead><tr><th>World</th><th>Hex</th><th>Attitude</th><th class="c">Fence</th><th class="c">Recruit</th><th class="c">Arrest</th><th class="c">Spies</th><th class="c">Protect</th><th>Note</th>${gm ? '<th></th>' : ''}</tr></thead><tbody>
+                ${sectors.map(sec => `<tr class="at-sector"><td colspan="${gm ? 10 : 9}">${esc(sec)}</td></tr>` + bySector[sec].map(p => { const e = PORT_EFFECTS[p.attitude] || {};
+                  return `<tr><td>${esc(p.world)}</td><td>${esc(p.hex || '')}</td>
+                    <td>${gm ? `<select onchange="setAttitude('${p.id}', this.value)">${lvlOpts(p.attitude)}</select>` : pill(p.attitude)}</td>
+                    <td class="c">${e.fence || ''}</td><td class="c">${e.recruit || ''}</td><td class="c">${e.arrest || ''}</td><td class="c">${e.spies || ''}</td><td class="c">${e.protect || ''}</td>
+                    <td><input class="at-note" value="${esc(p.note || '')}" ${ro} onchange="saveNote('${p.id}', this.value)" placeholder="${gm ? 'e.g. what is needed to upgrade' : ''}" /></td>
+                    ${gm ? `<td><button class="btn-small" onclick="removePort('${p.id}')" title="Remove from the list">✕</button></td>` : ''}</tr>`; }).join('')).join('')}
+              </tbody></table>`
+              : `<div class="at-sub">No ports listed yet.${gm ? '' : ' Ask the GM to load them.'}</div>`}
+              ${gm ? `<div class="at-row" style="margin-top:12px">
+                ${ports.length < DRINAX_PORTS.length ? '<button class="btn-outline at-btn" onclick="loadBook()">Load Appendix 2 worlds</button>' : ''}
+                <label>Sector<input id="at-new-sector" list="at-sectors" /></label>
+                <datalist id="at-sectors">${['Sindal', 'Tobia', 'Tliowaha', 'Borderlands'].map(s => `<option value="${s}">`).join('')}</datalist>
+                <label>World<input class="at-wide" id="at-new-world" /></label>
+                <label>Hex<input id="at-new-hex" style="width:70px" /></label>
+                <label>Attitude<select id="at-new-att">${lvlOpts('Neutral')}</select></label>
+                <button class="btn-outline at-btn" onclick="addPort()">Add world</button></div>` : ''}
+              <div class="at-sub" style="margin-top:10px">Fence = the pirates' share of the value of stolen goods sold there. Recruit = 2D target to find crew. Arrest = 2D roll on landing; Spies = 2D roll on departure; Protect = 2D roll when attacked in the port's space. Starting attitudes were read from Appendix 2 and the PDF text is garbled in places, so check any that look wrong. The book prints "Tolerant" twice in the effects table; the second row is treated as Neutral.</div>
+            </div>
+
+            <div class="calc-block">
+              <div class="calc-block-title">Change log <span class="at-sub" style="font-weight:400">(latest 200)</span></div>
+              ${log.length ? `<table class="at-table"><thead><tr><th>When</th><th>By</th><th>What</th><th>Change</th><th>Why</th></tr></thead><tbody>
+                ${log.map(l => `<tr><td>${new Date(l.created_at).toLocaleString()}</td><td>${esc(l.user_name || '')}</td><td>${l.kind === 'standing' ? 'Standing · ' : ''}${esc(l.subject)}</td><td>${esc(l.old_value)} → ${esc(l.new_value)}</td><td>${esc(l.note || '')}</td></tr>`).join('')}
+              </tbody></table>` : '<div class="at-sub">Nothing recorded yet.</div>'}
+            </div>
+          </div>
+
+          <div class="at-side">
+            <div class="calc-block">
+              <div class="calc-block-title">Standing</div>
+              <div class="at-stand">${standBlock}</div>
+              <div class="at-sub" style="margin-top:8px">Starts at 0 with the Imperium and −5 with the Hierate. Ally and Tolerated also change that power's ports, and Enemy of the State drops ports that are not Friendly or better by one level. Make those port changes yourself in the list.</div>
+            </div>
+            ${gm ? `<div class="calc-block">
+              <div class="calc-block-title">Record incidents</div>
+              <div class="at-row"><label>Against<select id="at-in-power"><option value="Imperium">Third Imperium</option><option value="Hierate">Aslan Hierate</option></select></label></div>
+              <div class="at-inc">${STANDING_INCIDENTS.map(inc => `<label><input type="checkbox" id="at-inc-${inc.id}" />${esc(inc.label)}${inc.count ? ' <input type="number" id="at-inc-n" min="1" value="1" />' : ' <span class="at-sub">' + (inc.sign < 0 ? '−' : '+') + '1D</span>'}</label>`).join('')}</div>
+              <button class="btn-outline at-btn" onclick="rollIncidents()">Roll</button>
+              <div class="at-calc" id="at-roll-out"></div>
+              <div class="at-row" style="margin-top:8px"><label>Change to apply<input type="number" id="at-in-adj" /></label>
+                <label>Note<input class="at-wide" id="at-in-note" placeholder="what happened" /></label>
+                <button class="btn-outline at-btn" onclick="applyIncidents()">Apply</button></div>
+              <div class="at-sub" style="margin-top:8px">Rolls can be combined, and you can overwrite the total. An attack on one power is usually a Heroic Deed (+1D) with the other: run it again with that power chosen.</div>
+              <div style="margin-top:10px"><button class="btn-outline at-btn" onclick="monthPassed()">A month passed without incident</button>
+                <div class="at-sub" style="margin-top:4px">Moves each Standing one point back toward its starting value.</div></div>
+            </div>` : ''}
+            <div class="calc-block">
+              <div class="calc-block-title">Port attitude by Law Level</div>
+              <table class="at-table at-mini"><tbody><tr><td>2 or less</td><td>Tolerant</td></tr><tr><td>3-5</td><td>Neutral</td></tr><tr><td>6-9</td><td>Suspicious</td></tr><tr><td>10-11</td><td>Unfriendly</td></tr><tr><td>12+</td><td>Hostile</td></tr></tbody></table>
+              <div class="at-row" style="margin-top:8px"><label>Law Level<input type="number" id="at-law" oninput="lawHelp()" style="width:70px" /></label></div>
+              <div class="at-calc" id="at-law-out"></div>
+              <div class="at-sub">Drinax is the only Haven at the start, Theev the only Friendly port, and all Aslan ports are Unfriendly. Ports are upgraded by contacts and patron missions, spending money in port, or donating captured ships and equipment.</div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    async function doSignOut() {
+      await supabaseClient.auth.signOut();
+      window.location.href = '../../index.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>

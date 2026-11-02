@@ -18,7 +18,8 @@ const NAV_GROUPS = [
   { id: 'campaign', label: 'Campaign', items: [
     ['time-tracker.html',     'Time Tracker'],
     ['campaign-finance.html', 'Campaign Finance'],
-    ['piracy-encounter.html', 'Piracy Encounter']
+    ['piracy-encounter.html', 'Piracy Encounter'],
+    ['attitudes.html',        'Attitudes']
   ]},
   { id: 'reference', label: 'Reference', items: [
     ['general-rules.html',        'General Rules'],
