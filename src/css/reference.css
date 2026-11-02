@@ -371,8 +371,26 @@
 .ref-grid > .rule-card-row { display: contents; }
 .ref-grid .rule-card { margin: 0 !important; }
 
+/* Two whole sections side by side (each keeps its own heading); cards inside stack in one column */
+.ref-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+  margin-bottom: 36px;
+}
+.ref-pair > .ref-section {
+  margin-bottom: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ref-pair > .ref-section > * { margin: 0; }
+.ref-pair > .ref-section > .ref-section-title { margin-bottom: 2px; }
+.ref-pair > .ref-section > .rule-card:last-child { flex: 1; }
+
 @media (max-width: 900px) {
-  .ref-grid { grid-template-columns: 1fr; }
+  .ref-grid, .ref-pair { grid-template-columns: 1fr; }
 }
 
 /* Reference note (small text below a card) */

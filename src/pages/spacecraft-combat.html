@@ -11,7 +11,6 @@
 </head>
 <body>
 
-
   <div class="app-shell">
     <nav class="sidebar">
       <div class="sidebar-logo">
@@ -37,6 +36,7 @@
       <!-- SETUP & CREW TAB -->
       <div id="tab-setup" class="tab-content">
 
+<div class="ref-pair">
 <div class="ref-section ref-grid">
           <h2 class="ref-section-title">Round Structure</h2>
           <div class="rule-card">
@@ -46,14 +46,13 @@
             <div class="rule-card-title">Combat Steps (each round, in order)</div>
             <table class="ref-table">
               <tbody>
-                <tr><td class="td-cyan" style="width:30%">1. Manoeuvre Step</td><td>In Initiative order — each ship allocates Thrust to movement or combat manoeuvring.</td></tr>
+                <tr><td class="td-cyan">1. Manoeuvre Step</td><td>In Initiative order — each ship allocates Thrust to movement or combat manoeuvring.</td></tr>
                 <tr><td class="td-cyan">2. Attack Step</td><td>In Initiative order — each ship fires weapons or conducts boarding actions.</td></tr>
                 <tr><td class="td-cyan">3. Actions Step</td><td>In Initiative order — crew perform miscellaneous actions: repairs, jumping, reloading, electronic warfare.</td></tr>
               </tbody>
             </table>
           </div>
         </div>
-
 <div class="ref-section ref-grid">
           <h2 class="ref-section-title">Initiative</h2>
           <div class="rule-formula">2D + Pilot skill + Ship's Thrust score</div>
@@ -63,6 +62,7 @@
             <p class="rule-body">Difficult to achieve in space — few places to hide. Damaged sensors, inattentive operators, asteroids, or feigning neutrality can allow one ship to approach undetected. A surprised ship <strong>cannot take any actions in the first round</strong>.</p>
           </div>
         </div>
+</div>
 
 <div class="ref-section ref-grid">
           <h2 class="ref-section-title">Range Bands</h2>
@@ -105,20 +105,13 @@
             <div class="rule-card-title">Automated Duties (Software)</div>
             <table class="ref-table">
               <tbody>
-                <tr><td style="width:45%">Fire Control program</td><td>Acts as a gunner or assists gunners.</td></tr>
+                <tr><td>Fire Control program</td><td>Acts as a gunner or assists gunners.</td></tr>
                 <tr><td>Auto-Repair software + repair drones</td><td>Performs damage control.</td></tr>
                 <tr><td>Intellect + Expert (engineer)</td><td>Acts as engineer for j-drive, m-drive, or power plant.</td></tr>
                 <tr><td>Intellect + Expert (pilot)</td><td>Acts as pilot.</td></tr>
                 <tr><td>Intellect + Expert (electronics — sensors)</td><td>Acts as sensor operator.</td></tr>
               </tbody>
             </table>
-          </div>
-        </div>
-
-<div class="ref-section ref-grid">
-          <h2 class="ref-section-title">Facing &amp; Fire Arcs</h2>
-          <div class="ref-span rule-card">
-            <p class="rule-body">Most spacecraft can spin or rotate freely and carry turret-mounted weapons with wide fire arcs — <strong>tracking facing is usually unnecessary</strong>. Exception: small craft (fighters) with <strong>fixed weapon mounts</strong> must physically point at their target, making facing relevant.</p>
           </div>
         </div>
 
@@ -151,19 +144,25 @@
             <p class="ref-note">Once a ship moves to Close or Adjacent range, immediately switch to the Dogfighting rules.</p>
           </div>
 
-          <div class="ref-span rule-card">
+          <div class="rule-card">
             <div class="rule-card-title">Combat Manoeuvring</div>
             <p class="rule-body" style="margin-bottom:10px">Each remaining Thrust point (after movement) allows one of the following. Each may only be attempted once per round except Evasive Action.</p>
             <table class="ref-table">
               <tbody>
-                <tr><td class="td-cyan" style="width:30%">Aid Gunners</td><td>Pilot check to start a task chain with gunners — provides a firing platform bonus.</td></tr>
+                <tr><td class="td-cyan">Aid Gunners</td><td>Pilot check to start a task chain with gunners — provides a firing platform bonus.</td></tr>
                 <tr><td class="td-cyan">Docking</td><td>Pilot check required. If unwilling target, opposed Pilot checks — docking ship suffers DM−2. Success allows boarding actions.</td></tr>
                 <tr><td class="td-cyan">Evasive Action</td><td>Each unspent Thrust point allows the ship to dodge one incoming attack. The attack suffers a negative DM equal to the <strong>pilot's skill</strong>.</td></tr>
               </tbody>
             </table>
           </div>
+
+          <div class="rule-card">
+            <div class="rule-card-title">Facing &amp; Fire Arcs</div>
+            <p class="rule-body">Most spacecraft can spin or rotate freely and carry turret-mounted weapons with wide fire arcs — <strong>tracking facing is usually unnecessary</strong>. Exception: small craft (fighters) with <strong>fixed weapon mounts</strong> must physically point at their target, making facing relevant.</p>
+          </div>
         </div>
 
+<div class="ref-pair">
 <div class="ref-section ref-grid">
           <h2 class="ref-section-title">Attack Step</h2>
           <div class="rule-card">
@@ -187,7 +186,6 @@
             </table>
           </div>
         </div>
-
 <div class="ref-section ref-grid">
           <h2 class="ref-section-title">Reactions</h2>
           <p class="rule-body" style="margin-bottom:12px; font-size:0.88rem; color:#b0d8e8;">Reactions are declared in response to incoming attacks — outside of normal turn order. <em style="color:#4a9ab8">Core Rulebook p.171</em></p>
@@ -206,6 +204,7 @@
             <p class="rule-body">A sandcaster can block incoming laser attacks. Make a <strong>Gunner (turret)</strong> check against the laser — if successful, add <strong>1D + Effect</strong> to the ship's armour against that attack only. Uses one sand canister. Can also be directed against incoming boarders: success deals <strong>8D damage (Ground scale)</strong> to each target in the boarding party.</p>
           </div>
         </div>
+</div>
 
 <div class="ref-section ref-grid">
           <h2 class="ref-section-title">Actions Step</h2>
@@ -215,7 +214,7 @@
             <div class="rule-card-title">Captain Actions</div>
             <table class="ref-table">
               <tbody>
-                <tr><td class="td-cyan" style="width:35%">Improve Initiative</td><td>Leadership check. Effect (even if negative) is applied to the ship's Initiative for the next round only.</td></tr>
+                <tr><td class="td-cyan">Improve Initiative</td><td>Leadership check. Effect (even if negative) is applied to the ship's Initiative for the next round only.</td></tr>
               </tbody>
             </table>
           </div>
@@ -224,7 +223,7 @@
             <div class="rule-card-title">Engineer Actions</div>
             <table class="ref-table">
               <tbody>
-                <tr><td class="td-cyan" style="width:35%">Jump</td><td>Initiate jump. Hurried conditions raise difficulty by one level on both Astrogation and Engineer (j-drive) checks to bring time down to 1D minutes.</td></tr>
+                <tr><td class="td-cyan">Jump</td><td>Initiate jump. Hurried conditions raise difficulty by one level on both Astrogation and Engineer (j-drive) checks to bring time down to 1D minutes.</td></tr>
                 <tr><td class="td-cyan">Offline System</td><td>Engineer (power) check — shuts down any number of systems, freeing Power for other uses. Takes another round to bring systems back online.</td></tr>
                 <tr><td class="td-cyan">Overload Drive</td><td>Difficult (10+) Engineer (m-drive) check — increases Thrust by +1 next round. Fail with Effect −6 or worse: m-drive takes Severity 1 critical hit. Cumulative DM−2 each subsequent attempt (reset with 1D hours maintenance).</td></tr>
                 <tr><td class="td-cyan">Overload Plant</td><td>Difficult (10+) Engineer (power) check — increases Power by +10% next round. Fail with Effect −6 or worse: power plant takes Severity 1 critical hit. Cumulative DM−2 each subsequent attempt.</td></tr>
@@ -237,7 +236,7 @@
             <div class="rule-card-title">Gunner Actions</div>
             <table class="ref-table">
               <tbody>
-                <tr><td class="td-cyan" style="width:35%">Reload Turret</td><td>Reloads a sandcaster or missile rack. The turret cannot attack this round. Any Traveller with the Gunner skill may reload.</td></tr>
+                <tr><td class="td-cyan">Reload Turret</td><td>Reloads a sandcaster or missile rack. The turret cannot attack this round. Any Traveller with the Gunner skill may reload.</td></tr>
               </tbody>
             </table>
           </div>
@@ -246,7 +245,7 @@
             <div class="rule-card-title">Sensor Operator Actions</div>
             <table class="ref-table">
               <tbody>
-                <tr><td class="td-cyan" style="width:35%">Sensor Lock</td><td>Electronics (sensors) check — all attacks against the locked target gain <strong>DM+2</strong> until the lock is broken.</td></tr>
+                <tr><td class="td-cyan">Sensor Lock</td><td>Electronics (sensors) check — all attacks against the locked target gain <strong>DM+2</strong> until the lock is broken.</td></tr>
                 <tr><td class="td-cyan">Electronic Warfare</td><td>Opposed Electronics (comms) check to jam enemy communications, or Electronics (sensors) to break a sensor lock. Also used as a missile countermeasure (see Missiles tab).</td></tr>
               </tbody>
             </table>
@@ -256,7 +255,7 @@
             <div class="rule-card-title">Marine Actions</div>
             <table class="ref-table">
               <tbody>
-                <tr><td class="td-cyan" style="width:35%">Boarding Action</td><td>When at Adjacent range, marines may launch a boarding action. Takes 2D rounds to resolve. See Dogfighting &amp; Boarding tab.</td></tr>
+                <tr><td class="td-cyan">Boarding Action</td><td>When at Adjacent range, marines may launch a boarding action. Takes 2D rounds to resolve. See Dogfighting &amp; Boarding tab.</td></tr>
               </tbody>
             </table>
           </div>
@@ -265,7 +264,7 @@
             <div class="rule-card-title">Any Crew</div>
             <table class="ref-table">
               <tbody>
-                <tr><td class="td-cyan" style="width:35%">Reassignment</td><td>Traveller changes their assigned duty. No other action this round; new duty takes effect next round.</td></tr>
+                <tr><td class="td-cyan">Reassignment</td><td>Traveller changes their assigned duty. No other action this round; new duty takes effect next round.</td></tr>
               </tbody>
             </table>
           </div>
@@ -304,7 +303,7 @@
             <div class="rule-card-title">Dogfighting Notes</div>
             <table class="ref-table">
               <tbody>
-                <tr><td style="width:40%">Turret weapons</td><td>Can fire into any arc — dogfight usually only imposes attack roll penalties, not arc restrictions.</td></tr>
+                <tr><td>Turret weapons</td><td>Can fire into any arc — dogfight usually only imposes attack roll penalties, not arc restrictions.</td></tr>
                 <tr><td>Distant enemies</td><td>Ships in a dogfight cannot attack at further ranges; ships outside cannot attack in without risk of friendly fire.</td></tr>
                 <tr><td>Spacecraft vs vehicles</td><td>Spacecraft suffer DM−2 — designed for vast distances, not atmospheric knife-fights. They can operate at any Speed Band, typically Hypersonic when entering atmosphere.</td></tr>
               </tbody>
@@ -547,8 +546,12 @@
             <p class="rule-body">Missiles are fired in <strong>salvos</strong> — all missiles launched by a ship at a single target in the same round. A triple turret with three missile racks fires up to 3 missiles; multiple turrets contribute to the same salvo. Each turret holds <strong>12 missiles</strong>. <em style="color:#4a9ab8">Core Rulebook p.172</em></p>
             <p class="rule-body" style="margin-top:8px">Missiles at Adjacent or Close range <strong>lose the Smart trait</strong> — insufficient time to lock. Missile salvos have effective <strong>Thrust 10</strong>.</p>
           </div>
-          <div class="rule-card" style="margin-top:12px">
-            <div class="rule-card-title">Missile Flight Time</div>
+        </div>
+
+<div class="ref-pair">
+<div class="ref-section ref-grid">
+          <h2 class="ref-section-title">Missile Flight Time</h2>
+          <div class="rule-card">
             <table class="ref-table">
               <thead><tr><th>Range at Launch</th><th>Rounds to Impact</th></tr></thead>
               <tbody>
@@ -561,14 +564,13 @@
             <p class="ref-note">A missile that hasn't reached its target within 10 rounds runs out of fuel and becomes inert.</p>
           </div>
         </div>
-
 <div class="ref-section ref-grid">
           <h2 class="ref-section-title">Detecting Missile Launch</h2>
-          <div class="ref-span rule-card">
+          <div class="rule-card">
             <p class="rule-body" style="margin-bottom:10px">When missiles are launched, other ships' sensor operators may immediately attempt to detect them.</p>
             <table class="ref-table">
               <tbody>
-                <tr><td style="width:55%">Firing ship already detected</td><td><strong>Routine (6+)</strong> Electronics (sensors)</td></tr>
+                <tr><td>Firing ship already detected</td><td><strong>Routine (6+)</strong> Electronics (sensors)</td></tr>
                 <tr><td>Firing ship not yet detected</td><td><strong>Average (8+)</strong> Electronics (sensors)</td></tr>
                 <tr><td>Every 10 full missiles in salvo</td><td class="td-bonus">DM+1 (max DM+6)</td></tr>
               </tbody>
@@ -576,7 +578,28 @@
             <p class="rule-body" style="margin-top:10px">Undetected missiles may be spotted at the start of every subsequent round with an <strong>Average (8+)</strong> Electronics (sensors) check.</p>
           </div>
         </div>
+</div>
 
+<div class="ref-pair">
+<div class="ref-section ref-grid">
+          <h2 class="ref-section-title">Missile Attack &amp; Impact</h2>
+          <div class="rule-card">
+            <div class="rule-card-title">Missile Attack Roll</div>
+            <p class="rule-body" style="margin-bottom:10px">When a salvo reaches its target it attacks in the Attack Step. The Gunner skill of the firer and range are <strong>not used</strong> as modifiers. Instead:</p>
+            <table class="ref-table">
+              <tbody>
+                <tr><td>Each missile remaining in salvo</td><td class="td-bonus">DM+1 to attack roll</td></tr>
+                <tr><td>Missiles launched at Distant range</td><td class="td-penalty">DM−2 to attack roll</td></tr>
+                <tr><td>Evasive Action</td><td>Applied as normal</td></tr>
+                <tr><td>Smart trait</td><td>Use higher of missile TL or attacking ship TL</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="rule-card" style="margin-top:12px">
+            <div class="rule-card-title">Impact Damage</div>
+            <p class="rule-body">Roll damage as for a single missile. Deduct armour as normal. <strong>Do not add the Effect</strong> to damage — instead, <strong>multiply damage by the Effect</strong> (Effect cannot exceed the number of missiles remaining in the salvo).</p>
+          </div>
+        </div>
 <div class="ref-section ref-grid">
           <h2 class="ref-section-title">Countermeasures</h2>
           <p class="rule-body" style="margin-bottom:14px; font-size:0.88rem; color:#b0d8e8;">As missiles take several rounds to arrive, track how many remain in each salvo — reduce as countermeasures take effect. <em style="color:#4a9ab8">Core Rulebook p.172</em></p>
@@ -596,26 +619,7 @@
             <p class="rule-body">Performed as a <strong>Reaction</strong> just as a salvo is about to make its attack roll. A turret gunner makes a <strong>Gunner (turret)</strong> check — the Effect removes that many missiles from the salvo. A turret with two lasers grants DM+1; three lasers grants DM+2. A weapon used for point defence cannot also attack this round. Only once per round per gunner.</p>
           </div>
         </div>
-
-<div class="ref-section ref-grid">
-          <h2 class="ref-section-title">Missile Attack &amp; Impact</h2>
-          <div class="rule-card">
-            <div class="rule-card-title">Missile Attack Roll</div>
-            <p class="rule-body" style="margin-bottom:10px">When a salvo reaches its target it attacks in the Attack Step. The Gunner skill of the firer and range are <strong>not used</strong> as modifiers. Instead:</p>
-            <table class="ref-table">
-              <tbody>
-                <tr><td style="width:55%">Each missile remaining in salvo</td><td class="td-bonus">DM+1 to attack roll</td></tr>
-                <tr><td>Missiles launched at Distant range</td><td class="td-penalty">DM−2 to attack roll</td></tr>
-                <tr><td>Evasive Action</td><td>Applied as normal</td></tr>
-                <tr><td>Smart trait</td><td>Use higher of missile TL or attacking ship TL</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="rule-card" style="margin-top:12px">
-            <div class="rule-card-title">Impact Damage</div>
-            <p class="rule-body">Roll damage as for a single missile. Deduct armour as normal. <strong>Do not add the Effect</strong> to damage — instead, <strong>multiply damage by the Effect</strong> (Effect cannot exceed the number of missiles remaining in the salvo).</p>
-          </div>
-        </div>
+</div>
 
         <div class="special-divider"><span>Traveller Companion — Missile Types</span></div>
 
@@ -690,7 +694,7 @@
             <p class="rule-body" style="margin-bottom:10px">The ship being boarded must be <strong>inert or unable to evade</strong> — not operating its manoeuvre drive voluntarily or due to disablement.</p>
             <table class="ref-table">
               <tbody>
-                <tr><td class="td-cyan" style="width:30%">Routine Inspection</td><td>Ship voluntarily allows boarding. No combat assumed.</td></tr>
+                <tr><td class="td-cyan">Routine Inspection</td><td>Ship voluntarily allows boarding. No combat assumed.</td></tr>
                 <tr><td class="td-cyan">Forced Boarding</td><td>Attacker must have <strong>superior Thrust</strong> — a ship with Thrust parity or better can evade indefinitely. Attacker must also establish docking, linkage, or spatial parity before boarding can proceed.</td></tr>
                 <tr><td class="td-cyan">Salvage / Exploratory</td><td>Derelict or disabled ship. Approach, Contact and Entry are assumed. Conflict only occurs if something unexpected is discovered aboard.</td></tr>
               </tbody>
@@ -708,7 +712,7 @@
             <p class="rule-body" style="margin-bottom:8px">Request, demand, or force access to the target ship.</p>
             <table class="ref-table">
               <tbody>
-                <tr><td style="width:30%"><strong>Accepted</strong></td><td>Proceed to Contact.</td></tr>
+                <tr><td><strong>Accepted</strong></td><td>Proceed to Contact.</td></tr>
                 <tr><td><strong>Declined</strong></td><td>Apply censure and/or attack. Engage in space combat to debilitate the ship, establish superior Thrust, then close distance for boarding.</td></tr>
               </tbody>
             </table>
@@ -720,7 +724,7 @@
             <p class="rule-body" style="margin-bottom:8px">Establish a physical connection with the target ship.</p>
             <table class="ref-table">
               <tbody>
-                <tr><td style="width:30%"><strong>Standard Docking</strong></td><td>Mate airlocks — Average (8+) Pilot check. Forced linkage apparatus adds DM+2.</td></tr>
+                <tr><td><strong>Standard Docking</strong></td><td>Mate airlocks — Average (8+) Pilot check. Forced linkage apparatus adds DM+2.</td></tr>
                 <tr><td><strong>Breaching Tube</strong></td><td>Cuts through unarmoured hull in under 2 minutes. Creates sealed passage — no decompression risk. Fastest forced entry option.</td></tr>
                 <tr><td><strong>Free Board</strong></td><td>Vacc-suited boarders leap across in open space. Extremely dangerous but avoids risk of reverse boarding. Sandcasters can be used against free boarders with deadly results.</td></tr>
               </tbody>
@@ -732,7 +736,7 @@
             <p class="rule-body" style="margin-bottom:8px">Gain access to the ship's interior.</p>
             <table class="ref-table">
               <tbody>
-                <tr><td style="width:30%"><strong>Entrance Allowed</strong></td><td>Proceed to Secure (routine) or Conflict (hostile).</td></tr>
+                <tr><td><strong>Entrance Allowed</strong></td><td>Proceed to Secure (routine) or Conflict (hostile).</td></tr>
                 <tr><td><strong>Entrance Denied</strong></td><td>Force entry via intrusion software, explosives, cutting tools, personal weapons, or breaching tube. See Entry Methods below.</td></tr>
               </tbody>
             </table>
@@ -743,7 +747,7 @@
             <p class="rule-body" style="margin-bottom:8px">Combat within the ship's corridors and compartments. See Combat Aboard Ship below.</p>
             <table class="ref-table">
               <tbody>
-                <tr><td style="width:30%"><strong>Defend entry point</strong></td><td>Crew holds the breach and tries to repel the boarding party.</td></tr>
+                <tr><td><strong>Defend entry point</strong></td><td>Crew holds the breach and tries to repel the boarding party.</td></tr>
                 <tr><td><strong>Limited objectives</strong></td><td>Boarding party targets a specific area — cargo, a prisoner, a person.</td></tr>
                 <tr><td><strong>Full takeover</strong></td><td>Boarding party must secure Bridge, Engineering, and Gunnery. The Bridge is the priority — all other section controls are accessible from there. Override from another section: <strong>Formidable (14+) Electronics (computers)</strong> check (1D minutes, EDU).</td></tr>
               </tbody>
@@ -755,7 +759,7 @@
             <p class="rule-body" style="margin-bottom:8px">All fighting has ceased. One side has full control.</p>
             <table class="ref-table">
               <tbody>
-                <tr><td style="width:30%"><strong>Boarders win</strong></td><td>Secure Bridge, Engineering, Gunnery and/or cargo. Round up crew, remove booby traps, verify key systems.</td></tr>
+                <tr><td><strong>Boarders win</strong></td><td>Secure Bridge, Engineering, Gunnery and/or cargo. Round up crew, remove booby traps, verify key systems.</td></tr>
                 <tr><td><strong>Limited objective</strong></td><td>Phase complete once objectives achieved and boarding party returns to their own ship.</td></tr>
                 <tr><td><strong>Defenders win</strong></td><td>All boarders killed, captured, or forced back. Ship is secured once no boarders remain a threat.</td></tr>
               </tbody>
@@ -904,7 +908,7 @@
             <p class="rule-body" style="margin-bottom:10px">In tight ship corridors, combatants form a stack. The front person absorbs most attacks. <em style="color:#4a9ab8">High Guard p.132</em></p>
             <table class="ref-table">
               <tbody>
-                <tr><td style="width:55%">After a successful hit, roll 2D — <strong>9 or less</strong></td><td>Front target in the stack is hit.</td></tr>
+                <tr><td>After a successful hit, roll 2D — <strong>9 or less</strong></td><td>Front target in the stack is hit.</td></tr>
                 <tr><td>After a successful hit, roll 2D — <strong>10–12</strong></td><td>Another random member of the group is hit instead.</td></tr>
                 <tr><td>To target a specific non-front person</td><td>Must roll <strong>10+</strong> on 2D first — fail means the front person is the target.</td></tr>
               </tbody>
@@ -944,7 +948,7 @@
             <p class="rule-body" style="margin-bottom:10px">Ruptured fuel lines can cause catastrophic explosions. Most tanks have baffles limiting damage to one compartment. <em style="color:#4a9ab8">High Guard p.133</em></p>
             <table class="ref-table">
               <tbody>
-                <tr><td style="width:40%">Explosion in vacuum</td><td><strong>8D damage, Blast 10.</strong> Non-vacuum-sealed armour: no protection. Vacc suits: full protection.</td></tr>
+                <tr><td>Explosion in vacuum</td><td><strong>8D damage, Blast 10.</strong> Non-vacuum-sealed armour: no protection. Vacc suits: full protection.</td></tr>
                 <tr><td>Explosion with atmosphere present</td><td><strong>3DD damage.</strong> Oxygen dramatically amplifies the blast.</td></tr>
               </tbody>
             </table>
