@@ -34,6 +34,7 @@
     .pa-who { color: #00e5ff; font-weight: 700; }
     .pa-reward { color: #7dffc8; font-size: 0.8rem; }
     .pa-none { color: #4a9ab8; opacity: 0.7; }
+    .pa-src { color: #4a9ab8; font-size: 0.72rem; font-style: italic; margin-top: 1px; }
     .pa-power { border: 1px solid #0a4a60; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; }
     .pa-power .pa-name { color: #4a9ab8; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; }
     .pa-power .pa-val { font-size: 1.7rem; font-weight: 700; color: #00ffaa; line-height: 1.1; }
@@ -106,7 +107,7 @@
       if (!list.length || (!p.known_patron && !p.known_need)) return '<span class="pa-none">Nothing known yet</span>';
       return list.map(m => {
         const who = p.known_patron && m.patron ? '<span class="pa-who">' + esc(m.patron) + '</span>' : '';
-        const need = p.known_need ? esc(m.need) + '<div class="pa-reward">Reward: ' + esc(m.reward) + '</div>'
+        const need = p.known_need ? esc(m.need) + '<div class="pa-reward">Reward: ' + esc(m.reward) + '</div>' + (m.src ? '<div class="pa-src">Source: ' + esc(m.src) + '</div>' : '')
           : (p.known_patron ? '<span class="pa-none">What they want is not yet known.</span>' : '');
         return '<div class="pa-path">' + who + (who && need ? ' — ' : '') + need + '</div>';
       }).join('');

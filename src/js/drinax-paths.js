@@ -161,3 +161,24 @@ const DRINAX_ADVENTURES = {
   'Asim': [
     { adv: 'Blood of the Star Dragon', note: 'Prince Harrick\'s trail leads here.' }]
 };
+
+// Where each Path entry comes from, in the same order as the entries above, so players can look it up.
+// Page numbers are the printed page numbers of the books (not the PDF page).
+const SRC_PATRONS = pg => 'The Pirates of Drinax, Book 1: Campaign, Patrons and Opportunities, p.' + pg;
+const SRC_ADVENTURE = (adv, pg) => 'The Pirates of Drinax, Book 1: Campaign, ' + adv + ', p.' + pg;
+const PATH_SOURCES = {
+  'Byrni': [SRC_PATRONS(263)], 'Acrid': [SRC_PATRONS(263)], 'Argona': [SRC_PATRONS(263), SRC_PATRONS(263)],
+  'Arunisiir': [SRC_PATRONS(263)], 'Cordan': [SRC_PATRONS(263), SRC_PATRONS(263)], 'Ergo': [SRC_PATRONS(263)],
+  'Exe': [SRC_PATRONS(264)], 'Falcon': [SRC_PATRONS(264)], 'Inurin': [SRC_PATRONS(264)], 'Pandora': [SRC_PATRONS(264)],
+  'Sperle': [SRC_PATRONS(264)], 'Tanith': [SRC_PATRONS(264)], 'Umemii': [SRC_PATRONS(264)],
+  'Borite': [SRC_PATRONS(264)], 'Chalchiutlicu': [SRC_PATRONS(264)],
+  'Number One': [SRC_PATRONS(265)], 'Salif': [SRC_PATRONS(265)], 'Vume': [SRC_PATRONS(265)],
+  'Akoaft': [SRC_PATRONS(265)], 'Blue': [SRC_PATRONS(265)], 'Clarke': [SRC_PATRONS(265), SRC_ADVENTURE('Honour Among Thieves', 49)],
+  'Fantasy': [SRC_PATRONS(266)], 'Hilfer': [SRC_PATRONS(266)], 'Iroioah': [SRC_PATRONS(266)], 'Keaih': [SRC_PATRONS(266)],
+  'Khusai': [SRC_PATRONS(266)], 'Kteiroa': [SRC_ADVENTURE('Ihatei!', 85), SRC_PATRONS(266)],
+  'Paal': [SRC_PATRONS(267)], 'Pourne': [SRC_PATRONS(267)], 'The World': [SRC_PATRONS(267)],
+  'Torpol': [SRC_PATRONS(267), SRC_ADVENTURE('Honour Among Thieves', 49)], 'Tyokh': [SRC_PATRONS(267)], 'Vorito': [SRC_PATRONS(267)],
+  'Boulder': [SRC_PATRONS(268)], 'Exocet': [SRC_PATRONS(268)], 'Scaladon': [SRC_PATRONS(268)], 'Wildeman': [SRC_PATRONS(268)], 'Iilgan': [SRC_PATRONS(268)],
+  'Tech-World': [SRC_ADVENTURE('The Demon\'s Eye', 102)]
+};
+Object.entries(PATH_SOURCES).forEach(([world, srcs]) => srcs.forEach((s, i) => { if (DRINAX_PATHS[world] && DRINAX_PATHS[world][i]) DRINAX_PATHS[world][i].src = s; }));

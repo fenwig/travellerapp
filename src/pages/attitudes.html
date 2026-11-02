@@ -238,7 +238,7 @@
       const items = list.map((m, i) => {
         const effect = m.set ? 'Set to ' + m.set : m.step ? (m.per ? 'Move up per unit paid' : 'Move up ' + m.step) : '';
         return `<div class="at-path"><span class="at-who">${esc(m.patron || 'Price')}</span> — ${esc(m.need)}
-          <div class="at-reward">Reward: ${esc(m.reward)}</div>${m.gm ? `<div class="at-gmnote">GM: ${esc(m.gm)}</div>` : ''}
+          <div class="at-reward">Reward: ${esc(m.reward)}</div>${m.src ? `<div class="at-sub" style="font-style:italic">Source: ${esc(m.src)}</div>` : ''}${m.gm ? `<div class="at-gmnote">GM: ${esc(m.gm)}</div>` : ''}
           ${effect ? `<button class="btn-small" style="margin-top:4px" onclick="applyPath('${p.id}', ${i})">Apply: ${esc(effect)}${m.also ? ' (also ' + esc(m.also.join(', ')) + ')' : ''}</button>` : ''}</div>`;
       }).join('');
       const adv = (DRINAX_ADVENTURES[p.world] || []).map(a => `<div><span class="at-advname">${esc(a.adv)}</span> — ${esc(a.note)}</div>`).join('');
