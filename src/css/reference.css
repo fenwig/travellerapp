@@ -355,6 +355,26 @@
   }
 }
 
+/* Section laid out as two even columns: cards sit in rows, headings/text/wide tables span both. */
+.ref-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.ref-grid > * { margin: 0; min-width: 0; }
+.ref-grid > h2,
+.ref-grid > p,
+.ref-grid > table,
+.ref-grid > .ref-span { grid-column: 1 / -1; }
+.ref-grid > .rule-card-row { display: contents; }
+.ref-grid .rule-card { margin: 0 !important; }
+
+@media (max-width: 900px) {
+  .ref-grid { grid-template-columns: 1fr; }
+}
+
 /* Reference note (small text below a card) */
 .ref-note {
   font-size: 0.8rem;
