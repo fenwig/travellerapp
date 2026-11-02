@@ -67,3 +67,17 @@ CREATE INDEX IF NOT EXISTS attitude_log_campaign_idx ON attitude_log (campaign_i
 ALTER TABLE port_attitudes ADD COLUMN IF NOT EXISTS uwp TEXT;
 ALTER TABLE port_attitudes ADD COLUMN IF NOT EXISTS trade_codes TEXT;
 ALTER TABLE port_attitudes ADD COLUMN IF NOT EXISTS policy TEXT;   -- Government/Security/Technology, e.g. 221; - null, X no negotiation
+
+-- Added later: GM duties are shared, so anyone logged in can edit. Every change is still logged with the person's name.
+-- Run this block in the Supabase SQL editor (it replaces the GM-only policies above).
+DROP POLICY IF EXISTS port_attitudes_gm ON port_attitudes;
+DROP POLICY IF EXISTS port_attitudes_write ON port_attitudes;
+CREATE POLICY port_attitudes_write ON port_attitudes FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS standing_gm ON standing;
+DROP POLICY IF EXISTS standing_write ON standing;
+CREATE POLICY standing_write ON standing FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS attitude_log_gm ON attitude_log;
+DROP POLICY IF EXISTS attitude_log_write ON attitude_log;
+CREATE POLICY attitude_log_write ON attitude_log FOR ALL TO authenticated USING (true) WITH CHECK (true);

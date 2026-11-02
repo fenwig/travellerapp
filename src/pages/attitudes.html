@@ -100,7 +100,7 @@
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = '../../index.html'; return; }
       currentUser = session.user;
-      gm = isGM(currentUser);
+      gm = true;   // GM duties are shared: everyone can edit, and every change is logged with their name
       userName = currentUser.user_metadata?.display_name || currentUser.email;
       document.getElementById('sidebar-user').textContent = userName;
       const list = await loadCampaigns();
@@ -263,7 +263,7 @@
 
       document.getElementById('at-root').innerHTML = `
         <div id="at-msg" class="at-msg"></div>
-        <div class="at-sub" style="margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">${esc(campaignName)} — Pirates of Drinax${gm ? '' : ' · view only (the GM edits)'}</div>
+        <div class="at-sub" style="margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">${esc(campaignName)} — Pirates of Drinax${gm ? '' : ''}</div>
 
         <div class="at-layout">
           <div class="at-main">
