@@ -35,6 +35,14 @@
     .at-Suspicious { color: #ffd166; border-color: #ffd16688; }
     .at-Unfriendly { color: #ff9a5a; border-color: #ff9a5a88; }
     .at-Hostile    { color: #ff6a5a; border-color: #ff6a5a88; }
+    .at-table td.at-Haven, .at-table select.at-Haven { color: #00ffaa; }
+    .at-table td.at-Friendly, .at-table select.at-Friendly { color: #7dffc8; }
+    .at-table td.at-Tolerant, .at-table select.at-Tolerant { color: #00e5ff; }
+    .at-table td.at-Neutral, .at-table select.at-Neutral { color: #b0d8e8; }
+    .at-table td.at-Suspicious, .at-table select.at-Suspicious { color: #ffd166; }
+    .at-table td.at-Unfriendly, .at-table select.at-Unfriendly { color: #ff9a5a; }
+    .at-table td.at-Hostile, .at-table select.at-Hostile { color: #ff6a5a; }
+    .at-table td.at-world { font-weight: 600; }
     .at-counts { display: flex; flex-wrap: wrap; gap: 8px; }
     .at-row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; }
     .at-row label { display: flex; flex-direction: column; gap: 3px; font-size: 0.72rem; color: #4a9ab8; }
@@ -260,8 +268,8 @@
               <div class="at-counts" style="margin-bottom:10px">${PORT_LEVELS.map(l => `<span>${pill(l)} ${counts[l]}</span>`).join('')}</div>
               ${ports.length ? `<table class="at-table"><thead><tr><th>World</th><th>Hex</th><th>Attitude</th><th class="c">Fence</th><th class="c">Recruit</th><th class="c">Arrest</th><th class="c">Spies</th><th class="c">Protect</th><th>Note</th>${gm ? '<th></th>' : ''}</tr></thead><tbody>
                 ${sectors.map(sec => `<tr class="at-sector"><td colspan="${gm ? 10 : 9}">${esc(sec)}</td></tr>` + bySector[sec].map(p => { const e = PORT_EFFECTS[p.attitude] || {};
-                  return `<tr><td title="${esc([p.uwp, p.trade_codes, p.policy ? 'Policy ' + p.policy : ''].filter(Boolean).join(' · '))}">${esc(p.world)}</td><td>${esc(p.hex || '')}</td>
-                    <td>${gm ? `<select onchange="setAttitude('${p.id}', this.value)">${lvlOpts(p.attitude)}</select>` : pill(p.attitude)}</td>
+                  return `<tr><td class="at-world at-${p.attitude}" title="${esc([p.uwp, p.trade_codes, p.policy ? 'Policy ' + p.policy : ''].filter(Boolean).join(' · '))}">${esc(p.world)}</td><td>${esc(p.hex || '')}</td>
+                    <td>${gm ? `<select class="at-${p.attitude}" onchange="setAttitude('${p.id}', this.value)">${lvlOpts(p.attitude)}</select>` : pill(p.attitude)}</td>
                     <td class="c">${e.fence || ''}</td><td class="c">${e.recruit || ''}</td><td class="c">${e.arrest || ''}</td><td class="c">${e.spies || ''}</td><td class="c">${e.protect || ''}</td>
                     <td><input class="at-note" value="${esc(p.note || '')}" ${ro} onchange="saveNote('${p.id}', this.value)" placeholder="${gm ? 'e.g. what is needed to upgrade' : ''}" /></td>
                     ${gm ? `<td><button class="btn-small" onclick="removePort('${p.id}')" title="Remove from the list">✕</button></td>` : ''}</tr>`; }).join('')).join('')}
