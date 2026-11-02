@@ -349,6 +349,11 @@
   margin-bottom: 0;
 }
 
+/* Three equal boxes in a row */
+.rule-card-row-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 /* Wider left column (e.g. a table beside stacked cards) */
 .rule-card-row-wide {
   grid-template-columns: 1.15fr 1fr;
@@ -356,7 +361,7 @@
 }
 
 @media (max-width: 580px) {
-  .rule-card-row, .rule-card-row-wide {
+  .rule-card-row, .rule-card-row-wide, .rule-card-row-3 {
     grid-template-columns: 1fr;
   }
 }
