@@ -18,7 +18,7 @@ const NAV_GROUPS = [
   { id: 'campaign', label: 'Campaign', items: [
     ['time-tracker.html',     'Time Tracker'],
     ['campaign-finance.html', 'Campaign Finance'],
-    ['piracy-encounter.html', 'Piracy Encounter'],
+    ['piracy-encounter.html', 'Piracy Encounter (GM)', false, true],
     ['player-attitudes.html', 'Port Attitudes'],
     ['reach-map.html',        'Trojan Reach Map'],
     ['attitudes.html',        'Attitudes (GM)', false, true]   // fourth value: GM only

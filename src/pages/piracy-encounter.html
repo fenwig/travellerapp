@@ -51,6 +51,17 @@
   <script src="../js/piracy-data.js"></script>
   <script src="../js/ships-data.js"></script>
   <script>
+    // GM only (GM_EMAILS in supabase-config.js). The page stays hidden until the check passes.
+    (async () => {
+      const main = document.querySelector('.page-main');
+      main.style.visibility = 'hidden';
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = '../../index.html'; return; }
+      if (isGM(session.user)) { main.style.visibility = ''; return; }
+      main.innerHTML = '<h1 class="page-title">PIRACY ENCOUNTER</h1><p class="calc-intro">This page is for the GM.</p>';
+      main.style.visibility = '';
+    })();
+
     const AUTO = ['Auto', 'Yes', 'No'];
 
     document.getElementById('form').innerHTML = `
