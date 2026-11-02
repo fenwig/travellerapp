@@ -85,3 +85,79 @@ const DRINAX_PATHS = {
   'Tech-World': [{ patron: 'Dr. Gerret Hodal (The Demon\'s Eye)', need: 'Deliver regular shipments of basic goods and raw materials, supply at least four 300-ton System Defence Boats (or equivalent), protect against GeDeCo reprisals, and guarantee unrestricted research.', reward: 'Tech-World becomes Friendly, in secret.', set: 'Friendly',
     gm: 'Good Diplomat or Broker checks can reduce the demands (for example, refitted freighters as Q-ships, or paying for stolen cargo). He insists on secrecy until everything is in place.' }]
 };
+
+// Worlds the ten campaign adventures send the Travellers to (Book 1), so the referee knows which worlds matter if the
+// Travellers head there. Referee-only (the player pages never read this). Paraphrased from each adventure's synopsis
+// and scenes. Worlds that are not on the Attitudes list yet (Keaih, Akoaft, Mirage, Neumann, Pax Rulin) are included
+// so they light up as soon as they are added. The Finale recruits worlds all over the Reach, so only Drinax is listed for it.
+const DRINAX_ADVENTURES = {
+  'Drinax': [
+    { adv: 'Honour Among Thieves', note: 'The usual starting point: Princess Rao sends the Travellers after the raiders of Torpol and Clarke.' },
+    { adv: 'Ihatei!', note: 'Starts here: King Oleb briefs them, and an Aslan scout is buried in the sands near the palace.' },
+    { adv: 'The Treasure of Sindal', note: 'Starts here: Professor haut-Belzoni visits the palace archives.' },
+    { adv: 'The Vorito Gambit', note: 'Rachando, the palace merchant, is GeDeCo\'s spy at court.' },
+    { adv: 'The Prodigal Outcast', note: 'Starts here: Kasiyl recruits the Travellers.' },
+    { adv: 'Blood of the Star Dragon', note: 'The coup and the missing princess play out on the Floating Palace.' },
+    { adv: 'The Game of Sun and Shadow', note: 'One of the two likeliest targets for the Imperial punitive fleet.' },
+    { adv: 'Finale', note: 'Begins and ends here.' }],
+  'Torpol': [
+    { adv: 'Honour Among Thieves', note: 'The provosts post a bounty on the raiders.' }],
+  'Clarke': [
+    { adv: 'Honour Among Thieves', note: 'The Psychopomps post a bounty on the raiders.' }],
+  'Borite': [
+    { adv: 'Honour Among Thieves', note: 'The trail leads here, where a raider was abandoned.' }],
+  'Theev': [
+    { adv: 'Honour Among Thieves', note: 'Port Blacksand: the Travellers must find and deal with the raiders.' },
+    { adv: 'The Game of Sun and Shadow', note: 'One of the two likeliest targets for the Imperial punitive fleet.' }],
+  'Arunisiir': [
+    { adv: 'Treasure Ship', note: 'The damaged Imperial treasure ship is grounded here at the start.' }],
+  'Tech-World': [
+    { adv: 'Treasure Ship', note: 'The treasure ship stops here, where GeDeCo cracks the vault code.' },
+    { adv: 'The Demon\'s Eye', note: 'Starts here: the scientists open secret negotiations and Jali Astor flees.' }],
+  'Byrni': [
+    { adv: 'Treasure Ship', note: 'The treasure ship\'s destination: a standoff between Imperial forces and the old Sindalian fleet.' },
+    { adv: 'The Game of Sun and Shadow', note: 'Vice-Admiral Krond\'s fleet makes its base here.' }],
+  'Acrid': [
+    { adv: 'Treasure Ship', note: 'The treasure ship passes through; a possible ambush in the landing corridor.' }],
+  'Exe': [
+    { adv: 'Treasure Ship', note: 'A possible battle site if Hroal Irontooth\'s ambush fails.' },
+    { adv: 'The Demon\'s Eye', note: 'Jali\'s trail begins here after she steals a far trader.' }],
+  'Cordan': [
+    { adv: 'The Demon\'s Eye', note: 'Jali\'s next jump after Exe.' }],
+  'Mirage': [
+    { adv: 'The Demon\'s Eye', note: 'Jali confronts the Shield Church\'s archon here.' }],
+  'Neumann': [
+    { adv: 'The Demon\'s Eye', note: 'The swarm-ridden homeworld where the final confrontation can happen.' }],
+  'Kteiroa': [
+    { adv: 'Ihatei!', note: 'The ihatei camp the Travellers must infiltrate.' },
+    { adv: 'The Prodigal Outcast', note: 'One place Hwehalokharl may be found, if the Travellers played Ihatei!' }],
+  'Tyokh': [
+    { adv: 'Ihatei!', note: 'The usual entry into the Hierate; papers of passage come from the Tlaiowaha clan here.' }],
+  'Keaih': [
+    { adv: 'Ihatei!', note: 'The war the Travellers must prolong.' }],
+  'Akoaft': [
+    { adv: 'Ihatei!', note: 'The limited war between the Htyowao and Hkaaiheir is fought here.' },
+    { adv: 'The Prodigal Outcast', note: 'One place Hwehalokharl may be found.' }],
+  'Fantasy': [
+    { adv: 'The Prodigal Outcast', note: 'One place Hwehalokharl may be found.' }],
+  'Hilfer': [
+    { adv: 'The Prodigal Outcast', note: 'One place Hwehalokharl may be found.' }],
+  'Noricum': [
+    { adv: 'The Treasure of Sindal', note: 'First world on the treasure trail: the old imperial capital.' }],
+  'Number One': [
+    { adv: 'The Treasure of Sindal', note: 'Second world on the treasure trail.' }],
+  'Thebus': [
+    { adv: 'The Treasure of Sindal', note: 'Third world on the treasure trail.' }],
+  'Ace': [
+    { adv: 'The Treasure of Sindal', note: 'Fourth and last world on the treasure trail.' }],
+  'Vorito': [
+    { adv: 'The Vorito Gambit', note: 'GeDeCo\'s district headquarters and its secret vault.' }],
+  'Oghma': [
+    { adv: 'The Game of Sun and Shadow', note: 'A possible target for the punitive fleet.' }],
+  'Wildeman': [
+    { adv: 'The Game of Sun and Shadow', note: 'A possible target for the punitive fleet.' }],
+  'Pax Rulin': [
+    { adv: 'The Game of Sun and Shadow', note: 'Starts here: the fleet base the punitive flotilla sails from.' }],
+  'Asim': [
+    { adv: 'Blood of the Star Dragon', note: 'Prince Harrick\'s trail leads here.' }]
+};

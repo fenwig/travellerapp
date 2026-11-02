@@ -12,7 +12,9 @@
   <style>
     .at-wrap .calc-block { max-width: none; margin-bottom: 14px; }
     .at-sub { color: #4a9ab8; font-size: 0.82rem; }
-    .at-layout { display: grid; grid-template-columns: 7fr 4fr; gap: 14px; align-items: start; max-width: 1500px; }
+    .at-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; align-items: start; max-width: none; }
+    .at-scroll { overflow-x: auto; }
+    .at-table .btn-small { padding: 2px 10px; font-size: 0.78rem; line-height: 1.3; }
     .at-main, .at-side { min-width: 0; }
     @media (max-width: 1100px) { .at-layout { grid-template-columns: 1fr; } }
     .at-msg { margin: 0 0 14px; padding: 9px 14px; border-radius: 6px; font-size: 0.85rem; display: none; }
@@ -70,6 +72,11 @@
     .at-pathrow td { background: rgba(0,229,255,0.04); padding: 8px 14px; }
     .at-path { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed rgba(10,74,96,0.6); }
     .at-path:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+    .at-table .btn-small.at-gold { color: #ffd166; border-color: #ffd166aa; font-weight: 700; }
+    .at-table .btn-small.at-gold:hover { color: #ffe599; border-color: #ffd166; }
+    .at-adv { color: #b0d8e8; }
+    .at-advhead { color: #ffd166; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
+    .at-advname { color: #ffd166; font-weight: 700; }
     .at-path .at-who { color: #00e5ff; font-weight: 700; }
     .at-path .at-reward { color: #7dffc8; }
     .at-path .at-gmnote { color: #ffd166; font-size: 0.78rem; margin-top: 2px; }
@@ -215,7 +222,7 @@
       const hasPath = !!DRINAX_PATHS[p.world];
       const box = (field, letter, tip, off) => `<label title="${tip}"><input type="checkbox" ${p[field] ? 'checked' : ''} ${off ? 'disabled' : ''} onchange="setReveal('${p.id}', '${field}', this.checked)" /><span>${letter}</span></label>`;
       return `<td class="at-see">${box('on_map', 'Map', 'Show this world on the player page and map')}${box('known_patron', 'Patron', 'Players know who the patron is', !hasPath)}${box('known_need', 'Needs', 'Players know what this world requires', !hasPath)}</td>
-        <td>${hasPath ? `<button class="btn-small" onclick="togglePath('${p.id}')">${openPath.has(p.id) ? 'Hide' : 'Path'}</button>` : '<span class="at-sub">none</span>'}</td>`;
+        <td>${hasPath || DRINAX_ADVENTURES[p.world] ? `<button class="btn-small${DRINAX_ADVENTURES[p.world] ? ' at-gold' : ''}" onclick="togglePath('${p.id}')" title="${DRINAX_ADVENTURES[p.world] ? 'Part of: ' + esc(DRINAX_ADVENTURES[p.world].map(a => a.adv).join(', ')) : 'How to move this port toward Haven'}">${openPath.has(p.id) ? 'Hide' : 'Path'}</button>` : '<span class="at-sub">none</span>'}</td>`;
     }
     async function setReveal(id, field, on) {
       const p = ports.find(x => x.id === id); if (!p) return;
@@ -234,7 +241,9 @@
           <div class="at-reward">Reward: ${esc(m.reward)}</div>${m.gm ? `<div class="at-gmnote">GM: ${esc(m.gm)}</div>` : ''}
           ${effect ? `<button class="btn-small" style="margin-top:4px" onclick="applyPath('${p.id}', ${i})">Apply: ${esc(effect)}${m.also ? ' (also ' + esc(m.also.join(', ')) + ')' : ''}</button>` : ''}</div>`;
       }).join('');
-      return `<tr class="at-pathrow"><td colspan="12">${items}</td></tr>`;
+      const adv = (DRINAX_ADVENTURES[p.world] || []).map(a => `<div><span class="at-advname">${esc(a.adv)}</span> — ${esc(a.note)}</div>`).join('');
+      const advBlock = adv ? `<div class="at-path at-adv"><div class="at-advhead">Campaign adventures</div>${adv}</div>` : '';
+      return `<tr class="at-pathrow"><td colspan="12">${advBlock}${items || '<div class="at-sub">No way to move this port toward Haven is given in the books.</div>'}</td></tr>`;
     }
     // Moves one port to a level (or up the ladder by n), writes the log, and returns the new level (or null if unchanged).
     async function moveOne(p, mission, units) {
@@ -337,7 +346,7 @@
             <div class="calc-block">
               <div class="calc-block-title">Port attitudes</div>
               <div class="at-counts" style="margin-bottom:10px">${PORT_LEVELS.map(l => `<span>${pill(l)} ${counts[l]}</span>`).join('')}</div>
-              ${ports.length ? `<table class="at-table"><thead><tr><th>World</th><th>Hex</th><th>Attitude</th><th class="c">Fence</th><th class="c">Recruit</th><th class="c">Arrest</th><th class="c">Spies</th><th class="c">Protect</th><th>Note</th><th title="What the players can see on the player page">Players see</th><th>Path</th>${gm ? '<th></th>' : ''}</tr></thead><tbody>
+              ${ports.length ? `<div class="at-scroll"><table class="at-table"><thead><tr><th>World</th><th>Hex</th><th>Attitude</th><th class="c">Fence</th><th class="c">Recruit</th><th class="c">Arrest</th><th class="c">Spies</th><th class="c">Protect</th><th>Note</th><th title="What the players can see on the player page">Players see</th><th>Path</th>${gm ? '<th></th>' : ''}</tr></thead><tbody>
                 ${sectors.map(sec => `<tr class="at-sector"><td colspan="${gm ? 12 : 11}">${esc(sec)}</td></tr>` + bySector[sec].map(p => { const e = PORT_EFFECTS[p.attitude] || {};
                   return `<tr><td class="at-world at-${p.attitude}" title="${esc([p.uwp, p.trade_codes, p.policy ? 'Policy ' + p.policy : ''].filter(Boolean).join(' · '))}">${esc(p.world)}</td><td>${esc(p.hex || '')}</td>
                     <td>${gm ? `<select class="at-${p.attitude}" onchange="setAttitude('${p.id}', this.value)">${lvlOpts(p.attitude)}</select>` : pill(p.attitude)}</td>
@@ -345,7 +354,7 @@
                     <td><input class="at-note" value="${esc(p.note || '')}" ${ro} onchange="saveNote('${p.id}', this.value)" placeholder="${gm ? 'e.g. what is needed to upgrade' : ''}" /></td>
                     ${revealCells(p)}
                     ${gm ? `<td><button class="btn-small" onclick="removePort('${p.id}')" title="Remove from the list">✕</button></td>` : ''}</tr>` + (openPath.has(p.id) ? pathRow(p) : ''); }).join('')).join('')}
-              </tbody></table>`
+              </tbody></table></div>`
               : `<div class="at-sub">No ports listed yet.${gm ? '' : ' Ask the GM to load them.'}</div>`}
               ${gm ? `<div class="at-row" style="margin-top:12px">
                 ${(ports.length < DRINAX_PORTS.length || ports.some(p => !p.uwp && DRINAX_PORTS.some(r => r[1] === p.world))) ? '<button class="btn-outline at-btn" onclick="loadBook()">Load Appendix 2 worlds</button>' : ''}
