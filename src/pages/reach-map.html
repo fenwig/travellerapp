@@ -105,9 +105,9 @@
 
     // The in-game world data players already have: the UWP, each digit decoded, and the trade codes.
     function infoPanel() {
-      const p = ports.find(x => x.world === selected && x.on_map);
+      const p = ports.find(x => x.world === selected);   // any world, charted or not: this is in-game information, not campaign information
       let body;
-      if (!p) body = '<div class="rm-sub">Click a charted world on the map to see its world data.</div>';
+      if (!p) body = '<div class="rm-sub">Click a world on the map to see its world data.</div>';
       else {
         const rows = decodeUwp(p.uwp);
         body = `<div class="rm-wname">${esc(p.world)} <span class="rm-uwp">${esc(p.uwp || '')}</span></div>
@@ -166,15 +166,27 @@
         svg += `<rect x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="none" stroke="#0a6a8a" stroke-width="1.2" stroke-dasharray="6 4"/>`;
         svg += `<text x="${(x0 + w / 2).toFixed(1)}" y="${(y0 + h / 2).toFixed(1)}" text-anchor="middle" fill="#0a4a60" font-size="34" font-weight="700" letter-spacing="4" opacity="0.55">${name.toUpperCase()}</text>`;
       });
+      // travel zones: an amber or red ring (ordinary in-game map information, shown whether or not the world is charted)
+      TRAVEL_ZONES.forEach(z => {
+        const c = centre(z.sector, z.hex); if (!c) return;
+        const amber = z.zone === 'A', col = amber ? '#ffb000' : '#ff3b30';
+        const listed = z.world && ports.some(p => p.world === z.world);
+        svg += `<g><title>${esc((z.world ? z.world + ' — ' : '') + (amber ? 'Amber Zone' : 'Red Zone'))}</title>`
+          + (listed ? '' : `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="2.5" fill="#4a6572"/>`)
+          + `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="15" fill="none" stroke="${col}" stroke-width="2"/></g>`;
+      });
       // worlds
       let off = 0;
       shown.forEach(p => {
         const c = centre(p.sector, p.hex); if (!c) { off++; return; }
         if (!p.on_map) {
-          // Undiscovered: grey dot and name, no attitude shown (the GM still sees it in the tooltip).
-          svg += `<g><title>${esc(p.world + ' — not yet charted' + (gm ? ' (' + p.attitude + ')' : ''))}</title>`
+          // Not yet charted: a grey dot and name that gives nothing away (no attitude, no patron). It can still be
+          // clicked for the world data (UWP) and to set a ship's location, which are ordinary in-game information.
+          if (selected === p.world) svg += `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="10" fill="none" stroke="#ffffff" stroke-width="1.6"/>`;
+          svg += `<g data-world="${esc(p.world)}" style="cursor:pointer"><title>${esc(p.world + ' — not yet charted' + (gm ? ' (' + p.attitude + ')' : ''))}</title>`
             + `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="#4a6572" stroke="#03121a" stroke-width="1.2"/>`
-            + `<text x="${(c.x + 8).toFixed(1)}" y="${(c.y + 3).toFixed(1)}" fill="#8fa8b4" font-size="10" paint-order="stroke" stroke="#03121a" stroke-width="3">${esc(p.world)}</text></g>`;
+            + `<text class="rm-wlabel" x="${(c.x + 8).toFixed(1)}" y="${(c.y + 3).toFixed(1)}" fill="#8fa8b4" font-size="10" paint-order="stroke" stroke="#03121a" stroke-width="3">${esc(p.world)}</text>`
+            + `<rect x="${(c.x - 9).toFixed(1)}" y="${(c.y - 9).toFixed(1)}" width="${Math.max(36, p.world.length * 6.2 + 20).toFixed(0)}" height="18" fill="transparent"/></g>`;
           return;
         }
         const col = COLORS[p.attitude] || '#b0d8e8';
@@ -200,7 +212,10 @@
             <div class="calc-block"><div class="calc-block-title">Allies</div>
               ${allyBarHtml(allies)}</div>
             <div class="calc-block"><div class="calc-block-title">Key</div><div class="rm-legend">${legend}</div>
-              <div class="rm-sub" style="margin-top:8px">A ring marks a Haven. Grey worlds are not yet charted: their attitude is unknown. Hover a world for its name and attitude, or click a charted world for its world data.</div></div>
+              <div class="rm-legend" style="margin-top:10px">
+                <div><span class="dot" style="background:none;border:2px solid #ffb000"></span>Amber Zone</div>
+                <div><span class="dot" style="background:none;border:2px solid #ff3b30"></span>Red Zone</div></div>
+              <div class="rm-sub" style="margin-top:8px">A ring around a dot marks a Haven. Grey worlds are not yet charted: their attitude is unknown. Click any world for its world data or to set a ship's location.</div></div>
             ${infoPanel()}
           </div>
         </div>`;

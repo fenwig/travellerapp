@@ -114,3 +114,21 @@ function allyBarHtml(allies) {
     <div class="ab-track"><div class="ab-fill ${met ? 'ab-met-bg' : ''}" style="width:${(allies / max * 100).toFixed(1)}%"></div>
       <div class="ab-tick" style="left:${(ALLY_TARGET / max * 100).toFixed(1)}%"><span>${ALLY_TARGET}</span></div></div>`;
 }
+
+// Travel zones, read off a Traveller Map screenshot of the four subsectors (hex positions worked out from the map's
+// hex grid). A = Amber Zone (take care), R = Red Zone (forbidden). 'world' is filled in where the hex matches a world
+// in the lists above; the others are worlds that are not in Appendix 2, so their names are unknown.
+const TRAVEL_ZONES = [
+  { sector: 'Sindal', hex: '0109', zone: 'A', world: 'Ace' },
+  { sector: 'Sindal', hex: '0408', zone: 'A', world: 'Noricum' },
+  { sector: 'Sindal', hex: '0503', zone: 'A' },
+  { sector: 'Sindal', hex: '0506', zone: 'A', world: 'Theev' },
+  { sector: 'Tobia', hex: '0206', zone: 'A', world: 'Scaladon' },
+  { sector: 'Tobia', hex: '0304', zone: 'A' },
+  { sector: 'Tobia', hex: '0404', zone: 'A' },
+  { sector: 'Tobia', hex: '0603', zone: 'A' },
+  { sector: 'Tobia', hex: '0703', zone: 'A' },
+  { sector: 'Tobia', hex: '0706', zone: 'A' },
+  { sector: 'Tliowaha', hex: '0709', zone: 'A', world: 'Vorito' },
+  { sector: 'Borderlands', hex: '0205', zone: 'R', world: 'Ergo' }
+];
