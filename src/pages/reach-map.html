@@ -19,8 +19,18 @@
     .rm-legend span.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
     .rm-goal { font-size: 0.95rem; color: #b0d8e8; }
     .rm-goal b { color: #00ffaa; font-size: 1.4rem; }
-    .rm-bar { height: 8px; background: #0a2a38; border-radius: 4px; margin-top: 8px; overflow: hidden; }
-    .rm-bar > div { height: 100%; background: #00ffaa; }
+    .ab-goal { font-size: 0.95rem; color: #b0d8e8; }
+    .ab-goal b { color: #7dffc8; font-size: 1.4rem; }
+    .ab-goal b.ab-met { color: #00ffaa; }
+    .ab-sub { color: #4a9ab8; font-size: 0.74rem; margin-top: 2px; }
+    .ab-track { position: relative; height: 8px; background: #0a2a38; border-radius: 4px; margin: 10px 0 22px; }
+    .ab-fill { height: 100%; background: #4a9ab8; border-radius: 4px; }
+    .ab-fill.ab-met-bg { background: #00ffaa; }
+    .ab-tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #ffd166; transform: translateX(-1px); }
+    .ab-tick span { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 3px; font-size: 0.7rem; color: #ffd166; }
+    .rm-map [data-world]:hover .rm-wlabel { fill: #ffffff; text-decoration: underline; }
+    .rm-ship select, .rm-ship button { margin: 0; }
+    .rm-ship select { width: 100%; padding: 6px 8px; margin-bottom: 8px; }
     .rm-wname { font-size: 1.05rem; font-weight: 700; color: #00e5ff; }
     .rm-uwp { font-family: Consolas, monospace; color: #00ffaa; margin-left: 8px; font-weight: 400; }
     .rm-uwprow { display: flex; flex-direction: column; padding: 5px 0; border-bottom: 1px solid rgba(10,74,96,0.3); font-size: 0.84rem; color: #b0d8e8; }
@@ -55,9 +65,8 @@
   <script src="../js/drinax-ports.js"></script>
   <script src="../js/uwp-data.js"></script>
   <script>
-    let gm = false, campaignId = null, campaignName = '', ports = [], selected = null;
+    let gm = false, campaignId = null, campaignName = '', ports = [], ships = [], selected = null;
     const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    const TARGET_ALLIES = 12;
 
     // The four subsectors of the map form a 2 x 2 block (Trojan Reach sector layout): Sindal and Tobia above,
     // Tliowaha and Borderlands below. Each subsector is 8 columns by 10 rows; hex "0603" is column 06, row 03.
@@ -77,6 +86,8 @@
         const p = await supabaseClient.from('port_attitudes').select('*').eq('campaign_id', campaignId);
         if (p.error) throw p.error;
         ports = p.data || [];
+        const sh = await inCampaign(supabaseClient.from('spacecraft').select('id,name,current_world_name,current_world_uwp').eq('status', 'active').order('name'), campaignId);
+        ships = sh.error ? [] : (sh.data || []);
         render();
       } catch (e) {
         document.getElementById('rm-root').innerHTML = '<div class="rm-sub">Could not load the map: ' + esc(e.message) + '</div>';
@@ -104,12 +115,43 @@
           + (rows ? rows.map(r => `<div class="rm-uwprow"><span class="rm-ulabel">${r.label}</span><span><b>${esc(r.code)}</b>${r.text ? ' — ' + esc(r.text) : ''}</span></div>`).join('')
             : '<div class="rm-sub">No world data recorded for this world yet.</div>');
       }
-      return `<div class="calc-block"><div class="calc-block-title">World data</div>${body}</div>`;
+      return `<div class="calc-block"><div class="calc-block-title">World data</div>${body}</div>` + (p ? locationBox(p) : '');
+    }
+
+    // "Set Location for [ship]": writes the same two fields the Spacecraft Record's Current World boxes use.
+    const shipKey = () => 'tc-ship-' + (campaignId || 'none');   // same key the calculators use, so the choice is shared
+    function chosenShip() {
+      let id = null; try { id = localStorage.getItem(shipKey()); } catch (e) {}
+      return ships.find(s => s.id === id) || ships[0] || null;
+    }
+    function locationBox(p) {
+      if (!ships.length) return '<div class="calc-block"><div class="calc-block-title">Set Location</div><div class="rm-sub">No active spacecraft in this campaign.</div></div>';
+      const cur = chosenShip();
+      return `<div class="calc-block rm-ship"><div class="calc-block-title">Set Location</div>
+        <div class="rm-sub" style="margin-bottom:4px">Set Location for</div>
+        <select id="rm-ship" onchange="pickShip(this.value)">${ships.map(s => `<option value="${s.id}" ${cur && s.id === cur.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select>
+        <button class="btn-outline" style="width:100%" ${p.uwp ? '' : 'disabled title="This world has no profile recorded"'} onclick="setLocation('${esc(p.world).replace(/'/g, "\\'")}')">Set location to ${esc(p.world)}</button>
+        <div class="rm-sub" id="rm-ship-msg" style="margin-top:6px">${locationNote(cur)}</div></div>`;
+    }
+    function locationNote(s) { return s ? esc(s.name) + (s.current_world_name ? ' is at ' + esc(s.current_world_name) + '.' : ' has no location set.') : ''; }
+    function pickShip(id) {
+      try { localStorage.setItem(shipKey(), id); } catch (e) {}
+      const el = document.getElementById('rm-ship-msg'); if (el) { el.style.color = ''; el.innerHTML = locationNote(chosenShip()); }
+    }
+    async function setLocation(world) {
+      const p = ports.find(x => x.world === world), s = ships.find(x => x.id === val('rm-ship')), el = document.getElementById('rm-ship-msg');
+      if (!p || !s || !p.uwp) return;
+      const { error } = await supabaseClient.from('spacecraft').update({ current_world_name: p.world, current_world_uwp: p.uwp }).eq('id', s.id);
+      el.style.color = error ? '#ff8a7a' : '#00ffaa';
+      if (error) { el.textContent = 'Could not set the location: ' + error.message; return; }
+      s.current_world_name = p.world; s.current_world_uwp = p.uwp;
+      try { localStorage.setItem(shipKey(), s.id); } catch (e) {}
+      el.textContent = s.name + ' is now at ' + p.world + '. It shows on the Spacecraft Record.';
     }
 
     function render() {
       const shown = ports;   // every world is drawn; undiscovered ones (not on_map) are greyed out and give nothing away
-      const allies = ports.filter(p => p.on_map && (p.attitude === 'Haven' || p.attitude === 'Friendly')).length;
+      const allies = countAllies(ports);
       const W = 40 * 2 + 15 * 1.5 * S + 2 * S + 20, HT = 40 * 2 + 19 * H + 2 * H;
       let svg = `<svg class="rm-map" viewBox="0 0 ${W.toFixed(0)} ${HT.toFixed(0)}" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">`;
 
@@ -130,9 +172,9 @@
         const c = centre(p.sector, p.hex); if (!c) { off++; return; }
         if (!p.on_map) {
           // Undiscovered: grey dot and name, no attitude shown (the GM still sees it in the tooltip).
-          svg += `<g opacity="0.55"><title>${esc(p.world + ' — not yet charted' + (gm ? ' (' + p.attitude + ')' : ''))}</title>`
-            + `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="#3d5560" stroke="#03121a" stroke-width="1.2"/>`
-            + `<text x="${(c.x + 8).toFixed(1)}" y="${(c.y + 3).toFixed(1)}" fill="#5f7a86" font-size="9" paint-order="stroke" stroke="#03121a" stroke-width="3">${esc(p.world)}</text></g>`;
+          svg += `<g><title>${esc(p.world + ' — not yet charted' + (gm ? ' (' + p.attitude + ')' : ''))}</title>`
+            + `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="#4a6572" stroke="#03121a" stroke-width="1.2"/>`
+            + `<text x="${(c.x + 8).toFixed(1)}" y="${(c.y + 3).toFixed(1)}" fill="#8fa8b4" font-size="10" paint-order="stroke" stroke="#03121a" stroke-width="3">${esc(p.world)}</text></g>`;
           return;
         }
         const col = COLORS[p.attitude] || '#b0d8e8';
@@ -140,7 +182,9 @@
         if (selected === p.world) svg += `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="10" fill="none" stroke="#ffffff" stroke-width="1.6"/>`;
         if (p.attitude === 'Haven') svg += `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="12" fill="none" stroke="${col}" stroke-width="1.2" opacity="0.7"/>`;
         svg += `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="${p.world === 'Drinax' ? 8 : 6}" fill="${col}" stroke="#03121a" stroke-width="1.5"/>`;
-        svg += `<text x="${(c.x + 10).toFixed(1)}" y="${(c.y + 3).toFixed(1)}" fill="${col}" font-size="10" paint-order="stroke" stroke="#03121a" stroke-width="3">${esc(p.world)}</text></g>`;
+        svg += `<text class="rm-wlabel" x="${(c.x + 10).toFixed(1)}" y="${(c.y + 4).toFixed(1)}" fill="#e8fbff" font-size="11" font-weight="600" paint-order="stroke" stroke="#03121a" stroke-width="3.5">${esc(p.world)}</text>`;
+        // generous invisible click target over the dot and the start of the name
+        svg += `<rect x="${(c.x - 9).toFixed(1)}" y="${(c.y - 9).toFixed(1)}" width="${Math.max(36, p.world.length * 6.6 + 22).toFixed(0)}" height="18" fill="transparent"/></g>`;
       });
       svg += '</svg>';
 
@@ -154,8 +198,7 @@
           <div>${svg}${off ? `<div class="rm-sub" style="margin-top:6px">${off} listed world(s) have no hex on this map.</div>` : ''}</div>
           <div>
             <div class="calc-block"><div class="calc-block-title">Allies</div>
-              <div class="rm-goal"><b>${allies}</b> of ${TARGET_ALLIES} worlds Friendly or better</div>
-              <div class="rm-bar"><div style="width:${Math.min(100, allies / TARGET_ALLIES * 100).toFixed(0)}%"></div></div></div>
+              ${allyBarHtml(allies)}</div>
             <div class="calc-block"><div class="calc-block-title">Key</div><div class="rm-legend">${legend}</div>
               <div class="rm-sub" style="margin-top:8px">A ring marks a Haven. Grey worlds are not yet charted: their attitude is unknown. Hover a world for its name and attitude, or click a charted world for its world data.</div></div>
             ${infoPanel()}

@@ -40,8 +40,15 @@
     .pa-power .pa-val.neg { color: #ff8a7a; }
     .pa-power .pa-band { color: #00e5ff; font-size: 0.82rem; font-weight: 700; }
     .pa-power .pa-eff { color: #4a9ab8; font-size: 0.74rem; margin-top: 2px; }
-    .pa-goal { font-size: 0.95rem; color: #b0d8e8; }
-    .pa-goal b { color: #00ffaa; font-size: 1.4rem; }
+    .ab-goal { font-size: 0.95rem; color: #b0d8e8; }
+    .ab-goal b { color: #7dffc8; font-size: 1.4rem; }
+    .ab-goal b.ab-met { color: #00ffaa; }
+    .ab-sub { color: #4a9ab8; font-size: 0.74rem; margin-top: 2px; }
+    .ab-track { position: relative; height: 8px; background: #0a2a38; border-radius: 4px; margin: 10px 0 22px; }
+    .ab-fill { height: 100%; background: #4a9ab8; border-radius: 4px; }
+    .ab-fill.ab-met-bg { background: #00ffaa; }
+    .ab-tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #ffd166; transform: translateX(-1px); }
+    .ab-tick span { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 3px; font-size: 0.7rem; color: #ffd166; }
   </style>
 </head>
 <body>
@@ -70,7 +77,6 @@
   <script>
     let campaignId = null, campaignName = '', ports = [], standing = {};
     const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    const TARGET_ALLIES = 12;   // Book 1: a Kingdom flag over a dozen worlds makes the letter of marque retroactively valid
 
     async function init() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -108,7 +114,7 @@
 
     function render() {
       const counts = {}; PORT_LEVELS.forEach(l => { counts[l] = 0; }); ports.forEach(p => { if (counts[p.attitude] != null) counts[p.attitude]++; });
-      const allies = counts.Haven + counts.Friendly;
+      const allies = countAllies(ports);   // Book 1: a dozen worlds under the banner makes the letter of marque retroactively valid
       const bySector = {}; ports.forEach(p => { (bySector[p.sector] = bySector[p.sector] || []).push(p); });
       const stand = ['Imperium', 'Hierate'].map(pw => {
         const v = standing[pw], b = standingBand(v);
@@ -133,7 +139,7 @@
           <div class="pa-side">
             <div class="calc-block">
               <div class="calc-block-title">Allies</div>
-              <div class="pa-goal"><b>${allies}</b> of ${TARGET_ALLIES} worlds Friendly or better</div>
+              ${allyBarHtml(allies)}
               <div class="pa-sub" style="margin-top:6px">Twelve worlds behind the Drinaxi banner is what turns your letter of marque from a death sentence into a licence.</div>
             </div>
             <div class="calc-block">

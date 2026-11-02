@@ -99,3 +99,18 @@ const STANDING_INCIDENTS = [
   { id: 'interfere', label: 'Interference (scouts, couriers, convoys, starports, refuelling)', dice: 1, sign: -1 },
   { id: 'heroic',  label: 'Heroic Deed (attacked pirates or hurt the other power)', dice: 1, sign: 1 }
 ];
+
+// Allies toward the Kingdom: Friendly or Haven worlds the Travellers have charted. Drinax and Theev are the starting
+// friends and do not count toward the target. Twelve is the minimum goal, but the count can go past it.
+const ALLY_TARGET = 12;
+const ALLY_EXCLUDED = ['Drinax', 'Theev'];
+function countAllies(ports) {
+  return ports.filter(p => p.on_map && (p.attitude === 'Haven' || p.attitude === 'Friendly') && !ALLY_EXCLUDED.includes(p.world)).length;
+}
+// A bar that grows past the target; the tick marks the minimum goal.
+function allyBarHtml(allies) {
+  const max = Math.max(ALLY_TARGET, allies), met = allies >= ALLY_TARGET;
+  return `<div class="ab-goal"><b class="${met ? 'ab-met' : ''}">${allies}</b> worlds Friendly or better<div class="ab-sub">Minimum goal: ${ALLY_TARGET}. Drinax and Theev do not count.</div></div>
+    <div class="ab-track"><div class="ab-fill ${met ? 'ab-met-bg' : ''}" style="width:${(allies / max * 100).toFixed(1)}%"></div>
+      <div class="ab-tick" style="left:${(ALLY_TARGET / max * 100).toFixed(1)}%"><span>${ALLY_TARGET}</span></div></div>`;
+}
