@@ -115,20 +115,18 @@ function allyBarHtml(allies) {
       <div class="ab-tick" style="left:${(ALLY_TARGET / max * 100).toFixed(1)}%"><span>${ALLY_TARGET}</span></div></div>`;
 }
 
-// Travel zones, read off a Traveller Map screenshot of the four subsectors (hex positions worked out from the map's
-// hex grid). A = Amber Zone (take care), R = Red Zone (forbidden). 'world' is filled in where the hex matches a world
-// in the lists above; the others are worlds that are not in Appendix 2, so their names are unknown.
-const TRAVEL_ZONES = [
-  { sector: 'Sindal', hex: '0109', zone: 'A', world: 'Ace' },
-  { sector: 'Sindal', hex: '0408', zone: 'A', world: 'Noricum' },
-  { sector: 'Sindal', hex: '0503', zone: 'A' },
-  { sector: 'Sindal', hex: '0506', zone: 'A', world: 'Theev' },
-  { sector: 'Tobia', hex: '0206', zone: 'A', world: 'Scaladon' },
-  { sector: 'Tobia', hex: '0304', zone: 'A' },
-  { sector: 'Tobia', hex: '0404', zone: 'A' },
-  { sector: 'Tobia', hex: '0603', zone: 'A' },
-  { sector: 'Tobia', hex: '0703', zone: 'A' },
-  { sector: 'Tobia', hex: '0706', zone: 'A' },
-  { sector: 'Tliowaha', hex: '0709', zone: 'A', world: 'Vorito' },
-  { sector: 'Borderlands', hex: '0205', zone: 'R', world: 'Ergo' }
-];
+// Political borders for the map, measured from a Traveller Map screenshot of the four subsectors (shaded red for the
+// Third Imperium, yellow for the Aslan Hierate). Hexes are listed by map column (1-16 across Sindal, Tobia on the top
+// row; Tliowaha, Borderlands below) then rows (1-20 down), the same grid the map page draws. Borders outside the four
+// subsectors are not included.
+const REACH_REGIONS = {
+  Imperium: {
+    6: [1, 2, 3], 7: [2, 3], 8: [1, 2, 3], 9: [1, 2, 3, 4, 5], 10: [1, 2, 3, 4, 5, 6], 11: [1, 2, 3, 4, 5, 6, 7],
+    12: [1, 2, 3, 4, 5, 6, 7], 13: [1, 2, 3, 4, 5, 6, 7, 8], 14: [1, 2, 3, 4, 5, 6, 7, 8],
+    15: [1, 2, 3, 4, 5, 6, 7, 8, 9], 16: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  },
+  Hierate: {
+    1: [12, 13, 14, 15, 16, 17, 18, 19, 20], 2: [12, 13, 14, 15, 16, 17, 18, 19, 20], 3: [13, 14, 15, 16, 17, 18, 19, 20],
+    4: [13, 14, 15, 16, 17, 18, 19, 20], 5: [15, 16, 17, 18, 19, 20], 6: [16, 17, 18, 19, 20]
+  }
+};

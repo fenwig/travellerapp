@@ -149,6 +149,30 @@
       el.textContent = s.name + ' is now at ' + p.world + '. It shows on the Spacecraft Record.';
     }
 
+    // Shaded hexes for the Third Imperium and Aslan Hierate (data: REACH_REGIONS in drinax-ports.js).
+    const REGION_STYLE = { Imperium: { fill: 'rgba(170,30,30,0.34)', edge: '#d0473a' }, Hierate: { fill: 'rgba(205,175,0,0.26)', edge: '#e8c500' } };
+    function regionSvg() {
+      const vx = (p, i) => (p.x + S * Math.cos(Math.PI / 3 * i)).toFixed(1) + ',' + (p.y + S * Math.sin(Math.PI / 3 * i)).toFixed(1);
+      let out = '<g pointer-events="none">';
+      Object.entries(REACH_REGIONS).forEach(([name, cols]) => {
+        const st = REGION_STYLE[name], has = (c, r) => (cols[c] || []).includes(r);
+        let fills = '', edges = '';
+        Object.entries(cols).forEach(([cs, rows]) => rows.forEach(r => {
+          const c = +cs, p = { x: 40 + (c - 1) * 1.5 * S, y: 40 + (r - 1) * H + (c % 2 === 0 ? H / 2 : 0) };
+          fills += `<polygon points="${hexPath(p.x, p.y, S)}" fill="${st.fill}"/>`;
+          // neighbours across edge i (between vertex i and i+1): down-right, down, down-left, up-left, up, up-right
+          const nbs = c % 2 === 1 ? [[c + 1, r], [c, r + 1], [c - 1, r], [c - 1, r - 1], [c, r - 1], [c + 1, r - 1]]
+                                  : [[c + 1, r + 1], [c, r + 1], [c - 1, r + 1], [c - 1, r], [c, r - 1], [c + 1, r]];
+          nbs.forEach(([nc, nr], i) => {
+            if (nc < 1 || nc > 16 || nr < 1 || nr > 20 || has(nc, nr)) return;   // no edge along the map's own border or inside the region
+            edges += `<line x1="${vx(p, i).split(',')[0]}" y1="${vx(p, i).split(',')[1]}" x2="${vx(p, (i + 1) % 6).split(',')[0]}" y2="${vx(p, (i + 1) % 6).split(',')[1]}"/>`;
+          });
+        }));
+        out += fills + `<g stroke="${st.edge}" stroke-width="2.4" stroke-linecap="round">${edges}</g>`;
+      });
+      return out + '</g>';
+    }
+
     function render() {
       const shown = ports;   // every world is drawn; undiscovered ones (not on_map) are greyed out and give nothing away
       const allies = countAllies(ports);
@@ -160,20 +184,13 @@
         const cx = 40 + (col - 1) * 1.5 * S, cy = 40 + (row - 1) * H + (col % 2 === 0 ? H / 2 : 0);
         svg += `<polygon points="${hexPath(cx, cy, S * 0.96)}" fill="none" stroke="#0a3a4c" stroke-width="0.6"/>`;
       }
+      // political borders: shaded hexes with a bold edge where the territory ends (ordinary map information)
+      svg += regionSvg();
       // subsector outlines and names
       Object.entries(SUBSECTORS).forEach(([name, [oc, or]]) => {
         const x0 = 40 + oc * 1.5 * S - S, y0 = 40 + or * H - H / 2, w = 8 * 1.5 * S + S / 2, h = 10 * H + H / 2;
         svg += `<rect x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="none" stroke="#0a6a8a" stroke-width="1.2" stroke-dasharray="6 4"/>`;
         svg += `<text x="${(x0 + w / 2).toFixed(1)}" y="${(y0 + h / 2).toFixed(1)}" text-anchor="middle" fill="#0a4a60" font-size="34" font-weight="700" letter-spacing="4" opacity="0.55">${name.toUpperCase()}</text>`;
-      });
-      // travel zones: an amber or red ring (ordinary in-game map information, shown whether or not the world is charted)
-      TRAVEL_ZONES.forEach(z => {
-        const c = centre(z.sector, z.hex); if (!c) return;
-        const amber = z.zone === 'A', col = amber ? '#ffb000' : '#ff3b30';
-        const listed = z.world && ports.some(p => p.world === z.world);
-        svg += `<g><title>${esc((z.world ? z.world + ' — ' : '') + (amber ? 'Amber Zone' : 'Red Zone'))}</title>`
-          + (listed ? '' : `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="2.5" fill="#4a6572"/>`)
-          + `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="15" fill="none" stroke="${col}" stroke-width="2"/></g>`;
       });
       // worlds
       let off = 0;
@@ -213,8 +230,8 @@
               ${allyBarHtml(allies)}</div>
             <div class="calc-block"><div class="calc-block-title">Key</div><div class="rm-legend">${legend}</div>
               <div class="rm-legend" style="margin-top:10px">
-                <div><span class="dot" style="background:none;border:2px solid #ffb000"></span>Amber Zone</div>
-                <div><span class="dot" style="background:none;border:2px solid #ff3b30"></span>Red Zone</div></div>
+                <div><span class="dot" style="border-radius:3px;background:rgba(170,30,30,0.5);border:2px solid #d0473a"></span>Third Imperium</div>
+                <div><span class="dot" style="border-radius:3px;background:rgba(205,175,0,0.4);border:2px solid #e8c500"></span>Aslan Hierate</div></div>
               <div class="rm-sub" style="margin-top:8px">A ring around a dot marks a Haven. Grey worlds are not yet charted: their attitude is unknown. Click any world for its world data or to set a ship's location.</div></div>
             ${infoPanel()}
           </div>
