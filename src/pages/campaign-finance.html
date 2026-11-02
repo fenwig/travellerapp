@@ -155,6 +155,10 @@
       const sp = equalSplit(gross - fundShare, ids);
       return { fund: fundShare + sp.left, each: sp.each, players: sp.each > 0 ? ids.map(id => ({ id, amount: sp.each })) : [] };
     }
+    // King of Drinax: takes a percentage off the top of proceeds (default 10%) before the fund/player split.
+    // Until docs/king-tithe.sql has been run, settings has no pct_king and the 10% default applies.
+    const tithePct = () => { const v = settings && settings.pct_king; return v == null ? 10 : Number(v); };
+    const titheOf = gross => Math.round(gross * tithePct() / 100);
     const nameOf = id => { const a = actives.find(x => x.id === id); return a ? a.name : '?'; };
     const withNames = players => players.map(p => ({ ...p, name: nameOf(p.id) }));
 
@@ -175,9 +179,20 @@
     }
     async function done(msg) { await loadAll(); flash(msg, true); }
 
+    function depositPlan() {
+      const gross = amt('cf-dep-amt'); if (gross <= 0) return null;
+      const el = document.getElementById('cf-dep-tithe'), tithe = el && el.checked ? titheOf(gross) : 0;
+      return { gross, tithe, net: gross - tithe };
+    }
+    function previewDeposit() {
+      const p = depositPlan(), el = document.getElementById('cf-dep-prev');
+      el.textContent = !p || !p.tithe ? '' : 'King ' + cr(p.tithe) + ' (' + tithePct() + '%) · party fund receives ' + cr(p.net);
+    }
     async function deposit() {
-      const a = amt('cf-dep-amt'); if (a <= 0) return flash('Enter an amount to deposit.', false);
-      if (await apply('deposit', 'General', val('cf-dep-note'), a)) await done('Deposited ' + cr(a) + '.');
+      const p = depositPlan(); if (!p) return flash('Enter an amount to deposit.', false);
+      if (p.net <= 0) return flash('Nothing would be left to deposit after the tithe.', false);
+      const details = p.tithe ? { gross: p.gross, tithe: p.tithe, tithe_pct: tithePct() } : {};
+      if (await apply('deposit', 'General', val('cf-dep-note'), p.net, [], details)) await done('Deposited ' + cr(p.net) + (p.tithe ? ' (' + cr(p.tithe) + ' paid to the King)' : '') + '.');
     }
     async function withdraw() {
       const a = amt('cf-wd-amt'); if (a <= 0) return flash('Enter an amount to withdraw.', false);
@@ -207,16 +222,17 @@
       const type = val('cf-in-type'), gross = amt('cf-in-amt');
       if (gross <= 0) return null;
       const pct = Number(settings[INCOME_TYPES.find(t => t[0] === type)[1]]);
-      return { type, gross, pct, ...incomeSplit(gross, pct, [...ticked]) };
+      const tithe = titheOf(gross);
+      return { type, gross, pct, tithe, ...incomeSplit(gross - tithe, pct, [...ticked]) };
     }
     function previewIncome() {
       const p = incomePlan(), el = document.getElementById('cf-in-prev');
-      el.textContent = !p ? '' : 'Party fund ' + cr(p.fund) + ' (' + p.pct + '% + rounding)' + (p.players.length ? ' · ' + p.players.length + ' player' + (p.players.length === 1 ? '' : 's') + ' get ' + cr(p.each) + ' each' : ' · no players ticked, so the fund keeps it all');
+      el.textContent = !p ? '' : (p.tithe ? 'King ' + cr(p.tithe) + ' (' + tithePct() + '%) · ' : '') + 'Party fund ' + cr(p.fund) + ' (' + p.pct + '% + rounding)' + (p.players.length ? ' · ' + p.players.length + ' player' + (p.players.length === 1 ? '' : 's') + ' get ' + cr(p.each) + ' each' : ' · no players ticked, so the fund keeps it all');
     }
     async function recordIncome() {
       const p = incomePlan(); if (!p) return flash('Enter the amount received.', false);
-      const id = await apply('income', p.type, val('cf-in-note'), p.fund, withNames(p.players), { gross: p.gross, pct: p.pct });
-      if (id) await done(p.type + ' income of ' + cr(p.gross) + ' recorded.');
+      const id = await apply('income', p.type, val('cf-in-note'), p.fund, withNames(p.players), { gross: p.gross, pct: p.pct, tithe: p.tithe, tithe_pct: tithePct() });
+      if (id) await done(p.type + ' income of ' + cr(p.gross) + ' recorded' + (p.tithe ? ' (' + cr(p.tithe) + ' paid to the King)' : '') + '.');
     }
 
     // Cargo sales from the Sell Cargo log, banked once each.
@@ -228,9 +244,9 @@
       const r = unbanked.find(x => x.id === rowId); if (!r) return false;
       const basis = val('cf-bank-basis'), a = Math.round(bankAmount(r, basis));
       if (a <= 0) { if (!silent) flash('That sale made no ' + (basis === 'net' ? 'proceeds' : 'profit') + ', so there is nothing to bank. Use Dismiss to clear it.', false); return false; }
-      const pct = Number(settings.pct_cargo), sp = incomeSplit(a, pct, [...ticked]);
+      const pct = Number(settings.pct_cargo), tithe = titheOf(a), sp = incomeSplit(a - tithe, pct, [...ticked]);
       const id = await apply('income', 'Cargo', 'Sale: ' + r.good_name + ' ×' + r.tons + 't' + (r.sold_world ? ' at ' + r.sold_world : ''),
-        sp.fund, withNames(sp.players), { gross: a, pct, trade_log: r.id });
+        sp.fund, withNames(sp.players), { gross: a, pct, tithe, tithe_pct: tithePct(), trade_log: r.id });
       if (!id) return false;
       await supabaseClient.from('spacecraft_trade_log').update({ banked_ledger_id: id }).eq('id', r.id);
       return true;
@@ -255,6 +271,7 @@
     async function saveSettings() {
       const row = { campaign_id: campaignId };
       INCOME_TYPES.forEach(([, col]) => { row[col] = Math.max(0, Math.min(100, Math.round(parseFloat(val('cf-set-' + col)) || 0))); });
+      if ('pct_king' in settings) row.pct_king = Math.max(0, Math.min(100, Math.round(parseFloat(val('cf-set-pct_king')) || 0)));
       const { error } = await supabaseClient.from('party_settings').upsert(row, { onConflict: 'campaign_id' });
       if (error) return flash(error.message, false);
       await done('Payout percentages saved.');
@@ -284,9 +301,11 @@
             <div class="cf-grid">
               <div class="calc-block">
                 <div class="calc-block-title">Deposit</div>
-                <div class="cf-row"><label>Amount (Cr)<input type="number" id="cf-dep-amt" min="1" /></label>
+                <div class="cf-row"><label>Amount (Cr)<input type="number" id="cf-dep-amt" min="1" oninput="previewDeposit()" /></label>
                   <label>Note<input class="cf-wide" id="cf-dep-note" placeholder="what is it for" /></label>
+                  <label class="cf-check" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="cf-dep-tithe" onchange="previewDeposit()" />Pay tithe to King Drinax</label>
                   <button class="btn-outline cf-btn" onclick="deposit()">Deposit</button></div>
+                <div class="cf-preview" id="cf-dep-prev"></div>
               </div>
               <div class="calc-block">
                 <div class="calc-block-title">Income — passenger, freight, mission</div>
@@ -331,7 +350,7 @@
                 ${ledger.map(l => { const pl = (l.details && l.details.players) || [], rev = !!l.reversed_by;
                   return `<tr class="${rev ? 'cf-rev' : ''}"><td class="l">${new Date(l.created_at).toLocaleString()}</td><td class="l">${esc(l.user_name || '')}</td>
                   <td class="l">${KIND[l.kind] || l.kind}${l.category && l.category !== 'General' ? ' · ' + esc(l.category) : ''}</td>
-                  <td class="l">${esc(l.note || '')}${pl.length ? '<div class="cf-detail">→ ' + pl.map(p => esc(p.name || '') + ' ' + cr(p.amount)).join(', ') + '</div>' : ''}</td>
+                  <td class="l">${esc(l.note || '')}${l.details && l.details.tithe ? '<div class="cf-detail">King\'s tithe ' + cr(l.details.tithe) + ' (' + (l.details.tithe_pct != null ? l.details.tithe_pct : 10) + '% of ' + cr(l.details.gross) + ')</div>' : ''}${pl.length ? '<div class="cf-detail">→ ' + pl.map(p => esc(p.name || '') + ' ' + cr(p.amount)).join(', ') + '</div>' : ''}</td>
                   <td class="${l.amount >= 0 ? 'cf-pos' : 'cf-neg'}">${l.amount >= 0 ? '+' : ''}${cr(l.amount)}</td><td>${cr(l.balance_after)}</td>
                   <td>${!rev && l.kind !== 'reverse' && l.category !== 'Maintenance Period' && l.category !== 'Ship Expenses' ? `<button class="btn-small" onclick="reverse('${l.id}')">Reverse</button>` : ''}</td></tr>`; }).join('')}
               </tbody></table>` : '<div class="cf-sub">Nothing recorded yet.</div>'}
@@ -359,6 +378,9 @@
               <div class="calc-block-title">Payout settings</div>
               <div class="cf-sub" style="margin-bottom:8px">% to the party fund. The rest is shared equally among ticked players.</div>
               <div class="cf-pct">${INCOME_TYPES.map(([t, col]) => `<label>${t} %<input type="number" id="cf-set-${col}" min="0" max="100" value="${settings[col]}" /></label>`).join('')}
+                <label title="Taken off the top of all income and banked cargo sales before the split">King of Drinax %<input type="number" id="cf-set-pct_king" min="0" max="100" value="${tithePct()}" ${'pct_king' in settings ? '' : 'disabled'} /></label></div>
+              <div class="cf-sub" style="margin:6px 0">The King's share comes off the top of passenger, freight, cargo and mission income before it is split.${'pct_king' in settings ? '' : ' Run docs/king-tithe.sql in Supabase to change it; until then it is fixed at 10%.'}</div>
+              <div class="cf-pct">
                 <button class="btn-outline cf-btn" onclick="saveSettings()">Save</button></div>
             </div>
           </div>
