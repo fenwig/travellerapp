@@ -21,6 +21,12 @@
     .rm-goal b { color: #00ffaa; font-size: 1.4rem; }
     .rm-bar { height: 8px; background: #0a2a38; border-radius: 4px; margin-top: 8px; overflow: hidden; }
     .rm-bar > div { height: 100%; background: #00ffaa; }
+    .rm-wname { font-size: 1.05rem; font-weight: 700; color: #00e5ff; }
+    .rm-uwp { font-family: Consolas, monospace; color: #00ffaa; margin-left: 8px; font-weight: 400; }
+    .rm-uwprow { display: flex; flex-direction: column; padding: 5px 0; border-bottom: 1px solid rgba(10,74,96,0.3); font-size: 0.84rem; color: #b0d8e8; }
+    .rm-uwprow:last-child { border-bottom: none; }
+    .rm-ulabel { color: #4a9ab8; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; }
+    .rm-uwprow b { color: #00ffaa; }
     .rm-gm { font-size: 0.8rem; color: #b0d8e8; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
     .rm-gm input { width: auto; margin: 0; }
   </style>
@@ -47,8 +53,9 @@
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/drinax-ports.js"></script>
+  <script src="../js/uwp-data.js"></script>
   <script>
-    let gm = false, showAll = false, campaignId = null, campaignName = '', ports = [];
+    let gm = false, campaignId = null, campaignName = '', ports = [], selected = null;
     const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const TARGET_ALLIES = 12;
 
@@ -85,8 +92,23 @@
       return Array.from({ length: 6 }, (_, i) => { const a = Math.PI / 3 * i; return (cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1); }).join(' ');
     }
 
+    // The in-game world data players already have: the UWP, each digit decoded, and the trade codes.
+    function infoPanel() {
+      const p = ports.find(x => x.world === selected && x.on_map);
+      let body;
+      if (!p) body = '<div class="rm-sub">Click a charted world on the map to see its world data.</div>';
+      else {
+        const rows = decodeUwp(p.uwp);
+        body = `<div class="rm-wname">${esc(p.world)} <span class="rm-uwp">${esc(p.uwp || '')}</span></div>
+          <div class="rm-sub" style="margin-bottom:8px">${esc([p.sector, p.hex].filter(Boolean).join(' · '))}${p.trade_codes ? ' · ' + esc(p.trade_codes) : ''}</div>`
+          + (rows ? rows.map(r => `<div class="rm-uwprow"><span class="rm-ulabel">${r.label}</span><span><b>${esc(r.code)}</b>${r.text ? ' — ' + esc(r.text) : ''}</span></div>`).join('')
+            : '<div class="rm-sub">No world data recorded for this world yet.</div>');
+      }
+      return `<div class="calc-block"><div class="calc-block-title">World data</div>${body}</div>`;
+    }
+
     function render() {
-      const shown = ports.filter(p => showAll || p.on_map);
+      const shown = ports;   // every world is drawn; undiscovered ones (not on_map) are greyed out and give nothing away
       const allies = ports.filter(p => p.on_map && (p.attitude === 'Haven' || p.attitude === 'Friendly')).length;
       const W = 40 * 2 + 15 * 1.5 * S + 2 * S + 20, HT = 40 * 2 + 19 * H + 2 * H;
       let svg = `<svg class="rm-map" viewBox="0 0 ${W.toFixed(0)} ${HT.toFixed(0)}" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">`;
@@ -106,9 +128,16 @@
       let off = 0;
       shown.forEach(p => {
         const c = centre(p.sector, p.hex); if (!c) { off++; return; }
-        const col = COLORS[p.attitude] || '#b0d8e8', ghost = showAll && !p.on_map;
-        const tip = esc(p.world + ' — ' + p.attitude + (ghost ? ' (hidden from players)' : ''));
-        svg += `<g opacity="${ghost ? 0.35 : 1}"><title>${tip}</title>`;
+        if (!p.on_map) {
+          // Undiscovered: grey dot and name, no attitude shown (the GM still sees it in the tooltip).
+          svg += `<g opacity="0.55"><title>${esc(p.world + ' — not yet charted' + (gm ? ' (' + p.attitude + ')' : ''))}</title>`
+            + `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4" fill="#3d5560" stroke="#03121a" stroke-width="1.2"/>`
+            + `<text x="${(c.x + 8).toFixed(1)}" y="${(c.y + 3).toFixed(1)}" fill="#5f7a86" font-size="9" paint-order="stroke" stroke="#03121a" stroke-width="3">${esc(p.world)}</text></g>`;
+          return;
+        }
+        const col = COLORS[p.attitude] || '#b0d8e8';
+        svg += `<g data-world="${esc(p.world)}" style="cursor:pointer"><title>${esc(p.world + ' — ' + p.attitude)}</title>`;
+        if (selected === p.world) svg += `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="10" fill="none" stroke="#ffffff" stroke-width="1.6"/>`;
         if (p.attitude === 'Haven') svg += `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="12" fill="none" stroke="${col}" stroke-width="1.2" opacity="0.7"/>`;
         svg += `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="${p.world === 'Drinax' ? 8 : 6}" fill="${col}" stroke="#03121a" stroke-width="1.5"/>`;
         svg += `<text x="${(c.x + 10).toFixed(1)}" y="${(c.y + 3).toFixed(1)}" fill="${col}" font-size="10" paint-order="stroke" stroke="#03121a" stroke-width="3">${esc(p.world)}</text></g>`;
@@ -121,7 +150,6 @@
 
       document.getElementById('rm-root').innerHTML = `
         <div class="rm-sub" style="margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">${esc(campaignName)} — Pirates of Drinax</div>
-        ${gm ? `<label class="rm-gm"><input type="checkbox" ${showAll ? 'checked' : ''} onchange="showAll = this.checked; render()" /> GM view: also show worlds the players have not charted (faded)</label>` : ''}
         <div class="rm-layout">
           <div>${svg}${off ? `<div class="rm-sub" style="margin-top:6px">${off} listed world(s) have no hex on this map.</div>` : ''}</div>
           <div>
@@ -129,9 +157,15 @@
               <div class="rm-goal"><b>${allies}</b> of ${TARGET_ALLIES} worlds Friendly or better</div>
               <div class="rm-bar"><div style="width:${Math.min(100, allies / TARGET_ALLIES * 100).toFixed(0)}%"></div></div></div>
             <div class="calc-block"><div class="calc-block-title">Key</div><div class="rm-legend">${legend}</div>
-              <div class="rm-sub" style="margin-top:8px">A ring marks a Haven. Only worlds you have charted appear. Hover a world for its name and attitude.</div></div>
+              <div class="rm-sub" style="margin-top:8px">A ring marks a Haven. Grey worlds are not yet charted: their attitude is unknown. Hover a world for its name and attitude, or click a charted world for its world data.</div></div>
+            ${infoPanel()}
           </div>
         </div>`;
+      const map = document.querySelector('.rm-map');
+      if (map) map.addEventListener('click', e => {
+        const g = e.target.closest('[data-world]'); if (!g) return;
+        selected = selected === g.dataset.world ? null : g.dataset.world; render();
+      });
     }
 
     async function doSignOut() {
