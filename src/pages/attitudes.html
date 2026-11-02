@@ -217,17 +217,17 @@
     }
 
     // ── what the players see, and how to move a port up ──
-    const REVEAL_LABELS = { on_map: 'on the player map', known_patron: 'patron known', known_need: 'requirement known' };
+    const REVEAL_LABELS = { on_map: 'on the player map', known_patron: 'patron known', known_need: 'requirement known', known_policy: 'policy wants known' };
     function revealCells(p) {
       const hasPath = !!DRINAX_PATHS[p.world];
       const box = (field, letter, tip, off) => `<label title="${tip}"><input type="checkbox" ${p[field] ? 'checked' : ''} ${off ? 'disabled' : ''} onchange="setReveal('${p.id}', '${field}', this.checked)" /><span>${letter}</span></label>`;
-      return `<td class="at-see">${box('on_map', 'Map', 'Show this world on the player page and map')}${box('known_patron', 'Patron', 'Players know who the patron is', !hasPath)}${box('known_need', 'Needs', 'Players know what this world requires', !hasPath)}</td>
+      return `<td class="at-see">${box('on_map', 'Map', 'Show this world on the player page and map')}${box('known_patron', 'Patron', 'Players know who the patron is', !hasPath)}${box('known_need', 'Needs', 'Players know what this world requires', !hasPath)}${box('known_policy', 'Wants', 'Players know what this world wants from a new Kingdom (its policy profile, shown in words)', policyWants(p.policy) === null)}</td>
         <td>${hasPath || DRINAX_ADVENTURES[p.world] ? `<button class="btn-small${DRINAX_ADVENTURES[p.world] ? ' at-gold' : ''}" onclick="togglePath('${p.id}')" title="${DRINAX_ADVENTURES[p.world] ? 'Part of: ' + esc(DRINAX_ADVENTURES[p.world].map(a => a.adv).join(', ')) : 'How to move this port toward Haven'}">${openPath.has(p.id) ? 'Hide' : 'Path'}</button>` : '<span class="at-sub">none</span>'}</td>`;
     }
     async function setReveal(id, field, on) {
       const p = ports.find(x => x.id === id); if (!p) return;
       const { error } = await supabaseClient.from('port_attitudes').update({ [field]: on }).eq('id', id);
-      if (error) { await loadAll(); return flash(error.message + ' (Has docs/player-attitudes.sql been run in Supabase?)', false); }
+      if (error) { await loadAll(); return flash(error.message + ' (Have docs/player-attitudes.sql and docs/policy-known.sql been run in Supabase?)', false); }
       p[field] = on;
       await writeLog('reveal', p.world, on ? 'hidden' : 'shown', on ? 'shown' : 'hidden', REVEAL_LABELS[field]);
       flash(p.world + ': ' + REVEAL_LABELS[field] + (on ? ' — players can now see it.' : ' — hidden again.'), true);

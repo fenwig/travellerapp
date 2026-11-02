@@ -34,6 +34,8 @@
     .pa-who { color: #00e5ff; font-weight: 700; }
     .pa-reward { color: #7dffc8; font-size: 0.8rem; }
     .pa-none { color: #4a9ab8; opacity: 0.7; }
+    .pa-want { font-size: 0.82rem; margin-bottom: 2px; }
+    .pa-want b { color: #4a9ab8; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
     .pa-src { color: #4a9ab8; font-size: 0.72rem; font-style: italic; margin-top: 1px; }
     .pa-power { border: 1px solid #0a4a60; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; }
     .pa-power .pa-name { color: #4a9ab8; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; }
@@ -113,6 +115,13 @@
       }).join('');
     }
 
+    // What the world wants from a reborn Kingdom, in words, once the GM has unlocked it.
+    function wantsCell(p) {
+      const w = p.known_policy ? policyWants(p.policy) : null;
+      if (!w) return '<span class="pa-none">Not yet known</span>';
+      return w.map(r => '<div class="pa-want">' + (r.label ? '<b>' + r.label + ':</b> ' : '') + esc(r.text) + '</div>').join('');
+    }
+
     function render() {
       const counts = {}; PORT_LEVELS.forEach(l => { counts[l] = 0; }); ports.forEach(p => { if (counts[p.attitude] != null) counts[p.attitude]++; });
       const allies = countAllies(ports);   // Book 1: a dozen worlds under the banner makes the letter of marque retroactively valid
@@ -130,9 +139,9 @@
             <div class="calc-block">
               <div class="calc-block-title">Worlds you know</div>
               <div class="pa-counts">${PORT_LEVELS.map(l => `<span>${pill(l)} ${counts[l]}</span>`).join('')}</div>
-              ${ports.length ? `<table class="pa-table"><thead><tr><th>World</th><th>Hex</th><th>Attitude</th><th>How to win them over</th></tr></thead><tbody>
-                ${Object.keys(bySector).map(sec => `<tr class="pa-sector"><td colspan="4">${esc(sec)}</td></tr>` + bySector[sec].map(p =>
-                  `<tr><td class="pa-world pa-${p.attitude}" style="border:none">${esc(p.world)}</td><td>${esc(p.hex || '')}</td><td>${pill(p.attitude)}</td><td>${pathCell(p)}</td></tr>`).join('')).join('')}
+              ${ports.length ? `<table class="pa-table"><thead><tr><th>World</th><th>Hex</th><th>Attitude</th><th>How to win them over</th><th>What they want from a Kingdom</th></tr></thead><tbody>
+                ${Object.keys(bySector).map(sec => `<tr class="pa-sector"><td colspan="5">${esc(sec)}</td></tr>` + bySector[sec].map(p =>
+                  `<tr><td class="pa-world pa-${p.attitude}" style="border:none">${esc(p.world)}</td><td>${esc(p.hex || '')}</td><td>${pill(p.attitude)}</td><td>${pathCell(p)}</td><td>${wantsCell(p)}</td></tr>`).join('')).join('')}
               </tbody></table>` : '<div class="pa-sub">No worlds charted yet.</div>'}
               <div class="pa-sub" style="margin-top:10px">Attitudes show how each port treats your crew. Haven and Friendly ports will help you; Hostile ports will shoot. More is learned from rumours, contacts and patrons.</div>
             </div>

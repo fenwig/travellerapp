@@ -130,3 +130,25 @@ const REACH_REGIONS = {
     4: [13, 14, 15, 16, 17, 18, 19, 20], 5: [15, 16, 17, 18, 19, 20], 6: [16, 17, 18, 19, 20]
   }
 };
+
+// What a world wants from the reborn Kingdom, in words, from its policy profile (Government, Security, Technology as
+// three characters: 0-3, '-' for no view, 'X' for no grounds for negotiation). Wording follows the Finale's "Shaping
+// Royal Policy" (Book 1, pp.247-248). Returns [{ label, text }], or null when the profile is not readable.
+const POLICY_WORDS = {
+  Government: ['to stay independent, with Drinax only first among equals', 'a parliament where every world is represented',
+    'a feudal order, with the larger worlds as duchies', 'a strong king ruling from Drinax'],
+  Security: ['piracy tolerated, even encouraged', 'little change: piracy outlawed but often overlooked',
+    'a crackdown on piracy and a strong navy', 'a warrior king with a great fleet, and piracy outlawed'],
+  Technology: ['Drinax keeping its technology to itself', 'factories on member worlds and the Scholar\'s Tower open to their students',
+    'some technology shared, for a price', 'Drinax lifting everyone to higher technology']
+};
+function policyWants(policy) {
+  const m = /^([0-3X-])([0-3X-])([0-3X-])$/.exec(String(policy || '').trim().toUpperCase());
+  if (!m) return null;
+  const keys = Object.keys(POLICY_WORDS);
+  if (m.slice(1).every(c => c === '-')) return [{ label: '', text: 'No strong views on how the Kingdom is run.' }];
+  return keys.map((k, i) => {
+    const c = m[i + 1];
+    return { label: k, text: c === '-' ? 'no strong view' : c === 'X' ? 'will not negotiate on this' : POLICY_WORDS[k][+c] };
+  });
+}
