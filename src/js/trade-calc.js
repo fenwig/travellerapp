@@ -89,12 +89,15 @@ const TC = {
       if (!s || !s.current_world_uwp) {
         // no world on this ship (or the ship was just changed): make the block editable again
         [name, uwp].forEach(el => { if (el) { el.readOnly = false; el.style.opacity = ''; el.title = ''; } });
+        TC.pickHide(id, false);
         return null;
       }
       name.value = s.current_world_name || ''; uwp.value = s.current_world_uwp;
+      TC.pickHide(id, true);
       [name, uwp].forEach(el => { el.readOnly = true; el.style.opacity = '0.75'; el.title = 'Set on the Spacecraft Record (Current World)'; });
       TC.uwpShow(id);
-      return { name: s.current_world_name || '', uwp: s.current_world_uwp };
+      const listed = (await loadCampaignWorlds()).find(w => w.world === (s.current_world_name || ''));
+      return { name: s.current_world_name || '', uwp: s.current_world_uwp, trade_codes: listed ? listed.trade_codes : null };
     } catch (e) { return null; }
   },
   // Collapsed "how this was worked out" box: dice, modifiers and formulas stay out of sight until it is opened.
@@ -107,9 +110,29 @@ const TC = {
     return '<details class="dm-detail"><summary>How this was worked out</summary>' +
       lines.filter(Boolean).map(l => '<div>' + l + '</div>').join('') + mods + '</details>';
   },
+  // Dropdown of the campaign's listed worlds: choosing one fills the name and UWP (typing them still works).
+  pickHide(id, hide) { const p = document.querySelector('select.world-pick[data-block="' + id + '"]'); if (p) p.parentElement.style.display = hide ? 'none' : ''; },
+  async fillWorldPicks() {
+    const worlds = await loadCampaignWorlds();
+    document.querySelectorAll('select.world-pick').forEach(sel => {
+      if (!worlds.length) { sel.parentElement.style.display = 'none'; return; }
+      sel.innerHTML = worldOptions(worlds);
+    });
+  },
+  pickWorld(id, name) {
+    if (!name) return;
+    loadCampaignWorlds().then(ws => {
+      const w = ws.find(x => x.world === name); if (!w) return;
+      document.getElementById(id + '-name').value = w.world;
+      document.getElementById(id + '-uwp').value = w.uwp;
+      TC.uwpShow(id); TC.save();
+    });
+  },
   uwpRefresh() { document.querySelectorAll('[id$="-uwp"]').forEach(el => TC.uwpShow(el.id.slice(0, -4))); },
   worldBlock(id, title) {
+    setTimeout(() => TC.fillWorldPicks(), 0);   // the page puts this html in place just after calling us
     return '<div class="calc-block calc-row"><div class="calc-block-title">' + title + '</div><div class="calc-fields">' +
+      '<label>Listed world<select class="world-pick" data-block="' + id + '" style="width:190px" onchange="TC.pickWorld(\'' + id + '\', this.value)"><option value="">Pick a listed world…</option></select></label>' +
       '<label>World<input type="text" id="' + id + '-name" placeholder="name" style="width:120px" /></label>' +
       '<label>Profile (UWP)<input type="text" id="' + id + '-uwp" value="C566777-8" maxlength="10" style="width:105px;text-transform:uppercase" oninput="TC.uwpShow(\'' + id + '\')" /></label>' +
       '<label>Zone<select id="' + id + '-zone">' + TC.opts(['Green','Amber','Red'], 'Green') + '</select></label>' +

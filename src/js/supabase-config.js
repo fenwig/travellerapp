@@ -42,6 +42,24 @@ function setCampaignId(id) {
   try { localStorage.setItem(CAMPAIGN_KEY, id); } catch (e) {}
 }
 
+// Worlds listed on the Attitudes page for this campaign (name, UWP, trade codes...), for the world dropdowns.
+// Empty if the table doesn't exist yet. Only worlds that have a UWP are returned.
+let _worldsPromise = null;
+function loadCampaignWorlds() {
+  if (!_worldsPromise) {
+    _worldsPromise = currentCampaignId().then(cid => !cid ? [] :
+      supabaseClient.from('port_attitudes').select('world,sector,hex,uwp,trade_codes,attitude').eq('campaign_id', cid).order('sector').order('hex')
+        .then(({ data, error }) => (error ? [] : (data || []).filter(w => w.uwp))));
+  }
+  return _worldsPromise;
+}
+// <option>s for a world dropdown, grouped by sector.
+function worldOptions(worlds) {
+  const by = {}; worlds.forEach(w => { (by[w.sector] = by[w.sector] || []).push(w); });
+  return '<option value="">Pick a listed world…</option>' + Object.keys(by).map(s =>
+    '<optgroup label="' + s + '">' + by[s].map(w => '<option value="' + w.world.replace(/"/g, '&quot;') + '">' + w.world + ' (' + w.uwp + ')</option>').join('') + '</optgroup>').join('');
+}
+
 // Limit a query to a campaign (no change when there is no campaign id).
 function inCampaign(query, id) {
   return id ? query.eq('campaign_id', id) : query;

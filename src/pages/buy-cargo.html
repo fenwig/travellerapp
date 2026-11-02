@@ -404,8 +404,20 @@
 
     updateFindLabels();
     TC.persist('speculative', () => trade, v => { trade = v || { supplier: null }; }, ['step1', 'step2']);
-    TC.hereWorld('src');
-    TC.shipPicker(() => TC.hereWorld('src'));
+    // When the ship is at a listed world, carry its trade codes into the five code boxes.
+    function hereWithCodes() {
+      return TC.hereWorld('src').then(here => {
+        if (!here || !here.trade_codes) return;
+        const known = TRADE_CODES.map(c => c[0]);
+        const codes = here.trade_codes.split(/s+/).filter(c => known.includes(c)).slice(0, 5);
+        for (let i = 0; i < 5; i++) {
+          const el = document.getElementById('tc-' + i);
+          if (el) { el.value = codes[i] || ''; el.dispatchEvent(new Event('change', { bubbles: true })); }
+        }
+      });
+    }
+    hereWithCodes();
+    TC.shipPicker(hereWithCodes);
     updateFindLabels();
     syncGoodsButton();
   </script>

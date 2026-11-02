@@ -244,7 +244,7 @@
 
           <!-- Current world: used by the Passenger, Freight, Buy Cargo and Sell Cargo calculators. Saves on its own (no Edit mode). -->
           <div class="ship-meta" style="margin-top:6px;gap:8px 16px;align-items:center">
-            <div><span>Current World:</span><input class="ship-meta-input" id="cw-name" placeholder="World name" style="width:150px" /></div>
+            <div><span>Current World:</span><select class="ship-meta-input" id="cw-pick" style="width:190px;display:none" onchange="pickCurrentWorld(this.value)"><option value="">Pick a listed world…</option></select> <input class="ship-meta-input" id="cw-name" placeholder="World name" style="width:150px" /></div>
             <div><span>Profile:</span><input class="ship-meta-input" id="cw-uwp" placeholder="A9B2887-A" maxlength="10" style="width:100px;text-transform:uppercase" /></div>
             <button class="btn-primary" style="width:auto;padding:4px 14px;font-size:0.8rem" onclick="saveCurrentWorld()">Update Location</button>
             <span id="cw-msg" style="font-size:0.8rem"></span>
@@ -815,6 +815,19 @@ function renderHeader() {
   setVal('ei-streamlined', s.streamlined_status || 'Streamlined');
   setVal('cw-name',        s.current_world_name);
   setVal('cw-uwp',         s.current_world_uwp);
+  fillWorldPick();
+  const pk = document.getElementById('cw-pick'); if (pk) pk.value = '';
+}
+
+// Dropdown of the campaign's listed worlds (Attitudes page); picking one fills the name and profile boxes.
+async function fillWorldPick() {
+  const worlds = await loadCampaignWorlds(), sel = document.getElementById('cw-pick');
+  if (!sel || !worlds.length) return;
+  sel.innerHTML = worldOptions(worlds); sel.style.display = '';
+}
+async function pickCurrentWorld(name) {
+  const w = (await loadCampaignWorlds()).find(x => x.world === name); if (!w) return;
+  setVal('cw-name', w.world); setVal('cw-uwp', w.uwp);
 }
 
 // Current world (name + UWP profile) — saved straight to Supabase, no Edit mode required
