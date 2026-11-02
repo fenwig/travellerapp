@@ -349,8 +349,14 @@
   margin-bottom: 0;
 }
 
+/* Wider left column (e.g. a table beside stacked cards) */
+.rule-card-row-wide {
+  grid-template-columns: 1.15fr 1fr;
+  align-items: start;
+}
+
 @media (max-width: 580px) {
-  .rule-card-row {
+  .rule-card-row, .rule-card-row-wide {
     grid-template-columns: 1fr;
   }
 }
