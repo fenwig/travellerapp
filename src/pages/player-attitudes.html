@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Port Attitudes — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <link rel="stylesheet" href="../css/calculators.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/nav.js" defer></script>
+  <style>
+    .pa-wrap .calc-block { max-width: none; margin-bottom: 14px; }
+    .pa-sub { color: #4a9ab8; font-size: 0.82rem; }
+    .pa-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 14px; align-items: start; max-width: 1400px; }
+    .pa-main, .pa-side { min-width: 0; }
+    @media (max-width: 1000px) { .pa-layout { grid-template-columns: 1fr; } }
+    .pa-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    .pa-table th { text-align: left; color: #4a9ab8; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; padding: 5px 8px; border-bottom: 1px solid #0a4a60; }
+    .pa-table td { padding: 6px 8px; border-bottom: 1px solid rgba(10,74,96,0.3); color: #b0d8e8; vertical-align: top; }
+    .pa-table tr.pa-sector td { color: #00e5ff; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.74rem; background: rgba(0,229,255,0.05); }
+    .pa-world { font-weight: 600; white-space: nowrap; }
+    .pa-pill { display: inline-block; padding: 1px 9px; border-radius: 10px; font-size: 0.74rem; border: 1px solid; }
+    .pa-Haven      { color: #00ffaa; border-color: #00ffaa88; }
+    .pa-Friendly   { color: #7dffc8; border-color: #7dffc888; }
+    .pa-Tolerant   { color: #00e5ff; border-color: #00e5ff88; }
+    .pa-Neutral    { color: #b0d8e8; border-color: #b0d8e888; }
+    .pa-Suspicious { color: #ffd166; border-color: #ffd16688; }
+    .pa-Unfriendly { color: #ff9a5a; border-color: #ff9a5a88; }
+    .pa-Hostile    { color: #ff6a5a; border-color: #ff6a5a88; }
+    .pa-counts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .pa-path { margin-bottom: 6px; }
+    .pa-path:last-child { margin-bottom: 0; }
+    .pa-who { color: #00e5ff; font-weight: 700; }
+    .pa-reward { color: #7dffc8; font-size: 0.8rem; }
+    .pa-none { color: #4a9ab8; opacity: 0.7; }
+    .pa-power { border: 1px solid #0a4a60; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; }
+    .pa-power .pa-name { color: #4a9ab8; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .pa-power .pa-val { font-size: 1.7rem; font-weight: 700; color: #00ffaa; line-height: 1.1; }
+    .pa-power .pa-val.neg { color: #ff8a7a; }
+    .pa-power .pa-band { color: #00e5ff; font-size: 0.82rem; font-weight: 700; }
+    .pa-power .pa-eff { color: #4a9ab8; font-size: 0.74rem; margin-top: 2px; }
+    .pa-goal { font-size: 0.95rem; color: #b0d8e8; }
+    .pa-goal b { color: #00ffaa; font-size: 1.4rem; }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">PORT ATTITUDES</h1>
+      <div class="pa-wrap" id="pa-root"><div class="pa-sub">Loading…</div></div>
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/drinax-ports.js"></script>
+  <script src="../js/drinax-paths.js"></script>
+  <script>
+    let campaignId = null, campaignName = '', ports = [], standing = {};
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const TARGET_ALLIES = 12;   // Book 1: a Kingdom flag over a dozen worlds makes the letter of marque retroactively valid
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = '../../index.html'; return; }
+      const list = await loadCampaigns();
+      campaignId = await currentCampaignId();
+      if (!campaignId) { document.getElementById('pa-root').innerHTML = '<div class="pa-sub">Campaigns are not set up yet.</div>'; return; }
+      campaignName = (list.find(c => c.id === campaignId) || {}).name || '';
+      try {
+        const p = await supabaseClient.from('port_attitudes').select('*').eq('campaign_id', campaignId).eq('on_map', true).order('sector').order('hex');
+        if (p.error) throw p.error;
+        ports = p.data || [];
+        const s = await supabaseClient.from('standing').select('*').eq('campaign_id', campaignId);
+        standing = { Imperium: STANDING_START.Imperium, Hierate: STANDING_START.Hierate };
+        (s.data || []).forEach(r => { standing[r.power] = r.value; });
+        render();
+      } catch (e) {
+        document.getElementById('pa-root').innerHTML = '<div class="pa-sub">Could not load the port list: ' + esc(e.message) + '</div>';
+      }
+    }
+
+    function pill(level) { return '<span class="pa-pill pa-' + level + '">' + level + '</span>'; }
+
+    // What the players have been told about moving a port. Only the fields the GM has unlocked are shown.
+    function pathCell(p) {
+      const list = DRINAX_PATHS[p.world] || [];
+      if (!list.length || (!p.known_patron && !p.known_need)) return '<span class="pa-none">Nothing known yet</span>';
+      return list.map(m => {
+        const who = p.known_patron && m.patron ? '<span class="pa-who">' + esc(m.patron) + '</span>' : '';
+        const need = p.known_need ? esc(m.need) + '<div class="pa-reward">Reward: ' + esc(m.reward) + '</div>'
+          : (p.known_patron ? '<span class="pa-none">What they want is not yet known.</span>' : '');
+        return '<div class="pa-path">' + who + (who && need ? ' — ' : '') + need + '</div>';
+      }).join('');
+    }
+
+    function render() {
+      const counts = {}; PORT_LEVELS.forEach(l => { counts[l] = 0; }); ports.forEach(p => { if (counts[p.attitude] != null) counts[p.attitude]++; });
+      const allies = counts.Haven + counts.Friendly;
+      const bySector = {}; ports.forEach(p => { (bySector[p.sector] = bySector[p.sector] || []).push(p); });
+      const stand = ['Imperium', 'Hierate'].map(pw => {
+        const v = standing[pw], b = standingBand(v);
+        return `<div class="pa-power"><div class="pa-name">${pw === 'Imperium' ? 'Third Imperium' : 'Aslan Hierate'}</div>
+          <div class="pa-val ${v < 0 ? 'neg' : ''}">${v}</div><div class="pa-band">${b[1]}</div><div class="pa-eff">${esc(b[2])}</div></div>`;
+      }).join('');
+
+      document.getElementById('pa-root').innerHTML = `
+        <div class="pa-sub" style="margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">${esc(campaignName)} — Pirates of Drinax</div>
+        <div class="pa-layout">
+          <div class="pa-main">
+            <div class="calc-block">
+              <div class="calc-block-title">Worlds you know</div>
+              <div class="pa-counts">${PORT_LEVELS.map(l => `<span>${pill(l)} ${counts[l]}</span>`).join('')}</div>
+              ${ports.length ? `<table class="pa-table"><thead><tr><th>World</th><th>Hex</th><th>Attitude</th><th>How to win them over</th></tr></thead><tbody>
+                ${Object.keys(bySector).map(sec => `<tr class="pa-sector"><td colspan="4">${esc(sec)}</td></tr>` + bySector[sec].map(p =>
+                  `<tr><td class="pa-world pa-${p.attitude}" style="border:none">${esc(p.world)}</td><td>${esc(p.hex || '')}</td><td>${pill(p.attitude)}</td><td>${pathCell(p)}</td></tr>`).join('')).join('')}
+              </tbody></table>` : '<div class="pa-sub">No worlds charted yet.</div>'}
+              <div class="pa-sub" style="margin-top:10px">Attitudes show how each port treats your crew. Haven and Friendly ports will help you; Hostile ports will shoot. More is learned from rumours, contacts and patrons.</div>
+            </div>
+          </div>
+          <div class="pa-side">
+            <div class="calc-block">
+              <div class="calc-block-title">Allies</div>
+              <div class="pa-goal"><b>${allies}</b> of ${TARGET_ALLIES} worlds Friendly or better</div>
+              <div class="pa-sub" style="margin-top:6px">Twelve worlds behind the Drinaxi banner is what turns your letter of marque from a death sentence into a licence.</div>
+            </div>
+            <div class="calc-block">
+              <div class="calc-block-title">Standing</div>
+              ${stand}
+              <div class="pa-sub">How the two great powers regard you. It drifts back to where it began if you keep quiet.</div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    async function doSignOut() {
+      await supabaseClient.auth.signOut();
+      window.location.href = '../../index.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>

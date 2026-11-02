@@ -63,6 +63,16 @@
     .at-calc { color: #4a9ab8; font-size: 0.8rem; margin-top: 8px; min-height: 1.1em; }
     .at-pos { color: #00ffaa; } .at-neg { color: #ff8a7a; }
     .at-mini td, .at-mini th { padding: 2px 6px; font-size: 0.76rem; }
+    .at-see { white-space: nowrap; }
+    .at-see label { display: inline-flex; align-items: center; gap: 2px; margin-right: 6px; font-size: 0.7rem; color: #4a9ab8; cursor: pointer; }
+    .at-see input[type=checkbox] { width: auto; margin: 0; }
+    .at-see input:disabled + span { opacity: 0.35; }
+    .at-pathrow td { background: rgba(0,229,255,0.04); padding: 8px 14px; }
+    .at-path { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed rgba(10,74,96,0.6); }
+    .at-path:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+    .at-path .at-who { color: #00e5ff; font-weight: 700; }
+    .at-path .at-reward { color: #7dffc8; }
+    .at-path .at-gmnote { color: #ffd166; font-size: 0.78rem; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -87,9 +97,11 @@
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/drinax-ports.js"></script>
+  <script src="../js/drinax-paths.js"></script>
   <script>
     let currentUser = null, userName = '', gm = false, campaignId = null, campaignName = '';
     let ports = [], standing = {}, log = [], rolled = null;
+    const openPath = new Set();
 
     const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
@@ -100,9 +112,10 @@
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = '../../index.html'; return; }
       currentUser = session.user;
-      gm = true;   // GM duties are shared: everyone can edit, and every change is logged with their name
+      gm = isGM(currentUser);   // GM accounts are listed in GM_EMAILS (supabase-config.js)
       userName = currentUser.user_metadata?.display_name || currentUser.email;
       document.getElementById('sidebar-user').textContent = userName;
+      if (!gm) { document.getElementById('at-root').innerHTML = '<div class="at-sub">This page is for the GM. Players can see their charted worlds on <a href="player-attitudes.html" style="color:#00e5ff">Port Attitudes</a> and <a href="reach-map.html" style="color:#00e5ff">Trojan Reach Map</a>.</div>'; return; }
       const list = await loadCampaigns();
       campaignId = await currentCampaignId();
       if (!campaignId) { document.getElementById('at-root').innerHTML = '<div class="at-sub">Campaigns are not set up yet.</div>'; return; }
@@ -196,6 +209,60 @@
       document.getElementById('at-law-out').textContent = isNaN(law) ? '' : 'Law Level ' + law + ' starts at ' + attitudeFromLaw(law) + '.';
     }
 
+    // ── what the players see, and how to move a port up ──
+    const REVEAL_LABELS = { on_map: 'on the player map', known_patron: 'patron known', known_need: 'requirement known' };
+    function revealCells(p) {
+      const hasPath = !!DRINAX_PATHS[p.world];
+      const box = (field, letter, tip, off) => `<label title="${tip}"><input type="checkbox" ${p[field] ? 'checked' : ''} ${off ? 'disabled' : ''} onchange="setReveal('${p.id}', '${field}', this.checked)" /><span>${letter}</span></label>`;
+      return `<td class="at-see">${box('on_map', 'Map', 'Show this world on the player page and map')}${box('known_patron', 'Patron', 'Players know who the patron is', !hasPath)}${box('known_need', 'Needs', 'Players know what this world requires', !hasPath)}</td>
+        <td>${hasPath ? `<button class="btn-small" onclick="togglePath('${p.id}')">${openPath.has(p.id) ? 'Hide' : 'Path'}</button>` : '<span class="at-sub">none</span>'}</td>`;
+    }
+    async function setReveal(id, field, on) {
+      const p = ports.find(x => x.id === id); if (!p) return;
+      const { error } = await supabaseClient.from('port_attitudes').update({ [field]: on }).eq('id', id);
+      if (error) { await loadAll(); return flash(error.message + ' (Has docs/player-attitudes.sql been run in Supabase?)', false); }
+      p[field] = on;
+      await writeLog('reveal', p.world, on ? 'hidden' : 'shown', on ? 'shown' : 'hidden', REVEAL_LABELS[field]);
+      flash(p.world + ': ' + REVEAL_LABELS[field] + (on ? ' — players can now see it.' : ' — hidden again.'), true);
+    }
+    function togglePath(id) { openPath.has(id) ? openPath.delete(id) : openPath.add(id); render(); }
+    function pathRow(p) {
+      const list = DRINAX_PATHS[p.world] || [];
+      const items = list.map((m, i) => {
+        const effect = m.set ? 'Set to ' + m.set : m.step ? (m.per ? 'Move up per unit paid' : 'Move up ' + m.step) : '';
+        return `<div class="at-path"><span class="at-who">${esc(m.patron || 'Price')}</span> — ${esc(m.need)}
+          <div class="at-reward">Reward: ${esc(m.reward)}</div>${m.gm ? `<div class="at-gmnote">GM: ${esc(m.gm)}</div>` : ''}
+          ${effect ? `<button class="btn-small" style="margin-top:4px" onclick="applyPath('${p.id}', ${i})">Apply: ${esc(effect)}${m.also ? ' (also ' + esc(m.also.join(', ')) + ')' : ''}</button>` : ''}</div>`;
+      }).join('');
+      return `<tr class="at-pathrow"><td colspan="12">${items}</td></tr>`;
+    }
+    // Moves one port to a level (or up the ladder by n), writes the log, and returns the new level (or null if unchanged).
+    async function moveOne(p, mission, units) {
+      const cur = PORT_LEVELS.indexOf(p.attitude);
+      const target = mission.set ? PORT_LEVELS.indexOf(mission.set) : Math.max(0, cur - mission.step * units);
+      if (target === cur) return null;
+      if (mission.set && target > cur && !confirm(p.world + ' is already ' + p.attitude + ', better than ' + mission.set + '. Lower it to ' + mission.set + '?')) return null;
+      const level = PORT_LEVELS[target];
+      const { error } = await supabaseClient.from('port_attitudes').update({ attitude: level, updated_at: new Date().toISOString() }).eq('id', p.id);
+      if (error) throw error;
+      await writeLog('port', p.world, p.attitude, level, 'Mission: ' + (mission.patron || 'price paid') + ' — ' + mission.need);
+      return level;
+    }
+    async function applyPath(id, idx) {
+      const p = ports.find(x => x.id === id), m = p && (DRINAX_PATHS[p.world] || [])[idx]; if (!m) return;
+      let units = 1;
+      if (m.per) { units = parseInt(prompt('How many units did the Travellers pay or deliver? (' + m.need + ')', '1'), 10); if (!units || units < 1) return; }
+      try {
+        const names = [p.world].concat(m.also || []), done = [];
+        for (const w of names) {
+          const row = ports.find(x => x.world === w); if (!row) continue;
+          const lvl = await moveOne(row, m, units); if (lvl) done.push(w + ' → ' + lvl);
+        }
+        await loadAll();
+        flash(done.length ? done.join(', ') : 'No change: already at or beyond that level.', !!done.length);
+      } catch (e) { await loadAll(); flash(e.message, false); }
+    }
+
     // ── standing ──
     async function setStanding(power, value, note, details) {
       const old = standing[power];
@@ -270,13 +337,14 @@
             <div class="calc-block">
               <div class="calc-block-title">Port attitudes</div>
               <div class="at-counts" style="margin-bottom:10px">${PORT_LEVELS.map(l => `<span>${pill(l)} ${counts[l]}</span>`).join('')}</div>
-              ${ports.length ? `<table class="at-table"><thead><tr><th>World</th><th>Hex</th><th>Attitude</th><th class="c">Fence</th><th class="c">Recruit</th><th class="c">Arrest</th><th class="c">Spies</th><th class="c">Protect</th><th>Note</th>${gm ? '<th></th>' : ''}</tr></thead><tbody>
-                ${sectors.map(sec => `<tr class="at-sector"><td colspan="${gm ? 10 : 9}">${esc(sec)}</td></tr>` + bySector[sec].map(p => { const e = PORT_EFFECTS[p.attitude] || {};
+              ${ports.length ? `<table class="at-table"><thead><tr><th>World</th><th>Hex</th><th>Attitude</th><th class="c">Fence</th><th class="c">Recruit</th><th class="c">Arrest</th><th class="c">Spies</th><th class="c">Protect</th><th>Note</th><th title="What the players can see on the player page">Players see</th><th>Path</th>${gm ? '<th></th>' : ''}</tr></thead><tbody>
+                ${sectors.map(sec => `<tr class="at-sector"><td colspan="${gm ? 12 : 11}">${esc(sec)}</td></tr>` + bySector[sec].map(p => { const e = PORT_EFFECTS[p.attitude] || {};
                   return `<tr><td class="at-world at-${p.attitude}" title="${esc([p.uwp, p.trade_codes, p.policy ? 'Policy ' + p.policy : ''].filter(Boolean).join(' · '))}">${esc(p.world)}</td><td>${esc(p.hex || '')}</td>
                     <td>${gm ? `<select class="at-${p.attitude}" onchange="setAttitude('${p.id}', this.value)">${lvlOpts(p.attitude)}</select>` : pill(p.attitude)}</td>
                     <td class="c">${e.fence || ''}</td><td class="c">${e.recruit || ''}</td><td class="c">${e.arrest || ''}</td><td class="c">${e.spies || ''}</td><td class="c">${e.protect || ''}</td>
                     <td><input class="at-note" value="${esc(p.note || '')}" ${ro} onchange="saveNote('${p.id}', this.value)" placeholder="${gm ? 'e.g. what is needed to upgrade' : ''}" /></td>
-                    ${gm ? `<td><button class="btn-small" onclick="removePort('${p.id}')" title="Remove from the list">✕</button></td>` : ''}</tr>`; }).join('')).join('')}
+                    ${revealCells(p)}
+                    ${gm ? `<td><button class="btn-small" onclick="removePort('${p.id}')" title="Remove from the list">✕</button></td>` : ''}</tr>` + (openPath.has(p.id) ? pathRow(p) : ''); }).join('')).join('')}
               </tbody></table>`
               : `<div class="at-sub">No ports listed yet.${gm ? '' : ' Ask the GM to load them.'}</div>`}
               ${gm ? `<div class="at-row" style="margin-top:12px">

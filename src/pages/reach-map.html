@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trojan Reach Map — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <link rel="stylesheet" href="../css/calculators.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/nav.js" defer></script>
+  <style>
+    .rm-wrap .calc-block { max-width: none; margin-bottom: 14px; }
+    .rm-sub { color: #4a9ab8; font-size: 0.82rem; }
+    .rm-layout { display: grid; grid-template-columns: 3fr 1fr; gap: 14px; align-items: start; max-width: 1300px; }
+    @media (max-width: 1000px) { .rm-layout { grid-template-columns: 1fr; } }
+    .rm-map { width: 100%; height: auto; display: block; background: #03121a; border: 1px solid #0a4a60; border-radius: 6px; }
+    .rm-legend { display: flex; flex-direction: column; gap: 6px; font-size: 0.84rem; color: #b0d8e8; }
+    .rm-legend span.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+    .rm-goal { font-size: 0.95rem; color: #b0d8e8; }
+    .rm-goal b { color: #00ffaa; font-size: 1.4rem; }
+    .rm-bar { height: 8px; background: #0a2a38; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+    .rm-bar > div { height: 100%; background: #00ffaa; }
+    .rm-gm { font-size: 0.8rem; color: #b0d8e8; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+    .rm-gm input { width: auto; margin: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-signout">
+        <button onclick="doSignOut()">Sign Out</button>
+      </div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">TROJAN REACH MAP</h1>
+      <div class="rm-wrap" id="rm-root"><div class="rm-sub">Loading…</div></div>
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/drinax-ports.js"></script>
+  <script>
+    let gm = false, showAll = false, campaignId = null, campaignName = '', ports = [];
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const TARGET_ALLIES = 12;
+
+    // The four subsectors of the map form a 2 x 2 block (Trojan Reach sector layout): Sindal and Tobia above,
+    // Tliowaha and Borderlands below. Each subsector is 8 columns by 10 rows; hex "0603" is column 06, row 03.
+    const SUBSECTORS = { Sindal: [0, 0], Tobia: [8, 0], Tliowaha: [0, 10], Borderlands: [8, 10] };
+    const COLORS = { Haven: '#00ffaa', Friendly: '#7dffc8', Tolerant: '#00e5ff', Neutral: '#b0d8e8', Suspicious: '#ffd166', Unfriendly: '#ff9a5a', Hostile: '#ff6a5a' };
+    const S = 22, H = Math.sqrt(3) * S;   // hex size and height (flat-topped hexes, even columns drop half a hex)
+
+    async function init() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = '../../index.html'; return; }
+      gm = isGM(session.user);
+      const list = await loadCampaigns();
+      campaignId = await currentCampaignId();
+      if (!campaignId) { document.getElementById('rm-root').innerHTML = '<div class="rm-sub">Campaigns are not set up yet.</div>'; return; }
+      campaignName = (list.find(c => c.id === campaignId) || {}).name || '';
+      try {
+        const p = await supabaseClient.from('port_attitudes').select('*').eq('campaign_id', campaignId);
+        if (p.error) throw p.error;
+        ports = p.data || [];
+        render();
+      } catch (e) {
+        document.getElementById('rm-root').innerHTML = '<div class="rm-sub">Could not load the map: ' + esc(e.message) + '</div>';
+      }
+    }
+
+    function centre(sector, hex) {
+      const o = SUBSECTORS[sector]; if (!o || !/^\d{4}$/.test(hex || '')) return null;
+      const col = o[0] + parseInt(hex.slice(0, 2), 10), row = o[1] + parseInt(hex.slice(2), 10);
+      return { x: 40 + (col - 1) * 1.5 * S, y: 40 + (row - 1) * H + (col % 2 === 0 ? H / 2 : 0) };
+    }
+    function hexPath(cx, cy, r) {
+      return Array.from({ length: 6 }, (_, i) => { const a = Math.PI / 3 * i; return (cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1); }).join(' ');
+    }
+
+    function render() {
+      const shown = ports.filter(p => showAll || p.on_map);
+      const allies = ports.filter(p => p.on_map && (p.attitude === 'Haven' || p.attitude === 'Friendly')).length;
+      const W = 40 * 2 + 15 * 1.5 * S + 2 * S + 20, HT = 40 * 2 + 19 * H + 2 * H;
+      let svg = `<svg class="rm-map" viewBox="0 0 ${W.toFixed(0)} ${HT.toFixed(0)}" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">`;
+
+      // hex grid
+      for (let col = 1; col <= 16; col++) for (let row = 1; row <= 20; row++) {
+        const cx = 40 + (col - 1) * 1.5 * S, cy = 40 + (row - 1) * H + (col % 2 === 0 ? H / 2 : 0);
+        svg += `<polygon points="${hexPath(cx, cy, S * 0.96)}" fill="none" stroke="#0a3a4c" stroke-width="0.6"/>`;
+      }
+      // subsector outlines and names
+      Object.entries(SUBSECTORS).forEach(([name, [oc, or]]) => {
+        const x0 = 40 + oc * 1.5 * S - S, y0 = 40 + or * H - H / 2, w = 8 * 1.5 * S + S / 2, h = 10 * H + H / 2;
+        svg += `<rect x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="none" stroke="#0a6a8a" stroke-width="1.2" stroke-dasharray="6 4"/>`;
+        svg += `<text x="${(x0 + w / 2).toFixed(1)}" y="${(y0 + h / 2).toFixed(1)}" text-anchor="middle" fill="#0a4a60" font-size="34" font-weight="700" letter-spacing="4" opacity="0.55">${name.toUpperCase()}</text>`;
+      });
+      // worlds
+      let off = 0;
+      shown.forEach(p => {
+        const c = centre(p.sector, p.hex); if (!c) { off++; return; }
+        const col = COLORS[p.attitude] || '#b0d8e8', ghost = showAll && !p.on_map;
+        const tip = esc(p.world + ' — ' + p.attitude + (ghost ? ' (hidden from players)' : ''));
+        svg += `<g opacity="${ghost ? 0.35 : 1}"><title>${tip}</title>`;
+        if (p.attitude === 'Haven') svg += `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="12" fill="none" stroke="${col}" stroke-width="1.2" opacity="0.7"/>`;
+        svg += `<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="${p.world === 'Drinax' ? 8 : 6}" fill="${col}" stroke="#03121a" stroke-width="1.5"/>`;
+        svg += `<text x="${(c.x + 10).toFixed(1)}" y="${(c.y + 3).toFixed(1)}" fill="${col}" font-size="10" paint-order="stroke" stroke="#03121a" stroke-width="3">${esc(p.world)}</text></g>`;
+      });
+      svg += '</svg>';
+
+      const counts = {}; Object.keys(COLORS).forEach(l => { counts[l] = 0; });
+      ports.filter(p => p.on_map).forEach(p => { if (counts[p.attitude] != null) counts[p.attitude]++; });
+      const legend = Object.entries(COLORS).map(([l, c]) => `<div><span class="dot" style="background:${c}"></span>${l} <span class="rm-sub">(${counts[l]})</span></div>`).join('');
+
+      document.getElementById('rm-root').innerHTML = `
+        <div class="rm-sub" style="margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">${esc(campaignName)} — Pirates of Drinax</div>
+        ${gm ? `<label class="rm-gm"><input type="checkbox" ${showAll ? 'checked' : ''} onchange="showAll = this.checked; render()" /> GM view: also show worlds the players have not charted (faded)</label>` : ''}
+        <div class="rm-layout">
+          <div>${svg}${off ? `<div class="rm-sub" style="margin-top:6px">${off} listed world(s) have no hex on this map.</div>` : ''}</div>
+          <div>
+            <div class="calc-block"><div class="calc-block-title">Allies</div>
+              <div class="rm-goal"><b>${allies}</b> of ${TARGET_ALLIES} worlds Friendly or better</div>
+              <div class="rm-bar"><div style="width:${Math.min(100, allies / TARGET_ALLIES * 100).toFixed(0)}%"></div></div></div>
+            <div class="calc-block"><div class="calc-block-title">Key</div><div class="rm-legend">${legend}</div>
+              <div class="rm-sub" style="margin-top:8px">A ring marks a Haven. Only worlds you have charted appear. Hover a world for its name and attitude.</div></div>
+          </div>
+        </div>`;
+    }
+
+    async function doSignOut() {
+      await supabaseClient.auth.signOut();
+      window.location.href = '../../index.html';
+    }
+
+    init();
+  </script>
+</body>
+</html>

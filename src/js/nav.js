@@ -19,7 +19,9 @@ const NAV_GROUPS = [
     ['time-tracker.html',     'Time Tracker'],
     ['campaign-finance.html', 'Campaign Finance'],
     ['piracy-encounter.html', 'Piracy Encounter'],
-    ['attitudes.html',        'Attitudes']
+    ['player-attitudes.html', 'Port Attitudes'],
+    ['reach-map.html',        'Trojan Reach Map'],
+    ['attitudes.html',        'Attitudes (GM)', false, true]   // fourth value: GM only
   ]},
   { id: 'reference', label: 'Reference', items: [
     ['general-rules.html',        'General Rules'],
@@ -54,11 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const body = document.createElement('div');
     body.className = 'sidebar-group-body';
 
-    g.items.forEach(([href, label, newTab]) => {
+    g.items.forEach(([href, label, newTab, gmOnly]) => {
       const a = document.createElement(href ? 'a' : 'span');
       a.className = 'sidebar-nav-item' + (href === here ? ' active' : '') + (href ? '' : ' disabled');
       if (href) a.href = href;
       if (newTab) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
+      if (gmOnly) { a.style.display = 'none'; a.dataset.gmOnly = '1'; }
       a.textContent = label;
       body.appendChild(a);
     });
@@ -78,4 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebar.insertBefore(head, anchor);
     sidebar.insertBefore(body, anchor);
   });
+
+  // GM-only links stay hidden unless the signed-in account is a GM (isGM is in supabase-config.js).
+  if (typeof supabaseClient !== 'undefined' && typeof isGM === 'function') {
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+      if (session && isGM(session.user)) sidebar.querySelectorAll('[data-gm-only]').forEach(el => { el.style.display = ''; });
+    });
+  }
 });
