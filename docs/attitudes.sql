@@ -62,3 +62,8 @@ CREATE POLICY attitude_log_gm ON attitude_log FOR ALL TO authenticated
   WITH CHECK ((auth.jwt() ->> 'email') IN ('mikelasagna@gmail.com'));
 
 CREATE INDEX IF NOT EXISTS attitude_log_campaign_idx ON attitude_log (campaign_id, created_at DESC);
+
+-- Added later: world data from Appendix 2 (run this part if you ran the script above earlier).
+ALTER TABLE port_attitudes ADD COLUMN IF NOT EXISTS uwp TEXT;
+ALTER TABLE port_attitudes ADD COLUMN IF NOT EXISTS trade_codes TEXT;
+ALTER TABLE port_attitudes ADD COLUMN IF NOT EXISTS policy TEXT;   -- Government/Security/Technology, e.g. 221; - null, X no negotiation

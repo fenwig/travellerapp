@@ -149,11 +149,21 @@
     async function loadBook() {
       if (!confirm('Load the ' + DRINAX_PORTS.length + ' worlds from Appendix 2 with their starting attitudes? Worlds already in the list are left alone.')) return;
       const have = new Set(ports.map(p => p.world));
-      const rows = DRINAX_PORTS.filter(r => !have.has(r[1])).map(r => ({ campaign_id: campaignId, sector: r[0], world: r[1], hex: r[2], attitude: r[3] }));
-      if (!rows.length) return flash('Every Appendix 2 world is already listed.', false);
-      const { error } = await supabaseClient.from('port_attitudes').insert(rows);
-      if (error) return flash(error.message, false);
-      await loadAll(); flash('Loaded ' + rows.length + ' worlds.', true);
+      const rows = DRINAX_PORTS.filter(r => !have.has(r[1])).map(r => ({ campaign_id: campaignId, sector: r[0], world: r[1], hex: r[2], attitude: r[3], uwp: r[4], trade_codes: r[5], policy: r[6] }));
+      if (rows.length) {
+        const { error } = await supabaseClient.from('port_attitudes').insert(rows);
+        if (error) return flash(error.message, false);
+      }
+      await fillWorldData();
+      await loadAll(); flash('Loaded ' + rows.length + ' new worlds.', true);
+    }
+    // Add UWP, trade codes and policy to listed Appendix 2 worlds that lack them (attitudes are not touched).
+    async function fillWorldData() {
+      for (const r of DRINAX_PORTS) {
+        const p = ports.find(x => x.world === r[1]);
+        if (!p || p.uwp) continue;
+        await supabaseClient.from('port_attitudes').update({ uwp: r[4], trade_codes: r[5], policy: r[6] }).eq('id', p.id);
+      }
     }
     async function addPort() {
       const world = val('at-new-world').trim(); if (!world) return flash('Enter a world name.', false);
@@ -250,7 +260,7 @@
               <div class="at-counts" style="margin-bottom:10px">${PORT_LEVELS.map(l => `<span>${pill(l)} ${counts[l]}</span>`).join('')}</div>
               ${ports.length ? `<table class="at-table"><thead><tr><th>World</th><th>Hex</th><th>Attitude</th><th class="c">Fence</th><th class="c">Recruit</th><th class="c">Arrest</th><th class="c">Spies</th><th class="c">Protect</th><th>Note</th>${gm ? '<th></th>' : ''}</tr></thead><tbody>
                 ${sectors.map(sec => `<tr class="at-sector"><td colspan="${gm ? 10 : 9}">${esc(sec)}</td></tr>` + bySector[sec].map(p => { const e = PORT_EFFECTS[p.attitude] || {};
-                  return `<tr><td>${esc(p.world)}</td><td>${esc(p.hex || '')}</td>
+                  return `<tr><td title="${esc([p.uwp, p.trade_codes, p.policy ? 'Policy ' + p.policy : ''].filter(Boolean).join(' · '))}">${esc(p.world)}</td><td>${esc(p.hex || '')}</td>
                     <td>${gm ? `<select onchange="setAttitude('${p.id}', this.value)">${lvlOpts(p.attitude)}</select>` : pill(p.attitude)}</td>
                     <td class="c">${e.fence || ''}</td><td class="c">${e.recruit || ''}</td><td class="c">${e.arrest || ''}</td><td class="c">${e.spies || ''}</td><td class="c">${e.protect || ''}</td>
                     <td><input class="at-note" value="${esc(p.note || '')}" ${ro} onchange="saveNote('${p.id}', this.value)" placeholder="${gm ? 'e.g. what is needed to upgrade' : ''}" /></td>
@@ -258,7 +268,7 @@
               </tbody></table>`
               : `<div class="at-sub">No ports listed yet.${gm ? '' : ' Ask the GM to load them.'}</div>`}
               ${gm ? `<div class="at-row" style="margin-top:12px">
-                ${ports.length < DRINAX_PORTS.length ? '<button class="btn-outline at-btn" onclick="loadBook()">Load Appendix 2 worlds</button>' : ''}
+                ${(ports.length < DRINAX_PORTS.length || ports.some(p => !p.uwp && DRINAX_PORTS.some(r => r[1] === p.world))) ? '<button class="btn-outline at-btn" onclick="loadBook()">Load Appendix 2 worlds</button>' : ''}
                 <label>Sector<input id="at-new-sector" list="at-sectors" /></label>
                 <datalist id="at-sectors">${['Sindal', 'Tobia', 'Tliowaha', 'Borderlands'].map(s => `<option value="${s}">`).join('')}</datalist>
                 <label>World<input class="at-wide" id="at-new-world" /></label>
