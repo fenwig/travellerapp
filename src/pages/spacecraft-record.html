@@ -1672,6 +1672,15 @@ async function hireFullCrew() {
     if (made.error) { say('Could not add the crew slots: ' + made.error.message, false); return; }
     slots = made.data;
   }
+  // a gunner for every turret and barbette on the ship, empty turrets included
+  const mt = await supabaseClient.from('spacecraft_mounts').select('mount_type,count').eq('spacecraft_id', ship.id);
+  const turrets = (mt.data || []).filter(m => /turret|barbette/i.test(m.mount_type)).reduce((n, m) => n + (m.count || 1), 0);
+  const haveGunners = (await supabaseClient.from('spacecraft_crew_roles').select('id').eq('spacecraft_id', ship.id).eq('role', 'Turret Gunner')).data || [];
+  if (turrets > haveGunners.length) {
+    const more = await supabaseClient.from('spacecraft_crew_roles').insert(Array.from({ length: turrets - haveGunners.length }, () => ({ spacecraft_id: ship.id, role: 'Turret Gunner' }))).select('id,role');
+    if (more.error) { say('Could not add the gunner slots: ' + more.error.message, false); return; }
+    slots = slots.concat(more.data);
+  }
   if (!slots.length) { say('Every crew slot already has someone in it. Use Edit, then Add Crew Slot for more.', false); return; }
 
   const seen = {}, perRole = {};

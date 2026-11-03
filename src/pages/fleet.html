@@ -38,6 +38,7 @@
     .fl-dm { color: #00e5ff; font-weight: 700; white-space: nowrap; }
     .fl-tn { color: #ffd166; white-space: nowrap; }
     .fl-res { grid-column: 1 / -1; color: #00ffaa; font-size: 0.8rem; min-height: 0; }
+    .fl-adv { grid-column: 1 / -1; color: #ffd166; font-size: 0.78rem; }
     .fl-res.bad { color: #ff5a4a; }
     .fl-ctl { grid-column: 1 / -1; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; color: #4a9ab8; font-size: 0.78rem; }
     .fl-ctl input, .fl-ctl select { background: #080d12; border: 1px solid #0a4a60; color: #b0d8e8; border-radius: 4px; padding: 3px 6px; font-size: 0.8rem; }
@@ -110,8 +111,9 @@
         bad = effect < 0;
         btn.closest('.fl-line').dataset.effect = effect;
       }
-      if (btn.dataset.advice) text += ' — ' + btn.dataset.advice;
       res.textContent = text; res.className = 'fl-res' + (bad ? ' bad' : '');
+      const adv = btn.closest('.fl-line').querySelector('.fl-adv');   // the reminder sits on its own line, in gold
+      if (adv) adv.textContent = btn.dataset.advice || '';
     }
     const fmt = n => (n >= 0 ? '+' : '−') + Math.abs(n);
     const dice = n => { let t = 0; const r = []; for (let i = 0; i < n; i++) { const v = d6(); r.push(v); t += v; } return { total: t, rolls: r }; };
@@ -184,7 +186,7 @@
       if (dm == null) return '<div class="fl-line"><span class="fl-label">' + label + '</span><span class="fl-note" style="grid-column:2/-1;text-align:right">needs crew</span>' + (note ? '<div class="fl-note">' + note + '</div>' : '') + '</div>';
       const r = Math.round(dm);
       return '<div class="fl-line"><span class="fl-label">' + label + '</span><span class="fl-dm">2D ' + fmt(r) + '</span><span class="fl-tn">' + (tn ? tn + '+' : '') + '</span>' +
-        '<button class="fl-roll" data-dm="' + r + '" data-tn="' + (tn || '') + '"' + (opts.crit ? ' data-crit="1"' : '') + (opts.advice ? ' data-advice="' + esc(opts.advice) + '"' : '') + ' onclick="doRoll(this)">Roll</button><span class="fl-res"></span>' + (note ? '<div class="fl-note">' + note + '</div>' : '') + '</div>';
+        '<button class="fl-roll" data-dm="' + r + '" data-tn="' + (tn || '') + '"' + (opts.crit ? ' data-crit="1"' : '') + (opts.advice ? ' data-advice="' + esc(opts.advice) + '"' : '') + ' onclick="doRoll(this)">Roll</button><span class="fl-res"></span><span class="fl-adv"></span>' + (note ? '<div class="fl-note">' + note + '</div>' : '') + '</div>';
     }
     const dmOr = (v, add) => (v == null ? null : v + (add || 0));
 
@@ -240,7 +242,7 @@
             '<button class="fl-mini" onclick="launchMissiles(\'' + id + '\',\'' + wid + '\',' + a.capacity + ',this)">Launch</button>' +
             '<button class="fl-roll" data-tn="8" data-crit="1" data-salvo-input="1" data-advice="remember Distant range −2 and the target\'s Evasive Action" onclick="doRoll(this)">Attack roll</button>' + dmgBtn +
             '<button class="fl-mini" onclick="reloadMissiles(\'' + id + '\',\'' + wid + '\',' + a.capacity + ',this)">Reload</button></div>' +
-            '<span class="fl-res"></span></div>';
+            '<span class="fl-res"></span><span class="fl-adv"></span></div>';
           return;
         }
         const gd = a.bay ? bAvg : gAvg;

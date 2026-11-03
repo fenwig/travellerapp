@@ -12,7 +12,7 @@ const CATALOGUE_ROLE_MAP = {
   Purser: 'Administrator', Administrator: 'Administrator', Scientist: 'Scientist', 'Small Craft Crew': 'Small Craft Crew'
 };
 // The posts Hire Full Crew fills: what it takes to fly the ship
-const FLIGHT_ROLES = new Set(['Pilot', 'Astrogator', 'Engineer', 'Maintenance', 'Turret Gunner', 'Sensor Operator']);
+const FLIGHT_ROLES = new Set(['Pilot', 'Astrogator', 'Engineer', 'Maintenance', 'Turret Gunner', 'Bay Gunner', 'Sensor Operator']);
 const MOUNT_TYPE_BY_COUNT = { Turret: n => (n >= 3 ? 'Triple Turret' : n === 2 ? 'Double Turret' : 'Single Turret'), Barbette: () => 'Barbette', Fixed: () => 'Fixed Mount' };
 
 // "Triple Turret (beam lasers)" -> "Beam Laser"; plain names such as "Particle Barbette" stay as they are
@@ -31,7 +31,8 @@ function catalogueToRecord(s, opts) {
   let weaponPower = 0, mountPower = 0;
   s.weapons.forEach(w => {
     if (!MOUNT_TYPE_BY_COUNT[w.mount]) warnings.push('The record has no "' + w.mount + '" mount: "' + w.name + '" is added as a Fixed Mount');
-    const mountType = (MOUNT_TYPE_BY_COUNT[w.mount] || (() => 'Fixed Mount'))(w.perMount || 1);
+    const named = w.mount === 'Turret' ? /^(Triple|Double|Single) Turret/i.exec(w.name) : null;
+    const mountType = named ? named[1][0].toUpperCase() + named[1].slice(1).toLowerCase() + ' Turret' : (MOUNT_TYPE_BY_COUNT[w.mount] || (() => 'Fixed Mount'))(w.perMount || 1);
     const slots = mountType === 'Triple Turret' || mountType === 'Fixed Mount' ? 3 : mountType === 'Double Turret' ? 2 : 1;
     const mountIndex = mounts.length;
     mounts.push({ mount_type: mountType, count: w.count, tl: null, power: w.mountPower || 0 });
@@ -56,9 +57,15 @@ function catalogueToRecord(s, opts) {
   const crewSlots = [], skipped = {};
   s.crew.forEach(c => {
     const role = c.role === 'Fighter Pilot' ? null : CATALOGUE_ROLE_MAP[c.role];
+    if (role === 'Turret Gunner') return;     // gunners follow the weapons below, not the book's crew list
     if (FLIGHT_ROLES.has(role)) for (let i = 0; i < c.count; i++) crewSlots.push({ role });
     else skipped[c.role] = (skipped[c.role] || 0) + c.count;
   });
+  // A gunner for every turret and barbette (empty turrets too: a turret is always fitted out), and one for every bay weapon
+  const turrets = s.weapons.filter(w => w.mount === 'Turret' || w.mount === 'Barbette').reduce((n, w) => n + (w.count || 1), 0);
+  const bays = s.weapons.filter(w => w.mount === 'Bay').reduce((n, w) => n + (w.count || 1), 0);
+  for (let i = 0; i < turrets; i++) crewSlots.push({ role: 'Turret Gunner' });
+  for (let i = 0; i < bays; i++) crewSlots.push({ role: 'Bay Gunner' });
   const skippedList = Object.keys(skipped).map(r => skipped[r] + ' ' + r);
   if (skippedList.length) warnings.push('No crew slots for ' + skippedList.join(', ') + ' (not needed to fly the ship; add by hand if wanted)');
 
