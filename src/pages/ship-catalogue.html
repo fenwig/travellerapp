@@ -181,6 +181,7 @@
         <div class="sc-line"><i>Sensors</i> ${esc(s.sensors)} · <i>Bridge</i> ${esc(s.bridge)}</div>
         <div class="sc-line"><i>Systems</i> ${esc(s.systems.join(', ') || 'None')}</div>
         <div class="sc-line"><i>Craft carried</i> ${esc(s.craft.join(', ') || 'None')}</div>
+        ${s.notes ? `<div class="sc-note">${esc(s.notes)}</div>` : ''}
       </details>`;
     }
 
@@ -201,7 +202,6 @@
         <div class="sc-line"><i>Berths</i> ${esc(accomText(s))} · <i>Cargo</i> ${s.cargo} tons</div>
         <div class="sc-line"><i>Cost</i> ${mcr(s.purchase)} · <i>Maintenance</i> Cr${s.maintenance.toLocaleString('en-US')}/month</div>
         ${specDetails(s)}
-        ${s.notes ? `<div class="sc-note">${esc(s.notes)}</div>` : ''}
         <div class="sc-add"><button class="sc-add-btn" onclick="addToRecord('${s.id}', this)">Add to Spacecraft Record</button> <select class="sc-add-status" title="Fleet: crewed entirely by NPCs. Active: crewed by one or more player characters. Reserve: not in use."><option value="reserve">as Reserve</option><option value="fleet">as Fleet</option><option value="active">as Active</option></select><span class="sc-add-msg"></span></div>
         <div class="sc-src">${esc(s.source.book)}${s.source.page ? ', p.' + s.source.page : ''}</div>
       </div>`;
