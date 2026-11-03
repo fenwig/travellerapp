@@ -28,6 +28,19 @@
     .sc-more { margin-top: 6px; border-top: 1px solid #0a4a60; padding-top: 6px; }
     .sc-more summary { cursor: pointer; color: #00e5ff; font-size: 0.78rem; margin-bottom: 6px; }
     .sc-note { margin-top: 6px; color: #4a9ab8; font-size: 0.76rem; }
+    .sc-wpn { margin: 8px 0; border: 1px solid #0a4a60; border-radius: 6px; padding: 6px 8px; background: rgba(0,229,255,0.04); }
+    .sc-wpn-h { color: #00e5ff; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .sc-w { padding: 4px 0; border-top: 1px solid rgba(10,74,96,0.6); }
+    .sc-w:first-of-type { border-top: 0; }
+    .sc-w-name { color: #e0f4ff; font-weight: 600; }
+    .sc-w-sub { margin-left: 8px; color: #b0d8e8; }
+    .sc-w-sub b { color: #00e5ff; }
+    .sc-w-ammo { margin-left: 8px; color: #ffd166; font-size: 0.76rem; }
+    .sc-ammo { margin-bottom: 14px; font-size: 0.8rem; color: #b0d8e8; }
+    .sc-ammo summary { cursor: pointer; color: #00e5ff; }
+    .sc-ammo table { border-collapse: collapse; margin: 8px 18px 8px 0; display: inline-table; vertical-align: top; }
+    .sc-ammo th, .sc-ammo td { border: 1px solid #0a4a60; padding: 2px 8px; text-align: left; }
+    .sc-ammo th { color: #4a9ab8; font-weight: 600; }
     .sc-src { margin-top: 8px; font-size: 0.7rem; color: #4a9ab8; border-top: 1px solid #0a4a60; padding-top: 6px; }
   </style>
 </head>
@@ -43,7 +56,8 @@
 
     <main class="page-main">
       <h1 class="page-title">SHIP CATALOGUE</h1>
-      <p class="calc-intro" style="color:#b0d8e8;font-size:0.88rem;max-width:860px;margin-bottom:14px">Published ship designs from High Guard. <b style="color:#ffd166">Ships marked Draft were read from the book text and still need checking against the page</b>; the rest follow in batches. Costs are in MCr, maintenance in Cr per month.</p>
+      <p class="calc-intro" style="color:#b0d8e8;font-size:0.88rem;max-width:860px;margin-bottom:14px">Published ship designs from High Guard and Pirates of Drinax. Each card shows its weapons the way they are used in combat: range, damage, power and ammunition. Costs are in MCr, maintenance in Cr per month.</p>
+      <details class="sc-ammo"><summary>Missile and torpedo types</summary><div id="sc-ammo"></div></details>
       <div class="sc-bar">
         <input id="sc-q" placeholder="Search ships…" oninput="draw()" />
         <select id="sc-polity" onchange="draw()"><option value="">All polities</option></select>
@@ -57,6 +71,7 @@
   <script src="../js/supabase-config.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/ship-catalogue-data.js"></script>
+  <script src="../js/weapons-data.js"></script>
   <script>
     async function doSignOut() { await supabaseClient.auth.signOut(); window.location.href = '../../index.html'; }
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -64,6 +79,49 @@
 
     function weaponText(s) {
       return s.weapons.length ? s.weapons.map(w => (w.count > 1 ? w.count + ' × ' : '') + w.name).join(', ') : 'None';
+    }
+    // Combat view of a ship's weapons. Damage follows the High Guard rules: weapons of one type in a turret or fixed mount fire
+    // together for one roll, each extra weapon adding +1 per damage die; barbettes multiply damage by 3 and bays by 10/20/100.
+    const BAY_MULT = { small: 10, medium: 20, large: 100 }, BAY_MISSILES = { small: 12, medium: 24, large: 120 }, BAY_TORPS = { small: 3, medium: 6, large: 30 };
+    const isAmmo = n => /missile|torpedo/i.test(n || '');
+    function dmgText(t, k, mount, name, bay) {
+      if (t.damage == null) return '';
+      const m = /^(\d+)D$/.exec(t.damage);
+      if (!m) return t.damage;
+      if (isAmmo(name)) return t.damage + ' per ' + (/torpedo/i.test(name) ? 'torpedo' : 'missile');
+      if (mount === 'Barbette') return t.damage + ' ×3';
+      if (mount === 'Bay') return t.damage + ' ×' + (BAY_MULT[bay] || 10);
+      return t.damage + (k > 1 ? '+' + (k - 1) * +m[1] : '');
+    }
+    function ammoText(w) {
+      const names = (w.mixed ? w.names : [w.name]).join(' | '), bay = (/(small|medium|large)/i.exec(w.name) || [])[1];
+      const b = bay && bay.toLowerCase();
+      if (/missile rack/i.test(names)) return w.mount === 'Fixed' ? 'Holds 4 missiles' : 'Holds 12 missiles per turret';
+      if (/missile barbette/i.test(w.name)) return 'Fires 5 missiles per attack · holds 25';
+      if (/torpedo barbette/i.test(w.name)) return 'Holds 3 torpedoes';
+      if (/missile bay/i.test(w.name) && b) return 'Fires ' + BAY_MISSILES[b] + ' missiles per attack · holds ' + BAY_MISSILES[b] * 12;
+      if (/torpedo bay/i.test(w.name) && b) return 'Fires ' + BAY_TORPS[b] + ' torpedoes per attack · holds ' + BAY_TORPS[b] * 12;
+      return '';
+    }
+    function weaponLines(w) {
+      const bay = ((/(small|medium|large)/i.exec(w.name) || [])[1] || '').toLowerCase();
+      const groups = [];
+      const add = (name, t) => { const f = groups.find(g => g.name === name); if (f) f.k++; else groups.push({ name, t, k: 1 }); };
+      if (w.mixed) w.mixed.forEach((t, i) => t && add(w.names[i], t));
+      else if (w.stats) for (let i = 0; i < (w.perMount || 1); i++) add(w.name, w.stats);
+      const power = groups.reduce((a, g) => a + g.k * (g.t.power || 0), 0) + (w.mountPower || 0);
+      const head = '<div class="sc-w-name">' + (w.count > 1 ? w.count + ' × ' : '') + esc(w.name) + (power ? ' <span style="color:#4a9ab8;font-weight:400">· power ' + power + (w.count > 1 ? ' each' : '') + '</span>' : '') + '</div>';
+      if (!groups.length) return '<div class="sc-w">' + head + '<div class="sc-w-sub" style="color:#4a9ab8">No weapon fitted</div></div>';
+      const subs = groups.map(g => {
+        const parts = [w.mixed ? '<b>' + esc(g.name) + '</b>' + (g.k > 1 ? ' ×' + g.k : '') : (g.k > 1 ? '<b>' + g.k + ' weapons</b>' : ''),
+          g.t.range, dmgText(g.t, g.k, w.mount, g.name, bay), g.t.traits && g.t.traits !== '--' ? esc(g.t.traits) : ''].filter(Boolean);
+        return '<div class="sc-w-sub">' + parts.map((p, i) => i && !/^<b>/.test(p) ? esc(p).replace(/&amp;/g, '&') : p).join(' · ') + '</div>';
+      }).join('');
+      const ammo = ammoText(w);
+      return '<div class="sc-w">' + head + subs + (ammo ? '<div class="sc-w-ammo">' + ammo + '</div>' : '') + '</div>';
+    }
+    function weaponBlock(s) {
+      return '<div class="sc-wpn"><div class="sc-wpn-h">Weapons</div>' + (s.weapons.length ? s.weapons.map(weaponLines).join('') : '<div class="sc-w-sub" style="color:#4a9ab8">Unarmed</div>') + '</div>';
     }
     function crewText(s) {
       return s.crew.map(c => c.role + (c.count > 1 ? ' ×' + c.count : '')).join(', ');
@@ -83,15 +141,12 @@
         .concat(p.other).filter(x => x[1]).map(x => x[0] + ' ' + x[1]).join(' · ');
       const sw = s.software.map(x => esc(x.name) + (x.rating != null ? '/' + x.rating : '') + ' (BW ' + x.bw + ')').join(', ');
       const jcMax = c.processor + (c.bis ? 5 : 0), jcOk = s.softwareBw.jumpControl <= jcMax, otherOk = s.softwareBw.other <= c.processor;
-      const one = (n, t) => esc(n) + ': ' + [t.tl != null ? 'TL' + t.tl : '', t.range, 'power ' + t.power, t.damage, t.cost != null ? 'MCr' + t.cost : ''].filter(x => x !== '' && x != null).join(', ') + (t.traits ? ' ' + esc(t.traits) : '');
-      const stats = s.weapons.map(w => w.mixed ? w.mixed.map((t, i) => t ? one(w.names[i], t) : '').filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).join('; ') : w.stats ? one(w.name, w.stats) : '').filter(Boolean).join('; ');
       return `<details class="sc-more"><summary>Full specification</summary>
         <div class="sc-line"><i>Power plant</i> ${s.power} · <i>Fuel tanks</i> ${s.fuelTons != null ? s.fuelTons + " tons" : "not read"}</div>
         <div class="sc-line"><i>Power needed</i> ${esc(power)}</div>
         <div class="sc-line"><i>Computer</i> processor ${c.processor}${c.bis ? ' · bis' : ''}${c.fib ? ' · fib' : ''}</div>
         <div class="sc-line"><i>Software</i> ${sw}</div>
         <div class="sc-line"><i>Jump Control</i> <b style="color:${jcOk ? '#00ffaa' : '#ff5a4a'}">${s.softwareBw.jumpControl} of ${jcMax}</b>${c.bis ? ' (processor ' + c.processor + ' +5 for bis)' : ''} · <i>Other programs</i> <b style="color:${otherOk ? '#00ffaa' : '#ffd166'}">${s.softwareBw.other} of ${c.processor}</b>${otherOk ? '' : ' (not all can run at once)'}</div>
-        ${stats ? '<div class="sc-line"><i>Weapon stats</i> ' + stats + '</div>' : ''}
         <div class="sc-line"><i>Sensors</i> ${esc(s.sensors)} · <i>Bridge</i> ${esc(s.bridge)}</div>
         <div class="sc-line"><i>Systems</i> ${esc(s.systems.join(', ') || 'None')}</div>
         <div class="sc-line"><i>Craft carried</i> ${esc(s.craft.join(', ') || 'None')}</div>
@@ -110,7 +165,7 @@
         </div>
         <div class="sc-line"><i>Power</i> ${s.power} · <i>Computer</i> ${esc(s.computer)} · <i>Sensors</i> ${esc(s.sensors)}</div>
         <div class="sc-line"><i>Armour type</i> ${esc(s.armour.type)} · <i>Fuel</i> ${esc(s.fuel)}</div>
-        <div class="sc-line"><i>Weapons</i> ${esc(weaponText(s))}</div>
+        ${weaponBlock(s)}
         <div class="sc-line"><i>Crew</i> ${esc(crewText(s))}</div>
         <div class="sc-line"><i>Berths</i> ${esc(accomText(s))} · <i>Cargo</i> ${s.cargo} tons</div>
         <div class="sc-line"><i>Cost</i> ${mcr(s.purchase)} · <i>Maintenance</i> Cr${s.maintenance.toLocaleString('en-US')}/month</div>
@@ -137,6 +192,11 @@
         .forEach(x => psel.insertAdjacentHTML('beforeend', `<option>${x}</option>`));
       const sel = document.getElementById('sc-role');
       [...new Set(SHIP_CATALOGUE.map(s => s.role))].sort().forEach(r => sel.insertAdjacentHTML('beforeend', `<option>${esc(r)}</option>`));
+      const cr = m => 'Cr' + Math.round(m * 1e6).toLocaleString('en-US');
+      const tbl = (title, per, rows) => '<table><tr><th colspan="6">' + title + '</th></tr><tr><th>Type</th><th>TL</th><th>Thrust</th><th>Damage</th><th>Cost per ' + per + '</th><th>Traits</th></tr>' +
+        rows.map(r => '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + esc(r[3]) + '</td><td>' + cr(r[4]) + '</td><td>' + esc(r[5]) + '</td></tr>').join('') + '</table>';
+      document.getElementById('sc-ammo').innerHTML = tbl('Missiles (12 per ton)', 12, MISSILES) + tbl('Torpedoes', 3, TORPEDOES) +
+        '<div style="color:#4a9ab8;font-size:0.76rem">Anti-torpedo missiles do only 1D to conventional targets. Damage multiples do not apply to missiles or torpedoes.</div>';
       draw();
     })();
   </script>
