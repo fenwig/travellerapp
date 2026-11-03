@@ -600,7 +600,7 @@
             <span id="disp-cargo-max" style="color:#00e5ff;font-weight:600">0</span> tons
           </div>
           <table class="gear-table">
-            <thead><tr><th>Description</th><th>Tonnage</th><th></th></tr></thead>
+            <thead><tr><th>Description</th><th>Tonnage</th><th title="Taken from another ship; must be sold through an illicit buyer or fence">Stolen</th><th></th></tr></thead>
             <tbody id="cargo-tbody"></tbody>
           </table>
           <div style="font-size:0.78rem;color:#4a9ab8;margin-top:6px">Total loaded: <span id="cargo-total">0</span> tons</div>
@@ -1394,9 +1394,10 @@ async function renderCargo() {
   tbody.innerHTML = rows.length ? rows.map(r => `
     <tr data-id="${r.id}">
       <td>${r.description}</td><td>${r.tonnage}</td>
+      <td><input type="checkbox" ${r.stolen ? 'checked' : ''} onchange="toggleCargoStolen('${r.id}',this.checked)" title="Stolen cargo" /></td>
       <td class="td-act"><button class="skill-remove" onclick="deleteCargoRow('${r.id}',this.closest('tr'))">✕</button></td>
     </tr>`).join('')
-  : '<tr><td colspan="3" style="color:#4a9ab8;font-size:0.82rem">Empty</td></tr>';
+  : '<tr><td colspan="4" style="color:#4a9ab8;font-size:0.82rem">Empty</td></tr>';
   const total = rows.reduce((s,r) => s+parseFloat(r.tonnage||0), 0);
   document.getElementById('cargo-total').textContent = total.toFixed(2);
   sv('sv-cargo-cur', total.toFixed(2));
@@ -1408,6 +1409,7 @@ function addCargoRow() {
   const tr = document.createElement('tr'); tr.dataset.id = 'new-'+Date.now();
   tr.innerHTML = `<td><input placeholder="Description" /></td>
     <td><input type="number" placeholder="0" step="0.5" style="width:95px" /></td>
+    <td><input type="checkbox" title="Stolen cargo" /></td>
     <td class="td-act"><button class="btn-small" onclick="saveCargoRow(this.closest('tr'))">Save</button></td>`;
   tbody.appendChild(tr);
 }
@@ -1415,8 +1417,13 @@ function addCargoRow() {
 async function saveCargoRow(tr) {
   const i = tr.querySelectorAll('input');
   if (!i[0].value) return;
-  await supabaseClient.from('spacecraft_cargo').insert({ spacecraft_id:ship.id, description:i[0].value, tonnage:parseFloat(i[1].value)||0 });
+  await supabaseClient.from('spacecraft_cargo').insert({ spacecraft_id:ship.id, description:i[0].value, tonnage:parseFloat(i[1].value)||0, stolen:i[2].checked });
   await renderCargo();
+}
+
+async function toggleCargoStolen(id, on) {
+  const { error } = await supabaseClient.from('spacecraft_cargo').update({ stolen: on }).eq('id', id);
+  if (error) { alert('Could not save the stolen tick: ' + error.message); await renderCargo(); }
 }
 
 async function deleteCargoRow(id, tr) {
@@ -1440,7 +1447,7 @@ async function renderTradeLog() {
     total += profit;
     return `<tr data-id="${r.id}">
       <td>${new Date(r.sold_at).toLocaleDateString()}</td>
-      <td>${r.good_name}${r.illegal ? ' <span style="color:#ff5a4a">(illegal)</span>' : ''}</td>
+      <td>${r.good_name}${r.illegal ? ' <span style="color:#ff5a4a">(illegal)</span>' : ''}${r.stolen ? ' <span style="color:#ff5a4a">(stolen' + (r.fence_pct != null ? ', fence ' + r.fence_pct + '%' : '') + ')</span>' : ''}</td>
       <td>${r.tons}</td>
       <td>${cr(r.purchase_price)}/t${r.origin_world ? ' · ' + r.origin_world : ''}</td>
       <td>${cr(r.sale_price)}/t${r.sold_world ? ' · ' + r.sold_world : ''}</td>
@@ -1820,7 +1827,7 @@ async function createNewShip() {
   renderSoftware([]); renderSensors([]); renderSystems([]); renderMounts([]);
   renderPowerTable();
   renderCritGrid(); compileCritDamage(); renderFinance(); renderNotes();
-  document.getElementById('cargo-tbody').innerHTML      = '<tr><td colspan="3" style="color:#4a9ab8;font-size:0.82rem">Empty</td></tr>';
+  document.getElementById('cargo-tbody').innerHTML      = '<tr><td colspan="4" style="color:#4a9ab8;font-size:0.82rem">Empty</td></tr>';
   document.getElementById('passengers-tbody').innerHTML = '<tr><td colspan="7" style="color:#4a9ab8;font-size:0.82rem">No passengers</td></tr>';
   await renderCrew();
   enterEditMode();

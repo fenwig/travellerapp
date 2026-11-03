@@ -52,6 +52,7 @@
   <script src="../js/sidebar.js"></script>
   <script src="../js/trade-calc.js"></script>
   <script src="../js/trade-goods.js"></script>
+  <script src="../js/drinax-ports.js"></script>
   <script>
     // Trade codes, Core Rulebook p.260
     const TRADE_CODES = [
@@ -189,13 +190,27 @@
       return { dm: top[1], label: top[0] + ' ' + TC.signed(top[1]) };
     }
 
+    // The fence share for the selling world, read from the GM's port attitudes when the world is on the list
+    async function lookupFence(world) {
+      if (!world) return null;
+      try {
+        const cid = await currentCampaignId();
+        if (!cid) return null;
+        const { data } = await supabaseClient.from('port_attitudes').select('attitude').eq('campaign_id', cid).ilike('world', world).limit(1);
+        const att = data && data[0] && data[0].attitude;
+        if (!att) return null;
+        const f = PORT_EFFECTS[att] && PORT_EFFECTS[att].fence;
+        return { attitude: att, pct: f && f !== '-' ? parseInt(f, 10) : 0 };
+      } catch (e) { return null; }
+    }
+
     async function getOffers() {
       const b = sell.buyer;
       if (!b || sell.offers) return;
       try {
         const ship = await TC.activeShip();
         const { data, error } = await supabaseClient.from('spacecraft_cargo')
-          .select('id,tonnage,trade_good_id,purchase_price,base_price,origin_world,illegal,buy_fee_pct')
+          .select('id,tonnage,trade_good_id,purchase_price,base_price,origin_world,illegal,stolen,buy_fee_pct')
           .eq('spacecraft_id', ship.id).not('trade_good_id', 'is', null);
         if (error) {
           if (/column|schema cache/i.test(error.message)) throw new Error('The cargo table needs the trade columns. Run docs/cargo-trade-columns.sql and docs/broker-fee-buy.sql in Supabase first.');
@@ -212,7 +227,8 @@
         (data || []).forEach(r => {
           const g = TRADE_GOODS.find(x => x.id === r.trade_good_id);
           if (!g) return;
-          if (!!r.illegal !== !!b.illegal) { skipped.push(g.name); return; }
+          // stolen goods always need an illicit buyer, whether or not the goods are illegal themselves
+          if (r.stolen ? !b.illegal : !!r.illegal !== !!b.illegal) { skipped.push(g.name + (r.stolen ? ' (stolen)' : '')); return; }
           let sellBest = bestDM(g.sell, codes);
           if (LAW_BANNED[g.id] !== undefined) {
             const lawDM = law - LAW_BANNED[g.id];
@@ -224,7 +240,7 @@
           const pct = salePct(total);
           const base = parseFloat(r.base_price) || g.price;
           offers.push({
-            rowId: r.id, id: g.id, name: g.name, example: g.example, illegal: !!r.illegal,
+            rowId: r.id, id: g.id, name: g.name, example: g.example, illegal: !!r.illegal, stolen: !!r.stolen, rolledPct: pct,
             held: parseFloat(r.tonnage) || 0, paid: parseFloat(r.purchase_price) || 0, base, buyFeePct: parseFloat(r.buy_fee_pct) || 0,
             origin: r.origin_world || '', pct, offer: Math.round(base * pct / 100),
             rollText: '3D [' + pd.join('+') + '] ' + TC.signed(skill) + ' ' + skillLabel + (brokerDM ? ' ' + TC.signed(brokerDM) + ' local broker' : '') +
@@ -232,6 +248,13 @@
               TC.signed(-buyerBroker) + " buyer's Broker = " + total + ' → ' + pct + '% of ' + TC.cr(base)
           });
         });
+        if (offers.some(o => o.stolen)) {
+          // the ship's Current World (Spacecraft Record) decides the port; the typed name is only a fallback
+          const f = await lookupFence((ship.current_world_name || document.getElementById('dst-name').value).trim());
+          sell.fence = f ? { pct: f.pct, note: 'Read from this port\'s attitude (' + f.attitude + ').' }
+            : { pct: 10, note: 'This world is not on the Attitudes list, so 10% is a placeholder. Set the fence share yourself.' };
+          offers.filter(o => o.stolen).forEach(applyStolenPrice);
+        }
         sell.offers = offers;
         sell.skipped = skipped;
         sell.shipName = ship.name;
@@ -244,7 +267,57 @@
       }
     }
 
+    // Stolen goods: market value from the Modified Price table (adjustable), then only the fence's share is paid out
+    function applyStolenPrice(o) {
+      const fence = Math.max(0, (sell.fence && sell.fence.pct) || 0);
+      o.market = Math.round(o.base * o.pct / 100);
+      o.offer = Math.round(o.market * fence / 100);
+    }
+
+    function stolenRow(o) {
+      const fence = (sell.fence && sell.fence.pct) || 0;
+      return `<div class="good-row">
+        <div class="good-main"><b>${o.name}</b> (${o.id})
+          <span class="good-tons">${o.held} ton${o.held === 1 ? '' : 's'} held</span>
+          <span class="good-badge" style="color:#ff5a4a">STOLEN</span>
+          <label class="good-buy">Value <input type="number" id="val-${o.rowId}" min="10" max="400" step="5" value="${o.pct}" oninput="setStolenValue('${o.rowId}')" /> % of base</label>
+          <span>market <b id="mkt-${o.rowId}">${TC.cr(o.market)}</b>/ton → fence pays <b id="off-${o.rowId}">${TC.cr(o.offer)}</b>/ton</span>
+          ${o.held > 0 && fence > 0 ? '<label class="good-buy">Sell <input type="number" id="sell-' + o.rowId + '" min="0" max="' + o.held + '" value="0" oninput="updateSellTotals()" /> tons</label>' : o.held > 0 ? '<span class="good-badge">no fence here</span>' : '<span class="good-badge">sold out</span>'}
+        </div>
+        <details class="dm-detail"><summary>How this was worked out</summary><div>${o.rollText}. Rolled ${o.rolledPct}%; adjust the Value box to haggle. Then × the fence share.</div></details>
+      </div>`;
+    }
+
+    function setStolenValue(rowId) {
+      const o = sell.offers.find(x => String(x.rowId) === String(rowId));
+      if (!o) return;
+      o.pct = Math.max(10, Math.min(parseFloat(document.getElementById('val-' + rowId).value) || o.rolledPct, 400));
+      applyStolenPrice(o);
+      refreshStolenPrices(o);
+    }
+
+    function setFence() {
+      const v = parseFloat(document.getElementById('fence-pct').value);
+      sell.fence.pct = isNaN(v) ? 0 : Math.max(0, Math.min(v, 100));
+      // rows need re-rendering when selling becomes possible or impossible, so keep the quantities typed so far
+      const typed = {};
+      sell.offers.forEach(o => { const el = document.getElementById('sell-' + o.rowId); if (el) typed[o.rowId] = el.value; });
+      sell.offers.filter(o => o.stolen).forEach(applyStolenPrice);
+      renderOffers();
+      Object.keys(typed).forEach(id => { const el = document.getElementById('sell-' + id); if (el) el.value = typed[id]; });
+      updateSellTotals();
+      TC.save();
+    }
+
+    function refreshStolenPrices(o) {
+      document.getElementById('mkt-' + o.rowId).textContent = TC.cr(o.market);
+      document.getElementById('off-' + o.rowId).textContent = TC.cr(o.offer);
+      updateSellTotals();
+      TC.save();
+    }
+
     function offerRow(o) {
+      if (o.stolen) return stolenRow(o);
       const diff = o.offer - o.paid;
       const profitPct = o.paid ? Math.round(diff / o.paid * 100) : 0;
       const col = diff > 0 ? '#00ffaa' : diff < 0 ? '#ff5a4a' : '#b0d8e8';
@@ -268,6 +341,13 @@
       let html = '<div class="calc-result-title" style="margin-top:20px">OFFERS FOR THE CARGO ON ' + (sell.shipName || 'THE ACTIVE SHIP').toUpperCase() + '</div>';
       html += `<div class="calc-note">Buyer: <b>${b.label}</b>${b.broker ? ' (broker skill ' + b.brokerSkill + ', ' + b.fee + '% fee after the sale, DM+2)' : ''}.
         Offers were rolled once for this buyer; to get new prices, search for another buyer. Green is a profit over what you paid, red a loss.</div>`;
+      if (sell.offers.some(o => o.stolen)) {
+        html += `<div class="calc-block calc-row">
+          <div class="calc-block-title">Fence</div>
+          <div class="calc-fields"><label>Fence share of market value (%)<input type="number" id="fence-pct" min="0" max="100" value="${(sell.fence && sell.fence.pct) || 0}" onchange="setFence()" /></label></div>
+          <span class="calc-note" style="margin:0">${(sell.fence && sell.fence.note) || ''} Stolen goods are paid at the market value below × this share${b.broker ? ', then the broker\'s ' + b.fee + '% fee comes off' : ''}. Set 0 if there is no fence.</span>
+        </div>`;
+      }
       if (sell.offers.length) {
         html += '<div class="calc-block">' + sell.offers.map(offerRow).join('') + '</div>';
       } else {
@@ -339,8 +419,12 @@
           return { spacecraft_id: ship.id, trade_good_id: p.o.id, good_name: p.o.name, tons: p.n, purchase_price: p.o.paid,
             sale_price: p.o.offer, origin_world: p.o.origin || null, sold_world: world || null, gross, broker_fee: feeOf(p), illegal: p.o.illegal };
         });
+        if (picks.some(p => p.o.stolen)) {   // stolen sales also record the fence share (needs docs/stolen-sales.sql)
+          logRows.forEach((r, i) => { r.stolen = !!picks[i].o.stolen; r.fence_pct = picks[i].o.stolen ? (sell.fence.pct || 0) : null; });
+        }
         const { error: le } = await supabaseClient.from('spacecraft_trade_log').insert(logRows);
         if (le) {
+          if (/stolen|fence_pct/i.test(le.message)) throw new Error('The sales record needs the stolen columns. Run docs/stolen-sales.sql in Supabase first.');
           if (/relation|does not exist|schema cache/i.test(le.message)) throw new Error('The sales record table is missing. Run docs/trade-log.sql in Supabase first.');
           throw le;
         }
