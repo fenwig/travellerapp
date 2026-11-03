@@ -331,7 +331,7 @@
     async function loadSpacecraft() {
       const { data, error } = await inCampaign(supabaseClient
         .from('spacecraft')
-        .select('id,name,ship_class,status'), campaignId)
+        .select('id,name,ship_class,status').neq('status', 'npc'), campaignId)
         .order('name');
 
       const tbody = document.getElementById('ship-tbody');

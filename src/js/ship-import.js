@@ -142,7 +142,15 @@ async function addCatalogueShipToRecord(db, s, opts) {
       tl: w.tl || null, range: w.range || null, damage: w.damage || null, power: w.power || 0, traits: w.traits && w.traits !== '--' ? w.traits : null }))));
     if (r.software.length) must('Software', await db.from('spacecraft_software').insert(r.software.map(x => ({ spacecraft_id: id, ...x }))));
     if (s.systems.length) must('Systems', await db.from('spacecraft_systems').insert(s.systems.map(d => ({ spacecraft_id: id, description: d }))));
-    if (r.crewSlots.length && !r.hiredCrew.length) must('Crew slots', await db.from('spacecraft_crew_roles').insert(r.crewSlots.map(c => ({ spacecraft_id: id, role: c.role }))));
+    if (opts && opts.npcCrewLevel != null && r.crewSlots.length) {
+      // NPC fleet ships are fully staffed: an NPC at the given skill level in every slot ("Pilot-1"; the level can be changed later)
+      const per = {}, seen = {};
+      r.crewSlots.forEach(c => { per[c.role] = (per[c.role] || 0) + 1; });
+      const hires = r.crewSlots.map(c => { seen[c.role] = (seen[c.role] || 0) + 1;
+        return { spacecraft_id: id, name: c.role + (per[c.role] > 1 ? ' ' + seen[c.role] : ''), role: c.role + '-' + opts.npcCrewLevel, salary: 0 }; });
+      const npcs = must('NPC crew', await db.from('spacecraft_hired_crew').insert(hires).select());
+      must('NPC crew roles', await db.from('spacecraft_crew_roles').insert(npcs.map((h, i) => ({ spacecraft_id: id, role: r.crewSlots[i].role, hired_crew_id: h.id }))));
+    } else if (r.crewSlots.length && !r.hiredCrew.length) must('Crew slots', await db.from('spacecraft_crew_roles').insert(r.crewSlots.map(c => ({ spacecraft_id: id, role: c.role }))));
     const crew = r.hiredCrew.length ? must('Crew', await db.from('spacecraft_hired_crew')
       .insert(r.hiredCrew.map(h => ({ spacecraft_id: id, name: h.name, role: h.role, salary: h.salary }))).select()) : [];
     if (r.crewRoles.length) must('Crew roles', await db.from('spacecraft_crew_roles')
@@ -152,4 +160,18 @@ async function addCatalogueShipToRecord(db, s, opts) {
     throw e;
   }
   return { ship, warnings: r.warnings };
+}
+
+// "Yacht 1", "Yacht 2": the next free number for a design name among the campaign's NPC ships
+async function nextNpcDesignator(db, campaignId, base) {
+  let q = db.from('spacecraft').select('name').eq('status', 'npc');
+  if (campaignId) q = q.eq('campaign_id', campaignId);
+  const { data } = await q;
+  const prefix = base + ' ';
+  let max = 0;
+  (data || []).forEach(r => {
+    const m = r.name.startsWith(prefix) ? /^\d+$/.exec(r.name.slice(prefix.length)) : null;
+    if (m) max = Math.max(max, parseInt(m[0]));
+  });
+  return base + ' ' + (max + 1);
 }

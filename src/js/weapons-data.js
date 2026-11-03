@@ -134,3 +134,26 @@ const TORPEDOES = [
   ['Plasma', 12, 10, '1DD', 0.65, 'AP 10, Smart'],
   ['Standard', 7, 10, '6D', 0.15, 'Smart']
 ];
+
+// Weapons slots on each kind of mount
+const MOUNT_SLOT_COUNT = { 'Fixed Mount': 3, 'Single Turret': 1, 'Double Turret': 2, 'Triple Turret': 3, 'Barbette': 1 };
+
+// The weapons the "Add from catalogue" menus offer for a mount: turret weapons for turrets, barbettes for a barbette, and for a
+// fixed mount also the bays and point defence batteries (which the Spacecraft Record keeps as fixed mounts).
+// Returns [[group label, [{ name, tl, range, power, damage, traits }]]].
+function catalogueWeaponGroups(mountType) {
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const w = r => ({ name: r[0], tl: r[1], range: r[2], power: r[3], damage: r[4], traits: r[6] && r[6] !== '--' ? r[6] : '' });
+  if (mountType === 'Barbette') return [['Barbettes', BARBETTE_WEAPONS.map(w)]];
+  const groups = [['Turret and fixed weapons', TURRET_WEAPONS.map(w)]];
+  if (mountType === 'Fixed Mount') {
+    ['small', 'medium', 'large'].forEach(sz => groups.push([cap(sz) + ' bay weapons', BAY_WEAPONS[sz].map(r => Object.assign(w(r), { name: cap(sz) + ' ' + r[0] }))]));
+    groups.push(['Point defence', POINT_DEFENCE.map(r => ({ name: r[0], tl: r[1], range: 'Point defence (intercept ' + r[2] + ')', power: r[3], damage: '', traits: 'Takes ' + r[4] + ' tons and one hardpoint' }))]);
+  }
+  return groups;
+}
+// <option>s (with a leading prompt) for a weapon menu; the value is "group|index"
+function catalogueWeaponOptions(mountType, prompt) {
+  return '<option value="">' + (prompt || 'Add from catalogue…') + '</option>' + catalogueWeaponGroups(mountType).map((g, gi) =>
+    '<optgroup label="' + g[0] + '">' + g[1].map((x, i) => '<option value="' + gi + '|' + i + '">' + x.name + ' (TL' + x.tl + ', ' + (x.damage || 'point defence') + ')</option>').join('') + '</optgroup>').join('');
+}

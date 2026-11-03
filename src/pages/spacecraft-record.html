@@ -1220,24 +1220,7 @@ async function deleteMountRow(id, tr) {
   recalcPowerAllocated();
 }
 
-// ── Add a weapon from the catalogue (High Guard weapon tables, js/weapons-data.js) ──
-// The menu on each weapon slot offers what fits the mount: turret weapons for turrets, barbettes for a barbette,
-// and for a fixed mount also the bays and point defence batteries (which the record keeps as fixed mounts).
-function catalogueWeaponGroups(mountType) {
-  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-  const w = r => ({ name: r[0], tl: r[1], range: r[2], power: r[3], damage: r[4], traits: r[6] && r[6] !== '--' ? r[6] : '' });
-  if (mountType === 'Barbette') return [['Barbettes', BARBETTE_WEAPONS.map(w)]];
-  const groups = [['Turret and fixed weapons', TURRET_WEAPONS.map(w)]];
-  if (mountType === 'Fixed Mount') {
-    ['small', 'medium', 'large'].forEach(sz => groups.push([cap(sz) + ' bay weapons', BAY_WEAPONS[sz].map(r => Object.assign(w(r), { name: cap(sz) + ' ' + r[0] }))]));
-    groups.push(['Point defence', POINT_DEFENCE.map(r => ({ name: r[0], tl: r[1], range: 'Point defence (intercept ' + r[2] + ')', power: r[3], damage: '', traits: 'Takes ' + r[4] + ' tons and one hardpoint' }))]);
-  }
-  return groups;
-}
-function catalogueWeaponOptions(mountType) {
-  return '<option value="">Add from catalogue…</option>' + catalogueWeaponGroups(mountType).map((g, gi) =>
-    '<optgroup label="' + g[0] + '">' + g[1].map((x, i) => '<option value="' + gi + '|' + i + '">' + x.name + ' (TL' + x.tl + ', ' + (x.damage || 'point defence') + ')</option>').join('') + '</optgroup>').join('');
-}
+// ── Add a weapon from the catalogue (the menus are built by catalogueWeaponOptions in js/weapons-data.js) ──
 function fillWeaponFromCatalogue(sel) {
   if (!sel.value) return;
   const tr = sel.closest('tr'), [g, i] = sel.value.split('|').map(Number);

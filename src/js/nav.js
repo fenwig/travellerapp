@@ -23,6 +23,7 @@ const NAV_GROUPS = [
     ['player-attitudes.html', 'Port Attitudes'],
     ['reach-map.html',        'Trojan Reach Map'],
     ['fleet.html',            'Fleet'],
+    ['npc-fleet.html',        'NPC Fleet (GM)', false, true],
     ['ship-catalogue.html',   'Ship Catalogue']
   ]},
   { id: 'reference', label: 'Reference', items: [

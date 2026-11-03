@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NPC Fleet — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <link rel="stylesheet" href="../css/fleet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/nav.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-signout"><button onclick="doSignOut()">Sign Out</button></div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">NPC FLEET (GM)</h1>
+      <p class="calc-intro" style="color:#b0d8e8;font-size:0.88rem;max-width:900px;margin-bottom:14px">The GM's ships. They have no Spacecraft Record and stay off the Roster and the players' pages. Each ship is fully staffed with NPC crew at skill level 1 (average characteristics, DM+0); use the + and − in a card's NPC setup to change their level. A ship added more than once is numbered: Yacht 1, Yacht 2. Turrets arrive empty, so pick their weapons in the card's NPC setup.</p>
+      <div class="npc-bar">
+        <select id="npc-polity"></select>
+        <select id="npc-ship" style="min-width:280px"></select>
+        <input id="npc-qty" type="number" min="1" max="20" value="1" title="How many" />
+        <button id="npc-add">Add to NPC Fleet</button>
+        <span id="npc-msg" style="font-size:0.8rem"></span>
+      </div>
+      <div class="fl-bar"><button onclick="rollAllInitiative()">Roll initiative for all</button></div>
+      <div class="fl-order" id="fl-order"></div>
+      <div class="fl-grid" id="fl-grid"><div class="fl-msg">Loading…</div></div>
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/ship-data.js"></script>
+  <script src="../js/weapons-data.js"></script>
+  <script src="../js/ship-catalogue-data.js"></script>
+  <script src="../js/ship-import.js"></script>
+  <script src="../js/fleet-combat.js"></script>
+  <script>
+    async function doSignOut() { await supabaseClient.auth.signOut(); window.location.href = '../../index.html'; }
+    window.FLEET_NPC = true;
+  </script>
+  <script src="../js/fleet-ui.js"></script>
+</body>
+</html>
