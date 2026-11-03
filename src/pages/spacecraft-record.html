@@ -850,9 +850,15 @@ async function saveCurrentWorld() {
 }
 
 // ── Specs ────────────────────────────────────────────────
+// Hull points: 25% of tonnage, unless the ship came from the Ship Catalogue, which stores the book's figure (kept while the tonnage is unchanged)
+function hullMaxFor(tons) {
+  if (ship && ship.hull_max > 0 && tons === Number(ship.hull_tonnage)) return ship.hull_max;
+  return Math.floor(tons * 0.25);
+}
+
 function renderSpecs() {
   const s = ship;
-  const hullMax = Math.floor((s.hull_tonnage || 0) * 0.25);
+  const hullMax = hullMaxFor(s.hull_tonnage || 0);
 
   sv('sv-hull-tons',    s.hull_tonnage || 0);
   sv('sv-staterooms',   s.staterooms || 0);
@@ -923,7 +929,7 @@ function syncComputerBandwidth() {
 
 function autoHullPoints() {
   const tons = parseFloat(document.getElementById('ei-hull-tons').value) || 0;
-  const hp   = Math.floor(tons * 0.25);
+  const hp   = hullMaxFor(tons);
   document.getElementById('ei-hull-max-calc').textContent = hp;
   document.getElementById('ei-hull-max-calc2').textContent = hp;
 }
@@ -1686,7 +1692,7 @@ async function saveAll() {
     }));
 
     const hullTons = parseFloat(gi('ei-hull-tons')) || 0;
-    const hullMax  = Math.floor(hullTons * 0.25);
+    const hullMax  = hullMaxFor(hullTons);
 
     const update = {
       name:           gi('ei-name'),

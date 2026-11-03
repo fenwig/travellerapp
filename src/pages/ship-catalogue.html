@@ -44,6 +44,11 @@
     .sc-ammo table { border-collapse: collapse; margin: 8px 18px 8px 0; display: inline-table; vertical-align: top; }
     .sc-ammo th, .sc-ammo td { border: 1px solid #0a4a60; padding: 2px 8px; text-align: left; }
     .sc-ammo th { color: #4a9ab8; font-weight: 600; }
+    .sc-add { margin-top: 8px; }
+    .sc-add-btn { background: transparent; border: 1px solid #00e5ff; color: #00e5ff; border-radius: 4px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; }
+    .sc-add-btn:hover { background: rgba(0,229,255,0.12); }
+    .sc-add-btn:disabled { opacity: 0.5; cursor: default; }
+    .sc-add-msg { margin-left: 10px; font-size: 0.78rem; }
     .sc-src { margin-top: 8px; font-size: 0.7rem; color: #4a9ab8; border-top: 1px solid #0a4a60; padding-top: 6px; }
   </style>
 </head>
@@ -75,6 +80,7 @@
   <script src="../js/sidebar.js"></script>
   <script src="../js/ship-catalogue-data.js"></script>
   <script src="../js/weapons-data.js"></script>
+  <script src="../js/ship-import.js"></script>
   <script>
     async function doSignOut() { await supabaseClient.auth.signOut(); window.location.href = '../../index.html'; }
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -195,8 +201,27 @@
         <div class="sc-line"><i>Cost</i> ${mcr(s.purchase)} · <i>Maintenance</i> Cr${s.maintenance.toLocaleString('en-US')}/month</div>
         ${specDetails(s)}
         ${s.notes ? `<div class="sc-note">${esc(s.notes)}</div>` : ''}
+        <div class="sc-add"><button class="sc-add-btn" onclick="addToRecord('${s.id}', this)">Add to Spacecraft Record</button><span class="sc-add-msg"></span></div>
         <div class="sc-src">${esc(s.source.book)}${s.source.page ? ', p.' + s.source.page : ''}</div>
       </div>`;
+    }
+
+    // One click: builds the Spacecraft Record rows from the catalogue entry and saves them as a Reserve ship in the current campaign
+    async function addToRecord(id, btn) {
+      const s = SHIP_CATALOGUE.find(x => x.id === id), msg = btn.parentNode.querySelector('.sc-add-msg');
+      const name = prompt('Name for this ship on the Spacecraft Record:', s.name);
+      if (name === null) return;
+      const preview = catalogueToRecord(s, { name: name.trim() || s.name });
+      const warn = preview.warnings.length ? '\n\nNotes:\n- ' + preview.warnings.join('\n- ') : '';
+      if (!confirm('Add "' + preview.ship.name + '" to the Spacecraft Record as a Reserve ship, with its software, weapons and crew?' + warn)) return;
+      btn.disabled = true; msg.style.color = '#4a9ab8'; msg.textContent = 'Adding…';
+      try {
+        const res = await addCatalogueShipToRecord(supabaseClient, s, { name: name.trim() || s.name, status: 'reserve', campaignId: await currentCampaignId() });
+        msg.style.color = '#00ffaa'; msg.innerHTML = 'Added. <a href="spacecraft-record.html?id=' + res.ship.id + '" style="color:#00e5ff">Open it</a>';
+      } catch (e) {
+        msg.style.color = '#ff5a4a'; msg.textContent = 'Not added: ' + e.message;
+      }
+      btn.disabled = false;
     }
 
     function draw() {

@@ -82,7 +82,7 @@ function catalogueToRecord(s, opts) {
     power_basic: s.powerReq.basic, power_m_drive: s.powerReq.mDrive, power_j_drive: s.powerReq.jDrive,
     power_sensor: s.powerReq.sensors, power_weapons: weaponPower, power_turrets: mountPower,
     power_extra: extra,
-    sensor_grade: s.sensors,
+    sensor_grade: String(s.sensors).replace(/ Grade$/, ''),   // the record's grades are Basic/Civilian/Military/Improved/Advanced
     computer_processor: s.computerSpec.processor, computer_bis: !!s.computerSpec.bis, computer_fib: !!s.computerSpec.fib,
     fin_maintenance: s.maintenance,
     notes: [s.notes, 'Imported from the Ship Catalogue (' + s.source.book + ' p.' + s.source.page + '). Systems: ' + s.systems.join(', ') +
@@ -91,5 +91,34 @@ function catalogueToRecord(s, opts) {
   if (Math.abs((weaponPower + mountPower) - s.powerReq.weapons) > 0.01 && s.weapons.some(w => w.perMount)) {
     warnings.push('Weapon power ' + (weaponPower + mountPower) + ' differs from the book\'s ' + s.powerReq.weapons);
   }
-  return { ship, software, mounts, weapons, hiredCrew, crewRoles, warnings };
+  // The same warning repeated (e.g. each extra Pilot) is listed once with a count
+  const counts = {}; warnings.forEach(w => { counts[w] = (counts[w] || 0) + 1; });
+  const tidy = Object.keys(counts).map(w => w + (counts[w] > 1 ? ' (x' + counts[w] + ')' : ''));
+  return { ship, software, mounts, weapons, hiredCrew, crewRoles, warnings: tidy };
+}
+
+// Writes a catalogue entry to the Spacecraft Record tables (ship first, then the rows that need its ids).
+// Returns { ship, warnings }. If anything fails after the ship row exists, the ship (and its rows) is removed again and the error is thrown.
+async function addCatalogueShipToRecord(db, s, opts) {
+  const r = catalogueToRecord(s, opts);
+  const must = (what, res) => { if (res.error) throw new Error(what + ': ' + res.error.message); return res.data; };
+  const ship = must('Ship', await db.from('spacecraft').insert(r.ship).select().single());
+  try {
+    const id = ship.id;
+    const mounts = r.mounts.length ? must('Mounts', await db.from('spacecraft_mounts')
+      .insert(r.mounts.map(m => ({ spacecraft_id: id, mount_type: m.mount_type, count: m.count, tl: m.tl || 0, power: m.power }))).select()) : [];
+    if (r.weapons.length) must('Weapons', await db.from('spacecraft_weapons').insert(r.weapons.map(w => ({
+      spacecraft_id: id, mount_id: mounts[w.mountIndex].id, instance: w.instance, slot: w.slot, name: w.name,
+      tl: w.tl || null, range: w.range || null, damage: w.damage || null, power: w.power || 0, traits: w.traits && w.traits !== '--' ? w.traits : null }))));
+    if (r.software.length) must('Software', await db.from('spacecraft_software').insert(r.software.map(x => ({ spacecraft_id: id, ...x }))));
+    if (s.systems.length) must('Systems', await db.from('spacecraft_systems').insert(s.systems.map(d => ({ spacecraft_id: id, description: d }))));
+    const crew = r.hiredCrew.length ? must('Crew', await db.from('spacecraft_hired_crew')
+      .insert(r.hiredCrew.map(h => ({ spacecraft_id: id, name: h.name, role: h.role, salary: h.salary }))).select()) : [];
+    if (r.crewRoles.length) must('Crew roles', await db.from('spacecraft_crew_roles')
+      .insert(r.crewRoles.map(c => ({ spacecraft_id: id, role: c.role, hired_crew_id: crew[c.hiredIndex].id }))));
+  } catch (e) {
+    await db.from('spacecraft').delete().eq('id', ship.id);
+    throw e;
+  }
+  return { ship, warnings: r.warnings };
 }
