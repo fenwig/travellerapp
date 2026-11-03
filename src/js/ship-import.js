@@ -32,9 +32,9 @@ function catalogueToRecord(s, opts) {
     mountPower += w.count * (w.mountPower || 0);
     for (let inst = 1; inst <= w.count; inst++) {
       for (let slot = 1; slot <= Math.min(slots, w.perMount || 0); slot++) {
-        const st = w.stats;
+        const st = w.mixed ? w.mixed[slot - 1] : w.stats;
         if (!st) warnings.push('No weapon stats yet for ' + w.name);
-        weapons.push({ mountIndex, instance: inst, slot, name: weaponName(w.name),
+        weapons.push({ mountIndex, instance: inst, slot, name: w.names ? w.names[slot - 1] : weaponName(w.name),
           tl: st ? st.tl : null, range: st ? st.range : null, damage: st ? st.damage : null, power: st ? st.power : 0, traits: st ? st.traits : null });
         weaponPower += st ? st.power : 0;
       }

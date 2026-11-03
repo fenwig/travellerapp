@@ -82,7 +82,8 @@
         .concat(p.other).filter(x => x[1]).map(x => x[0] + ' ' + x[1]).join(' · ');
       const sw = s.software.map(x => esc(x.name) + (x.rating != null ? '/' + x.rating : '') + ' (BW ' + x.bw + ')').join(', ');
       const jcMax = c.processor + (c.bis ? 5 : 0), jcOk = s.softwareBw.jumpControl <= jcMax, otherOk = s.softwareBw.other <= c.processor;
-      const stats = s.weapons.filter(w => w.stats).map(w => esc(w.name) + ': TL' + w.stats.tl + ', ' + w.stats.range + ', power ' + w.stats.power + ', ' + w.stats.damage + ', MCr' + w.stats.cost + ' ' + esc(w.stats.traits)).join('; ');
+      const one = (n, t) => esc(n) + ': TL' + t.tl + ', ' + t.range + ', power ' + t.power + ', ' + t.damage + ', MCr' + t.cost + ' ' + esc(t.traits);
+      const stats = s.weapons.map(w => w.mixed ? w.mixed.map((t, i) => t ? one(w.names[i], t) : '').filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).join('; ') : w.stats ? one(w.name, w.stats) : '').filter(Boolean).join('; ');
       return `<details class="sc-more"><summary>Full specification</summary>
         <div class="sc-line"><i>Power plant</i> ${s.power} · <i>Fuel tanks</i> ${s.fuelTons} tons</div>
         <div class="sc-line"><i>Power needed</i> ${esc(power)}</div>
@@ -114,7 +115,7 @@
         <div class="sc-line"><i>Cost</i> ${mcr(s.purchase)} · <i>Maintenance</i> Cr${s.maintenance.toLocaleString('en-US')}/month</div>
         ${specDetails(s)}
         ${s.notes ? `<div class="sc-note">${esc(s.notes)}</div>` : ''}
-        <div class="sc-src">${esc(s.source.book)}, p.${s.source.page}</div>
+        <div class="sc-src">${esc(s.source.book)}${s.source.page ? ', p.' + s.source.page : ''}</div>
       </div>`;
     }
 

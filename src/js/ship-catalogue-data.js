@@ -2519,5 +2519,669 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 20
     }
+  },
+  {
+    "id": "b3-fast-trader-a3",
+    "name": "Fast Trader",
+    "cls": "Type A3",
+    "role": "Merchant",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": null
+    },
+    "tl": 12,
+    "tons": 200,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "Crystaliron",
+      "value": 2
+    },
+    "thrust": 4,
+    "jump": 2,
+    "power": 135,
+    "fuel": "J-2, 4 weeks of operation",
+    "structure": 80,
+    "computer": "Computer/5bis",
+    "sensors": "Civilian Grade",
+    "bridge": "Standard",
+    "weapons": [],
+    "staterooms": 10,
+    "lowBerths": 20,
+    "barracks": 0,
+    "cargo": 36,
+    "craft": [],
+    "systems": [
+      "Fuel Scoop",
+      "Fuel Processors (20 tons/day)",
+      "Cargo Crane",
+      "Aerofins"
+    ],
+    "software": [
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 1
+      },
+      {
+        "role": "Medic",
+        "count": 1
+      },
+      {
+        "role": "Steward",
+        "count": 1
+      }
+    ],
+    "total": 76.5,
+    "purchase": 76.5,
+    "maintenance": 6375,
+    "fuelTons": 41,
+    "powerReq": {
+      "basic": 40,
+      "mDrive": 80,
+      "jDrive": 40,
+      "sensors": 1,
+      "weapons": 0,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": true,
+      "fib": false
+    },
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 0
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-star-ray-interceptor",
+    "name": "Interceptor",
+    "cls": "Star Ray class",
+    "role": "Warship",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": null
+    },
+    "tl": 12,
+    "tons": 200,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "Crystaliron",
+      "value": 4
+    },
+    "thrust": 3,
+    "jump": 1,
+    "power": 140,
+    "fuel": "J-1 (twice), 4 weeks of operation, plus Light Fighter",
+    "structure": 80,
+    "computer": "Computer/10",
+    "sensors": "Improved",
+    "bridge": "Standard",
+    "weapons": [
+      {
+        "name": "Double Turret (beam lasers)",
+        "mount": "Turret",
+        "count": 2,
+        "perMount": 2,
+        "mountPower": 1,
+        "stats": {
+          "tl": 10,
+          "range": "Medium",
+          "power": 4,
+          "damage": "1D",
+          "cost": 0.5,
+          "traits": "(beam laser turrets DM+4 to attack)",
+          "source": "High Guard turret weapon table"
+        }
+      }
+    ],
+    "staterooms": 8,
+    "lowBerths": 6,
+    "barracks": 0,
+    "cargo": 44,
+    "craft": [
+      "Light Fighter"
+    ],
+    "systems": [
+      "Fuel Processor (20 tons/day)",
+      "Fuel Scoops",
+      "Cargo Crane",
+      "Heavy Grappling Arm",
+      "Cargo Scoop",
+      "Forced Linkage Apparatus (TL15)",
+      "Docking Space (10 tons)"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Jump Control",
+        "rating": 1,
+        "tl": 9,
+        "bw": 5
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 1
+      },
+      {
+        "role": "Gunner",
+        "count": 2
+      },
+      {
+        "role": "Fighter Pilot",
+        "count": 1
+      },
+      {
+        "role": "Marine",
+        "count": 6
+      }
+    ],
+    "total": 87.75,
+    "purchase": 87.75,
+    "maintenance": 7312,
+    "fuelTons": 42,
+    "powerReq": {
+      "basic": 40,
+      "mDrive": 60,
+      "jDrive": 20,
+      "sensors": 4,
+      "weapons": 18,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 10,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Power plant is Fusion TL15, Power 140.",
+    "softwareBw": {
+      "jumpControl": 5,
+      "other": 0
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-herald-fast-messenger",
+    "name": "Fast Messenger",
+    "cls": "Herald class",
+    "role": "Courier",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": null
+    },
+    "tl": 15,
+    "tons": 300,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "Bonded Superdense",
+      "value": 4
+    },
+    "thrust": 2,
+    "jump": 4,
+    "power": 240,
+    "fuel": "J-4, 6 weeks of operation",
+    "structure": 120,
+    "computer": "Computer/15bis",
+    "sensors": "Civilian Grade",
+    "bridge": "Standard",
+    "weapons": [
+      {
+        "name": "Double Turret (missile rack, sandcaster)",
+        "mount": "Turret",
+        "count": 1,
+        "perMount": 2,
+        "mountPower": 1,
+        "mixed": [
+          {
+            "tl": 7,
+            "range": "Special",
+            "power": 0,
+            "damage": "4D",
+            "cost": 0.75,
+            "traits": "Smart",
+            "source": "High Guard turret weapon table"
+          },
+          {
+            "tl": 9,
+            "range": "Special",
+            "power": 0,
+            "damage": "Special",
+            "cost": 0.25,
+            "traits": "--",
+            "source": "High Guard turret weapon table"
+          }
+        ],
+        "names": [
+          "Missile Rack",
+          "Sandcaster"
+        ]
+      }
+    ],
+    "staterooms": 8,
+    "lowBerths": 0,
+    "barracks": 0,
+    "cargo": 14.4,
+    "craft": [
+      "Launch"
+    ],
+    "systems": [
+      "Fuel Scoops",
+      "Docking Space (20 tons)"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Jump Control",
+        "rating": 4,
+        "tl": 13,
+        "bw": 20
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Evade",
+        "rating": 2,
+        "tl": 11,
+        "bw": 15
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 2
+      },
+      {
+        "role": "Gunner",
+        "count": 1
+      },
+      {
+        "role": "Steward",
+        "count": 1
+      }
+    ],
+    "total": 140.127,
+    "purchase": 140.127,
+    "maintenance": 11677,
+    "fuelTons": 123,
+    "powerReq": {
+      "basic": 60,
+      "mDrive": 60,
+      "jDrive": 120,
+      "sensors": 1,
+      "weapons": 1,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 15,
+      "bis": true,
+      "fib": false
+    },
+    "notes": "Staterooms: 4 standard, 2 high and 2 luxury. A common refit swaps the lifeboat for escape pods and adds cargo and staterooms.",
+    "softwareBw": {
+      "jumpControl": 20,
+      "other": 15
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-indigo-pirate-carrier",
+    "name": "Pirate Carrier",
+    "cls": "Indigo class",
+    "role": "Pirate",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": null
+    },
+    "tl": 15,
+    "tons": 300,
+    "hull": "Dispersed",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 1,
+    "jump": 2,
+    "power": 135,
+    "fuel": "J-2, 4 weeks of operation, plus Light Fighters",
+    "structure": 120,
+    "computer": "Computer/10",
+    "sensors": "Military Grade",
+    "bridge": "Standard",
+    "weapons": [
+      {
+        "name": "Triple Turret (beam lasers x2, missile rack)",
+        "mount": "Turret",
+        "count": 3,
+        "perMount": 3,
+        "mountPower": 1,
+        "mixed": [
+          {
+            "tl": 10,
+            "range": "Medium",
+            "power": 4,
+            "damage": "1D",
+            "cost": 0.5,
+            "traits": "(beam laser turrets DM+4 to attack)",
+            "source": "High Guard turret weapon table"
+          },
+          {
+            "tl": 10,
+            "range": "Medium",
+            "power": 4,
+            "damage": "1D",
+            "cost": 0.5,
+            "traits": "(beam laser turrets DM+4 to attack)",
+            "source": "High Guard turret weapon table"
+          },
+          {
+            "tl": 7,
+            "range": "Special",
+            "power": 0,
+            "damage": "4D",
+            "cost": 0.75,
+            "traits": "Smart",
+            "source": "High Guard turret weapon table"
+          }
+        ],
+        "names": [
+          "Beam Laser",
+          "Beam Laser",
+          "Missile Rack"
+        ]
+      }
+    ],
+    "staterooms": 10,
+    "lowBerths": 8,
+    "barracks": 0,
+    "cargo": 65,
+    "craft": [
+      "Light Fighters x10"
+    ],
+    "systems": [
+      "Fuel Processor (20 tons/day)",
+      "Cargo Net",
+      "Heavy Grappling Arm",
+      "Type I Docking Clamps x10"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 1
+      },
+      {
+        "role": "Gunner",
+        "count": 3
+      },
+      {
+        "role": "Fighter Pilot",
+        "count": 10
+      }
+    ],
+    "total": 184.96,
+    "purchase": 184.96,
+    "maintenance": 15413,
+    "fuelTons": 81,
+    "powerReq": {
+      "basic": 60,
+      "mDrive": 40,
+      "jDrive": 80,
+      "sensors": 2,
+      "weapons": 27,
+      "other": [
+        [
+          "Fuel Processor",
+          1
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 10,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Power plant is Fusion TL12, Power 135. The book prints manoeuvre 40 and jump 80 on the power block; they do not follow the usual 10% of hull per thrust or jump, so check them.",
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 0
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-vulture-salvage-hauler",
+    "name": "Salvage Hauler",
+    "cls": "Vulture class",
+    "role": "Salvage",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": null
+    },
+    "tl": 15,
+    "tons": 400,
+    "hull": "Standard",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 1,
+    "jump": 2,
+    "power": 135,
+    "fuel": "J-2, 8 weeks of operation",
+    "structure": 160,
+    "computer": "Computer/5bis",
+    "sensors": "Civilian Grade",
+    "bridge": "Standard",
+    "weapons": [
+      {
+        "name": "Double Turret (pulse lasers)",
+        "mount": "Turret",
+        "count": 1,
+        "perMount": 2,
+        "mountPower": 1,
+        "stats": {
+          "tl": 9,
+          "range": "Long",
+          "power": 4,
+          "damage": "2D",
+          "cost": 1,
+          "traits": "--",
+          "source": "High Guard turret weapon table"
+        }
+      }
+    ],
+    "staterooms": 4,
+    "lowBerths": 0,
+    "barracks": 0,
+    "cargo": 16,
+    "craft": [
+      "Launch"
+    ],
+    "systems": [
+      "Fuel Processor (40 tons/day)",
+      "Fuel Scoops",
+      "Cargo Scoop",
+      "Loading Belt (TL12)",
+      "Probe Drones x5",
+      "Forced Linkage Apparatus (TL12)",
+      "Grappling Arm",
+      "Heavy Grappling Arm",
+      "Docking Space (20 tons)"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 1
+      },
+      {
+        "role": "Gunner",
+        "count": 1
+      }
+    ],
+    "total": 98.822,
+    "purchase": 98.822,
+    "maintenance": 8235,
+    "fuelTons": 82,
+    "powerReq": {
+      "basic": 80,
+      "mDrive": 40,
+      "jDrive": 80,
+      "sensors": 1,
+      "weapons": 9,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": true,
+      "fib": false
+    },
+    "notes": "Weapon power (9) and the total cost are worked out, not read: the text for them is missing. Power plant is Fusion TL12, Power 135.",
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 0
+    },
+    "draft": true
   }
 ];
