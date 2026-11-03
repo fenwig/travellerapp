@@ -148,5 +148,5 @@ const LOOT = {
   safePer100Tons: 20000,       // ship's safe treasure per 100 tons of ship
   high: 10000, middle: 5000, low: 1000,   // passenger treasure
   perCrew: 1000,               // crew equipment (must be fenced)
-  vehiclePerTon: 250000        // a 20-ton launch is worth MCr5 (must be fenced)
+  vehiclePerTon: 250000        // only the book's example (a 20-ton launch is MCr5), not a rule: the GM sets real values (must be fenced)
 };

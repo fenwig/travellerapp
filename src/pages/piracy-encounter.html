@@ -790,7 +790,7 @@
         'Cr20,000 per 100 tons of ship (' + s.tons + ' tons). Search time is 1D hours per 100 tons of ship: ' + (st ? st.n + 'D [' + st.dice.join('+') + '] = ' + st.hours + ' hours.' : ''), false);
       html += row('Passenger treasure', pass, '', 'Cr10,000 per high, Cr5,000 per middle, Cr1,000 per low passenger. Looting takes 1D minutes per passenger (unless it is in the safe).', false);
       html += row('Crew equipment', equip, '', 'Cr1,000 per crew member. Takes 1D minutes per crew member.', true);
-      html += row('Vehicles', veh, s.vehicles ? 'Overriding its security needs a Difficult (10+) Electronics (computers) check; flying it across an Average (8+) Pilot check.' : '', s.vehicles + ' × ' + s.vehTons + ' tons at Cr250,000 per ton (a 20-ton launch is worth MCr5). Security: 1D × 10 minutes. Flying it across: 1D minutes.', true);
+      html += row('Vehicles', veh, s.vehicles ? 'Overriding its security needs a Difficult (10+) Electronics (computers) check; flying it across an Average (8+) Pilot check.' : '', s.vehicles + ' × ' + s.vehTons + ' tons at Cr250,000 per ton. That rate is only an example from the book (a 20-ton launch worth MCr5), so the GM should set the real value of each vehicle. Security: 1D × 10 minutes. Flying it across: 1D minutes.', true);
       const all = safe + pass;
       html += `<div class="calc-note" style="margin-top:8px">Spendable immediately (safe + passenger treasure): <b>${TC.cr(all)}</b>. Equipment and vehicles total <b>${TC.cr(equip + veh)}</b> before the fence's share.</div></div>`;
       out.innerHTML = html;
