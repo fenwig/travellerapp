@@ -4660,7 +4660,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 0
     },
-    "draft": true,
     "polity": "Aslan"
   },
   {
@@ -4776,7 +4775,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 15,
       "other": 0
     },
-    "draft": true,
     "polity": "Aslan"
   },
   {
@@ -4874,7 +4872,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 0
     },
-    "draft": true,
     "polity": "Aslan"
   },
   {
@@ -5029,7 +5026,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 10
     },
-    "draft": true,
     "polity": "Aslan"
   },
   {
@@ -5214,7 +5210,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 20,
       "other": 20
     },
-    "draft": true,
     "polity": "Aslan"
   },
   {
@@ -5401,7 +5396,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 15,
       "other": 20
     },
-    "draft": true,
     "polity": "Aslan"
   },
   {
@@ -5563,7 +5557,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 0
     },
-    "draft": true,
     "polity": "Aslan"
   },
   {
@@ -5769,7 +5762,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 15,
       "other": 25
     },
-    "draft": true,
     "polity": "Aslan"
   },
   {
@@ -5987,7 +5979,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 25
     },
-    "draft": true,
     "polity": "Aslan"
   },
   {
@@ -6084,7 +6075,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 0,
       "other": 0
     },
-    "draft": true,
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
@@ -6191,7 +6181,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 0,
       "other": 5
     },
-    "draft": true,
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
@@ -6304,7 +6293,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 0,
       "other": 0
     },
-    "draft": true,
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
@@ -6388,7 +6376,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 0,
       "other": 0
     },
-    "draft": true,
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
@@ -6483,7 +6470,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 0,
       "other": 0
     },
-    "draft": true,
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
@@ -6578,7 +6564,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 0,
       "other": 0
     },
-    "draft": true,
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
@@ -6673,7 +6658,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 0,
       "other": 0
     },
-    "draft": true,
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
@@ -6767,7 +6751,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 0,
       "other": 0
     },
-    "draft": true,
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
@@ -6863,7 +6846,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 0,
       "other": 0
     },
-    "draft": true,
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
@@ -6993,7 +6975,6 @@ const SHIP_CATALOGUE = [
       "jumpControl": 0,
       "other": 35
     },
-    "draft": true,
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
