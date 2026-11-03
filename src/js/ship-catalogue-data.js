@@ -7,6 +7,7 @@
 // Weapons: count = number of mounts; perMount = weapons in each mount; mountPower = the mount's own power (turrets 1, barbettes 0).
 // Check: sum of count x (mountPower + perMount x weapon power) should equal powerReq.weapons.
 // draft: true marks a ship read from the book text and not yet checked by hand against the page.
+// polity: who builds and flies the design (Imperium, Aslan, Drinax, Zhodani); the catalogue page filters on it.
 const SHIP_CATALOGUE = [
   {
     "id": "hg-scout-courier-s",
@@ -120,7 +121,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-free-trader-a",
@@ -230,7 +232,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 5,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-far-trader-a2",
@@ -337,7 +340,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-corsair-p",
@@ -465,7 +469,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-close-escort-gazelle",
@@ -637,7 +642,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 25,
       "other": 30
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-subsidised-merchant-r",
@@ -744,7 +750,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 5,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-patrol-corvette-t",
@@ -907,7 +914,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 15,
       "other": 15
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-subsidised-liner-m",
@@ -1047,7 +1055,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 15,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-yacht-y",
@@ -1172,7 +1181,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 5,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-survey-scout-donosev",
@@ -1290,7 +1300,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 15,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-system-defence-boat-dragon",
@@ -1477,7 +1488,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 0,
       "other": 30
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-mercenary-cruiser-c",
@@ -1632,7 +1644,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 15,
       "other": 20
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-seeker-mining-ship-j",
@@ -1744,7 +1757,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-safari-ship-k",
@@ -1874,7 +1888,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-far-trader-empress-marava",
@@ -2010,7 +2025,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-x-boat-tender-xt",
@@ -2155,7 +2171,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 5,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "hg-destroyer-escort-fer-de-lance",
@@ -2345,7 +2362,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 20,
       "other": 35
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "pod-harrier",
@@ -2518,7 +2536,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 20
-    }
+    },
+    "polity": "Drinax"
   },
   {
     "id": "b3-fast-trader-a3",
@@ -2618,7 +2637,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "b3-star-ray-interceptor",
@@ -2749,7 +2769,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 5,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "b3-herald-fast-messenger",
@@ -2898,7 +2919,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 20,
       "other": 15
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "b3-indigo-pirate-carrier",
@@ -3052,7 +3074,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "b3-vulture-salvage-hauler",
@@ -3177,7 +3200,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "b3-buccaneer-blockade-runner",
@@ -3338,7 +3362,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "b3-fiery-gunship",
@@ -3561,7 +3586,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 30
-    }
+    },
+    "polity": "Imperium"
   },
   {
     "id": "b3-ghost-of-the-reach",
@@ -3716,7 +3742,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 15,
       "other": 30
-    }
+    },
+    "polity": "Zhodani"
   },
   {
     "id": "b3-hraye-scout",
@@ -3846,7 +3873,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Aslan"
   },
   {
     "id": "b3-ihateisho-scout",
@@ -3975,7 +4003,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 20,
       "other": 15
-    }
+    },
+    "polity": "Aslan"
   },
   {
     "id": "b3-ktiyhui-courier",
@@ -4151,7 +4180,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 15,
       "other": 10
-    }
+    },
+    "polity": "Aslan"
   },
   {
     "id": "b3-kteiroa-seeker",
@@ -4253,7 +4283,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Aslan"
   },
   {
     "id": "b3-iyeliy-messenger",
@@ -4371,7 +4402,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 25,
       "other": 0
-    }
+    },
+    "polity": "Aslan"
   },
   {
     "id": "b3-aoaiw-light-trader",
@@ -4525,7 +4557,8 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    }
+    },
+    "polity": "Aslan"
   },
   {
     "id": "b3-eakhau-trader",
@@ -4627,7 +4660,8 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 0
     },
-    "draft": true
+    "draft": true,
+    "polity": "Aslan"
   },
   {
     "id": "b3-hkiyrerao-researcher",
@@ -4742,7 +4776,8 @@ const SHIP_CATALOGUE = [
       "jumpControl": 15,
       "other": 0
     },
-    "draft": true
+    "draft": true,
+    "polity": "Aslan"
   },
   {
     "id": "b3-khtukhao-clan-transport",
@@ -4839,7 +4874,8 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 0
     },
-    "draft": true
+    "draft": true,
+    "polity": "Aslan"
   },
   {
     "id": "b3-owatarl-tender",
@@ -4993,7 +5029,8 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 10
     },
-    "draft": true
+    "draft": true,
+    "polity": "Aslan"
   },
   {
     "id": "b3-ekawsiykua-escort",
@@ -5177,7 +5214,8 @@ const SHIP_CATALOGUE = [
       "jumpControl": 20,
       "other": 20
     },
-    "draft": true
+    "draft": true,
+    "polity": "Aslan"
   },
   {
     "id": "b3-aositaoh-cruiser",
@@ -5363,7 +5401,8 @@ const SHIP_CATALOGUE = [
       "jumpControl": 15,
       "other": 20
     },
-    "draft": true
+    "draft": true,
+    "polity": "Aslan"
   },
   {
     "id": "b3-hkisyeleaa-slaver",
@@ -5524,7 +5563,8 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 0
     },
-    "draft": true
+    "draft": true,
+    "polity": "Aslan"
   },
   {
     "id": "b3-halaheike-pocket-warship",
@@ -5729,7 +5769,8 @@ const SHIP_CATALOGUE = [
       "jumpControl": 15,
       "other": 25
     },
-    "draft": true
+    "draft": true,
+    "polity": "Aslan"
   },
   {
     "id": "b3-sakhai-assault-carrier",
@@ -5946,7 +5987,8 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 25
     },
-    "draft": true
+    "draft": true,
+    "polity": "Aslan"
   },
   {
     "id": "hg-ultralight-fighter",
@@ -6046,7 +6088,8 @@ const SHIP_CATALOGUE = [
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
-    "fuelTons": null
+    "fuelTons": null,
+    "polity": "Imperium"
   },
   {
     "id": "hg-light-fighter",
@@ -6152,7 +6195,8 @@ const SHIP_CATALOGUE = [
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
-    "fuelTons": null
+    "fuelTons": null,
+    "polity": "Imperium"
   },
   {
     "id": "hg-military-gig",
@@ -6264,7 +6308,8 @@ const SHIP_CATALOGUE = [
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
-    "fuelTons": null
+    "fuelTons": null,
+    "polity": "Imperium"
   },
   {
     "id": "hg-launch",
@@ -6347,7 +6392,8 @@ const SHIP_CATALOGUE = [
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
-    "fuelTons": null
+    "fuelTons": null,
+    "polity": "Imperium"
   },
   {
     "id": "hg-ships-boat",
@@ -6441,7 +6487,8 @@ const SHIP_CATALOGUE = [
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
-    "fuelTons": null
+    "fuelTons": null,
+    "polity": "Imperium"
   },
   {
     "id": "hg-slow-boat",
@@ -6535,7 +6582,8 @@ const SHIP_CATALOGUE = [
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
-    "fuelTons": null
+    "fuelTons": null,
+    "polity": "Imperium"
   },
   {
     "id": "hg-pinnace",
@@ -6629,7 +6677,8 @@ const SHIP_CATALOGUE = [
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
-    "fuelTons": null
+    "fuelTons": null,
+    "polity": "Imperium"
   },
   {
     "id": "hg-slow-pinnace",
@@ -6722,7 +6771,8 @@ const SHIP_CATALOGUE = [
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
-    "fuelTons": null
+    "fuelTons": null,
+    "polity": "Imperium"
   },
   {
     "id": "hg-modular-cutter",
@@ -6817,7 +6867,8 @@ const SHIP_CATALOGUE = [
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
-    "fuelTons": null
+    "fuelTons": null,
+    "polity": "Imperium"
   },
   {
     "id": "hg-heavy-fighter",
@@ -6946,6 +6997,7 @@ const SHIP_CATALOGUE = [
     "jump": 0,
     "lowBerths": 0,
     "barracks": 0,
-    "fuelTons": null
+    "fuelTons": null,
+    "polity": "Imperium"
   }
 ];

@@ -46,6 +46,7 @@
       <p class="calc-intro" style="color:#b0d8e8;font-size:0.88rem;max-width:860px;margin-bottom:14px">Published ship designs from High Guard. <b style="color:#ffd166">Ships marked Draft were read from the book text and still need checking against the page</b>; the rest follow in batches. Costs are in MCr, maintenance in Cr per month.</p>
       <div class="sc-bar">
         <input id="sc-q" placeholder="Search ships…" oninput="draw()" />
+        <select id="sc-polity" onchange="draw()"><option value="">All polities</option></select>
         <select id="sc-role" onchange="draw()"><option value="">All roles</option></select>
         <span class="sc-count" id="sc-count"></span>
       </div>
@@ -121,7 +122,8 @@
 
     function draw() {
       const q = document.getElementById('sc-q').value.trim().toLowerCase(), role = document.getElementById('sc-role').value;
-      const hits = SHIP_CATALOGUE.filter(s => (!role || s.role === role) &&
+      const polity = document.getElementById('sc-polity').value;
+      const hits = SHIP_CATALOGUE.filter(s => (!role || s.role === role) && (!polity || s.polity === polity) &&
         (!q || (s.name + ' ' + s.cls + ' ' + s.role).toLowerCase().includes(q)));
       document.getElementById('sc-grid').innerHTML = hits.map(card).join('') || '<div class="sc-count">No ships match.</div>';
       document.getElementById('sc-count').textContent = hits.length + ' of ' + SHIP_CATALOGUE.length + ' ships';
@@ -130,6 +132,9 @@
     (async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = '../../index.html'; return; }
+      const psel = document.getElementById('sc-polity');
+      ['Imperium', 'Aslan', 'Drinax', 'Zhodani'].filter(x => SHIP_CATALOGUE.some(s => s.polity === x))
+        .forEach(x => psel.insertAdjacentHTML('beforeend', `<option>${x}</option>`));
       const sel = document.getElementById('sc-role');
       [...new Set(SHIP_CATALOGUE.map(s => s.role))].sort().forEach(r => sel.insertAdjacentHTML('beforeend', `<option>${esc(r)}</option>`));
       draw();
