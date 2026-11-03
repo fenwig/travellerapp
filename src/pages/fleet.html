@@ -107,6 +107,7 @@
       if (tn != null) {
         const effect = total - tn;
         text += ' vs ' + tn + '+ → ' + (effect >= 0 ? 'success, Effect ' + effect : 'failure, Effect ' + effect);
+        if (btn.dataset.crit && effect >= 6) text += ' (critical hit if damage gets through)';
         bad = effect < 0;
         btn.closest('.fl-line').dataset.effect = effect;
       }
@@ -257,7 +258,7 @@
         }
         h += ln;
       });
-      h += '<div class="fl-legend">Lock-on: +2 against a ship held by Sensor Lock. The target\'s Evasive Action takes its pilot\'s skill off the roll. Effect 6+ with damage getting through is a critical hit.</div>';
+      h += '<div class="fl-legend">Lock-on: +2 against a ship held by Sensor Lock. The target\'s Evasive Action takes its pilot\'s skill off the roll.</div>';
       h += '<div class="fl-wh" style="color:#00e5ff">Reactions</div>';
       h += '<div class="fl-note" style="padding:2px 0"><b style="color:#00e5ff">Evasive Action</b>: each unspent Thrust (up to ' + fc.thrust + ') makes one attack on this ship take DM−' + Math.abs(fc.evasiveDm) + '.</div>';
       if (fc.hasLasers) h += line('Point Defence (laser turret)', gAvg, 8, 'The turret cannot attack this round. Effect = missiles removed from the salvo. DM+1 for two lasers in the turret, +2 for three.');
