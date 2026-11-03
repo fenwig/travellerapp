@@ -19,10 +19,10 @@ const NAV_GROUPS = [
     ['time-tracker.html',     'Time Tracker'],
     ['campaign-finance.html', 'Campaign Finance'],
     ['piracy-encounter.html', 'Piracy Encounter (GM)', false, true],
+    ['attitudes.html',        'Attitudes (GM)', false, true],   // fourth value: GM only
     ['player-attitudes.html', 'Port Attitudes'],
     ['reach-map.html',        'Trojan Reach Map'],
-    ['ship-catalogue.html',   'Ship Catalogue'],
-    ['attitudes.html',        'Attitudes (GM)', false, true]   // fourth value: GM only
+    ['ship-catalogue.html',   'Ship Catalogue']
   ]},
   { id: 'reference', label: 'Reference', items: [
     ['general-rules.html',        'General Rules'],
