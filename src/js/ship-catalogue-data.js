@@ -3178,5 +3178,547 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 0
     }
+  },
+  {
+    "id": "b3-buccaneer-blockade-runner",
+    "name": "Blockade Runner",
+    "cls": "Buccaneer class",
+    "role": "Blockade runner",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": 10
+    },
+    "tl": 15,
+    "tons": 400,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "Bonded Superdense",
+      "value": 5
+    },
+    "thrust": 3,
+    "jump": 2,
+    "power": 300,
+    "fuel": "J-2, 4 weeks of operation, plus Launch; thruster fuel for a 2 hour burn",
+    "structure": 160,
+    "computer": "Computer/5bis",
+    "sensors": "Improved",
+    "bridge": "Standard",
+    "weapons": [
+      {
+        "name": "Double Turret (pulse lasers)",
+        "mount": "Turret",
+        "count": 2,
+        "perMount": 2,
+        "mountPower": 1,
+        "stats": {
+          "tl": 9,
+          "range": "Long",
+          "power": 4,
+          "damage": "2D",
+          "cost": 1,
+          "traits": "--",
+          "source": "High Guard turret weapon table"
+        }
+      },
+      {
+        "name": "Double Turret (sandcaster, pulse laser)",
+        "mount": "Turret",
+        "count": 2,
+        "perMount": 2,
+        "mountPower": 1,
+        "mixed": [
+          {
+            "tl": 9,
+            "range": "Special",
+            "power": 0,
+            "damage": "Special",
+            "cost": 0.25,
+            "traits": "--",
+            "source": "High Guard turret weapon table"
+          },
+          {
+            "tl": 9,
+            "range": "Long",
+            "power": 4,
+            "damage": "2D",
+            "cost": 1,
+            "traits": "--",
+            "source": "High Guard turret weapon table"
+          }
+        ],
+        "names": [
+          "Sandcaster",
+          "Pulse Laser"
+        ]
+      }
+    ],
+    "staterooms": 8,
+    "lowBerths": 0,
+    "barracks": 0,
+    "cargo": 62,
+    "craft": [
+      "Launch"
+    ],
+    "systems": [
+      "H.B. Thruster (Thrust 3 more for a 2 hour burn, combined Thrust 6)",
+      "Sandcaster Barrel x40",
+      "Fuel Processor (100 tons/day)",
+      "Fuel Scoops",
+      "Docking Space (20 tons)"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Medic",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 3
+      },
+      {
+        "role": "Gunner",
+        "count": 4
+      }
+    ],
+    "total": 160.187,
+    "purchase": 157.347,
+    "maintenance": 13348,
+    "fuelTons": 81,
+    "powerReq": {
+      "basic": 80,
+      "mDrive": 120,
+      "jDrive": 80,
+      "sensors": 4,
+      "weapons": 28,
+      "other": [
+        [
+          "Fuel Processor",
+          5
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": true,
+      "fib": false
+    },
+    "notes": "Built to run blockades and deliver small high-value cargoes. The high-burn thruster gives a combined Thrust 6 for two hours, enough to break orbit and reach the 100-diameter limit of most worlds.",
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 0
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-fiery-gunship",
+    "name": "Gunship",
+    "cls": "Fiery class",
+    "role": "Warship",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": 12
+    },
+    "tl": 12,
+    "tons": 400,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "Crystaliron",
+      "value": 6
+    },
+    "thrust": 6,
+    "jump": 2,
+    "power": 525,
+    "fuel": "J-2, 4 weeks of operation",
+    "structure": 160,
+    "computer": "Computer/20fib",
+    "sensors": "Military Grade",
+    "bridge": "Holographic Controls",
+    "weapons": [
+      {
+        "name": "Small Fusion Gun Bay",
+        "mount": "Bay",
+        "count": 1,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": null,
+          "range": null,
+          "power": 50,
+          "damage": null,
+          "cost": null,
+          "traits": "Small fusion gun bay: stats not entered; power 50 is the remainder of the book's weapon total",
+          "source": "derived"
+        }
+      },
+      {
+        "name": "Particle Barbette",
+        "mount": "Barbette",
+        "count": 1,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": 11,
+          "range": "Very Long",
+          "power": 15,
+          "damage": "4D",
+          "cost": 8,
+          "traits": "Radiation",
+          "source": "High Guard barbette table (given by user)"
+        }
+      },
+      {
+        "name": "Double Turret (beam lasers)",
+        "mount": "Turret",
+        "count": 1,
+        "perMount": 2,
+        "mountPower": 1,
+        "stats": {
+          "tl": 10,
+          "range": "Medium",
+          "power": 4,
+          "damage": "1D",
+          "cost": 0.5,
+          "traits": "(beam laser turrets DM+4 to attack)",
+          "source": "High Guard turret weapon table"
+        }
+      },
+      {
+        "name": "Triple Turret (sandcasters x2, beam laser)",
+        "mount": "Turret",
+        "count": 1,
+        "perMount": 3,
+        "mountPower": 1,
+        "mixed": [
+          {
+            "tl": 9,
+            "range": "Special",
+            "power": 0,
+            "damage": "Special",
+            "cost": 0.25,
+            "traits": "--",
+            "source": "High Guard turret weapon table"
+          },
+          {
+            "tl": 9,
+            "range": "Special",
+            "power": 0,
+            "damage": "Special",
+            "cost": 0.25,
+            "traits": "--",
+            "source": "High Guard turret weapon table"
+          },
+          {
+            "tl": 10,
+            "range": "Medium",
+            "power": 4,
+            "damage": "1D",
+            "cost": 0.5,
+            "traits": "(beam laser turrets DM+4 to attack)",
+            "source": "High Guard turret weapon table"
+          }
+        ],
+        "names": [
+          "Sandcaster",
+          "Sandcaster",
+          "Beam Laser"
+        ]
+      }
+    ],
+    "staterooms": 9,
+    "lowBerths": 0,
+    "barracks": 30,
+    "cargo": 6,
+    "craft": [],
+    "systems": [
+      "Enhanced Signal Processing",
+      "Sandcaster Barrel x40",
+      "Fuel Processor (40 tons/day)",
+      "Fuel Scoops",
+      "Breaching Tube",
+      "Armoury",
+      "Brig"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Evade",
+        "rating": 2,
+        "tl": 11,
+        "bw": 15
+      },
+      {
+        "name": "Fire Control",
+        "rating": 3,
+        "tl": 11,
+        "bw": 15
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Officer",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 2
+      },
+      {
+        "role": "Maintenance",
+        "count": 1
+      },
+      {
+        "role": "Gunner",
+        "count": 4
+      },
+      {
+        "role": "Marine",
+        "count": 30
+      }
+    ],
+    "total": 208.65,
+    "purchase": 208.65,
+    "maintenance": 17387,
+    "fuelTons": 84,
+    "powerReq": {
+      "basic": 80,
+      "mDrive": 240,
+      "jDrive": 80,
+      "sensors": 3,
+      "weapons": 79,
+      "other": [
+        [
+          "Fuel Processor",
+          2
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 20,
+      "bis": false,
+      "fib": true
+    },
+    "notes": "Sensors are listed as \"Military Grade, Improved\". Cargo (6) is the last row of the tons column. The small fusion gun bay has no stats here; its 50 power is what is left of the book's weapon total of 79.",
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 30
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-ghost-of-the-reach",
+    "name": "Heavy Scout",
+    "cls": "The Ghost of the Reach",
+    "role": "Scout",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": 15
+    },
+    "tl": 15,
+    "tons": 400,
+    "hull": "Streamlined (Superior Stealth, Emissions Absorption Grid)",
+    "armour": {
+      "type": "Bonded Superdense",
+      "value": 6
+    },
+    "thrust": 3,
+    "jump": 3,
+    "power": 360,
+    "fuel": "J-3, 4 weeks of operation, plus Ship's Boat",
+    "structure": 160,
+    "computer": "Computer/15fib",
+    "sensors": "Advanced",
+    "bridge": "Holographic Controls",
+    "weapons": [
+      {
+        "name": "Double Turret (beam lasers)",
+        "mount": "Turret",
+        "count": 4,
+        "perMount": 2,
+        "mountPower": 1,
+        "stats": {
+          "tl": 10,
+          "range": "Medium",
+          "power": 4,
+          "damage": "1D",
+          "cost": 0.5,
+          "traits": "(beam laser turrets DM+4 to attack)",
+          "source": "High Guard turret weapon table"
+        }
+      }
+    ],
+    "staterooms": 10,
+    "lowBerths": 0,
+    "barracks": 0,
+    "cargo": 36.8,
+    "craft": [
+      "Ship's Boat"
+    ],
+    "systems": [
+      "Sensor Station",
+      "Enhanced Signal Processing",
+      "Fuel Processor (120 tons/day)",
+      "Fuel Scoops",
+      "Probe Drones",
+      "Armoury",
+      "Briefing Room",
+      "Medical Bay",
+      "Laboratory",
+      "Docking Space (30 tons)"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Jump Control",
+        "rating": 3,
+        "tl": 12,
+        "bw": 15
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Evade",
+        "rating": 2,
+        "tl": 11,
+        "bw": 15
+      },
+      {
+        "name": "Fire Control",
+        "rating": 3,
+        "tl": 11,
+        "bw": 15
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Sensor Operator",
+        "count": 1
+      },
+      {
+        "role": "Medic",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 2
+      },
+      {
+        "role": "Gunner",
+        "count": 4
+      },
+      {
+        "role": "Marine",
+        "count": 6
+      }
+    ],
+    "total": 625.142,
+    "purchase": 625.142,
+    "maintenance": 52095,
+    "fuelTons": 123,
+    "powerReq": {
+      "basic": 80,
+      "mDrive": 120,
+      "jDrive": 120,
+      "sensors": 8,
+      "weapons": 36,
+      "other": [
+        [
+          "Fuel Processor",
+          6
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 15,
+      "bis": false,
+      "fib": true
+    },
+    "notes": "A Zhodani long-range heavy scout with a sensor-baffling hull coat and strong electronic countermeasures. Its ship's boat can flank fast-moving targets.",
+    "softwareBw": {
+      "jumpControl": 15,
+      "other": 30
+    },
+    "draft": true
   }
 ];
