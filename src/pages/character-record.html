@@ -104,7 +104,15 @@
     .skill-totals b { color: #00e5ff; }
     .skill-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: rgba(13,21,32,0.7); border: 1px solid #0a4a60; border-radius: 5px; margin-bottom: 0; font-size: 0.85rem; color: #b0d8e8; cursor: pointer; }
     .skill-row:hover .skill-name { color: #80f0ff; }
-    .skill-wrap { margin-bottom: 5px; border-radius: 5px; overflow: hidden; border: 1px solid #0a4a60; }
+    /* four columns; an opened description spans the full row beneath the skill that was clicked */
+    #skills-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px 8px; }
+    .skill-wrap { display: contents; }
+    .skill-row { min-width: 0; gap: 8px; padding: 5px 8px; }
+    .skill-row .skill-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .skill-row .skill-spacer, .skill-row .skill-info-icon { display: none; }
+    .skill-detail { grid-column: 1 / -1; border: 1px solid #0a4a60; border-radius: 5px; }
+    #skills-list > div:only-child { grid-column: 1 / -1; }
+    @media (max-width: 900px) { #skills-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     .skill-name { color: #00e5ff; }
     .skill-spacer { flex: 1; }
     .skill-info-icon { font-size: 0.7rem; color: #4a9ab8; flex-shrink: 0; user-select: none; }
@@ -1135,7 +1143,7 @@ function renderSkills() {
           <input class="skill-level-input edit-only" type="number" min="0" max="4" value="${s.level}"
                  onclick="event.stopPropagation()"
                  onchange="updateSkillLevel('${key}', this.value)" />
-          <div class="skill-name">${label}</div>
+          <div class="skill-name" title="${s.specialty ? sName + ' (' + s.specialty + ')' : sName}">${label}</div>
           <span class="skill-spacer"></span>
           <span class="skill-info-icon">▾</span>
           <button class="skill-remove edit-only" onclick="event.stopPropagation();removeSkill('${key}')">✕</button>
