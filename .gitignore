@@ -19,3 +19,9 @@ docs/sourcebooks/
 # Database backups and the key that makes them (contain private data)
 backups/
 tools/.env
+
+# Scenario and handout Word files — kept local, not pushed to GitHub
+docs/**/*.docx
+
+# GM kit: licensed sourcebook PDFs and GM-only notes, kept local
+docs/gm-kit/
