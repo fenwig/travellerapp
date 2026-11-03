@@ -372,7 +372,7 @@
               </tbody></table>
               ${several ? '<div class="cf-ships">' + shipData.map(r => '<div><span>' + esc(r.ship.name) + '</span><span>' + cr(r.ex.total) + '</span></div>').join('') + '</div>' : ''}
               <div class="cf-sub" style="margin-top:6px">Active ships, fuel not included. Pay it from the <a href="time-tracker.html" style="color:#00e5ff">Time Tracker</a>.</div>`
-              : '<div class="cf-sub">No active spacecraft in this campaign.</div>'}
+              : '<div class="cf-sub">No active or fleet spacecraft in this campaign.</div>'}
             </div>
             <div class="calc-block">
               <div class="calc-block-title">Payout settings</div>

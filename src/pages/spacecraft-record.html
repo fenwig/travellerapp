@@ -24,6 +24,7 @@
     .ship-cargo-badge span { color:#00e5ff; font-weight:600; }
     .status-badge { display:inline-block; padding:3px 12px; border-radius:4px; font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
     .status-active    { background:rgba(0,255,170,0.12);  color:#00ffaa; border:1px solid #00ffaa44; }
+    .status-fleet     { background:rgba(255,209,102,0.12); color:#ffd166; border:1px solid #ffd16644; }
     .status-reserve   { background:rgba(0,229,255,0.12);  color:#00e5ff; border:1px solid #00e5ff44; }
     .status-sold      { background:rgba(74,154,184,0.12); color:#4a9ab8; border:1px solid #4a9ab844; }
     .status-destroyed { background:rgba(255,90,74,0.12);  color:#ff5a4a; border:1px solid #ff5a4a44; }
@@ -165,7 +166,7 @@
 
     /* ── Crew ── */
     .crew-section-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.1em; color:#4a9ab8; padding:4px 0 2px; margin-top:8px; }
-    .crew-role-row { display:grid; grid-template-columns:150px 1fr 24px; gap:10px; align-items:center; padding:7px 10px; background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:5px; margin-bottom:5px; font-size:0.85rem; }
+    .crew-role-row { display:grid; grid-template-columns:150px 1fr 24px 24px; gap:10px; align-items:center; padding:7px 10px; background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:5px; margin-bottom:5px; font-size:0.85rem; }
     .crew-role-label { color:#4a9ab8; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; }
     .crew-select { background:#0d1520; border:1px solid #0a4a60; border-radius:4px; color:#b0d8e8; padding:4px 8px; font-size:0.85rem; outline:none; width:100%; }
     .hired-row { display:grid; grid-template-columns:1fr 140px 120px 24px; gap:8px; align-items:center; padding:7px 10px; background:rgba(13,21,32,0.7); border:1px solid #0a4a60; border-radius:5px; margin-bottom:5px; font-size:0.85rem; }
@@ -269,6 +270,7 @@
             <!-- Edit mode status -->
             <select class="ship-meta-select edit-only" id="ei-status">
               <option value="active">Active</option>
+              <option value="fleet">Fleet</option>
               <option value="reserve">Reserve</option>
               <option value="sold">Sold</option>
               <option value="destroyed">Destroyed</option>
@@ -626,6 +628,12 @@
         <div class="cr-section">
           <div class="cr-section-title">Crew Assignments</div>
           <div id="crew-roles-list"></div>
+          <div class="edit-only">
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+              <select id="add-slot-role" class="ship-meta-select"></select>
+              <button class="add-row-btn" style="margin-top:0" onclick="addCrewSlotFromMenu()">+ Add Crew Slot</button>
+            </div>
+          </div>
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:10px;">
@@ -637,6 +645,11 @@
 
           <div class="cr-section">
             <div class="cr-section-title">Hired Crew</div>
+            <div class="view-only" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+              <select id="hire-level" class="ship-meta-select"><option value="1">Skill level 1</option><option value="2">Skill level 2</option><option value="3">Skill level 3</option></select>
+              <button class="btn btn-ghost" onclick="hireFullCrew()">Hire Full Crew</button>
+              <span id="hire-msg" style="font-size:0.78rem"></span>
+            </div>
             <div style="font-size:0.7rem;color:#4a9ab8;display:grid;grid-template-columns:1fr 100px 100px 24px;gap:8px;padding:0 10px 6px;text-transform:uppercase;letter-spacing:0.06em">
               <div>Name</div><div>Role</div><div>Salary</div><div></div>
             </div>
@@ -701,9 +714,9 @@ const SENSOR_GRADES = {
 };
 
 // Single-slot roles (only one person allowed)
-const CREW_SINGLE = ["Captain","Pilot"];
+const CREW_SINGLE = ["Captain"];
 // Multi-slot roles
-const CREW_MULTI  = ["Astrogator","Sensor Operator","Engineer","Turret Gunner","Bay Gunner","Medic","Steward","Marine"];
+const CREW_MULTI  = ["Pilot","Astrogator","Sensor Operator","Engineer","Maintenance","Turret Gunner","Bay Gunner","Medic","Steward","Administrator","Officer","Marine","Scientist","Small Craft Crew"];
 
 const MOUNT_SLOTS = { "Fixed Mount":3, "Single Turret":1, "Double Turret":2, "Triple Turret":3, "Barbette":1 };
 const MOUNT_DEFAULTS = {
@@ -733,6 +746,8 @@ let pendingHired      = [];
 // onboard characters, hired crew/NPCs, and passengers) — populated by
 // renderCrew()/renderPassengers() before renderFinance() reads them.
 let hiredCrewCount = 0;
+let hiredSalaryTotal = 0;     // hired crew salaries added together, part of the Crew Salaries figure
+let crewOptsHtml = '';        // <option>s for a crew slot: unassigned, characters onboard, hired NPCs
 let passengerCount = 0;
 
 // ── Init ─────────────────────────────────────────────────
@@ -1324,7 +1339,7 @@ function renderFinance() {
   const fuelCost      = (s.fuel_max || 0) * 500;
   const onboardCount  = allCharacters.filter(c => c.onboard_ship_id === s.id).length;
   // the same figures the Time Tracker uses (js/ship-expenses.js)
-  const ex = shipExpenses(s, { onboard: onboardCount, hired: hiredCrewCount, passengers: passengerCount });
+  const ex = shipExpenses(s, { onboard: onboardCount, hired: hiredCrewCount, hiredSalaries: hiredSalaryTotal, passengers: passengerCount });
   const personCount   = ex.persons;
   const maintenance   = ex.maintenance;
   const lifeStaterooms = (s.staterooms || 0) * 1000;
@@ -1355,7 +1370,8 @@ function renderFinance() {
     </div>
     <div class="finance-box">
       <div class="finance-label">Crew Salaries</div>
-      <div class="finance-value view-only" id="fv-salaries">${(s.fin_salaries||0).toLocaleString()}</div>
+      <div class="finance-value view-only" id="fv-salaries" title="Hired crew Cr${hiredSalaryTotal.toLocaleString()} + other salaries Cr${(s.fin_salaries||0).toLocaleString()}">${ex.salaries.toLocaleString()}</div>
+      <div class="edit-only" style="font-size:0.7rem;color:#4a9ab8">Hired crew Cr${hiredSalaryTotal.toLocaleString()} is added automatically. Other salaries:</div>
       <input class="finance-input edit-only" type="number" id="fi-salaries" value="${s.fin_salaries||0}" />
     </div>
     <div class="finance-box">
@@ -1534,6 +1550,7 @@ async function renderCrew() {
   const assigned = rolesRes.data || [];
   const hired    = hiredRes.data || [];
   hiredCrewCount = hired.length;
+  hiredSalaryTotal = hired.reduce((n, h) => n + (h.salary || 0), 0);
 
   // Only characters marked "onboard" on the roster are offered as
   // assignable crew — together with hired NPCs, that's the pool of who's
@@ -1542,6 +1559,7 @@ async function renderCrew() {
   const charOpts = onboardChars.map(c => `<option value="char:${c.id}">${c.name}</option>`).join('');
   const npcOpts  = hired.map(h => `<option value="npc:${h.id}">${h.name} (NPC)</option>`).join('');
   const allOpts  = `<option value="">— Unassigned —</option>${charOpts}${npcOpts}`;
+  crewOptsHtml = allOpts;
 
   const list = document.getElementById('crew-roles-list');
   let html   = '';
@@ -1552,7 +1570,7 @@ async function renderCrew() {
     const a   = assigned.find(r => r.role === role);
     const lbl = resolveCrewLabel(a, allCharacters, hired);
     const val = resolveCrewValue(a);
-    html += crewRow(role, lbl, val, allOpts, false, a?.id);
+    html += crewRow(role, lbl, val, allOpts, false, a?.id, !!a);
   });
 
   // Multi-slot roles
@@ -1560,15 +1578,16 @@ async function renderCrew() {
   CREW_MULTI.forEach(role => {
     const slots = assigned.filter(r => r.role === role);
     if (slots.length === 0) {
-      html += crewRow(role, '— Unassigned —', '', allOpts, true, null);
+      html += crewRow(role, '— Unassigned —', '', allOpts, true, null, false);
     } else {
       slots.forEach((a,i) => {
-        html += crewRow(role + (slots.length>1 ? ` ${i+1}` : ''), resolveCrewLabel(a,allCharacters,hired), resolveCrewValue(a), allOpts, i===slots.length-1, a.id);
+        html += crewRow(role + (slots.length>1 ? ` ${i+1}` : ''), resolveCrewLabel(a,allCharacters,hired), resolveCrewValue(a), allOpts, i===slots.length-1, a.id, true);
       });
     }
   });
 
   list.innerHTML = html;
+  document.getElementById('add-slot-role').innerHTML = CREW_SINGLE.concat(CREW_MULTI).map(r => '<option>' + r + '</option>').join('');
 
   // Set select values after render
   list.querySelectorAll('select[data-orig-val]').forEach(sel => {
@@ -1595,40 +1614,86 @@ async function renderCrew() {
       <button class="skill-remove edit-only" onclick="queueDel('pendingHired','${h.id}',this.closest('.hired-row'))">✕</button>
     </div>`).join('')
   : '<div style="color:#4a9ab8;font-size:0.85rem;padding:6px 0">No hired crew.</div>';
+  renderFinance();   // salaries and life support follow the hired crew
 }
 
-function crewRow(role, label, val, allOpts, showPlus, rowId) {
+// A slot is a saved row of Crew Assignments (data-slot="1"); the plain "Unassigned" lines for posts with no slot are only prompts and are not saved.
+function crewRow(role, label, val, allOpts, showPlus, rowId, real) {
+  const base = role.replace(/\s\d+$/, '');
   const plusBtn = showPlus
-    ? `<button class="skill-remove edit-only" style="color:#00e5ff;font-size:1.1rem" onclick="addCrewSlot('${role.replace(/\s\d+$/,'')}')">+</button>`
+    ? `<button class="skill-remove edit-only" style="color:#00e5ff;font-size:1.1rem" title="Add another ${base} slot" onclick="addCrewSlot('${base}')">+</button>`
     : '<div></div>';
-  return `<div class="crew-role-row" data-role="${role}" data-row-id="${rowId||''}">
+  const delBtn = real
+    ? `<button class="skill-remove edit-only" style="color:#ff5a4a" title="Remove this slot" onclick="this.closest('.crew-role-row').remove()">✕</button>`
+    : '<div></div>';
+  return `<div class="crew-role-row" data-role="${role}" data-row-id="${rowId||''}" data-slot="${real ? 1 : 0}">
     <div class="crew-role-label">${role}</div>
     <div class="view-only" style="color:#b0d8e8">${label}</div>
     <select class="crew-select edit-only" data-role="${role}" data-orig-val="${val}">${allOpts}</select>
-    ${plusBtn}
+    ${plusBtn}${delBtn}
   </div>`;
 }
 
+// Adds an empty slot for any post (the + beside a post, or the Add Crew Slot menu)
 function addCrewSlot(role) {
   const list = document.getElementById('crew-roles-list');
-  const existing = list.querySelectorAll(`[data-role^="${role}"]`);
+  const existing = [...list.querySelectorAll('.crew-role-row')].filter(r => r.dataset.role.replace(/\s\d+$/, '') === role);
+  // a post that only has its "Unassigned" prompt line turns that line into its first slot
+  const prompt = existing.find(r => r.dataset.slot === '0');
+  if (prompt) { prompt.dataset.slot = '1'; return; }
   const n = existing.length + 1;
   const div = document.createElement('div');
   div.className = 'crew-role-row';
   div.dataset.role = role + ' ' + n;
   div.dataset.rowId = '';
-
-  // Build fresh options
-  const charOpts = allCharacters.filter(c => c.onboard_ship_id === ship.id).map(c => `<option value="char:${c.id}">${c.name}</option>`).join('');
-
+  div.dataset.slot = '1';
   div.innerHTML = `
     <div class="crew-role-label">${role} ${n}</div>
     <div class="view-only" style="color:#4a9ab8">— Unassigned —</div>
-    <select class="crew-select edit-only" data-role="${role} ${n}">
-      <option value="">— Unassigned —</option>${charOpts}
-    </select>
-    <button class="skill-remove edit-only" onclick="this.closest('.crew-role-row').remove()" style="color:#ff5a4a">✕</button>`;
-  list.appendChild(div);
+    <select class="crew-select edit-only" data-role="${role} ${n}">${crewOptsHtml}</select>
+    <div></div>
+    <button class="skill-remove edit-only" onclick="this.closest('.crew-role-row').remove()" style="color:#ff5a4a" title="Remove this slot">✕</button>`;
+  const last = existing[existing.length - 1];
+  if (last) last.after(div); else list.appendChild(div);
+}
+
+function addCrewSlotFromMenu() {
+  const role = document.getElementById('add-slot-role').value;
+  if (role) addCrewSlot(role);
+}
+
+// Hire Full Crew: an NPC for every empty crew slot, at the chosen skill level, paid the High Guard salary for that level
+async function hireFullCrew() {
+  const msg = document.getElementById('hire-msg');
+  const say = (text, ok) => { msg.textContent = text; msg.style.color = ok ? '#00ffaa' : '#ff5a4a'; };
+  if (document.body.classList.contains('editing')) { say('Save or cancel your edits first.', false); return; }
+  const level = parseInt(document.getElementById('hire-level').value) || 1;
+  const { data: slots, error } = await supabaseClient.from('spacecraft_crew_roles').select('id,role')
+    .eq('spacecraft_id', ship.id).is('character_id', null).is('hired_crew_id', null);
+  if (error) { say('Could not read the crew slots: ' + error.message, false); return; }
+  if (!slots.length) { say('There are no empty crew slots. Use Edit, then Add Crew Slot on this tab.', false); return; }
+
+  const seen = {}, perRole = {};
+  slots.forEach(s => { perRole[s.role] = (perRole[s.role] || 0) + 1; });
+  const hires = slots.map(s => {
+    seen[s.role] = (seen[s.role] || 0) + 1;
+    return { slot: s, row: { spacecraft_id: ship.id, name: s.role + (perRole[s.role] > 1 ? ' ' + seen[s.role] : ''), role: s.role + '-' + level, salary: crewSalary(s.role, level) || 0 } };
+  });
+  const cost = hires.reduce((n, h) => n + h.row.salary, 0);
+  const unpriced = [...new Set(hires.filter(h => crewSalary(h.slot.role, level) == null).map(h => h.slot.role))];
+  if (!confirm('Hire ' + slots.length + ' NPC crew at skill level ' + level + '?\n\nSalaries total Cr' + cost.toLocaleString() + ' per period (High Guard: the level 1 figure, +50% for each level above).' +
+    (unpriced.length ? '\n\nNo book salary for ' + unpriced.join(', ') + '; they are added at Cr0, so set their pay by hand.' : ''))) return;
+
+  say('Hiring…', true);
+  const ins = await supabaseClient.from('spacecraft_hired_crew').insert(hires.map(h => h.row)).select();
+  if (ins.error) { say('Not hired: ' + ins.error.message, false); return; }
+  // each empty slot is rewritten with its new crew member in it (same order as the hires)
+  const del = await supabaseClient.from('spacecraft_crew_roles').delete().in('id', slots.map(s => s.id));
+  if (del.error) { say('Hired, but the slots could not be filled: ' + del.error.message, false); return; }
+  const back = await supabaseClient.from('spacecraft_crew_roles').insert(ins.data.map((h, i) => ({ spacecraft_id: ship.id, role: hires[i].slot.role, hired_crew_id: h.id })));
+  if (back.error) { say('Hired, but the slots could not be filled: ' + back.error.message, false); return; }
+  await renderCrew();
+  say('Hired ' + slots.length + ' crew. Their salaries are in the Finance tab.', true);
 }
 
 function resolveCrewLabel(a, chars, hired) {
@@ -1798,17 +1863,22 @@ async function saveAll() {
       else { const i=p.div.querySelectorAll('input'); if(i[0].value) await supabaseClient.from('spacecraft_hired_crew').insert({spacecraft_id:ship.id,name:i[0].value,role:i[1].value||null,salary:parseInt(i[2].value)||0}); }
     }
     // Crew role assignments
+    // Every slot is kept, filled or not; the plain "Unassigned" prompt lines are only saved once someone is put in them
     await supabaseClient.from('spacecraft_crew_roles').delete().eq('spacecraft_id',ship.id);
-    const selects = document.querySelectorAll('.crew-select');
-    for (const sel of selects) {
-      if (!sel.value) continue;
-      const role       = sel.dataset.role;
-      const [type, id] = sel.value.split(':');
-      await supabaseClient.from('spacecraft_crew_roles').insert({
-        spacecraft_id: ship.id, role,
+    const slotRows = [];
+    document.querySelectorAll('#crew-roles-list .crew-role-row').forEach(row => {
+      const sel = row.querySelector('.crew-select');
+      if (!sel.value && row.dataset.slot !== '1') return;
+      const [type, id] = sel.value ? sel.value.split(':') : [];
+      slotRows.push({
+        spacecraft_id: ship.id, role: row.dataset.role.replace(/\s\d+$/, ''),
         character_id:  type==='char' ? id : null,
         hired_crew_id: type==='npc'  ? id : null
       });
+    });
+    if (slotRows.length) {
+      const { error: slotErr } = await supabaseClient.from('spacecraft_crew_roles').insert(slotRows);
+      if (slotErr) throw slotErr;
     }
 
     msg.textContent = 'Saved!'; msg.className = 'save-msg ok';

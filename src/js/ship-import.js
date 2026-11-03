@@ -5,8 +5,11 @@
 
 // Catalogue crew posts -> the record's crew roles. Posts the record has no role for map to null and are listed as warnings.
 const CATALOGUE_ROLE_MAP = {
-  Captain: 'Captain', Pilot: 'Pilot', Astrogator: 'Astrogator', Engineer: 'Engineer', Medic: 'Medic', Steward: 'Steward',
-  Gunner: 'Turret Gunner', Marine: 'Marine', Thug: 'Marine', 'Sensor Operator': 'Sensor Operator', Sensops: 'Sensor Operator'
+  Captain: 'Captain', Pilot: 'Pilot', 'Fighter Pilot': 'Pilot', 'Pilot/Astrogator': 'Pilot', Astrogator: 'Astrogator', Engineer: 'Engineer',
+  Mechanic: 'Maintenance', Maintenance: 'Maintenance', Medic: 'Medic', Steward: 'Steward', Stewards: 'Steward',
+  Gunner: 'Turret Gunner', Marine: 'Marine', Thug: 'Marine', 'Sensor Operator': 'Sensor Operator', Sensop: 'Sensor Operator',
+  Officer: 'Officer', 'Executive Officer': 'Officer', 'Executive Officer/Head Scientist': 'Officer', 'Purser/Executive Officer': 'Officer',
+  Purser: 'Administrator', Administrator: 'Administrator', Scientist: 'Scientist', 'Small Craft Crew': 'Small Craft Crew'
 };
 const MOUNT_TYPE_BY_COUNT = { Turret: n => (n >= 3 ? 'Triple Turret' : n === 2 ? 'Double Turret' : 'Single Turret'), Barbette: () => 'Barbette', Fixed: () => 'Fixed Mount' };
 
@@ -45,17 +48,24 @@ function catalogueToRecord(s, opts) {
   // Software: the record's names carry the rating ("Jump Control/2"); bandwidth is the book's table value
   const software = s.software.map(x => ({ name: x.rating != null ? x.name + '/' + x.rating : x.name, bandwidth: x.bw, tl: x.tl, active: false, note: '' }));
 
-  // Crew: the book's posts become NPC crew (hired crew) and are put in the record's crew roles
+  // Crew slots: one empty slot for each post the design needs (NPCs are hired later, by hand or with Hire Full Crew)
+  const crewSlots = [];
+  s.crew.forEach(c => {
+    const role = CATALOGUE_ROLE_MAP[c.role];
+    if (!role) warnings.push('No crew role in the record for "' + c.role + '" (x' + c.count + '): no slot added');
+    else for (let i = 0; i < c.count; i++) crewSlots.push({ role });
+  });
+
+  // Optional (opts.withCrew): the book's posts as NPC crew already filling those slots
   const hiredCrew = [], crewRoles = [];
   // Only when asked for (opts.withCrew): a ship added from the catalogue gets no NPC crew; they are hired by hand
   if (opts.withCrew) s.crew.forEach(c => {
     const role = CATALOGUE_ROLE_MAP[c.role];
-    if (!role) warnings.push('No crew role in the record for "' + c.role + '" (x' + c.count + '): added as hired crew only');
     for (let i = 0; i < c.count; i++) {
       hiredCrew.push({ name: c.role + (c.count > 1 ? ' ' + (i + 1) : ''), role: c.role, salary: 0, _recordRole: role || null });
     }
   });
-  const single = new Set(['Captain', 'Pilot']), used = new Set();
+  const single = new Set(['Captain']), used = new Set();
   if (opts.withCrew) hiredCrew.forEach((h, i) => {
     if (!h._recordRole) return;
     if (single.has(h._recordRole) && used.has(h._recordRole)) { warnings.push('Second ' + h._recordRole + ' has no role slot (record allows one)'); return; }
@@ -71,7 +81,7 @@ function catalogueToRecord(s, opts) {
   const ship = {
     ...(opts.campaignId ? { campaign_id: opts.campaignId } : {}),
     name: opts.name || s.name, ship_class: s.cls ? s.name + ', ' + s.cls : s.name, tl: s.tl,
-    status: opts.status || 'reserve',
+    status: opts.status || 'reserve', catalogue_id: s.id,
     streamlined_status: /^streamlined/i.test(s.hull) ? 'Streamlined' : 'Unstreamlined',
     purchase_value: round(s.purchase),
     hull_tonnage: s.tons, hull_max: s.structure, hull_current: s.structure,
@@ -95,7 +105,7 @@ function catalogueToRecord(s, opts) {
   // The same warning repeated (e.g. each extra Pilot) is listed once with a count
   const counts = {}; warnings.forEach(w => { counts[w] = (counts[w] || 0) + 1; });
   const tidy = Object.keys(counts).map(w => w + (counts[w] > 1 ? ' (x' + counts[w] + ')' : ''));
-  return { ship, software, mounts, weapons, hiredCrew, crewRoles, warnings: tidy };
+  return { ship, software, mounts, weapons, crewSlots, hiredCrew, crewRoles, warnings: tidy };
 }
 
 // Writes a catalogue entry to the Spacecraft Record tables (ship first, then the rows that need its ids).
@@ -103,7 +113,13 @@ function catalogueToRecord(s, opts) {
 async function addCatalogueShipToRecord(db, s, opts) {
   const r = catalogueToRecord(s, opts);
   const must = (what, res) => { if (res.error) throw new Error(what + ': ' + res.error.message); return res.data; };
-  const ship = must('Ship', await db.from('spacecraft').insert(r.ship).select().single());
+  let first = await db.from('spacecraft').insert(r.ship).select().single();
+  if (first.error && /catalogue_id/.test(first.error.message)) {   // docs/fleet-status.sql has not been run yet
+    const { catalogue_id, ...plain } = r.ship;
+    first = await db.from('spacecraft').insert(plain).select().single();
+  }
+  if (first.error && /status/.test(first.error.message)) first.error.message += ' (run docs/fleet-status.sql in Supabase to allow the Fleet status)';
+  const ship = must('Ship', first);
   try {
     const id = ship.id;
     const mounts = r.mounts.length ? must('Mounts', await db.from('spacecraft_mounts')
@@ -113,6 +129,7 @@ async function addCatalogueShipToRecord(db, s, opts) {
       tl: w.tl || null, range: w.range || null, damage: w.damage || null, power: w.power || 0, traits: w.traits && w.traits !== '--' ? w.traits : null }))));
     if (r.software.length) must('Software', await db.from('spacecraft_software').insert(r.software.map(x => ({ spacecraft_id: id, ...x }))));
     if (s.systems.length) must('Systems', await db.from('spacecraft_systems').insert(s.systems.map(d => ({ spacecraft_id: id, description: d }))));
+    if (r.crewSlots.length && !r.hiredCrew.length) must('Crew slots', await db.from('spacecraft_crew_roles').insert(r.crewSlots.map(c => ({ spacecraft_id: id, role: c.role }))));
     const crew = r.hiredCrew.length ? must('Crew', await db.from('spacecraft_hired_crew')
       .insert(r.hiredCrew.map(h => ({ spacecraft_id: id, name: h.name, role: h.role, salary: h.salary }))).select()) : [];
     if (r.crewRoles.length) must('Crew roles', await db.from('spacecraft_crew_roles')

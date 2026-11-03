@@ -46,6 +46,7 @@
     .sc-ammo th { color: #4a9ab8; font-weight: 600; }
     .sc-add { margin-top: 8px; }
     .sc-add-btn { background: transparent; border: 1px solid #00e5ff; color: #00e5ff; border-radius: 4px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; }
+    .sc-add-status { background: #080d12; border: 1px solid #0a4a60; color: #b0d8e8; border-radius: 4px; padding: 4px 6px; font-size: 0.78rem; }
     .sc-add-btn:hover { background: rgba(0,229,255,0.12); }
     .sc-add-btn:disabled { opacity: 0.5; cursor: default; }
     .sc-add-msg { margin-left: 10px; font-size: 0.78rem; }
@@ -201,7 +202,7 @@
         <div class="sc-line"><i>Cost</i> ${mcr(s.purchase)} · <i>Maintenance</i> Cr${s.maintenance.toLocaleString('en-US')}/month</div>
         ${specDetails(s)}
         ${s.notes ? `<div class="sc-note">${esc(s.notes)}</div>` : ''}
-        <div class="sc-add"><button class="sc-add-btn" onclick="addToRecord('${s.id}', this)">Add to Spacecraft Record</button><span class="sc-add-msg"></span></div>
+        <div class="sc-add"><button class="sc-add-btn" onclick="addToRecord('${s.id}', this)">Add to Spacecraft Record</button> <select class="sc-add-status" title="Fleet: crewed entirely by NPCs. Active: crewed by one or more player characters. Reserve: not in use."><option value="reserve">as Reserve</option><option value="fleet">as Fleet</option><option value="active">as Active</option></select><span class="sc-add-msg"></span></div>
         <div class="sc-src">${esc(s.source.book)}${s.source.page ? ', p.' + s.source.page : ''}</div>
       </div>`;
     }
@@ -211,12 +212,13 @@
       const s = SHIP_CATALOGUE.find(x => x.id === id), msg = btn.parentNode.querySelector('.sc-add-msg');
       const name = prompt('Name for this ship on the Spacecraft Record:', s.name);
       if (name === null) return;
+      const status = btn.parentNode.querySelector('.sc-add-status').value;
       const preview = catalogueToRecord(s, { name: name.trim() || s.name });
       const warn = preview.warnings.length ? '\n\nNotes:\n- ' + preview.warnings.join('\n- ') : '';
-      if (!confirm('Add "' + preview.ship.name + '" to the Spacecraft Record as a Reserve ship, with its software, weapons and crew?' + warn)) return;
+      if (!confirm('Add "' + preview.ship.name + '" to the Spacecraft Record as a ' + status + ' ship, with its software, weapons and empty crew slots (no NPCs are hired)?' + warn)) return;
       btn.disabled = true; msg.style.color = '#4a9ab8'; msg.textContent = 'Adding…';
       try {
-        const res = await addCatalogueShipToRecord(supabaseClient, s, { name: name.trim() || s.name, status: 'reserve', campaignId: await currentCampaignId() });
+        const res = await addCatalogueShipToRecord(supabaseClient, s, { name: name.trim() || s.name, status, campaignId: await currentCampaignId() });
         msg.style.color = '#00ffaa'; msg.innerHTML = 'Added. <a href="spacecraft-record.html?id=' + res.ship.id + '" style="color:#00e5ff">Open it</a>';
       } catch (e) {
         msg.style.color = '#ff5a4a'; msg.textContent = 'Not added: ' + e.message;

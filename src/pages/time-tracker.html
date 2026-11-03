@@ -205,7 +205,7 @@
         banner = `<div class="tt-ok good">Everything is paid up. Next charges fall due <b style="color:#00e5ff">${fmtAbs(nextDue)}</b> — in ${nextDue - abs} day${nextDue - abs === 1 ? '' : 's'} (about ${cr(allTotal)}). Party fund: ${cr(fund)}</div>`;
       }
 
-      const ships = shipData.map(r => shipPanel(r)).join('') || '<div class="tt-sub">There are no active spacecraft in this campaign.</div>';
+      const ships = shipData.map(r => shipPanel(r)).join('') || '<div class="tt-sub">There are no active or fleet spacecraft in this campaign.</div>';
       const payList = paySelection(), payTotal = sumOf(payList);
 
       document.getElementById('tt-root').innerHTML = `
