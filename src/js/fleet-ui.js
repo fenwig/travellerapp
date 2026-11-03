@@ -39,7 +39,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
       let text;
       if (d.missile) {
         const salvo = parseInt(ln.querySelector('.fl-salvo').value) || 1;
-        text = 'One missile: ' + n + 'D ' + r.rolls.join('+') + ' = ' + r.total + '. Take off the target\'s armour' + (ap ? ' (reduced by AP ' + ap + ' first)' : '') + ', then multiply by the Effect' +
+        text = 'One missile: ' + n + 'D ' + r.rolls.join('+') + ' = ' + r.total + (d.dd ? ' × 10 (Destructive) = ' + r.total * 10 : '') + '. Take off the target\'s armour' + (ap ? ' (reduced by AP ' + ap + ' first)' : '') + ', then multiply by the Effect' +
           (effect == null ? ' (roll the attack first)' : ' ' + Math.max(0, Math.min(effect, salvo)) + ' (never more than the ' + salvo + ' missiles in the salvo)') + '.';
       } else {
         const e = effect == null ? 0 : Math.max(0, effect), sum = r.total + flat + e;
@@ -145,9 +145,9 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
         if (a.missile) {
           // Missiles and torpedoes: the magazine is counted here; the salvo's flight and arrival are tracked at the table
           const cur = a.ammo == null ? a.capacity : a.ammo, wid = a.weaponId;
-          const dmgBtn = a.dice != null ? '<button class="fl-roll" data-dice="' + a.dice + '" data-flat="0" data-mult="1" data-ap="' + a.ap + '" data-missile="1" onclick="rollDamage(this)">Damage</button>' : '';
+          const dmgBtn = a.dice != null ? '<button class="fl-roll" data-dice="' + a.dice + '" data-flat="0" data-mult="1" data-ap="' + a.ap + '" data-missile="1"' + (a.dd ? ' data-dd="1"' : '') + ' onclick="rollDamage(this)">Damage</button>' : '';
           h += '<div class="fl-line" data-weapon="' + wid + '"><span class="fl-label">' + label + '</span><span class="fl-dm">' + cur + ' / ' + a.capacity + ' left</span><span></span><span></span>' +
-            '<div class="fl-note">' + info + ' · attack is 2D + 1 per missile in the salvo (gunner skill and range are not used); Distant range −2; Close and Adjacent lose Smart</div>' +
+            '<div class="fl-note">' + info + (a.simple ? ' · <span style="color:#ffd166">standard missiles only: NPC ships do not track the loaded type</span>' : ' · loaded: ' + esc(a.loaded.name) + ' (TL' + a.loaded.tl + ')') + ' · attack is 2D + 1 per missile in the salvo (gunner skill and range are not used); Distant range −2; Close and Adjacent lose Smart</div>' +
             '<div class="fl-ctl">Salvo <input type="number" class="fl-salvo" min="1" value="' + Math.max(1, Math.min(a.salvo, cur)) + '" />' +
             '<button class="fl-mini" onclick="launchMissiles(\'' + id + '\',\'' + wid + '\',' + a.capacity + ',this)">Launch</button>' +
             '<button class="fl-roll" data-tn="8" data-crit="1" data-salvo-input="1" data-advice="remember Distant range −2 and the target\'s Evasive Action" onclick="doRoll(this)">Attack roll</button>' + dmgBtn +
@@ -450,7 +450,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
         (hr.data || []).forEach(h => { hired[h.id] = h; });
         Object.keys(FL).forEach(k => delete FL[k]);
         per.forEach(p => {
-          const ctx = { roles: p.roles, chars, hired, mounts: p.mounts, weapons: p.weapons, software: p.software };
+          const ctx = { roles: p.roles, chars, hired, mounts: p.mounts, weapons: p.weapons, software: p.software, simpleMissiles: FLEET_NPC };
           FL[p.s.id] = { ship: p.s, ctx, fc: fleetCombat(p.s, ctx) };
         });
         drawAll();

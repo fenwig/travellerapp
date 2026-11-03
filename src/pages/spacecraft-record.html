@@ -1221,6 +1221,20 @@ async function deleteMountRow(id, tr) {
 }
 
 // ── Add a weapon from the catalogue (the menus are built by catalogueWeaponOptions in js/weapons-data.js) ──
+// Missiles and torpedoes: the type loaded in the launcher (standard unless changed), chosen from the High Guard missile and
+// torpedo tables for the ship's tech level. The Fleet cards use it for damage and traits.
+const isAmmoWeapon = n => /missile|torpedo/i.test(n || '');
+function ammoTypeOptions(name, selected) {
+  const list = (/torpedo/i.test(name || '') ? TORPEDOES : MISSILES).filter(r => !ship || !ship.tl || r[1] <= ship.tl);
+  return list.map(r => '<option' + (r[0] === (selected || 'Standard') ? ' selected' : '') + '>' + r[0] + '</option>').join('');
+}
+function syncAmmoSelect(tr) {
+  const name = tr.querySelector('[data-f="name"]').value, wrap = tr.querySelector('.ammo-wrap'), sel = wrap.querySelector('select');
+  const on = isAmmoWeapon(name);
+  wrap.style.display = on ? '' : 'none';
+  if (on) { const cur = sel.value; sel.innerHTML = ammoTypeOptions(name, cur); }
+}
+
 function fillWeaponFromCatalogue(sel) {
   if (!sel.value) return;
   const tr = sel.closest('tr'), [g, i] = sel.value.split('|').map(Number);
@@ -1232,6 +1246,7 @@ function fillWeaponFromCatalogue(sel) {
   };
   set('name', x.name); set('tl', x.tl); set('range', x.range); set('damage', x.damage); set('power', x.power); set('traits', x.traits);
   sel.value = '';
+  syncAmmoSelect(tr);
   recalcPowerAllocated();
 }
 
@@ -1253,7 +1268,9 @@ function renderWeaponSections() {
         const hasData = !!(w.name);
         html += `<tr class="${hasData ? '' : 'edit-only'}" data-mount="${m.id}" data-mtype="${m.mount_type}" data-instance="${inst}" data-slot="${slot}" data-weapon-id="${w.id || ''}">
           <td>${slot}</td>
-          <td><span class="view-only">${w.name||''}</span><select class="edit-only" style="max-width:150px;margin-bottom:3px" onchange="fillWeaponFromCatalogue(this)">${catalogueWeaponOptions(m.mount_type)}</select><input class="edit-only" data-f="name" value="${w.name||''}" placeholder="Weapon" /></td>
+          <td><span class="view-only">${w.name||''}</span><select class="edit-only" style="max-width:150px;margin-bottom:3px" onchange="fillWeaponFromCatalogue(this)">${catalogueWeaponOptions(m.mount_type)}</select><input class="edit-only" data-f="name" value="${w.name||''}" placeholder="Weapon" oninput="syncAmmoSelect(this.closest('tr'))" />
+            ${w.ammo_type ? `<div class="view-only" style="color:#4a9ab8;font-size:0.75rem">Loaded: ${w.ammo_type}</div>` : ''}
+            <div class="ammo-wrap edit-only" style="display:${isAmmoWeapon(w.name) ? '' : 'none'};font-size:0.75rem;color:#4a9ab8">Loaded <select data-f="ammo_type" style="max-width:130px">${ammoTypeOptions(w.name, w.ammo_type)}</select></div></td>
           <td><span class="view-only">${w.tl??''}</span><input class="edit-only" data-f="tl" type="number" value="${w.tl??''}" style="width:45px" /></td>
           <td><span class="view-only">${w.range||''}</span>
             <select class="edit-only" data-f="range" style="width:90px">
@@ -1880,6 +1897,12 @@ async function saveAll() {
         name, tl: parseInt(f('tl'))||null, range: f('range')||null,
         damage: f('damage')||null, power: parseFloat(f('power'))||0, traits: f('traits')||null
       };
+      // the loaded missile type is only sent when it is not the default (or was set before), so saving works before docs/missile-types.sql is run
+      const ammoSel = tr.querySelector('[data-f="ammo_type"]');
+      if (ammoSel && ammoSel.closest('.ammo-wrap').style.display !== 'none') {
+        const before = weaponSlotRows.find(x => String(x.id) === String(weaponId));
+        if (ammoSel.value !== 'Standard' || (before && before.ammo_type)) payload.ammo_type = ammoSel.value === 'Standard' ? null : ammoSel.value;
+      }
       if (weaponId) await supabaseClient.from('spacecraft_weapons').update(payload).eq('id', weaponId);
       else await supabaseClient.from('spacecraft_weapons').insert(payload);
     }

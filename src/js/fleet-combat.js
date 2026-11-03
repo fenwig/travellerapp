@@ -138,6 +138,14 @@ function ammoCapacity(name, mountType) {
   return /fixed/i.test(mountType || '') ? 4 : 12;
 }
 
+// The missile or torpedo type loaded in a launcher: the weapon's ammo_type from the Spacecraft Record, standard if none.
+// NPC ships (ctx.simpleMissiles) always use standard missiles.
+function loadedMissile(type, weaponName, simple) {
+  const table = /torpedo/i.test(weaponName) ? TORPEDOES : MISSILES;
+  const row = (!simple && type && table.find(r => r[0] === type)) || table.find(r => r[0] === 'Standard');
+  return { name: row[0], tl: row[1], thrust: row[2], damage: row[3], traits: row[5] === '--' ? '' : row[5] };
+}
+
 function fleetCombat(ship, ctx) {
   const crits = ship.critical_hits || {};
   const out = { crew: {}, crits };
@@ -189,6 +197,7 @@ function fleetCombat(ship, ctx) {
           dice: /^\d+D$/.test(g.w.damage || '') ? parseInt(g.w.damage) : null,
           flat: 0, mult: 1, ap: parseInt((/\bAP\s*(\d+)/i.exec(g.w.traits || '') || [])[1]) || 0, ion: /\bion\b/i.test(g.w.traits || ''),
           salvo: /missile|torpedo/i.test(g.name) ? salvoSize(g.name, g.k) : 0,
+          loaded: /missile|torpedo/i.test(g.name) ? loadedMissile(g.w.ammo_type, g.name, ctx.simpleMissiles) : null, simple: !!ctx.simpleMissiles,
           weaponId: g.w.id, ammo: g.w.ammo == null ? null : g.w.ammo, capacity: ammoCapacity(g.name, m.mount_type),
           missile: /missile|torpedo/i.test(g.name), sand: /sandcaster/i.test(g.name), laser: /laser/i.test(g.name)
         });
@@ -197,6 +206,12 @@ function fleetCombat(ship, ctx) {
   });
   // damage multiples and the extra dice for several weapons of one type in a turret
   out.attacks.forEach(a => {
+    if (a.loaded) {   // the loaded type sets the damage and traits ("DD" is Destructive: the dice total is multiplied by 10)
+      const m = /^(\d+)(DD|D)$/.exec(a.loaded.damage);
+      a.damage = a.loaded.damage + ' per ' + (/torpedo/i.test(a.name) ? 'torpedo' : 'missile');
+      a.traits = a.loaded.traits;
+      a.dice = m ? parseInt(m[1]) : null; a.dd = !!(m && m[2] === 'DD');
+    }
     if (a.missile || a.dice == null) return;
     if (a.bay) a.mult = { small: 10, medium: 20, large: 100 }[((/\b(small|medium|large)\b/i.exec(a.name) || [])[1] || 'small').toLowerCase()];
     else if (a.mountType === 'Barbette' || /barbette/i.test(a.name)) a.mult = 3;
