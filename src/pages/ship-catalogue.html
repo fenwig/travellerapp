@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ship Catalogue — Traveller</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/reference.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/nav.js" defer></script>
+  <style>
+    .sc-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+    .sc-bar input, .sc-bar select { background: #080d12; border: 1px solid #0a4a60; color: #b0d8e8; border-radius: 4px; padding: 6px 10px; font-size: 0.85rem; }
+    .sc-count { color: #4a9ab8; font-size: 0.8rem; }
+    .sc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+    .sc-card { background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 8px; padding: 12px 14px; font-size: 0.82rem; color: #b0d8e8; }
+    .sc-card:hover { border-color: #00e5ff; }
+    .sc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .sc-name { color: #00e5ff; font-weight: 700; font-size: 1rem; }
+    .sc-role { font-size: 0.7rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.08em; }
+    .sc-cls { color: #4a9ab8; margin-bottom: 8px; }
+    .sc-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
+    .sc-stat { background: rgba(0,229,255,0.06); border: 1px solid #0a4a60; border-radius: 4px; padding: 4px 6px; text-align: center; }
+    .sc-stat b { display: block; color: #00e5ff; font-size: 0.95rem; }
+    .sc-stat span { font-size: 0.62rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; }
+    .sc-line { margin-bottom: 4px; line-height: 1.45; }
+    .sc-line i { color: #4a9ab8; font-style: normal; }
+    .sc-note { margin-top: 6px; color: #4a9ab8; font-size: 0.76rem; }
+    .sc-src { margin-top: 8px; font-size: 0.7rem; color: #4a9ab8; border-top: 1px solid #0a4a60; padding-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-text">TRAVELLER</div>
+        <div class="sidebar-user" id="sidebar-user"></div>
+      </div>
+      <div class="sidebar-signout"><button onclick="doSignOut()">Sign Out</button></div>
+    </nav>
+
+    <main class="page-main">
+      <h1 class="page-title">SHIP CATALOGUE</h1>
+      <p class="calc-intro" style="color:#b0d8e8;font-size:0.88rem;max-width:860px;margin-bottom:14px">Published ship designs from High Guard. <b style="color:#ffd166">Sample of five ships</b> while the data is checked against the book; the rest follow. Costs are in MCr, maintenance in Cr per month.</p>
+      <div class="sc-bar">
+        <input id="sc-q" placeholder="Search ships…" oninput="draw()" />
+        <select id="sc-role" onchange="draw()"><option value="">All roles</option></select>
+        <span class="sc-count" id="sc-count"></span>
+      </div>
+      <div class="sc-grid" id="sc-grid"></div>
+    </main>
+  </div>
+
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/ship-catalogue-data.js"></script>
+  <script>
+    async function doSignOut() { await supabaseClient.auth.signOut(); window.location.href = '../../index.html'; }
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const mcr = n => 'MCr' + (Math.round(n * 1000) / 1000).toLocaleString('en-US');
+
+    function weaponText(s) {
+      return s.weapons.length ? s.weapons.map(w => (w.count > 1 ? w.count + ' × ' : '') + w.name).join(', ') : 'None';
+    }
+    function crewText(s) {
+      return s.crew.map(c => c.role + (c.count > 1 ? ' ×' + c.count : '')).join(', ');
+    }
+    function accomText(s) {
+      const a = [];
+      if (s.staterooms) a.push(s.staterooms + ' staterooms');
+      if (s.lowBerths) a.push(s.lowBerths + ' low berths');
+      if (s.barracks) a.push(s.barracks + ' barracks');
+      return a.join(', ') || 'None';
+    }
+
+    function card(s) {
+      return `<div class="sc-card">
+        <div class="sc-head"><span class="sc-name">${esc(s.name)}</span><span class="sc-role">${esc(s.role)}</span></div>
+        <div class="sc-cls">${esc(s.cls)} · TL${s.tl} · ${s.tons} tons · ${esc(s.hull)}</div>
+        <div class="sc-stats">
+          <div class="sc-stat"><b>${s.thrust}</b><span>Thrust</span></div>
+          <div class="sc-stat"><b>${s.jump}</b><span>Jump</span></div>
+          <div class="sc-stat"><b>${s.armour.value}</b><span>Armour</span></div>
+          <div class="sc-stat"><b>${s.structure}</b><span>Hull</span></div>
+        </div>
+        <div class="sc-line"><i>Power</i> ${s.power} · <i>Computer</i> ${esc(s.computer)} · <i>Sensors</i> ${esc(s.sensors)}</div>
+        <div class="sc-line"><i>Armour type</i> ${esc(s.armour.type)} · <i>Fuel</i> ${esc(s.fuel)}</div>
+        <div class="sc-line"><i>Weapons</i> ${esc(weaponText(s))}</div>
+        <div class="sc-line"><i>Crew</i> ${esc(crewText(s))}</div>
+        <div class="sc-line"><i>Berths</i> ${esc(accomText(s))} · <i>Cargo</i> ${s.cargo} tons</div>
+        <div class="sc-line"><i>Cost</i> ${mcr(s.purchase)} · <i>Maintenance</i> Cr${s.maintenance.toLocaleString('en-US')}/month</div>
+        ${s.notes ? `<div class="sc-note">${esc(s.notes)}</div>` : ''}
+        <div class="sc-src">${esc(s.source.book)}, p.${s.source.page}</div>
+      </div>`;
+    }
+
+    function draw() {
+      const q = document.getElementById('sc-q').value.trim().toLowerCase(), role = document.getElementById('sc-role').value;
+      const hits = SHIP_CATALOGUE.filter(s => (!role || s.role === role) &&
+        (!q || (s.name + ' ' + s.cls + ' ' + s.role).toLowerCase().includes(q)));
+      document.getElementById('sc-grid').innerHTML = hits.map(card).join('') || '<div class="sc-count">No ships match.</div>';
+      document.getElementById('sc-count').textContent = hits.length + ' of ' + SHIP_CATALOGUE.length + ' ships';
+    }
+
+    (async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) { window.location.href = '../../index.html'; return; }
+      const sel = document.getElementById('sc-role');
+      [...new Set(SHIP_CATALOGUE.map(s => s.role))].sort().forEach(r => sel.insertAdjacentHTML('beforeend', `<option>${esc(r)}</option>`));
+      draw();
+    })();
+  </script>
+</body>
+</html>

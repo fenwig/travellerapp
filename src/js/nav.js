@@ -2,7 +2,7 @@
 // page's <nav class="sidebar">. To add or move a page, edit NAV_GROUPS only.
 // Pages keep their own logo block and Sign Out button; this fills the middle.
 const NAV_GROUPS = [
-  { id: 'character', label: 'Character Resources', items: [
+  { id: 'character', label: 'Player Records', items: [
     ['character-record.html',   'Character Record'],
     ['spacecraft-record.html',  'Spacecraft Record'],
     ['character-list.html',     'Roster'],
@@ -15,12 +15,13 @@ const NAV_GROUPS = [
     ['sell-cargo.html',            'Sell Cargo'],
     ['https://travellermap.com',   'Traveller Map', true]   // third value: opens in a new tab
   ]},
-  { id: 'campaign', label: 'Campaign', items: [
+  { id: 'campaign', label: 'Campaign Tools', items: [
     ['time-tracker.html',     'Time Tracker'],
     ['campaign-finance.html', 'Campaign Finance'],
     ['piracy-encounter.html', 'Piracy Encounter (GM)', false, true],
     ['player-attitudes.html', 'Port Attitudes'],
     ['reach-map.html',        'Trojan Reach Map'],
+    ['ship-catalogue.html',   'Ship Catalogue'],
     ['attitudes.html',        'Attitudes (GM)', false, true]   // fourth value: GM only
   ]},
   { id: 'reference', label: 'Reference', items: [
