@@ -200,6 +200,8 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
       h += line('General scan / other sensor use', sk, 8, 'Routine sensor work; difficulty set by the Referee.');
       h += '</details>';
 
+      h += moraleHtml(id);
+
       // Damage and critical hits
       h += '<details class="fl-step" open><summary>Armour, damage &amp; critical hits<span>' + (lost > 0 ? lost + ' hull lost' : 'undamaged') + '</span></summary>';
       h += '<div class="fl-dmg">Hull <input type="number" value="' + fc.hull.cur + '" onchange="setField(\'' + id + '\',\'hull_current\',this.value)" /> / ' + fc.hull.max +
@@ -216,6 +218,95 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
       h += '</details>';
       if (FLEET_NPC) h += npcSetupHtml(id);
       return h + '</div>';
+    }
+
+    // ── Crew morale (Pirates of Drinax Book 1, Morale p.12 and Enemy Ship Morale p.14) ──
+    // One MOR for the whole ship's crew. Fleet and Active ships use the pirate rules: start 1D+6, MOR checks, events move it,
+    // 0 = mutiny. NPC ships use the enemy rules: start 1D+3 merchant / 1D+6 armed / 1D+8 naval (Aslan: a roll under 3 counts as 3),
+    // -1 per critical hit and a further -1D at Severity 4+, 0 = the ship jumps out or surrenders.
+    const MOR_CLASSES = { merchant: ['Merchant', 3], armed: ['Armed ship', 6], naval: ['Naval ship', 8] };
+    const morSay = (id, text, bad) => { const el = document.getElementById('mor-res-' + id); if (el) { el.textContent = text; el.className = 'fl-note' + (bad ? ' fl-res bad' : ''); } };
+
+    function moraleHtml(id) {
+      const { ship: s, ctx } = FL[id], mor = s.morale == null ? null : s.morale;
+      let h = '<details class="fl-step" open><summary>Crew morale<span>' + (mor == null ? 'not rolled yet' : 'MOR ' + mor + ' (DM' + fmt(statDm(mor)) + ')') + '</span></summary>';
+      const startCls = s.morale_class && MOR_CLASSES[s.morale_class] ? s.morale_class : 'armed';
+      h += '<div class="fl-ctl" style="margin:4px 0">' + (mor == null ? 'Starting MOR: ' : 'Re-roll starting MOR: ') +
+        (FLEET_NPC ? '<select id="mor-cls-' + id + '">' + Object.keys(MOR_CLASSES).map(k => '<option value="' + k + '"' + (k === startCls ? ' selected' : '') + '>' + MOR_CLASSES[k][0] + ' (1D+' + MOR_CLASSES[k][1] + ')</option>').join('') + '</select>' +
+          ' <label><input type="checkbox" id="mor-aslan-' + id + '" style="width:auto" /> Aslan (minimum 3)</label>' : '1D+6 ') +
+        '<button class="fl-mini" onclick="rollStartMorale(\'' + id + '\')">Roll</button></div>';
+      if (mor != null) {
+        h += '<div class="fl-dmg">MOR <input type="number" min="0" value="' + mor + '" onchange="setMorale(\'' + id + '\',this.value)" /> ' +
+          '<button class="fl-mini" onclick="adjustMorale(\'' + id + '\',-1,\'Adjusted by hand\')">−1</button><button class="fl-mini" onclick="adjustMorale(\'' + id + '\',1,\'Adjusted by hand\')">+1</button></div>';
+        if (mor === 0) h += '<div class="fl-res bad" style="padding:4px 0">' + (FLEET_NPC ? 'MOR 0: the ship jumps out if it can, otherwise it surrenders.' : 'MOR 0: the crew mutiny and try to overthrow the leadership and seize the ship.') + '</div>';
+        if (FLEET_NPC) {
+          h += '<div class="fl-dmg"><button class="fl-mini" onclick="adjustMorale(\'' + id + '\',-1,\'Critical hit\')">Critical hit −1</button> ' +
+            '<button class="fl-mini" onclick="critSevMorale(\'' + id + '\')">Severity 4+ also −1D</button></div>' +
+            '<div class="fl-legend">Applying a critical hit in the damage section below lowers MOR for you (−1, and −1D more at Severity 4+). These buttons are for hits you enter by hand.</div>';
+        } else {
+          const sk = statDm(mor);
+          h += '<div class="fl-line"><span class="fl-label">MOR check</span><span class="fl-dm">2D ' + fmt(sk) + '</span><span class="fl-tn">8+</span>' +
+            '<button class="fl-roll" onclick="morCheck(\'' + id + '\')">Roll</button><span class="fl-res" id="mor-check-' + id + '"></span>' +
+            '<div class="fl-note">The Referee calls for a check when the ship is endangered (hull under 10% of its starting value), the crew are ordered to risk their lives, endure undue hardship, or the leadership is divided. Average (8+) is assumed. A failed check costs 1D MOR.</div></div>';
+          h += '<div class="fl-dmg">' + [['Month without a division of the spoils', -1], ['Failed attempt to capture cargo or a prize', -1], ['Captured considerable cargo or a prize', 1], ['Shore leave, intoxicants, rewards', 1]]
+            .map(a => '<button class="fl-mini" onclick="adjustMorale(\'' + id + '\',' + a[1] + ',\'' + a[0] + '\')">' + fmt(a[1]) + ' ' + a[0] + '</button>').join(' ') + '</div>';
+          const crewN = ctx.roles.filter(r => r.character_id || r.hired_crew_id).length;
+          h += '<div class="fl-ctl" style="margin:6px 0">Division of the Spoils, retaining crew: <input type="number" id="mor-crew-' + id + '" min="1" value="' + Math.max(1, crewN) + '" /> crew ' +
+            '<button class="fl-mini" onclick="rollRetention(\'' + id + '\')">Roll for each (2D ' + fmt(statDm(mor)) + ' vs 6+)</button></div>';
+        }
+        h += '<div class="fl-note" id="mor-res-' + id + '"></div>';
+      }
+      return h + '</details>';
+    }
+
+    async function saveMorale(id, patch) {
+      const { error } = await supabaseClient.from('spacecraft').update(patch).eq('id', id);
+      if (error) { alert('Could not save morale: ' + error.message + (/morale/.test(error.message) ? ' (run docs/ship-morale.sql in Supabase)' : '')); return false; }
+      Object.assign(FL[id].ship, patch);
+      return true;
+    }
+    async function rollStartMorale(id) {
+      const s = FL[id].ship;
+      if (s.morale != null && !confirm('Replace the current MOR of ' + s.morale + ' with a new starting roll?')) return;
+      let cls = null, bonus = 6, aslan = false;
+      if (FLEET_NPC) { cls = document.getElementById('mor-cls-' + id).value; bonus = MOR_CLASSES[cls][1]; aslan = document.getElementById('mor-aslan-' + id).checked; }
+      const r = d6(); let total = r + bonus;
+      if (aslan && total < 3) total = 3;
+      if (!(await saveMorale(id, FLEET_NPC ? { morale: total, morale_class: cls } : { morale: total }))) return;
+      redraw(id);
+      morSay(id, 'Starting MOR: 1D ' + r + ' + ' + bonus + ' = ' + total + '.');
+    }
+    async function setMorale(id, v) {
+      const n = parseInt(v); if (isNaN(n)) return;
+      if (await saveMorale(id, { morale: Math.max(0, n) })) redraw(id);
+    }
+    async function adjustMorale(id, delta, why) {
+      const cur = FL[id].ship.morale || 0, next = Math.max(0, cur + delta);
+      if (!(await saveMorale(id, { morale: next }))) return;
+      redraw(id);
+      morSay(id, why + ': MOR ' + cur + ' → ' + next + '.' + (next === 0 ? (FLEET_NPC ? ' The ship jumps out or surrenders.' : ' The crew mutiny!') : ''), next === 0);
+    }
+    async function critSevMorale(id) {
+      const r = d6(), cur = FL[id].ship.morale || 0, next = Math.max(0, cur - r);
+      if (!(await saveMorale(id, { morale: next }))) return;
+      redraw(id);
+      morSay(id, 'Severity 4+: −1D (' + r + '): MOR ' + cur + ' → ' + next + '.' + (next === 0 ? ' The ship jumps out or surrenders.' : ''), next === 0);
+    }
+    async function morCheck(id) {
+      const mor = FL[id].ship.morale || 0, dm = statDm(mor), a = d6(), b = d6(), total = a + b + dm;
+      let text = '2D ' + a + '+' + b + ' ' + fmt(dm) + ' = ' + total + ' vs 8+ → ';
+      if (total >= 8) { document.getElementById('mor-check-' + id).textContent = text + 'the crew hold steady.'; return; }
+      const dmg = d6(), next = Math.max(0, mor - dmg);
+      if (!(await saveMorale(id, { morale: next }))) return;
+      redraw(id);
+      const el = document.getElementById('mor-check-' + id);
+      if (el) { el.textContent = text + 'failed. MOR takes 1D = ' + dmg + ': ' + mor + ' → ' + next + '.' + (next === 0 ? ' The crew mutiny!' : ''); el.className = 'fl-res bad'; }
+    }
+    function rollRetention(id) {
+      const mor = FL[id].ship.morale || 0, dm = statDm(mor), n = Math.max(1, parseInt(document.getElementById('mor-crew-' + id).value) || 1);
+      let leave = 0;
+      for (let i = 0; i < n; i++) if (d6() + d6() + dm < 6) leave++;
+      morSay(id, n + ' crew rolled 2D ' + fmt(dm) + ' vs 6+: ' + leave + ' choose to leave at the next Tolerant or better starport, ' + (n - leave) + ' stay.', leave > 0);
     }
 
     function redraw(id) {
@@ -250,7 +341,8 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
       if (!(await saveShip(id, { hull_current: after }))) return;
       redraw(id);
       const res = document.getElementById('dmg-res-' + id);
-      res.textContent = ' ' + dmg + ' − armour ' + armour + ' = ' + through + ' hull damage.' + (after === 0 ? ' Hull 0: the ship is wrecked.' : '') + (crits > 0 ? ' Sustained damage: roll ' + crits + ' × Severity 1 critical hit location.' : '');
+      res.textContent = ' ' + dmg + ' − armour ' + armour + ' = ' + through + ' hull damage.' + (after === 0 ? ' Hull 0: the ship is wrecked.' : '') + (crits > 0 ? ' Sustained damage: roll ' + crits + ' × Severity 1 critical hit location.' : '') +
+        (!FLEET_NPC && before > f.fc.hull.max * 0.1 && after <= f.fc.hull.max * 0.1 && after > 0 ? ' Hull is now under 10% of its starting value: the ship is endangered, so make a MOR check.' : '');
     }
     async function setCrit(id, loc, n) {
       const crits = Object.assign({}, FL[id].ship.critical_hits || {});
@@ -270,9 +362,18 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
       const crits = Object.assign({}, FL[id].ship.critical_hits || {});
       const r = applyCritSeverity(crits[loc], sev);
       crits[loc] = r.sev;
-      if (!(await saveShip(id, { critical_hits: crits }))) return;
+      const patch = { critical_hits: crits };
+      // Enemy ship morale: -1 per critical hit, and a further -1D at Severity 4+
+      let morText = '';
+      const ship = FL[id].ship;
+      if (FLEET_NPC && ship.morale != null) {
+        const extra = sev >= 4 ? d6() : 0, next = Math.max(0, ship.morale - 1 - extra);
+        patch.morale = next;
+        morText = ' Morale ' + ship.morale + ' → ' + next + ' (−1' + (extra ? ', −1D = ' + extra : '') + ').' + (next === 0 ? ' MOR 0: the ship jumps out or surrenders.' : '');
+      }
+      if (!(await saveShip(id, patch))) return;
       redraw(id);
-      document.getElementById('crit-res-' + id).textContent = ' ' + loc + ' now Severity ' + r.sev + (r.extra6D ? ' (already Severity 6: it takes 6D extra damage instead)' : '') + '.';
+      document.getElementById('crit-res-' + id).textContent = ' ' + loc + ' now Severity ' + r.sev + (r.extra6D ? ' (already Severity 6: it takes 6D extra damage instead)' : '') + '.' + morText;
     }
 
     // ── initiative for everyone ──
