@@ -127,14 +127,16 @@ function salvoSize(name, k) {
   return k;
 }
 
-// Attack DMs for the range band and the target's size (the book's attack modifiers table)
-const RANGE_BANDS = ['Adjacent', 'Close', 'Short', 'Medium', 'Long', 'Very Long', 'Distant'];
-const RANGE_DM = { Short: 1, Long: -2, 'Very Long': -4, Distant: -6 };
-function sizeDm(tons) { return Math.min(6, Math.floor((tons || 0) / 1000)); }
-// Bay weapons (not missiles or torpedoes): DM-2 against targets of 2,000 tons or less, DM-4 at 100 tons or less
-function bayDm(tons) { return tons <= 100 ? -4 : tons <= 2000 ? -2 : 0; }
-// Rounds a missile salvo takes to arrive, by the range it was launched from
-const MISSILE_FLIGHT = { Adjacent: 0, Close: 0, Short: 0, Medium: 0, Long: 1, 'Very Long': 4, Distant: 10 };
+// Missiles or torpedoes a magazine holds: 12 per turret with racks (4 on a fixed mount), 25 per missile barbette,
+// 3 per torpedo barbette, and 12 full salvos in a bay.
+function ammoCapacity(name, mountType) {
+  const size = ((/\b(small|medium|large)\b/i.exec(name) || [])[1] || '').toLowerCase();
+  if (/torpedo bay/i.test(name)) return 12 * ({ small: 3, medium: 6, large: 30 }[size] || 3);
+  if (/missile bay/i.test(name)) return 12 * ({ small: 12, medium: 24, large: 120 }[size] || 12);
+  if (/torpedo barbette/i.test(name)) return 3;
+  if (/missile barbette/i.test(name)) return 25;
+  return /fixed/i.test(mountType || '') ? 4 : 12;
+}
 
 function fleetCombat(ship, ctx) {
   const crits = ship.critical_hits || {};
@@ -187,6 +189,7 @@ function fleetCombat(ship, ctx) {
           dice: /^\d+D$/.test(g.w.damage || '') ? parseInt(g.w.damage) : null,
           flat: 0, mult: 1, ap: parseInt((/\bAP\s*(\d+)/i.exec(g.w.traits || '') || [])[1]) || 0, ion: /\bion\b/i.test(g.w.traits || ''),
           salvo: /missile|torpedo/i.test(g.name) ? salvoSize(g.name, g.k) : 0,
+          weaponId: g.w.id, ammo: g.w.ammo == null ? null : g.w.ammo, capacity: ammoCapacity(g.name, m.mount_type),
           missile: /missile|torpedo/i.test(g.name), sand: /sandcaster/i.test(g.name), laser: /laser/i.test(g.name)
         });
       });

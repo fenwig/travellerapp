@@ -39,6 +39,9 @@
     .fl-tn { color: #ffd166; white-space: nowrap; }
     .fl-res { grid-column: 1 / -1; color: #00ffaa; font-size: 0.8rem; min-height: 0; }
     .fl-res.bad { color: #ff5a4a; }
+    .fl-ctl { grid-column: 1 / -1; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; color: #4a9ab8; font-size: 0.78rem; }
+    .fl-ctl input, .fl-ctl select { background: #080d12; border: 1px solid #0a4a60; color: #b0d8e8; border-radius: 4px; padding: 3px 6px; font-size: 0.8rem; }
+    .fl-ctl input { width: 60px; }
     .fl-note { grid-column: 1 / -1; color: #4a9ab8; font-size: 0.76rem; }
     .fl-crew { color: #b0d8e8; margin: 2px 0 6px; font-size: 0.78rem; }
     .fl-crew i { color: #4a9ab8; font-style: normal; }
@@ -93,7 +96,9 @@
     // ── dice ──
     const d6 = () => 1 + Math.floor(Math.random() * 6);
     function doRoll(btn) {
-      const dm = parseFloat(btn.dataset.dm) || 0, tn = btn.dataset.tn ? parseInt(btn.dataset.tn) : null;
+      let dm = parseFloat(btn.dataset.dm) || 0;
+      if (btn.dataset.salvoInput) dm = parseInt(btn.closest('.fl-line').querySelector('.fl-salvo').value) || 0;   // +1 per missile in the salvo
+      const tn = btn.dataset.tn ? parseInt(btn.dataset.tn) : null;
       const a = d6(), b = d6(), total = a + b + Math.round(dm);
       const res = btn.closest('.fl-line').querySelector('.fl-res');
       let text = '2D ' + a + '+' + b + ' ' + fmt(Math.round(dm)) + ' = ' + total;
@@ -111,29 +116,62 @@
     const fmt = n => (n >= 0 ? '+' : '−') + Math.abs(n);
     const dice = n => { let t = 0; const r = []; for (let i = 0; i < n; i++) { const v = d6(); r.push(v); t += v; } return { total: t, rolls: r }; };
 
-    // Damage roll for a weapon line. Normal weapons: dice + extra dice + Effect, less armour (armour first reduced by AP), times the
-    // damage multiple. Missiles and torpedoes: one missile's damage less armour, times the Effect (at most the missiles in the salvo).
+    // Damage roll for a weapon line: the dice (and extra dice for several weapons) plus the Effect of the last attack roll.
+    // The player then takes off the target's armour (reduced by the weapon's AP) and applies the multiple. Missiles and torpedoes:
+    // one missile's damage, less armour, times the Effect (at most the missiles in the salvo).
     function rollDamage(btn) {
       const ln = btn.closest('.fl-line'), res = ln.querySelector('.fl-res'), d = btn.dataset;
       const effect = ln.dataset.effect == null ? null : parseInt(ln.dataset.effect);
-      const n = parseInt(d.dice), flat = parseInt(d.flat) || 0, mult = parseInt(d.mult) || 1, ap = parseInt(d.ap) || 0, armour = parseInt(d.armour) || 0, salvo = parseInt(d.salvo) || 0;
-      const r = dice(n), armEff = Math.max(0, armour - ap);
+      const n = parseInt(d.dice), flat = parseInt(d.flat) || 0, mult = parseInt(d.mult) || 1, ap = parseInt(d.ap) || 0;
+      const r = dice(n);
       let text;
       if (d.missile) {
-        const e = effect == null ? 1 : Math.max(0, Math.min(effect, salvo || effect));
-        const one = Math.max(0, r.total - armEff);
-        text = 'Damage ' + n + 'D ' + r.rolls.join('+') + ' = ' + r.total + ' − armour ' + armEff + ' = ' + one + ' per missile × Effect ' + e + (effect == null ? ' (no attack roll yet, taken as 1)' : '') + ' = ' + one * e;
+        const salvo = parseInt(ln.querySelector('.fl-salvo').value) || 1;
+        text = 'One missile: ' + n + 'D ' + r.rolls.join('+') + ' = ' + r.total + '. Take off the target\'s armour' + (ap ? ' (reduced by AP ' + ap + ' first)' : '') + ', then multiply by the Effect' +
+          (effect == null ? ' (roll the attack first)' : ' ' + Math.max(0, Math.min(effect, salvo)) + ' (never more than the ' + salvo + ' missiles in the salvo)') + '.';
       } else {
-        const e = effect == null ? 0 : Math.max(0, effect);
-        const sum = r.total + flat + e, left = Math.max(0, sum - armEff);
-        text = 'Damage ' + n + 'D ' + r.rolls.join('+') + (flat ? ' +' + flat : '') + ' + Effect ' + e + ' = ' + sum + ' − armour ' + armEff + (ap ? ' (armour ' + armour + ' less AP ' + ap + ')' : '') + ' = ' + left + (mult > 1 ? ' × ' + mult + ' = ' + left * mult : '') +
-          (effect == null ? ' (no attack roll yet, Effect taken as 0)' : '');
+        const e = effect == null ? 0 : Math.max(0, effect), sum = r.total + flat + e;
+        text = 'Damage ' + n + 'D ' + r.rolls.join('+') + (flat ? ' +' + flat : '') + ' + Effect ' + e + ' = ' + sum + '. Take off the target\'s armour' + (ap ? ' (reduced by AP ' + ap + ' first)' : '') +
+          (mult > 1 ? ', then multiply what is left by ' + mult : '') + '.' + (effect == null ? ' (No attack roll yet: Effect taken as 0.)' : '');
       }
       res.textContent = text; res.className = 'fl-res';
     }
 
-    // The target the card's attack rolls are aimed at
-    function setTarget(id, key, v) { FL[id].target[key] = v; redraw(id); }
+    // Missile and torpedo magazines (saved on the weapon's row of the Spacecraft Record)
+    const sayAt = (id, wid, text, bad) => {
+      const el = document.querySelector('#fl-' + id + ' [data-weapon="' + wid + '"] .fl-res');
+      if (el) { el.textContent = text; el.className = 'fl-res' + (bad ? ' bad' : ''); }
+    };
+    async function saveAmmo(id, wid, value) {
+      const { error } = await supabaseClient.from('spacecraft_weapons').update({ ammo: value }).eq('id', wid);
+      if (error) { alert('Could not save the missile count: ' + error.message + (/ammo/.test(error.message) ? ' (run docs/ship-weapon-ammo.sql in Supabase)' : '')); return false; }
+      const w = FL[id].ctx.weapons.find(x => x.id === wid); if (w) w.ammo = value;
+      return true;
+    }
+    async function launchMissiles(id, wid, cap, btn) {
+      const n = parseInt(btn.closest('.fl-line').querySelector('.fl-salvo').value) || 0;
+      const w = FL[id].ctx.weapons.find(x => x.id === wid), cur = w.ammo == null ? cap : w.ammo;
+      if (n <= 0) return;
+      if (n > cur) { sayAt(id, wid, 'Only ' + cur + ' left in the magazine.', true); return; }
+      if (!(await saveAmmo(id, wid, cur - n))) return;
+      redraw(id);
+      sayAt(id, wid, 'Launched ' + n + '. ' + (cur - n) + ' left.');
+    }
+    async function reloadMissiles(id, wid, cap, btn) {
+      if (!(await saveAmmo(id, wid, cap))) return;
+      redraw(id);
+      sayAt(id, wid, 'Magazine refilled to ' + cap + '.');
+    }
+
+    // Detecting a missile launch: Routine (6+) if the firing ship is already detected, else Average (8+); +1 per 10 full missiles (max +6)
+    function rollDetect(btn) {
+      const ln = btn.closest('.fl-line'), res = ln.querySelector('.fl-res');
+      const tn = parseInt(ln.querySelector('.fl-det').value), n = parseInt(ln.querySelector('.fl-salvo').value) || 1;
+      const bonus = Math.min(6, Math.floor(n / 10)), dm = Math.round(parseFloat(btn.dataset.dm)) + bonus;
+      const a = d6(), b = d6(), total = a + b + dm, effect = total - tn;
+      res.textContent = '2D ' + a + '+' + b + ' ' + fmt(dm) + (bonus ? ' (incl. salvo +' + bonus + ')' : '') + ' = ' + total + ' vs ' + tn + '+ → ' + (effect >= 0 ? 'launch detected, Effect ' + effect : 'not detected, Effect ' + effect);
+      res.className = 'fl-res' + (effect < 0 ? ' bad' : '');
+    }
 
     // ── building the card ──
     function crewText(c, allowSkillOnly) {
@@ -181,21 +219,9 @@
 
       // 3 Attack
       const gAvg = cw.gunners.avg, bAvg = cw.bayGunners.avg;
-      const tg = FL[id].target, tons = parseFloat(tg.tons), tonsSet = !isNaN(tons), rangeSet = !!tg.range;
-      const armourT = parseInt(tg.armour) || 0;
-      const rDm = rangeSet ? (RANGE_DM[tg.range] || 0) : 0, sDm = tonsSet ? sizeDm(tons) : 0;
-      const missileTotal = fc.missileLaunch, salvoN = parseInt(tg.salvo) || missileTotal;
       h += '<details class="fl-step" open><summary>3 · Attack &amp; Reactions<span>2D + Gunner + DEX DM, 8+</span></summary>';
       h += '<div class="fl-crew"><i>Turret gunners</i> ' + crewText(cw.gunners) + '</div>';
       if (fc.attacks.some(a => a.bay)) h += '<div class="fl-crew"><i>Bay gunners</i> ' + crewText(cw.bayGunners) + '</div>';
-      // The target: its range, size and armour feed every attack and damage roll below
-      h += '<div class="fl-dmg"><b style="color:#ffd166">Target</b> range <select onchange="setTarget(\'' + id + '\',\'range\',this.value)"><option value="">not set</option>' +
-        RANGE_BANDS.map(r => '<option' + (tg.range === r ? ' selected' : '') + '>' + r + '</option>').join('') + '</select> tons <input type="number" min="0" value="' + esc(tg.tons) + '" onchange="setTarget(\'' + id + '\',\'tons\',this.value)" /> armour <input type="number" min="0" value="' + esc(tg.armour) + '" onchange="setTarget(\'' + id + '\',\'armour\',this.value)" />' +
-        (missileTotal ? ' missiles in salvo <input type="number" min="1" value="' + esc(tg.salvo || missileTotal) + '" onchange="setTarget(\'' + id + '\',\'salvo\',this.value)" />' : '') + '</div>';
-      const missing = [];
-      if (!rangeSet) missing.push('range (Short +1, Long −2, Very Long −4, Distant −6)');
-      if (!tonsSet) missing.push('target size (+1 per full 1,000 tons, max +6)');
-      const advice = missing.length ? 'add the DM for ' + missing.join(' and ') : '';
       if (!fc.attacks.length) h += '<div class="fl-note">No weapons recorded on the Spacecraft Record.</div>';
       fc.attacks.forEach(a => {
         const label = (a.mountCount > 1 && a.instance === 1 ? a.mountCount + ' × ' : '') + esc(a.mountType) + ' — ' + (a.k > 1 ? a.k + ' × ' : '') + esc(a.name) + (a.mountCount > 1 ? ' #' + a.instance : '');
@@ -203,33 +229,34 @@
           h += '<div class="fl-line"><span class="fl-label">' + label + '</span><span class="fl-note" style="grid-column:2/-1;text-align:right">' + esc(a.range) + '</span></div>';
           return;
         }
-        let dm, parts = [];
+        const info = esc(a.range) + ' · damage ' + esc(a.damage) + (a.traits ? ' · ' + esc(a.traits) : '') + ' · power ' + a.power;
         if (a.missile) {
-          // Missiles and torpedoes ignore the gunner's skill and the range: +1 per missile in the salvo, -2 if launched at Distant range
-          const distant = tg.range === 'Distant' ? -2 : 0;
-          dm = salvoN + distant;
-          parts.push('salvo of ' + salvoN + ' (DM+1 each)' + (distant ? ', Distant −2' : ''));
-          if (tg.range) parts.push('arrives ' + (MISSILE_FLIGHT[tg.range] ? 'in ' + MISSILE_FLIGHT[tg.range] + ' round' + (MISSILE_FLIGHT[tg.range] > 1 ? 's' : '') : 'at once') + (tg.range === 'Adjacent' || tg.range === 'Close' ? ', loses Smart' : ''));
-        } else {
-          const gd = a.bay ? bAvg : gAvg;
-          dm = gd == null ? null : gd + a.weaponDm + rDm + sDm + (a.bay && tonsSet ? bayDm(tons) : 0);
-          parts.push(gd == null ? 'no gunner assigned' : 'gunner ' + fmt(Math.round(gd)));
-          if (a.weaponDm) parts.push('weapon ' + fmt(a.weaponDm));
-          if (rangeSet && rDm) parts.push('range ' + fmt(rDm));
-          if (tonsSet && sDm) parts.push('size ' + fmt(sDm));
-          if (a.bay && tonsSet && bayDm(tons)) parts.push('bay vs small target ' + fmt(bayDm(tons)));
-          if (a.bay && !tonsSet) parts.push('bays take DM−2 against targets of 2,000 tons or less, −4 at 100 or less');
+          // Missiles and torpedoes: the magazine is counted here; the salvo's flight and arrival are tracked at the table
+          const cur = a.ammo == null ? a.capacity : a.ammo, wid = a.weaponId;
+          const dmgBtn = a.dice != null ? '<button class="fl-roll" data-dice="' + a.dice + '" data-flat="0" data-mult="1" data-ap="' + a.ap + '" data-missile="1" onclick="rollDamage(this)">Damage</button>' : '';
+          h += '<div class="fl-line" data-weapon="' + wid + '"><span class="fl-label">' + label + '</span><span class="fl-dm">' + cur + ' / ' + a.capacity + ' left</span><span></span><span></span>' +
+            '<div class="fl-note">' + info + ' · attack is 2D + 1 per missile in the salvo (gunner skill and range are not used); Distant range −2; Close and Adjacent lose Smart</div>' +
+            '<div class="fl-ctl">Salvo <input type="number" class="fl-salvo" min="1" value="' + Math.max(1, Math.min(a.salvo, cur)) + '" />' +
+            '<button class="fl-mini" onclick="launchMissiles(\'' + id + '\',\'' + wid + '\',' + a.capacity + ',this)">Launch</button>' +
+            '<button class="fl-roll" data-tn="8" data-crit="1" data-salvo-input="1" data-advice="remember Distant range −2 and the target\'s Evasive Action" onclick="doRoll(this)">Attack roll</button>' + dmgBtn +
+            '<button class="fl-mini" onclick="reloadMissiles(\'' + id + '\',\'' + wid + '\',' + a.capacity + ',this)">Reload</button></div>' +
+            '<span class="fl-res"></span></div>';
+          return;
         }
-        const info = esc(a.range) + ' · damage ' + esc(a.damage) + (a.traits ? ' · ' + esc(a.traits) : '') + ' · power ' + a.power + ' · ' + parts.join(', ');
-        let ln = line(label, dm, 8, info, { crit: true, advice: a.missile ? '' : advice });
+        const gd = a.bay ? bAvg : gAvg;
+        const dm = gd == null ? null : gd + a.weaponDm;
+        const parts = [gd == null ? 'no gunner assigned' : 'gunner ' + fmt(Math.round(gd))];
+        if (a.weaponDm) parts.push('weapon ' + fmt(a.weaponDm) + ' already included');
+        const advice = 'add the DM for range (Short +1, Long −2, Very Long −4, Distant −6) and target size (+1 per full 1,000 tons, max +6)' +
+          (a.bay ? '; bays take −2 against targets of 2,000 tons or less, −4 at 100 or less' : '');
+        let ln = line(label, dm, 8, info + ' · ' + parts.join(', '), { crit: true, advice });
         if (a.dice != null && !a.ion && dm != null) {
-          const btn = '<button class="fl-roll" style="margin-left:6px" data-dice="' + a.dice + '" data-flat="' + a.flat + '" data-mult="' + a.mult + '" data-ap="' + a.ap + '" data-armour="' + armourT + '"' +
-            (a.missile ? ' data-missile="1" data-salvo="' + salvoN + '"' : '') + ' onclick="rollDamage(this)">Damage</button>';
+          const btn = '<button class="fl-roll" style="margin-left:6px" data-dice="' + a.dice + '" data-flat="' + a.flat + '" data-mult="' + a.mult + '" data-ap="' + a.ap + '" onclick="rollDamage(this)">Damage</button>';
           ln = ln.replace('<span class="fl-res">', btn + '<span class="fl-res">');
         }
         h += ln;
       });
-      h += '<div class="fl-legend">Set the target above and its range, size and armour are included in the rolls; otherwise each roll reminds you to add them. Lock-on: +2 against a ship held by Sensor Lock. The target\'s Evasive Action takes its pilot\'s skill off the roll. Effect 6+ with damage getting through is a critical hit. Damage = dice + Effect − armour (less the weapon\'s AP), then × the multiple for barbettes and bays; missiles multiply by the Effect instead.</div>';
+      h += '<div class="fl-legend">Each attack roll reminds you to add the range and target-size DMs; the beam and pulse laser bonuses are already in. Lock-on: +2 against a ship held by Sensor Lock. The target\'s Evasive Action takes its pilot\'s skill off the roll. Effect 6+ with damage getting through is a critical hit. Damage = dice + Effect, less the target\'s armour (armour first reduced by the weapon\'s AP), then × the multiple for barbettes and bays; missiles multiply by the Effect instead.</div>';
       h += '<div class="fl-wh" style="color:#00e5ff">Reactions</div>';
       h += '<div class="fl-note" style="padding:2px 0"><b style="color:#00e5ff">Evasive Action</b>: each unspent Thrust (up to ' + fc.thrust + ') makes one attack on this ship take DM−' + Math.abs(fc.evasiveDm) + '.</div>';
       if (fc.hasLasers) h += line('Point Defence (laser turret)', gAvg, 8, 'The turret cannot attack this round. Effect = missiles removed from the salvo. DM+1 for two lasers in the turret, +2 for three.');
@@ -254,7 +281,11 @@
       h += line('Sensor Lock', sk, 8, 'All attacks against the locked ship get DM+2 until the lock is broken.');
       h += line('Electronic Warfare', cw.comms.best == null ? null : cw.comms.best + fc.sensorDm + fc.sensorCrit, null, 'Opposed Electronics (comms) to jam, or Electronics (sensors) to break a sensor lock. Also a missile countermeasure.');
       h += line('Electronic Warfare vs an inbound missile salvo', sk, 10, 'Actions Step. The Effect removes that many missiles from one salvo; cumulative over rounds, once per round per salvo.');
-      h += line('Detect missile launch / scan', sk, 8, 'Routine sensor work; difficulty set by the Referee.');
+      h += '<div class="fl-line"><span class="fl-label">Detect missile launch</span><span class="fl-dm">' + (sk == null ? '' : '2D ' + fmt(Math.round(sk))) + '</span><span></span><span></span>' +
+        '<div class="fl-note">Electronics (sensors). Routine (6+) if the firing ship is already detected, Average (8+) if not; +1 for every 10 full missiles in the salvo (max +6). Missiles not spotted can be looked for at the start of each later round on an Average (8+) check.</div>' +
+        (sk == null ? '<div class="fl-note">needs a sensor operator</div>' : '<div class="fl-ctl">Firing ship already detected <select class="fl-det"><option value="6">Yes (6+)</option><option value="8">No (8+)</option></select> Missiles in salvo <input type="number" class="fl-salvo" min="1" value="1" /><button class="fl-roll" data-dm="' + Math.round(sk) + '" onclick="rollDetect(this)">Roll</button></div>') +
+        '<span class="fl-res"></span></div>';
+      h += line('General scan / other sensor use', sk, 8, 'Routine sensor work; difficulty set by the Referee.');
       h += '</details>';
 
       // Damage and critical hits
@@ -380,7 +411,7 @@
         (hr.data || []).forEach(h => { hired[h.id] = h; });
         per.forEach(p => {
           const ctx = { roles: p.roles, chars, hired, mounts: p.mounts, weapons: p.weapons, software: p.software };
-          FL[p.s.id] = { ship: p.s, ctx, fc: fleetCombat(p.s, ctx), target: { range: '', tons: '', armour: '', salvo: '' } };
+          FL[p.s.id] = { ship: p.s, ctx, fc: fleetCombat(p.s, ctx) };
         });
         drawAll();
       } catch (e) {
