@@ -2350,5 +2350,179 @@ const SHIP_CATALOGUE = [
       "other": 35
     },
     "draft": true
+  },
+  {
+    "id": "pod-harrier",
+    "name": "Commerce Raider",
+    "cls": "Drinaxi Harrier class",
+    "role": "Pirate",
+    "source": {
+      "book": "Pirates of Drinax, Book 2: The Trojan Reach",
+      "page": 9
+    },
+    "tl": 15,
+    "tons": 200,
+    "hull": "Streamlined, Reinforced (Superior Stealth)",
+    "armour": {
+      "type": "Bonded Superdense",
+      "value": 4
+    },
+    "thrust": 6,
+    "jump": 2,
+    "power": 260,
+    "fuel": "J-2, 4 weeks of operation (early jump, size reduction, stealth jump)",
+    "structure": 88,
+    "computer": "Computer/20",
+    "sensors": "Advanced",
+    "bridge": "Holographic Controls",
+    "weapons": [
+      {
+        "name": "Particle Barbette (accurate, high yield)",
+        "mount": "Barbette",
+        "count": 1,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": 11,
+          "range": "Very Long",
+          "power": 15,
+          "damage": "4D",
+          "cost": 8,
+          "traits": "Radiation",
+          "source": "High Guard barbette table (given by user)"
+        }
+      },
+      {
+        "name": "Single Turret (missile rack)",
+        "mount": "Turret",
+        "count": 1,
+        "perMount": 1,
+        "mountPower": 1,
+        "stats": {
+          "tl": 7,
+          "range": "Special",
+          "power": 0,
+          "damage": "4D",
+          "cost": 0.75,
+          "traits": "Smart",
+          "source": "High Guard turret weapon table"
+        }
+      }
+    ],
+    "staterooms": 8,
+    "lowBerths": 8,
+    "barracks": 0,
+    "cargo": 29.7,
+    "craft": [],
+    "systems": [
+      "Military Countermeasures Suite",
+      "Holographic Hull",
+      "Missile storage (12 missiles)",
+      "Armoury",
+      "Cargo Scoop",
+      "Fuel Processor (40 tons/day)"
+    ],
+    "software": [
+      {
+        "name": "Evade",
+        "rating": 1,
+        "tl": 9,
+        "bw": 10
+      },
+      {
+        "name": "Fire Control",
+        "rating": 2,
+        "tl": 10,
+        "bw": 10
+      },
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 1
+      },
+      {
+        "role": "Maintenance",
+        "count": 1
+      },
+      {
+        "role": "Gunner",
+        "count": 2
+      },
+      {
+        "role": "Medic",
+        "count": 1
+      },
+      {
+        "role": "Marine",
+        "count": 3
+      }
+    ],
+    "total": 318.94875,
+    "purchase": 318.94875,
+    "maintenance": 26579,
+    "fuelTons": 42,
+    "powerReq": {
+      "basic": 40,
+      "mDrive": 120,
+      "jDrive": 40,
+      "sensors": 8,
+      "weapons": 16,
+      "other": [
+        [
+          "Holographic Hull",
+          100
+        ],
+        [
+          "Low Berths",
+          1
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 20,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "The party's starting ship. As the campaign starts it is damaged: Hull 72 of 88 (microfractures), power plant at 75% (195), unreliable jump drive (DM-2 to Engineer checks to jump), unreliable manoeuvre drive (double 1 on a Pilot check cuts thrust for a round), damaged ventral turret, only part of the holographic hull works, countermeasures suite partly restored, and maintenance costs Cr10000 a month (the book says it would normally be Cr2657, though its printed maintenance figure is Cr26579). Ship Shares fix these at 1 Ship Share to MCr5.",
+    "startCondition": {
+      "hull_current": 72,
+      "power_current": 195
+    },
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 20
+    },
+    "draft": true
   }
 ];
