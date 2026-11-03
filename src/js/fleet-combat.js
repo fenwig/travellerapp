@@ -108,13 +108,33 @@ function weaponDamage(name, mountType, damage, k) {
   return damage + (k > 1 ? '+' + (k - 1) * parseInt(m[1]) : '');
 }
 
-// DM that comes with the weapon itself (the book's attack modifiers table)
+// DM that comes with the weapon itself: beam lasers +4 and pulse lasers +2 in turrets, fixed mounts and barbettes (not bays)
 function weaponAttackDm(name, mountType) {
-  const turret = /turret/i.test(mountType || '');
-  if (/beam laser/i.test(name) && turret) return 4;
-  if (/pulse laser/i.test(name) && turret) return 2;
+  if (/bay/i.test(name) || !/turret|fixed|barbette/i.test((mountType || '') + ' ' + name)) return 0;
+  if (/beam laser/i.test(name)) return 4;
+  if (/pulse laser/i.test(name)) return 2;
   return 0;
 }
+
+// Missiles or torpedoes a weapon launches in one round: one per rack, 5 per missile barbette, 3 per torpedo barbette;
+// bays fire 12/24/120 missiles or 3/6/30 torpedoes by size.
+function salvoSize(name, k) {
+  const size = ((/\b(small|medium|large)\b/i.exec(name) || [])[1] || '').toLowerCase();
+  if (/torpedo bay/i.test(name)) return { small: 3, medium: 6, large: 30 }[size] || 3;
+  if (/missile bay/i.test(name)) return { small: 12, medium: 24, large: 120 }[size] || 12;
+  if (/torpedo barbette/i.test(name)) return 3;
+  if (/missile barbette/i.test(name)) return 5;
+  return k;
+}
+
+// Attack DMs for the range band and the target's size (the book's attack modifiers table)
+const RANGE_BANDS = ['Adjacent', 'Close', 'Short', 'Medium', 'Long', 'Very Long', 'Distant'];
+const RANGE_DM = { Short: 1, Long: -2, 'Very Long': -4, Distant: -6 };
+function sizeDm(tons) { return Math.min(6, Math.floor((tons || 0) / 1000)); }
+// Bay weapons (not missiles or torpedoes): DM-2 against targets of 2,000 tons or less, DM-4 at 100 tons or less
+function bayDm(tons) { return tons <= 100 ? -4 : tons <= 2000 ? -2 : 0; }
+// Rounds a missile salvo takes to arrive, by the range it was launched from
+const MISSILE_FLIGHT = { Adjacent: 0, Close: 0, Short: 0, Medium: 0, Long: 1, 'Very Long': 4, Distant: 10 };
 
 function fleetCombat(ship, ctx) {
   const crits = ship.critical_hits || {};
@@ -164,11 +184,22 @@ function fleetCombat(ship, ctx) {
           mountType: m.mount_type, name: g.name, k: g.k, instance: inst, mountCount: m.count || 1, range: g.w.range || '—',
           damage: weaponDamage(g.name, m.mount_type, g.w.damage, g.k), traits: g.w.traits && g.w.traits !== '--' ? g.w.traits : '',
           power: g.w.power || 0, bay, point, weaponDm: weaponAttackDm(g.name, m.mount_type),
+          dice: /^\d+D$/.test(g.w.damage || '') ? parseInt(g.w.damage) : null,
+          flat: 0, mult: 1, ap: parseInt((/\bAP\s*(\d+)/i.exec(g.w.traits || '') || [])[1]) || 0, ion: /\bion\b/i.test(g.w.traits || ''),
+          salvo: /missile|torpedo/i.test(g.name) ? salvoSize(g.name, g.k) : 0,
           missile: /missile|torpedo/i.test(g.name), sand: /sandcaster/i.test(g.name), laser: /laser/i.test(g.name)
         });
       });
     }
   });
+  // damage multiples and the extra dice for several weapons of one type in a turret
+  out.attacks.forEach(a => {
+    if (a.missile || a.dice == null) return;
+    if (a.bay) a.mult = { small: 10, medium: 20, large: 100 }[((/\b(small|medium|large)\b/i.exec(a.name) || [])[1] || 'small').toLowerCase()];
+    else if (a.mountType === 'Barbette' || /barbette/i.test(a.name)) a.mult = 3;
+    else a.flat = (a.k - 1) * a.dice;
+  });
+  out.missileLaunch = out.attacks.filter(a => a.missile).reduce((n, a) => n + a.salvo, 0);
   out.hasLasers = out.attacks.some(a => a.laser && !a.bay);
   out.hasSand = out.attacks.some(a => a.sand);
 
