@@ -53,6 +53,7 @@ function catalogueToRecord(s, opts) {
   s.crew.forEach(c => {
     const role = CATALOGUE_ROLE_MAP[c.role];
     if (!role) warnings.push('No crew role in the record for "' + c.role + '" (x' + c.count + '): no slot added');
+    else if (role === 'Marine' && !opts.withMarines) warnings.push(c.count + ' ' + c.role + (c.count > 1 ? 's' : '') + ' (troops carried) are not given crew slots');
     else for (let i = 0; i < c.count; i++) crewSlots.push({ role });
   });
 
