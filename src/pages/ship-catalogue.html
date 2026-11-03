@@ -43,7 +43,7 @@
 
     <main class="page-main">
       <h1 class="page-title">SHIP CATALOGUE</h1>
-      <p class="calc-intro" style="color:#b0d8e8;font-size:0.88rem;max-width:860px;margin-bottom:14px">Published ship designs from High Guard. <b style="color:#ffd166">Sample of five ships</b> while the data is checked against the book; the rest follow. Costs are in MCr, maintenance in Cr per month.</p>
+      <p class="calc-intro" style="color:#b0d8e8;font-size:0.88rem;max-width:860px;margin-bottom:14px">Published ship designs from High Guard. <b style="color:#ffd166">Ships marked Draft were read from the book text and still need checking against the page</b>; the rest follow in batches. Costs are in MCr, maintenance in Cr per month.</p>
       <div class="sc-bar">
         <input id="sc-q" placeholder="Search ships…" oninput="draw()" />
         <select id="sc-role" onchange="draw()"><option value="">All roles</option></select>
@@ -98,7 +98,7 @@
 
     function card(s) {
       return `<div class="sc-card">
-        <div class="sc-head"><span class="sc-name">${esc(s.name)}</span><span class="sc-role">${esc(s.role)}</span></div>
+        <div class="sc-head"><span class="sc-name">${esc(s.name)}</span><span class="sc-role">${s.draft ? '<span style="color:#ffd166" title="Read from the book text; not yet checked against the page">Draft · check</span> · ' : ''}${esc(s.role)}</span></div>
         <div class="sc-cls">${esc(s.cls)} · TL${s.tl} · ${s.tons} tons · ${esc(s.hull)}</div>
         <div class="sc-stats">
           <div class="sc-stat"><b>${s.thrust}</b><span>Thrust</span></div>
