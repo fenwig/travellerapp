@@ -76,8 +76,10 @@
 
     /* ── Characteristics ── */
     .stats-tab-top { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 24px; align-items: start; margin-bottom: 22px; }
-    .char-stats-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
-    .stat-box { background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 6px; padding: 6px 2px; text-align: center; min-width: 0; }
+    .char-stats-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)) 22px; gap: 3px; }
+    .stat-box { background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 6px; padding: 5px 1px; text-align: center; min-width: 0; }
+    .stat-reset { background: rgba(13,21,32,0.92); border: 1px solid #0a4a60; border-radius: 6px; color: #ff5a4a; font-size: 0.62rem; font-weight: 700; cursor: pointer; padding: 0; writing-mode: vertical-rl; text-orientation: upright; letter-spacing: 0.02em; }
+    .stat-reset:hover { border-color: #ff5a4a; background: rgba(255,90,74,0.1); }
     .stat-label { font-size: 0.62rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
     .stat-aug { font-size: 0.6rem; color: #00ffaa; font-weight: 600; margin-left: 3px; vertical-align: super; }
     .stat-aug.neg { color: #ff5a4a; }
@@ -1080,7 +1082,7 @@ function renderStats() {
           </div>
         </div>
       </div>`;
-  }).join('');
+  }).join('') + `<button class="stat-reset" onclick="resetStats()" title="Restore every characteristic's current value to its full score">RESET</button>`;
 
   // Live DM update while editing the raw stat (current value re-clamps to the new max)
   CHARS.forEach(c => {
@@ -1099,6 +1101,14 @@ async function adjustInjury(key, delta) {
   const raw  = rawStat(key);
   const next = Math.max(0, Math.min(raw, currentStat(key) + delta));
   character.injuries[key] = next;
+  renderStats();
+  await supabaseClient.from('characters').update({ injuries: character.injuries }).eq('id', character.id);
+}
+
+// Puts every characteristic's current (injured) value back to its full score
+async function resetStats() {
+  if (!confirm('Reset all six characteristics to their full scores (clears injury and effect damage)?')) return;
+  character.injuries = {};
   renderStats();
   await supabaseClient.from('characters').update({ injuries: character.injuries }).eq('id', character.id);
 }
