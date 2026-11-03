@@ -115,7 +115,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
         '<div class="fl-stat"><b>' + esc(String(fc.sensorGrade).replace(' Grade', '')) + '</b><span>Sensors ' + fmt(fc.sensorDm) + '</span></div></div>';
 
       // 1 Initiative
-      h += '<details class="fl-step" open><summary>1 · Initiative<span>2D + Pilot skill + Thrust</span></summary>';
+      h += '<details class="fl-step"><summary>1 · Initiative<span>2D + Pilot skill + Thrust</span></summary>';
       h += '<div class="fl-crew"><i>Pilot</i> ' + crewText(cw.pilot) + '</div>';
       h += line('Initiative', fc.initiative.manned ? fc.initiative.dm : null, null, fc.initiative.manned ? 'Pilot skill ' + fmt(fc.initiative.pilotSkill) + ' + Thrust ' + fc.initiative.thrust + '. Highest total acts first.' : 'Pilot skill + Thrust ' + fc.initiative.thrust + '; no pilot assigned.');
       h += line('Tactics (naval), commander', cw.tactics.best, 8, 'Once at the start of battle: the Effect is added to the ship\'s Initiative. <i>Captain:</i> ' + crewText(cw.tactics));
@@ -123,7 +123,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
       h += '</details>';
 
       // 2 Manoeuvre
-      h += '<details class="fl-step" open><summary>2 · Manoeuvre<span>' + fc.thrust + ' Thrust to spend</span></summary>';
+      h += '<details class="fl-step"><summary>2 · Manoeuvre<span>' + fc.thrust + ' Thrust to spend</span></summary>';
       h += line('Pilot check (Aid Gunners, docking)', cw.pilot.best, 8, 'Aid Gunners starts a task chain with the gunners. Docking against an unwilling target is opposed, DM−2.');
       h += '<div class="fl-note" style="padding:2px 0">Movement: Thrust to change one range band — Adjacent 1, Close 1, Short 2, Medium 5, Long 10, Very Long 25, Distant 50. Within Close range switch to Dogfighting.</div>';
       h += '<div class="fl-note" style="padding:2px 0"><b style="color:#00e5ff">Evasive Action</b> (reaction): each unspent Thrust dodges one attack, which takes <b style="color:#ffd166">DM−' + Math.abs(fc.evasiveDm) + '</b> (the pilot\'s skill).' + (crits['M-Drive'] ? ' M-Drive damaged: Thrust is ' + fc.thrust + '.' : '') + '</div>';
@@ -131,7 +131,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
 
       // 3 Attack
       const gAvg = cw.gunners.avg, bAvg = cw.bayGunners.avg;
-      h += '<details class="fl-step" open><summary>3 · Attack &amp; Reactions<span>2D + Gunner + DEX DM, 8+</span></summary>';
+      h += '<details class="fl-step"><summary>3 · Attack &amp; Reactions<span>2D + Gunner + DEX DM, 8+</span></summary>';
       h += '<div class="fl-crew"><i>Turret gunners</i> ' + crewText(cw.gunners) + '</div>';
       if (fc.attacks.some(a => a.bay)) h += '<div class="fl-crew"><i>Bay gunners</i> ' + crewText(cw.bayGunners) + '</div>';
       if (!fc.attacks.length) h += '<div class="fl-note">No weapons recorded on the Spacecraft Record.</div>';
@@ -177,7 +177,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
 
       // 4 Engineering
       const e = cw.engAny;
-      h += '<details class="fl-step" open><summary>4 · Engineering actions<span>Engineer + EDU DM</span></summary>';
+      h += '<details class="fl-step"><summary>4 · Engineering actions<span>Engineer + EDU DM</span></summary>';
       h += '<div class="fl-crew"><i>Engineers</i> ' + crewText(e) + '</div>';
       h += line('Overload Drive (+1 Thrust next round)', cw.engM.best, 10, 'Engineer (m-drive). Cumulative DM−2 each further try. Fail by 6 or more: M-Drive Severity 1 hit.');
       h += line('Overload Plant (+10% Power next round)', cw.engPower.best, 10, 'Engineer (power). Cumulative DM−2 each further try. Fail by 6 or more: Power Plant Severity 1 hit.');
@@ -188,7 +188,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
 
       // 5 Sensors
       const sk = fc.sensorsDm;
-      h += '<details class="fl-step" open><summary>5 · Sensor actions<span>Electronics (sensors) + INT DM + sensors ' + fmt(fc.sensorDm) + (fc.sensorCrit ? ' + damage −2' : '') + '</span></summary>';
+      h += '<details class="fl-step"><summary>5 · Sensor actions<span>Electronics (sensors) + INT DM + sensors ' + fmt(fc.sensorDm) + (fc.sensorCrit ? ' + damage −2' : '') + '</span></summary>';
       h += '<div class="fl-crew"><i>Sensor operators</i> ' + crewText(cw.sensors) + '</div>';
       h += line('Sensor Lock', sk, 8, 'All attacks against the locked ship get DM+2 until the lock is broken.');
       h += line('Electronic Warfare', cw.comms.best == null ? null : cw.comms.best + fc.sensorDm + fc.sensorCrit, null, 'Opposed Electronics (comms) to jam, or Electronics (sensors) to break a sensor lock. Also a missile countermeasure.');
@@ -203,7 +203,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
       h += moraleHtml(id);
 
       // Damage and critical hits
-      h += '<details class="fl-step" open><summary>Armour, damage &amp; critical hits<span>' + (lost > 0 ? lost + ' hull lost' : 'undamaged') + '</span></summary>';
+      h += '<details class="fl-step"><summary>Armour, damage &amp; critical hits<span>' + (lost > 0 ? lost + ' hull lost' : 'undamaged') + '</span></summary>';
       h += '<div class="fl-dmg">Hull <input type="number" value="' + fc.hull.cur + '" onchange="setField(\'' + id + '\',\'hull_current\',this.value)" /> / ' + fc.hull.max +
         ' &nbsp; Armour <input type="number" value="' + fc.armour + '" onchange="setField(\'' + id + '\',\'armour_current\',this.value)" /> / ' + (s.armour_max || 0) + '</div>';
       h += '<div class="fl-dmg">Incoming damage <input type="number" id="dmg-' + id + '" min="0" /> <button class="fl-mini" onclick="applyDamage(\'' + id + '\')">Apply (minus armour)</button><span id="dmg-res-' + id + '" class="fl-note"></span></div>';
@@ -229,7 +229,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
 
     function moraleHtml(id) {
       const { ship: s, ctx } = FL[id], mor = s.morale == null ? null : s.morale;
-      let h = '<details class="fl-step" open><summary>Crew morale<span>' + (mor == null ? 'not rolled yet' : 'MOR ' + mor + ' (DM' + fmt(statDm(mor)) + ')') + '</span></summary>';
+      let h = '<details class="fl-step"><summary>Crew morale<span>' + (mor == null ? 'not rolled yet' : 'MOR ' + mor + ' (DM' + fmt(statDm(mor)) + ')') + '</span></summary>';
       const startCls = s.morale_class && MOR_CLASSES[s.morale_class] ? s.morale_class : 'armed';
       h += '<div class="fl-ctl" style="margin:4px 0">' + (mor == null ? 'Starting MOR: ' : 'Re-roll starting MOR: ') +
         (FLEET_NPC ? '<select id="mor-cls-' + id + '">' + Object.keys(MOR_CLASSES).map(k => '<option value="' + k + '"' + (k === startCls ? ' selected' : '') + '>' + MOR_CLASSES[k][0] + ' (1D+' + MOR_CLASSES[k][1] + ')</option>').join('') + '</select>' +
