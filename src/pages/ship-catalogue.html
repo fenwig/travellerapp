@@ -36,6 +36,9 @@
     .sc-w-sub { margin-left: 8px; color: #b0d8e8; }
     .sc-w-sub b { color: #00e5ff; }
     .sc-w-ammo { margin-left: 8px; color: #ffd166; font-size: 0.76rem; }
+    .sc-pick { margin-bottom: 6px; }
+    .sc-pick select { background: #080d12; border: 1px solid #0a4a60; color: #b0d8e8; border-radius: 4px; padding: 2px 6px; font-size: 0.8rem; }
+    .sc-pick-info { color: #4a9ab8; font-size: 0.76rem; }
     .sc-ammo { margin-bottom: 14px; font-size: 0.8rem; color: #b0d8e8; }
     .sc-ammo summary { cursor: pointer; color: #00e5ff; }
     .sc-ammo table { border-collapse: collapse; margin: 8px 18px 8px 0; display: inline-table; vertical-align: top; }
@@ -103,7 +106,25 @@
       if (/torpedo bay/i.test(w.name) && b) return 'Fires ' + BAY_TORPS[b] + ' torpedoes per attack · holds ' + BAY_TORPS[b] * 12;
       return '';
     }
-    function weaponLines(w) {
+    // Missile and torpedo type chosen per ship (default Standard); changing it redraws just that card
+    const ammoChoice = {};
+    const ammoKind = n => (/torpedo/i.test(n) ? 'torpedo' : /missile/i.test(n) ? 'missile' : '');
+    const ammoList = (kind, s) => { const all = kind === 'torpedo' ? TORPEDOES : MISSILES, ok = all.filter(r => r[1] <= s.tl); return ok.length ? ok : all; };
+    const ammoType = (kind, s) => { const l = ammoList(kind, s), n = ammoChoice[s.id + '|' + kind] || 'Standard'; return l.find(r => r[0] === n) || l[0]; };
+    function setAmmo(id, kind, name) {
+      ammoChoice[id + '|' + kind] = name;
+      const s = SHIP_CATALOGUE.find(x => x.id === id), el = document.getElementById('card-' + id);
+      if (s && el) { const open = el.querySelector('details.sc-more').open; el.outerHTML = card(s); if (open) document.getElementById('card-' + id).querySelector('details.sc-more').open = true; }
+    }
+    function ammoPicker(s) {
+      const kinds = [...new Set(s.weapons.flatMap(w => (w.mixed ? w.names : [w.name]).map(ammoKind)).filter(Boolean))];
+      return kinds.map(k => '<div class="sc-pick"><i>' + (k === 'torpedo' ? 'Torpedoes' : 'Missiles') + '</i> <select onchange="setAmmo(\'' + s.id + '\',\'' + k + '\',this.value)">' +
+        ammoList(k, s).map(r => '<option' + (r === ammoType(k, s) ? ' selected' : '') + '>' + esc(r[0]) + '</option>').join('') + '</select> ' +
+        '<span class="sc-pick-info">' + ammoInfo(ammoType(k, s), k) + '</span></div>').join('');
+    }
+    const ammoInfo = (r, kind) => 'TL' + r[1] + ' · thrust ' + r[2] + ' · ' + esc(r[3]) + (r[3].slice(-1) === '*' ? ' (removes 1D+Effect torpedoes from a salvo; 1D to ships)' : '') +
+      (r[5] && r[5] !== '--' ? ' · ' + esc(r[5]) : '') + ' · Cr' + Math.round(r[4] * 1e6).toLocaleString('en-US') + ' per ' + (kind === 'torpedo' ? 3 : 12);
+    function weaponLines(w, s) {
       const bay = ((/(small|medium|large)/i.exec(w.name) || [])[1] || '').toLowerCase();
       const groups = [];
       const add = (name, t) => { const f = groups.find(g => g.name === name); if (f) f.k++; else groups.push({ name, t, k: 1 }); };
@@ -113,15 +134,18 @@
       const head = '<div class="sc-w-name">' + (w.count > 1 ? w.count + ' × ' : '') + esc(w.name) + (power ? ' <span style="color:#4a9ab8;font-weight:400">· power ' + power + (w.count > 1 ? ' each' : '') + '</span>' : '') + '</div>';
       if (!groups.length) return '<div class="sc-w">' + head + '<div class="sc-w-sub" style="color:#4a9ab8">No weapon fitted</div></div>';
       const subs = groups.map(g => {
-        const parts = [w.mixed ? '<b>' + esc(g.name) + '</b>' + (g.k > 1 ? ' ×' + g.k : '') : (g.k > 1 ? '<b>' + g.k + ' weapons</b>' : ''),
-          g.t.range, dmgText(g.t, g.k, w.mount, g.name, bay), g.t.traits && g.t.traits !== '--' ? esc(g.t.traits) : ''].filter(Boolean);
+        let parts = [w.mixed ? '<b>' + esc(g.name) + '</b>' + (g.k > 1 ? ' ×' + g.k : '') : (g.k > 1 ? '<b>' + g.k + ' weapons</b>' : ''),
+          g.t.range, dmgText(g.t, g.k, w.mount, g.name, bay), g.t.traits && g.t.traits !== '--' ? esc(g.t.traits) : ''];
+        const kind = ammoKind(g.name);
+        if (kind) { const r = ammoType(kind, s); parts.splice(2, 2, 'thrust ' + r[2], r[3] + ' per ' + kind, r[5] && r[5] !== '--' ? r[5] : ''); }
+        parts = parts.filter(Boolean);
         return '<div class="sc-w-sub">' + parts.map((p, i) => i && !/^<b>/.test(p) ? esc(p).replace(/&amp;/g, '&') : p).join(' · ') + '</div>';
       }).join('');
       const ammo = ammoText(w);
       return '<div class="sc-w">' + head + subs + (ammo ? '<div class="sc-w-ammo">' + ammo + '</div>' : '') + '</div>';
     }
     function weaponBlock(s) {
-      return '<div class="sc-wpn"><div class="sc-wpn-h">Weapons</div>' + (s.weapons.length ? s.weapons.map(weaponLines).join('') : '<div class="sc-w-sub" style="color:#4a9ab8">Unarmed</div>') + '</div>';
+      return '<div class="sc-wpn"><div class="sc-wpn-h">Weapons</div>' + (s.weapons.length ? ammoPicker(s) + s.weapons.map(w => weaponLines(w, s)).join('') : '<div class="sc-w-sub" style="color:#4a9ab8">Unarmed</div>') + '</div>';
     }
     function crewText(s) {
       return s.crew.map(c => c.role + (c.count > 1 ? ' ×' + c.count : '')).join(', ');
@@ -154,7 +178,7 @@
     }
 
     function card(s) {
-      return `<div class="sc-card">
+      return `<div class="sc-card" id="card-${s.id}">
         <div class="sc-head"><span class="sc-name">${esc(s.name)}</span><span class="sc-role">${s.draft ? '<span style="color:#ffd166" title="Read from the book text; not yet checked against the page">Draft · check</span> · ' : ''}${esc(s.role)}</span></div>
         <div class="sc-cls">${esc(s.cls)} · TL${s.tl} · ${s.tons} tons · ${esc(s.hull)}</div>
         <div class="sc-stats">
