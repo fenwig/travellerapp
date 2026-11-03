@@ -404,7 +404,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
       await addNpcShips(entry.id, 1);
     }
 
-    // Adding ships from the catalogue: "Yacht 1", "Yacht 2"..., staffed with level 1 NPCs in every crew slot
+    // Adding another copy of a ship (the Ship Catalogue's Add to NPC Fleet button does the same): "Yacht 1", "Yacht 2"..., level 1 NPCs in every crew slot
     async function addNpcShips(entryId, qty) {
       const msg = document.getElementById('npc-msg');
       const say = (t, ok) => { if (msg) { msg.textContent = t; msg.style.color = ok ? '#00ffaa' : '#ff5a4a'; } };
@@ -424,18 +424,6 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
         say('Not added: ' + e.message + (/status/i.test(e.message) ? ' (run docs/npc-fleet.sql in Supabase first)' : ''), false);
       }
     }
-    function initNpcBar() {
-      const pol = document.getElementById('npc-polity'), sel = document.getElementById('npc-ship');
-      const polities = [...new Set(SHIP_CATALOGUE.map(s => s.polity))];
-      pol.innerHTML = '<option value="">All polities</option>' + polities.map(p => '<option>' + esc(p) + '</option>').join('');
-      const fill = () => {
-        const list = SHIP_CATALOGUE.filter(s => !pol.value || s.polity === pol.value);
-        sel.innerHTML = '<option value="">Choose a ship…</option>' + list.map(s => '<option value="' + esc(s.id) + '">' + esc(s.name) + ' — ' + esc(s.cls || '') + ' (' + s.tons + ' t)</option>').join('');
-      };
-      pol.onchange = fill; fill();
-      document.getElementById('npc-add').onclick = () => addNpcShips(sel.value, Math.max(1, Math.min(20, parseInt(document.getElementById('npc-qty').value) || 1)));
-    }
-
     // ── loading ──
     async function loadFleet() {
       try {
@@ -475,7 +463,6 @@ const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g,
       if (!session) { window.location.href = '../../index.html'; return; }
       if (FLEET_NPC) {
         if (!isGM(session.user)) { document.getElementById('fl-grid').innerHTML = '<div class="fl-msg">The NPC Fleet is for the GM only.</div>'; return; }
-        initNpcBar();
       }
       await loadFleet();
     })();

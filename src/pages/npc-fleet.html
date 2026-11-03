@@ -22,14 +22,8 @@
 
     <main class="page-main">
       <h1 class="page-title">NPC FLEET (GM)</h1>
-      <p class="calc-intro" style="color:#b0d8e8;font-size:0.88rem;max-width:900px;margin-bottom:14px">The GM's ships. They have no Spacecraft Record and stay off the Roster and the players' pages. Each ship is fully staffed with NPC crew at skill level 1 (average characteristics, DM+0); use the + and − in a card's NPC setup to change their level. A ship added more than once is numbered: Yacht 1, Yacht 2. Turrets arrive empty, so pick their weapons in the card's NPC setup.</p>
-      <div class="npc-bar">
-        <select id="npc-polity"></select>
-        <select id="npc-ship" style="min-width:280px"></select>
-        <input id="npc-qty" type="number" min="1" max="20" value="1" title="How many" />
-        <button id="npc-add">Add to NPC Fleet</button>
-        <span id="npc-msg" style="font-size:0.8rem"></span>
-      </div>
+      <p class="calc-intro" style="color:#b0d8e8;font-size:0.88rem;max-width:900px;margin-bottom:14px">The GM's ships. They have no Spacecraft Record and stay off the Roster and the players' pages. Each ship is fully staffed with NPC crew at skill level 1 (average characteristics, DM+0); use the + and − in a card's NPC setup to change their level. Add ships with the Add to NPC Fleet button on the Ship Catalogue cards; one added more than once is numbered: Yacht 1, Yacht 2. Turrets arrive empty, so pick their weapons in the card's NPC setup.</p>
+      <div class="npc-bar"><span style="color:#4a9ab8;font-size:0.84rem">Add ships from the <a href="ship-catalogue.html" style="color:#00e5ff">Ship Catalogue</a>: each card has an <b style="color:#ff5a4a">Add to NPC Fleet</b> button.</span> <span id="npc-msg" style="font-size:0.8rem"></span></div>
       <div class="fl-bar"><button onclick="rollAllInitiative()">Roll initiative for all</button></div>
       <div class="fl-order" id="fl-order"></div>
       <div class="fl-grid" id="fl-grid"><div class="fl-msg">Loading…</div></div>

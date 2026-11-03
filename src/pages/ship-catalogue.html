@@ -202,12 +202,28 @@
         <div class="sc-line"><i>Berths</i> ${esc(accomText(s))} · <i>Cargo</i> ${s.cargo} tons</div>
         <div class="sc-line"><i>Cost</i> ${mcr(s.purchase)} · <i>Maintenance</i> Cr${s.maintenance.toLocaleString('en-US')}/month</div>
         ${specDetails(s)}
-        <div class="sc-add"><button class="sc-add-btn" onclick="addToRecord('${s.id}', this)">Add to Spacecraft Record</button> <select class="sc-add-status" title="Fleet: crewed entirely by NPCs. Active: crewed by one or more player characters. Reserve: not in use."><option value="reserve">as Reserve</option><option value="fleet">as Fleet</option><option value="active">as Active</option></select><span class="sc-add-msg"></span></div>
+        <div class="sc-add"><button class="sc-add-btn" onclick="addToRecord('${s.id}', this)">Add to Spacecraft Record</button> <select class="sc-add-status" title="Fleet: crewed entirely by NPCs. Active: crewed by one or more player characters. Reserve: not in use."><option value="reserve">as Reserve</option><option value="fleet">as Fleet</option><option value="active">as Active</option></select>${IS_GM ? ` <button class="sc-add-btn" style="border-color:#ff5a4a;color:#ff5a4a" title="GM only: numbered, fully crewed with level 1 NPCs, managed on the NPC Fleet page" onclick="addToNpcFleet('${s.id}', this)">Add to NPC Fleet</button>` : ''}<span class="sc-add-msg"></span></div>
         <div class="sc-src">${esc(s.source.book)}${s.source.page ? ', p.' + s.source.page : ''}</div>
       </div>`;
     }
 
     // One click: builds the Spacecraft Record rows from the catalogue entry and saves them as a Reserve ship in the current campaign
+    let IS_GM = false;
+    // GM only: a numbered NPC ship ("Yacht 1", "Yacht 2") staffed with level 1 NPCs, managed on the NPC Fleet page
+    async function addToNpcFleet(id, btn) {
+      const s = SHIP_CATALOGUE.find(x => x.id === id), msg = btn.parentNode.querySelector('.sc-add-msg');
+      btn.disabled = true; msg.style.color = '#4a9ab8'; msg.textContent = 'Adding…';
+      try {
+        const cid = await currentCampaignId();
+        const name = await nextNpcDesignator(supabaseClient, cid, s.name);
+        await addCatalogueShipToRecord(supabaseClient, s, { name, status: 'npc', campaignId: cid, npcCrewLevel: 1 });
+        msg.style.color = '#00ffaa'; msg.innerHTML = 'Added ' + esc(name) + '. <a href="npc-fleet.html" style="color:#00e5ff">Open the NPC Fleet</a>';
+      } catch (e) {
+        msg.style.color = '#ff5a4a'; msg.textContent = 'Not added: ' + e.message + (/status/i.test(e.message) ? ' (run docs/npc-fleet.sql in Supabase first)' : '');
+      }
+      btn.disabled = false;
+    }
+
     async function addToRecord(id, btn) {
       const s = SHIP_CATALOGUE.find(x => x.id === id), msg = btn.parentNode.querySelector('.sc-add-msg');
       const name = prompt('Name for this ship on the Spacecraft Record:', s.name);
@@ -238,6 +254,7 @@
     (async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) { window.location.href = '../../index.html'; return; }
+      IS_GM = isGM(session.user);
       const psel = document.getElementById('sc-polity');
       ['Imperium', 'Aslan', 'Drinax', 'Zhodani'].filter(x => SHIP_CATALOGUE.some(s => s.polity === x))
         .forEach(x => psel.insertAdjacentHTML('beforeend', `<option>${x}</option>`));
