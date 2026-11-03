@@ -1350,7 +1350,15 @@ const SHIP_CATALOGUE = [
         "count": 1,
         "perMount": 1,
         "mountPower": 0,
-        "stats": null
+        "stats": {
+          "tl": 7,
+          "range": "Special",
+          "power": 5,
+          "damage": "4D",
+          "cost": 12,
+          "traits": "Smart",
+          "source": "High Guard small bay table"
+        }
       },
       {
         "name": "Point Defence Laser Battery (Type II)",
@@ -1358,7 +1366,15 @@ const SHIP_CATALOGUE = [
         "count": 1,
         "perMount": 1,
         "mountPower": 0,
-        "stats": null
+        "stats": {
+          "tl": 12,
+          "range": "Point defence (intercept +4D)",
+          "power": 20,
+          "damage": null,
+          "cost": 10,
+          "traits": "Takes 20 tons and one hardpoint",
+          "source": "High Guard point-defence table"
+        }
       }
     ],
     "staterooms": 10,
@@ -1484,7 +1500,7 @@ const SHIP_CATALOGUE = [
       "bis": false,
       "fib": true
     },
-    "notes": "No jump drive. Small missile bay and point defence battery stats are not entered yet: they need the bay and point-defence tables.",
+    "notes": "No jump drive. The small missile bay (power 5) and point defence laser battery (Type II, power 20) bring weapon power to the book's 55.",
     "softwareBw": {
       "jumpControl": 0,
       "other": 30
@@ -2205,7 +2221,15 @@ const SHIP_CATALOGUE = [
         "count": 4,
         "perMount": 1,
         "mountPower": 0,
-        "stats": null
+        "stats": {
+          "tl": 7,
+          "range": "Special",
+          "power": 0,
+          "damage": "4D",
+          "cost": 4,
+          "traits": "Smart",
+          "source": "High Guard barbette table"
+        }
       },
       {
         "name": "Triple Turret (accurate, high yield beam lasers)",
@@ -2358,7 +2382,7 @@ const SHIP_CATALOGUE = [
       "bis": false,
       "fib": true
     },
-    "notes": "Missile barbette stats are not entered yet; the book's weapon power of 78 is 6 turrets x (1 + 3 beam lasers x 4), so the barbettes use none. The beam lasers are accurate and high yield; those options are not applied to the stats.",
+    "notes": "The beam lasers are accurate and high yield; those options are not applied to the stats. The missile barbettes (accurate) use no power, as the book's weapon total of 78 shows.",
     "softwareBw": {
       "jumpControl": 20,
       "other": 35
@@ -3397,13 +3421,13 @@ const SHIP_CATALOGUE = [
         "perMount": 1,
         "mountPower": 0,
         "stats": {
-          "tl": null,
-          "range": null,
+          "tl": 12,
+          "range": "Medium",
           "power": 50,
-          "damage": null,
-          "cost": null,
-          "traits": "Small fusion gun bay: stats not entered; power 50 is the remainder of the book's weapon total",
-          "source": "derived"
+          "damage": "6D",
+          "cost": 8,
+          "traits": "AP 6, Radiation",
+          "source": "High Guard small bay table"
         }
       },
       {
@@ -3582,7 +3606,6 @@ const SHIP_CATALOGUE = [
       "bis": false,
       "fib": true
     },
-    "notes": "The small fusion gun bay has no stats here; its 50 power is what is left of the book's weapon total of 79.",
     "softwareBw": {
       "jumpControl": 10,
       "other": 30
@@ -5591,13 +5614,13 @@ const SHIP_CATALOGUE = [
         "perMount": 1,
         "mountPower": 0,
         "stats": {
-          "tl": null,
-          "range": null,
-          "power": 27,
-          "damage": null,
-          "cost": null,
-          "traits": "Small particle beam bay: stats not entered; power 27 each is what is left of the book's weapon total of 112",
-          "source": "derived"
+          "tl": 11,
+          "range": "Very Long",
+          "power": 30,
+          "damage": "6D",
+          "cost": 20,
+          "traits": "Radiation",
+          "source": "High Guard small bay table"
         }
       },
       {
@@ -5757,7 +5780,7 @@ const SHIP_CATALOGUE = [
       "bis": false,
       "fib": true
     },
-    "notes": "The bay can be converted to hold troops or about 200 low berths. Known for maintenance problems and jump drive failures.",
+    "notes": "The bay can be converted to hold troops or about 200 low berths. Known for maintenance problems and jump drive failures. The table values for the weapons add up to 118, six more than the book's weapon total of 112; the difference matches the mount power of the six missile-rack turrets, which the book may not count.",
     "softwareBw": {
       "jumpControl": 15,
       "other": 25
@@ -5796,13 +5819,13 @@ const SHIP_CATALOGUE = [
         "perMount": 1,
         "mountPower": 0,
         "stats": {
-          "tl": null,
-          "range": null,
-          "power": 90,
-          "damage": null,
-          "cost": null,
-          "traits": "Medium fusion gun bay: stats not entered; power 90 is what is left of the book's weapon total of 218",
-          "source": "derived"
+          "tl": 12,
+          "range": "Medium",
+          "power": 80,
+          "damage": "7D",
+          "cost": 14,
+          "traits": "AP 6, Radiation",
+          "source": "High Guard medium bay table"
         }
       },
       {
@@ -5812,13 +5835,13 @@ const SHIP_CATALOGUE = [
         "perMount": 1,
         "mountPower": 0,
         "stats": {
-          "tl": null,
-          "range": null,
-          "power": 0,
-          "damage": null,
-          "cost": null,
-          "traits": "Small missile bay: stats not entered",
-          "source": "derived"
+          "tl": 7,
+          "range": "Special",
+          "power": 5,
+          "damage": "4D",
+          "cost": 12,
+          "traits": "Smart",
+          "source": "High Guard small bay table"
         }
       },
       {
@@ -5974,7 +5997,7 @@ const SHIP_CATALOGUE = [
       "bis": false,
       "fib": false
     },
-    "notes": "Cargo (6) is the last row of the tons column. Carries 160 marines in barracks plus 200 low berths.",
+    "notes": "Cargo (6) is the last row of the tons column. Carries 160 marines in barracks plus 200 low berths. Weapon power adds up to the book's 218: medium fusion gun bay 80, two small missile bays 5 each, three particle barbettes 45, six beam laser turrets 78 and five sandcaster turrets 5.",
     "softwareBw": {
       "jumpControl": 10,
       "other": 25
