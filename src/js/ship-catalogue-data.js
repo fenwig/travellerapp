@@ -744,8 +744,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 5,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "hg-patrol-corvette-t",
@@ -908,8 +907,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 15,
       "other": 15
-    },
-    "draft": true
+    }
   },
   {
     "id": "hg-subsidised-liner-m",
@@ -1049,8 +1047,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 15,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "hg-yacht-y",
@@ -1175,8 +1172,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 5,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "hg-survey-scout-donosev",
@@ -1294,8 +1290,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 15,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "hg-system-defence-boat-dragon",
@@ -1482,8 +1477,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 0,
       "other": 30
-    },
-    "draft": true
+    }
   },
   {
     "id": "hg-mercenary-cruiser-c",
@@ -1638,8 +1632,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 15,
       "other": 20
-    },
-    "draft": true
+    }
   },
   {
     "id": "hg-seeker-mining-ship-j",
@@ -1751,6 +1744,610 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
+    }
+  },
+  {
+    "id": "hg-safari-ship-k",
+    "name": "Safari Ship",
+    "cls": "Type K (Animal class)",
+    "role": "Safari",
+    "source": {
+      "book": "High Guard",
+      "page": 173
+    },
+    "tl": 12,
+    "tons": 200,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 1,
+    "jump": 2,
+    "power": 105,
+    "fuel": "J-2, 4 weeks of operation",
+    "structure": 80,
+    "computer": "Computer/5bis",
+    "sensors": "Civilian Grade",
+    "bridge": "Standard",
+    "weapons": [
+      {
+        "name": "Double Turret (empty)",
+        "mount": "Turret",
+        "count": 1,
+        "perMount": 0,
+        "mountPower": 1
+      }
+    ],
+    "staterooms": 11,
+    "lowBerths": 0,
+    "barracks": 0,
+    "cargo": 13.2,
+    "craft": [
+      "Launch",
+      "ATV (on launch)",
+      "Air/Raft"
+    ],
+    "systems": [
+      "Docking Space (20 tons)",
+      "Docking Space (4 tons)",
+      "Fuel Processor (40 tons/day)",
+      "Fuel Scoops",
+      "Multi-Environment Equipment",
+      "Multi-Environment Holding Tanks",
+      "Trophy Lounge"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 1
+      },
+      {
+        "role": "Medic",
+        "count": 1
+      },
+      {
+        "role": "Steward",
+        "count": 1
+      }
+    ],
+    "total": 68.03,
+    "purchase": 61.227,
+    "maintenance": 5103,
+    "fuelTons": 41,
+    "powerReq": {
+      "basic": 40,
+      "mDrive": 20,
+      "jDrive": 40,
+      "sensors": 1,
+      "weapons": 0,
+      "other": [
+        [
+          "Fuel Processor",
+          2
+        ],
+        [
+          "Multi-Environment Equipment",
+          1
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": true,
+      "fib": false
+    },
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 0
+    },
+    "draft": true
+  },
+  {
+    "id": "hg-far-trader-empress-marava",
+    "name": "Far Trader",
+    "cls": "Empress Marava class",
+    "role": "Merchant",
+    "source": {
+      "book": "High Guard",
+      "page": 167
+    },
+    "tl": 12,
+    "tons": 200,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 1,
+    "jump": 2,
+    "power": 90,
+    "fuel": "J-2, 4 weeks of operation",
+    "structure": 80,
+    "computer": "Computer/5bis",
+    "sensors": "Civilian Grade",
+    "bridge": "Standard",
+    "weapons": [
+      {
+        "name": "Double Turret (beam lasers)",
+        "mount": "Turret",
+        "count": 2,
+        "perMount": 2,
+        "mountPower": 1,
+        "stats": {
+          "tl": 10,
+          "range": "Medium",
+          "power": 4,
+          "damage": "1D",
+          "cost": 0.5,
+          "traits": "(beam laser turrets DM+4 to attack)",
+          "source": "High Guard turret weapon table"
+        }
+      }
+    ],
+    "staterooms": 10,
+    "lowBerths": 4,
+    "barracks": 0,
+    "cargo": 57,
+    "craft": [
+      "Air/Raft"
+    ],
+    "systems": [
+      "Docking Space (4 tons)",
+      "Fuel Processor (40 tons/day)",
+      "Fuel Scoops",
+      "Loading Belt (TL7)",
+      "Cargo Airlocks x2"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot/Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 1
+      },
+      {
+        "role": "Steward",
+        "count": 1
+      },
+      {
+        "role": "Gunner",
+        "count": 2
+      }
+    ],
+    "total": 60.148,
+    "purchase": 54.1582,
+    "maintenance": 4513,
+    "fuelTons": 41,
+    "powerReq": {
+      "basic": 40,
+      "mDrive": 20,
+      "jDrive": 40,
+      "sensors": 1,
+      "weapons": 18,
+      "other": [
+        [
+          "Fuel Processor",
+          2
+        ],
+        [
+          "Loading Belt",
+          1
+        ],
+        [
+          "Low Berths",
+          1
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": true,
+      "fib": false
+    },
+    "notes": "The book lists one Pilot/Astrogator post.",
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 0
+    },
+    "draft": true
+  },
+  {
+    "id": "hg-x-boat-tender-xt",
+    "name": "X-Boat Tender",
+    "cls": "Class XT",
+    "role": "Tender",
+    "source": {
+      "book": "High Guard",
+      "page": 204
+    },
+    "tl": 14,
+    "tons": 1000,
+    "hull": "Standard",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 1,
+    "jump": 1,
+    "power": 450,
+    "fuel": "J-1, 20 weeks of operation",
+    "structure": 400,
+    "computer": "Computer/15",
+    "sensors": "Civilian Grade",
+    "bridge": "Standard",
+    "weapons": [
+      {
+        "name": "Single Turret (empty)",
+        "mount": "Turret",
+        "count": 2,
+        "perMount": 0,
+        "mountPower": 1
+      },
+      {
+        "name": "Pop-Up Single Turret (empty)",
+        "mount": "Turret",
+        "count": 1,
+        "perMount": 0,
+        "mountPower": 1
+      }
+    ],
+    "staterooms": 11,
+    "lowBerths": 20,
+    "barracks": 0,
+    "cargo": 78,
+    "craft": [
+      "Full Hangar (100 tons)"
+    ],
+    "systems": [
+      "Docking Space (300 tons)",
+      "Spare Parts and Equipment",
+      "Fuel Processor (100 tons/day)",
+      "Fuel Scoops",
+      "Mail Distribution Array (Advanced)",
+      "Workshops x2",
+      "Medical Bay with AutoDoc",
+      "UNREP (40 tons/hour)"
+    ],
+    "software": [
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      },
+      {
+        "name": "Jump Control",
+        "rating": 1,
+        "tl": 9,
+        "bw": 5
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 2
+      },
+      {
+        "role": "Maintenance",
+        "count": 1
+      },
+      {
+        "role": "Medic",
+        "count": 1
+      }
+    ],
+    "total": 311.35,
+    "purchase": 280.215,
+    "maintenance": 23351,
+    "fuelTons": 115,
+    "powerReq": {
+      "basic": 200,
+      "mDrive": 100,
+      "jDrive": 100,
+      "sensors": 1,
+      "weapons": 3,
+      "other": [
+        [
+          "Fuel Processor",
+          5
+        ],
+        [
+          "Low Berths",
+          2
+        ],
+        [
+          "UNREP",
+          2
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 15,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Staterooms: 10 standard and 1 high.",
+    "softwareBw": {
+      "jumpControl": 5,
+      "other": 0
+    },
+    "draft": true
+  },
+  {
+    "id": "hg-destroyer-escort-fer-de-lance",
+    "name": "Destroyer Escort",
+    "cls": "Fer-de-Lance class",
+    "role": "Warship",
+    "source": {
+      "book": "High Guard",
+      "page": 211
+    },
+    "tl": 15,
+    "tons": 1000,
+    "hull": "Close Structure (Reinforced)",
+    "armour": {
+      "type": "Bonded Superdense",
+      "value": 2
+    },
+    "thrust": 6,
+    "jump": 4,
+    "power": 1000,
+    "fuel": "J-4, 8 weeks of operation (reduced fuel x2)",
+    "structure": 440,
+    "computer": "Computer/35fib",
+    "sensors": "Advanced",
+    "bridge": "Holographic Controls",
+    "weapons": [
+      {
+        "name": "Missile Barbette (accurate)",
+        "mount": "Barbette",
+        "count": 4,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": null
+      },
+      {
+        "name": "Triple Turret (accurate, high yield beam lasers)",
+        "mount": "Turret",
+        "count": 6,
+        "perMount": 3,
+        "mountPower": 1,
+        "stats": {
+          "tl": 10,
+          "range": "Medium",
+          "power": 4,
+          "damage": "1D",
+          "cost": 0.5,
+          "traits": "(beam laser turrets DM+4 to attack)",
+          "source": "High Guard turret weapon table"
+        }
+      }
+    ],
+    "staterooms": 28,
+    "lowBerths": 0,
+    "barracks": 0,
+    "cargo": 11,
+    "craft": [
+      "Modular Cutters x2"
+    ],
+    "systems": [
+      "Radiation Shielding",
+      "Countermeasures Suite",
+      "Missile Storage (360 missiles)",
+      "Docking Spaces (50 tons) x2",
+      "Fuel Processor (180 tons/day)",
+      "Fuel Scoops",
+      "Repair Drones",
+      "Medical Bay",
+      "Armoury"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      },
+      {
+        "name": "Jump Control",
+        "rating": 4,
+        "tl": 13,
+        "bw": 20
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Auto-Repair",
+        "rating": 1,
+        "tl": 10,
+        "bw": 10
+      },
+      {
+        "name": "Evade",
+        "rating": 2,
+        "tl": 11,
+        "bw": 15
+      },
+      {
+        "name": "Fire Control",
+        "rating": 2,
+        "tl": 10,
+        "bw": 10
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 3
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 7
+      },
+      {
+        "role": "Maintenance",
+        "count": 2
+      },
+      {
+        "role": "Gunner",
+        "count": 20
+      },
+      {
+        "role": "Administrator",
+        "count": 1
+      },
+      {
+        "role": "Sensop",
+        "count": 3
+      },
+      {
+        "role": "Small Craft Crew",
+        "count": 4
+      },
+      {
+        "role": "Officer",
+        "count": 4
+      },
+      {
+        "role": "Medic",
+        "count": 1
+      }
+    ],
+    "total": 727.735,
+    "purchase": 654.9615,
+    "maintenance": 54581,
+    "fuelTons": null,
+    "powerReq": {
+      "basic": 200,
+      "mDrive": 300,
+      "jDrive": 400,
+      "sensors": 6,
+      "weapons": 78,
+      "other": [
+        [
+          "Fuel Processor",
+          9
+        ],
+        [
+          "Medical Bay",
+          1
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 35,
+      "bis": false,
+      "fib": true
+    },
+    "notes": "Fuel tank tonnage and cargo are not read yet (check the book). Missile barbette stats are not entered yet; the book's weapon power of 78 is 6 turrets x (1 + 3 beam lasers x 4), so the barbettes use none. The beam lasers are accurate and high yield; those options are not applied to the stats.",
+    "softwareBw": {
+      "jumpControl": 20,
+      "other": 35
     },
     "draft": true
   }
