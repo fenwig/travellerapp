@@ -3846,8 +3846,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "b3-ihateisho-scout",
@@ -3976,8 +3975,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 20,
       "other": 15
-    },
-    "draft": true
+    }
   },
   {
     "id": "b3-ktiyhui-courier",
@@ -4153,8 +4151,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 15,
       "other": 10
-    },
-    "draft": true
+    }
   },
   {
     "id": "b3-kteiroa-seeker",
@@ -4256,8 +4253,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "b3-iyeliy-messenger",
@@ -4375,8 +4371,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 25,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "b3-aoaiw-light-trader",
@@ -4530,7 +4525,6 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    },
-    "draft": true
+    }
   }
 ];
