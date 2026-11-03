@@ -4,6 +4,8 @@
 // the spec table. power = power plant output; powerReq = the book's Power Requirements block (feeds the Spacecraft
 // Record's power allocation: basic, mDrive, jDrive, sensors, weapons, other = extra labelled lines). structure = hull
 // points ("Hull: N"). fuelTons = fuel tank tonnage from the spec table. software bw = the package bandwidth from the Core Rulebook ship software table, tl its TL; softwareBw splits the total into Jump Control and other packages. A /bis computer runs Jump Control as if its Processing were 5 higher. computerSpec = the Spacecraft Record computer fields (processor, bis, fib). Sensor grade names match the record's grades.
+// Weapons: count = number of mounts; perMount = weapons in each mount; mountPower = the mount's own power (turrets 1, barbettes 0).
+// Check: sum of count x (mountPower + perMount x weapon power) should equal powerReq.weapons.
 const SHIP_CATALOGUE = [
   {
     "id": "hg-scout-courier-s",
@@ -33,7 +35,9 @@ const SHIP_CATALOGUE = [
       {
         "name": "Double Turret (empty)",
         "mount": "Turret",
-        "count": 1
+        "count": 1,
+        "mountPower": 1,
+        "perMount": 0
       }
     ],
     "staterooms": 4,
@@ -371,7 +375,9 @@ const SHIP_CATALOGUE = [
           "cost": 0.5,
           "traits": "(beam laser turrets DM+4 to attack)",
           "source": "High Guard p.27"
-        }
+        },
+        "mountPower": 1,
+        "perMount": 1
       }
     ],
     "staterooms": 10,
@@ -488,7 +494,18 @@ const SHIP_CATALOGUE = [
       {
         "name": "Particle Barbette",
         "mount": "Barbette",
-        "count": 2
+        "count": 2,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": 11,
+          "range": "Very Long",
+          "power": 15,
+          "damage": "4D",
+          "cost": 8,
+          "traits": "Radiation",
+          "source": "High Guard barbette table (given by user)"
+        }
       },
       {
         "name": "Triple Turret (beam lasers)",
@@ -502,7 +519,9 @@ const SHIP_CATALOGUE = [
           "cost": 0.5,
           "traits": "(beam laser turrets DM+4 to attack)",
           "source": "High Guard p.27"
-        }
+        },
+        "mountPower": 1,
+        "perMount": 3
       }
     ],
     "staterooms": 5,

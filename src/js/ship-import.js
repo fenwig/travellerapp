@@ -1,0 +1,94 @@
+// Turns a Ship Catalogue entry into the rows the Spacecraft Record stores.
+// catalogueToRecord(entry, { campaignId, name, status }) -> { ship, software, mounts, weapons, hiredCrew, crewRoles, warnings }
+// It only builds the rows; the caller inserts them (ship first, then mounts, then weapons and the rest, which need ids).
+// weapons[].mountIndex and weapons[].instance/slot say which mount (index into mounts) each weapon sits in.
+
+// Catalogue crew posts -> the record's crew roles. Posts the record has no role for map to null and are listed as warnings.
+const CATALOGUE_ROLE_MAP = {
+  Captain: 'Captain', Pilot: 'Pilot', Astrogator: 'Astrogator', Engineer: 'Engineer', Medic: 'Medic', Steward: 'Steward',
+  Gunner: 'Turret Gunner', Marine: 'Marine', Thug: 'Marine', 'Sensor Operator': 'Sensor Operator', Sensops: 'Sensor Operator'
+};
+const MOUNT_TYPE_BY_COUNT = { Turret: n => (n >= 3 ? 'Triple Turret' : n === 2 ? 'Double Turret' : 'Single Turret'), Barbette: () => 'Barbette' };
+
+// "Triple Turret (beam lasers)" -> "Beam Laser"; plain names such as "Particle Barbette" stay as they are
+function weaponName(n) {
+  const m = /^(?:Triple|Double|Single) Turrets? \(([^)]*?)s?(?: x\d+)?\)$/i.exec(n || '');
+  return m ? m[1].replace(/\b\w/g, c => c.toUpperCase()) : n;
+}
+
+function catalogueToRecord(s, opts) {
+  opts = opts || {};
+  const warnings = [];
+  const round = n => Math.round(n * 1000) / 1000;
+
+  // Weapons and mounts
+  const mounts = [], weapons = [];
+  let weaponPower = 0, mountPower = 0;
+  s.weapons.forEach(w => {
+    const mountType = (MOUNT_TYPE_BY_COUNT[w.mount] || (() => 'Fixed Mount'))(w.perMount || 1);
+    const slots = mountType === 'Triple Turret' ? 3 : mountType === 'Double Turret' ? 2 : 1;
+    const mountIndex = mounts.length;
+    mounts.push({ mount_type: mountType, count: w.count, tl: null, power: w.mountPower || 0 });
+    mountPower += w.count * (w.mountPower || 0);
+    for (let inst = 1; inst <= w.count; inst++) {
+      for (let slot = 1; slot <= Math.min(slots, w.perMount || 0); slot++) {
+        const st = w.stats;
+        if (!st) warnings.push('No weapon stats yet for ' + w.name);
+        weapons.push({ mountIndex, instance: inst, slot, name: weaponName(w.name),
+          tl: st ? st.tl : null, range: st ? st.range : null, damage: st ? st.damage : null, power: st ? st.power : 0, traits: st ? st.traits : null });
+        weaponPower += st ? st.power : 0;
+      }
+    }
+  });
+
+  // Software: the record's names carry the rating ("Jump Control/2"); bandwidth is the book's table value
+  const software = s.software.map(x => ({ name: x.rating != null ? x.name + '/' + x.rating : x.name, bandwidth: x.bw, tl: x.tl, active: false, note: '' }));
+
+  // Crew: the book's posts become NPC crew (hired crew) and are put in the record's crew roles
+  const hiredCrew = [], crewRoles = [];
+  s.crew.forEach(c => {
+    const role = CATALOGUE_ROLE_MAP[c.role];
+    if (!role) warnings.push('No crew role in the record for "' + c.role + '" (x' + c.count + '): added as hired crew only');
+    for (let i = 0; i < c.count; i++) {
+      hiredCrew.push({ name: c.role + (c.count > 1 ? ' ' + (i + 1) : ''), role: c.role, salary: 0, _recordRole: role || null });
+    }
+  });
+  const single = new Set(['Captain', 'Pilot']), used = new Set();
+  hiredCrew.forEach((h, i) => {
+    if (!h._recordRole) return;
+    if (single.has(h._recordRole) && used.has(h._recordRole)) { warnings.push('Second ' + h._recordRole + ' has no role slot (record allows one)'); return; }
+    used.add(h._recordRole);
+    crewRoles.push({ role: h._recordRole, hiredIndex: i });
+  });
+
+  // Power allocation: five fixed lines, the rest go to the record's labelled "extra" lines (it holds five)
+  const extra = (s.powerReq.other || []).map(o => ({ label: o[0], value: o[1] }));
+  while (extra.length < 5) extra.push({ label: '', value: 0 });
+  if (extra.length > 5) { warnings.push('More than five extra power lines'); extra.length = 5; }
+
+  const ship = {
+    ...(opts.campaignId ? { campaign_id: opts.campaignId } : {}),
+    name: opts.name || s.name, ship_class: s.cls ? s.name + ', ' + s.cls : s.name, tl: s.tl,
+    status: opts.status || 'reserve',
+    streamlined_status: /^streamlined/i.test(s.hull) ? 'Streamlined' : 'Unstreamlined',
+    purchase_value: round(s.purchase),
+    hull_tonnage: s.tons, hull_max: s.structure, hull_current: s.structure,
+    armour_max: s.armour.value, armour_current: s.armour.value,
+    fuel_max: s.fuelTons, fuel_current: s.fuelTons,
+    staterooms: s.staterooms, low_berths: s.lowBerths, cargo_max: s.cargo,
+    jump_drive: s.jump, m_drive: s.thrust,
+    power_plant: s.power, power_current: s.power,
+    power_basic: s.powerReq.basic, power_m_drive: s.powerReq.mDrive, power_j_drive: s.powerReq.jDrive,
+    power_sensor: s.powerReq.sensors, power_weapons: weaponPower, power_turrets: mountPower,
+    power_extra: extra,
+    sensor_grade: s.sensors,
+    computer_processor: s.computerSpec.processor, computer_bis: !!s.computerSpec.bis, computer_fib: !!s.computerSpec.fib,
+    fin_maintenance: s.maintenance,
+    notes: [s.notes, 'Imported from the Ship Catalogue (' + s.source.book + ' p.' + s.source.page + '). Systems: ' + s.systems.join(', ') +
+      (s.craft.length ? '. Craft: ' + s.craft.join(', ') : '') + '.'].filter(Boolean).join('\n')
+  };
+  if (Math.abs((weaponPower + mountPower) - s.powerReq.weapons) > 0.01 && s.weapons.some(w => w.perMount)) {
+    warnings.push('Weapon power ' + (weaponPower + mountPower) + ' differs from the book\'s ' + s.powerReq.weapons);
+  }
+  return { ship, software, mounts, weapons, hiredCrew, crewRoles, warnings };
+}
