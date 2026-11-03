@@ -8,7 +8,7 @@ const CATALOGUE_ROLE_MAP = {
   Captain: 'Captain', Pilot: 'Pilot', Astrogator: 'Astrogator', Engineer: 'Engineer', Medic: 'Medic', Steward: 'Steward',
   Gunner: 'Turret Gunner', Marine: 'Marine', Thug: 'Marine', 'Sensor Operator': 'Sensor Operator', Sensops: 'Sensor Operator'
 };
-const MOUNT_TYPE_BY_COUNT = { Turret: n => (n >= 3 ? 'Triple Turret' : n === 2 ? 'Double Turret' : 'Single Turret'), Barbette: () => 'Barbette' };
+const MOUNT_TYPE_BY_COUNT = { Turret: n => (n >= 3 ? 'Triple Turret' : n === 2 ? 'Double Turret' : 'Single Turret'), Barbette: () => 'Barbette', Fixed: () => 'Fixed Mount' };
 
 // "Triple Turret (beam lasers)" -> "Beam Laser"; plain names such as "Particle Barbette" stay as they are
 function weaponName(n) {
@@ -27,7 +27,7 @@ function catalogueToRecord(s, opts) {
   s.weapons.forEach(w => {
     if (!MOUNT_TYPE_BY_COUNT[w.mount]) warnings.push('The record has no "' + w.mount + '" mount: "' + w.name + '" is added as a Fixed Mount');
     const mountType = (MOUNT_TYPE_BY_COUNT[w.mount] || (() => 'Fixed Mount'))(w.perMount || 1);
-    const slots = mountType === 'Triple Turret' ? 3 : mountType === 'Double Turret' ? 2 : 1;
+    const slots = mountType === 'Triple Turret' || mountType === 'Fixed Mount' ? 3 : mountType === 'Double Turret' ? 2 : 1;
     const mountIndex = mounts.length;
     mounts.push({ mount_type: mountType, count: w.count, tl: null, power: w.mountPower || 0 });
     mountPower += w.count * (w.mountPower || 0);

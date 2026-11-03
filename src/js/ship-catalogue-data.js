@@ -5947,5 +5947,1005 @@ const SHIP_CATALOGUE = [
       "other": 25
     },
     "draft": true
+  },
+  {
+    "id": "hg-ultralight-fighter",
+    "name": "Ultralight Fighter",
+    "cls": "Small craft",
+    "role": "Fighter",
+    "source": {
+      "book": "High Guard",
+      "page": 136
+    },
+    "tl": 12,
+    "tons": 6,
+    "hull": "Streamlined (Stealth Improved)",
+    "armour": {
+      "type": "Crystaliron",
+      "value": 3
+    },
+    "thrust": 6,
+    "power": 15,
+    "fuel": "4 weeks of operation",
+    "structure": 2,
+    "computer": "Computer/5",
+    "sensors": "Civilian Grade",
+    "bridge": "Cockpit",
+    "weapons": [
+      {
+        "name": "Fixed Mount (pulse laser)",
+        "mount": "Fixed",
+        "count": 1,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": 9,
+          "range": "Long",
+          "power": 3,
+          "damage": "2D",
+          "cost": 1,
+          "traits": "--",
+          "source": "power as printed on the small craft sheet (the turret table gives 4)"
+        }
+      }
+    ],
+    "staterooms": 0,
+    "cargo": 0.06,
+    "craft": [],
+    "systems": [
+      "Fuel Scoops"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      }
+    ],
+    "total": 7.036,
+    "purchase": 6.3324,
+    "maintenance": 528,
+    "powerReq": {
+      "basic": 2,
+      "mDrive": 4,
+      "jDrive": 0,
+      "sensors": 1,
+      "weapons": 3,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Built to fly in flights of four from a 30-ton Fighter Frame Module. Fuel tank tonnage is not read for small craft.",
+    "softwareBw": {
+      "jumpControl": 0,
+      "other": 0
+    },
+    "draft": true,
+    "jump": 0,
+    "lowBerths": 0,
+    "barracks": 0,
+    "fuelTons": null
+  },
+  {
+    "id": "hg-light-fighter",
+    "name": "Light Fighter",
+    "cls": "Small craft",
+    "role": "Fighter",
+    "source": {
+      "book": "High Guard",
+      "page": 137
+    },
+    "tl": 12,
+    "tons": 10,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "Crystaliron",
+      "value": 2
+    },
+    "thrust": 6,
+    "power": 15,
+    "fuel": "4 weeks of operation",
+    "structure": 4,
+    "computer": "Computer/5",
+    "sensors": "Improved",
+    "bridge": "Cockpit",
+    "weapons": [
+      {
+        "name": "Fixed Mount (pulse laser)",
+        "mount": "Fixed",
+        "count": 1,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": 9,
+          "range": "Long",
+          "power": 3,
+          "damage": "2D",
+          "cost": 1,
+          "traits": "--",
+          "source": "power as printed on the small craft sheet (the turret table gives 4)"
+        }
+      }
+    ],
+    "staterooms": 0,
+    "cargo": 1.7,
+    "craft": [],
+    "systems": [
+      "Fuel Scoops"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Fire Control",
+        "rating": 1,
+        "tl": 9,
+        "bw": 5
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      }
+    ],
+    "total": 10.48,
+    "purchase": 9.432,
+    "maintenance": 786,
+    "powerReq": {
+      "basic": 2,
+      "mDrive": 6,
+      "jDrive": 0,
+      "sensors": 4,
+      "weapons": 3,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Fuel tank tonnage is not read for small craft.",
+    "softwareBw": {
+      "jumpControl": 0,
+      "other": 5
+    },
+    "draft": true,
+    "jump": 0,
+    "lowBerths": 0,
+    "barracks": 0,
+    "fuelTons": null
+  },
+  {
+    "id": "hg-military-gig",
+    "name": "Military Gig",
+    "cls": "Close escort variant",
+    "role": "Gig",
+    "source": {
+      "book": "High Guard",
+      "page": 138
+    },
+    "tl": 14,
+    "tons": 20,
+    "hull": "Streamlined (Stealth Improved)",
+    "armour": {
+      "type": "Bonded Superdense",
+      "value": 4
+    },
+    "thrust": 8,
+    "power": 30,
+    "fuel": "4 weeks of operation",
+    "structure": 8,
+    "computer": "Computer/5",
+    "sensors": "Basic",
+    "bridge": "Holographic Controls",
+    "weapons": [
+      {
+        "name": "Fixed Mount (pulse laser, intense focus, high yield)",
+        "mount": "Fixed",
+        "count": 1,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": 9,
+          "range": "Long",
+          "power": 3,
+          "damage": "2D",
+          "cost": 1,
+          "traits": "--",
+          "source": "power as printed on the small craft sheet (the turret table gives 4)"
+        }
+      }
+    ],
+    "staterooms": 0,
+    "cargo": 2.096,
+    "craft": [],
+    "systems": [
+      "Fuel Scoops",
+      "Acceleration Seats x6",
+      "Emergency Low Berths x3",
+      "Airlock"
+    ],
+    "software": [
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Gunner",
+        "count": 1
+      }
+    ],
+    "total": 15.187,
+    "purchase": 13.6683,
+    "maintenance": 1139,
+    "powerReq": {
+      "basic": 4,
+      "mDrive": 16,
+      "jDrive": 0,
+      "sensors": 0,
+      "weapons": 3,
+      "other": [
+        [
+          "Emergency Low Berths",
+          3
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Fuel tank tonnage is not read for small craft.",
+    "softwareBw": {
+      "jumpControl": 0,
+      "other": 0
+    },
+    "draft": true,
+    "jump": 0,
+    "lowBerths": 0,
+    "barracks": 0,
+    "fuelTons": null
+  },
+  {
+    "id": "hg-launch",
+    "name": "Launch",
+    "cls": "Small craft",
+    "role": "Small craft",
+    "source": {
+      "book": "High Guard",
+      "page": 139
+    },
+    "tl": 12,
+    "tons": 20,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 1,
+    "power": 10,
+    "fuel": "4 weeks of operation (Fusion TL8)",
+    "structure": 8,
+    "computer": "Computer/5",
+    "sensors": "Basic",
+    "bridge": "Basic",
+    "weapons": [],
+    "staterooms": 0,
+    "cargo": 14.8,
+    "craft": [],
+    "systems": [
+      "Fuel Scoops"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      }
+    ],
+    "total": 2.63,
+    "purchase": 2.367,
+    "maintenance": 197,
+    "powerReq": {
+      "basic": 4,
+      "mDrive": 2,
+      "jDrive": 0,
+      "sensors": 0,
+      "weapons": 0,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Also called a lifeboat. Fuel tank tonnage is not read for small craft.",
+    "softwareBw": {
+      "jumpControl": 0,
+      "other": 0
+    },
+    "draft": true,
+    "jump": 0,
+    "lowBerths": 0,
+    "barracks": 0,
+    "fuelTons": null
+  },
+  {
+    "id": "hg-ships-boat",
+    "name": "Ship's Boat",
+    "cls": "Small craft",
+    "role": "Small craft",
+    "source": {
+      "book": "High Guard",
+      "page": 140
+    },
+    "tl": 12,
+    "tons": 30,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 5,
+    "power": 23,
+    "fuel": "4 weeks of operation",
+    "structure": 12,
+    "computer": "Computer/5",
+    "sensors": "Basic",
+    "bridge": "Basic",
+    "weapons": [
+      {
+        "name": "Fixed Mount (empty)",
+        "mount": "Fixed",
+        "count": 1,
+        "perMount": 0,
+        "mountPower": 0,
+        "stats": null
+      }
+    ],
+    "staterooms": 0,
+    "cargo": 12,
+    "craft": [],
+    "systems": [
+      "Cabin Space x6",
+      "Airlock",
+      "Fuel Scoops"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      }
+    ],
+    "total": 7.58,
+    "purchase": 6.822,
+    "maintenance": 569,
+    "powerReq": {
+      "basic": 6,
+      "mDrive": 15,
+      "jDrive": 0,
+      "sensors": 0,
+      "weapons": 0,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Fuel tank tonnage is not read for small craft.",
+    "softwareBw": {
+      "jumpControl": 0,
+      "other": 0
+    },
+    "draft": true,
+    "jump": 0,
+    "lowBerths": 0,
+    "barracks": 0,
+    "fuelTons": null
+  },
+  {
+    "id": "hg-slow-boat",
+    "name": "Slow Boat",
+    "cls": "Small craft",
+    "role": "Small craft",
+    "source": {
+      "book": "High Guard",
+      "page": 141
+    },
+    "tl": 12,
+    "tons": 30,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 3,
+    "power": 15,
+    "fuel": "4 weeks of operation",
+    "structure": 12,
+    "computer": "Computer/5",
+    "sensors": "Basic",
+    "bridge": "Basic",
+    "weapons": [
+      {
+        "name": "Fixed Mount (empty)",
+        "mount": "Fixed",
+        "count": 1,
+        "perMount": 0,
+        "mountPower": 0,
+        "stats": null
+      }
+    ],
+    "staterooms": 0,
+    "cargo": 19.1,
+    "craft": [],
+    "systems": [
+      "Cabin Space x2",
+      "Airlock",
+      "Fuel Scoops"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      }
+    ],
+    "total": 5.58,
+    "purchase": 5.022,
+    "maintenance": 419,
+    "powerReq": {
+      "basic": 6,
+      "mDrive": 9,
+      "jDrive": 0,
+      "sensors": 0,
+      "weapons": 0,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Fuel tank tonnage is not read for small craft.",
+    "softwareBw": {
+      "jumpControl": 0,
+      "other": 0
+    },
+    "draft": true,
+    "jump": 0,
+    "lowBerths": 0,
+    "barracks": 0,
+    "fuelTons": null
+  },
+  {
+    "id": "hg-pinnace",
+    "name": "Pinnace",
+    "cls": "Small craft",
+    "role": "Small craft",
+    "source": {
+      "book": "High Guard",
+      "page": 142
+    },
+    "tl": 12,
+    "tons": 40,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 5,
+    "power": 30,
+    "fuel": "4 weeks of operation",
+    "structure": 16,
+    "computer": "Computer/5",
+    "sensors": "Basic",
+    "bridge": "Basic",
+    "weapons": [
+      {
+        "name": "Fixed Mount (empty)",
+        "mount": "Fixed",
+        "count": 1,
+        "perMount": 0,
+        "mountPower": 0,
+        "stats": null
+      }
+    ],
+    "staterooms": 0,
+    "cargo": 21,
+    "craft": [],
+    "systems": [
+      "Cabin Space x6",
+      "Airlock",
+      "Fuel Scoops"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      }
+    ],
+    "total": 9.68,
+    "purchase": 8.712,
+    "maintenance": 726,
+    "powerReq": {
+      "basic": 8,
+      "mDrive": 20,
+      "jDrive": 0,
+      "sensors": 0,
+      "weapons": 0,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Fuel tank tonnage is not read for small craft.",
+    "softwareBw": {
+      "jumpControl": 0,
+      "other": 0
+    },
+    "draft": true,
+    "jump": 0,
+    "lowBerths": 0,
+    "barracks": 0,
+    "fuelTons": null
+  },
+  {
+    "id": "hg-slow-pinnace",
+    "name": "Slow Pinnace",
+    "cls": "Small craft",
+    "role": "Small craft",
+    "source": {
+      "book": "High Guard",
+      "page": 143
+    },
+    "tl": 12,
+    "tons": 40,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 3,
+    "power": 20,
+    "fuel": "4 weeks of operation (Fusion TL8)",
+    "structure": 16,
+    "computer": "Computer/5",
+    "sensors": "Basic",
+    "bridge": "Basic",
+    "weapons": [
+      {
+        "name": "Fixed Mount (empty)",
+        "mount": "Fixed",
+        "count": 1,
+        "perMount": 0,
+        "mountPower": 0,
+        "stats": null
+      }
+    ],
+    "staterooms": 0,
+    "cargo": 30.8,
+    "craft": [],
+    "systems": [
+      "Airlock",
+      "Fuel Scoops"
+    ],
+    "software": [
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      }
+    ],
+    "total": 6.63,
+    "purchase": 5.967,
+    "maintenance": 497,
+    "powerReq": {
+      "basic": 8,
+      "mDrive": 9,
+      "jDrive": 0,
+      "sensors": 0,
+      "weapons": 0,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Fuel tank tonnage is not read for small craft.",
+    "softwareBw": {
+      "jumpControl": 0,
+      "other": 0
+    },
+    "draft": true,
+    "jump": 0,
+    "lowBerths": 0,
+    "barracks": 0,
+    "fuelTons": null
+  },
+  {
+    "id": "hg-modular-cutter",
+    "name": "Modular Cutter",
+    "cls": "Small craft",
+    "role": "Small craft",
+    "source": {
+      "book": "High Guard",
+      "page": 144
+    },
+    "tl": 12,
+    "tons": 50,
+    "hull": "Streamlined (Modular Hull, 30 tons)",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 4,
+    "power": 30,
+    "fuel": "4 weeks of operation",
+    "structure": 20,
+    "computer": "Computer/5",
+    "sensors": "Basic",
+    "bridge": "Basic",
+    "weapons": [
+      {
+        "name": "Fixed Mount (empty)",
+        "mount": "Fixed",
+        "count": 1,
+        "perMount": 0,
+        "mountPower": 0,
+        "stats": null
+      }
+    ],
+    "staterooms": 0,
+    "cargo": 4,
+    "craft": [],
+    "systems": [
+      "Cabin Space x4",
+      "Airlock",
+      "Fuel Scoops",
+      "Modular Hull: 30 tons for a cutter module"
+    ],
+    "software": [
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      }
+    ],
+    "total": 11.93,
+    "purchase": 10.737,
+    "maintenance": 895,
+    "powerReq": {
+      "basic": 10,
+      "mDrive": 20,
+      "jDrive": 0,
+      "sensors": 0,
+      "weapons": 0,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Carries a 30-ton cutter module (vehicle cradle, personnel transport, fuel skimmer, assault boat, pressurised shelter and others); the modules are not in the catalogue. Fuel tank tonnage is not read for small craft.",
+    "softwareBw": {
+      "jumpControl": 0,
+      "other": 0
+    },
+    "draft": true,
+    "jump": 0,
+    "lowBerths": 0,
+    "barracks": 0,
+    "fuelTons": null
+  },
+  {
+    "id": "hg-heavy-fighter",
+    "name": "Heavy Fighter",
+    "cls": "Small craft",
+    "role": "Fighter",
+    "source": {
+      "book": "High Guard",
+      "page": 148
+    },
+    "tl": 15,
+    "tons": 50,
+    "hull": "Streamlined, Reinforced",
+    "armour": {
+      "type": "Bonded Superdense",
+      "value": 15
+    },
+    "thrust": 9,
+    "power": 70,
+    "fuel": "4 weeks of operation",
+    "structure": 22,
+    "computer": "Computer/35",
+    "sensors": "Advanced",
+    "bridge": "Advanced",
+    "weapons": [
+      {
+        "name": "Single Turret (beam laser)",
+        "mount": "Turret",
+        "count": 1,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": 10,
+          "range": "Medium",
+          "power": 4,
+          "damage": "1D",
+          "cost": 0.5,
+          "traits": "(beam laser turrets DM+4 to attack)",
+          "source": "power as printed on the Heavy Fighter sheet"
+        }
+      },
+      {
+        "name": "Fixed Mount (missile rack)",
+        "mount": "Fixed",
+        "count": 1,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": 7,
+          "range": "Special",
+          "power": 0,
+          "damage": "4D",
+          "cost": 0.75,
+          "traits": "Smart",
+          "source": "High Guard turret weapon table"
+        }
+      }
+    ],
+    "staterooms": 2,
+    "cargo": 0.95,
+    "craft": [],
+    "systems": [
+      "Missile Storage (60 missiles)",
+      "Armoured Bulkheads (bridge, manoeuvre drive, power plant, sensors)",
+      "Airlock",
+      "Fuel Scoops"
+    ],
+    "software": [
+      {
+        "name": "Evade",
+        "rating": 2,
+        "tl": 11,
+        "bw": 15
+      },
+      {
+        "name": "Fire Control",
+        "rating": 4,
+        "tl": 12,
+        "bw": 20
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Gunner",
+        "count": 1
+      }
+    ],
+    "total": 76.57,
+    "purchase": 68.913,
+    "maintenance": 5743,
+    "powerReq": {
+      "basic": 10,
+      "mDrive": 45,
+      "jDrive": 0,
+      "sensors": 6,
+      "weapons": 4,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 35,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Fuel tank tonnage is not read for small craft.",
+    "softwareBw": {
+      "jumpControl": 0,
+      "other": 35
+    },
+    "draft": true,
+    "jump": 0,
+    "lowBerths": 0,
+    "barracks": 0,
+    "fuelTons": null
   }
 ];

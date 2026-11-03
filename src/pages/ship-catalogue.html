@@ -85,7 +85,7 @@
       const one = (n, t) => esc(n) + ': TL' + t.tl + ', ' + t.range + ', power ' + t.power + ', ' + t.damage + ', MCr' + t.cost + ' ' + esc(t.traits);
       const stats = s.weapons.map(w => w.mixed ? w.mixed.map((t, i) => t ? one(w.names[i], t) : '').filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).join('; ') : w.stats ? one(w.name, w.stats) : '').filter(Boolean).join('; ');
       return `<details class="sc-more"><summary>Full specification</summary>
-        <div class="sc-line"><i>Power plant</i> ${s.power} · <i>Fuel tanks</i> ${s.fuelTons} tons</div>
+        <div class="sc-line"><i>Power plant</i> ${s.power} · <i>Fuel tanks</i> ${s.fuelTons != null ? s.fuelTons + " tons" : "not read"}</div>
         <div class="sc-line"><i>Power needed</i> ${esc(power)}</div>
         <div class="sc-line"><i>Computer</i> processor ${c.processor}${c.bis ? ' · bis' : ''}${c.fib ? ' · fib' : ''}</div>
         <div class="sc-line"><i>Software</i> ${sw}</div>
