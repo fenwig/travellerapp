@@ -99,7 +99,7 @@ function catalogueToRecord(s, opts) {
     power_basic: s.powerReq.basic, power_m_drive: s.powerReq.mDrive, power_j_drive: s.powerReq.jDrive,
     power_sensor: s.powerReq.sensors, power_weapons: weaponPower, power_turrets: mountPower,
     power_extra: extra,
-    sensor_grade: String(s.sensors).replace(/ Grade$/, ''),   // the record's grades are Basic/Civilian/Military/Improved/Advanced
+    sensor_grade: s.sensors,   // the catalogue uses the record's own grade names (Basic, Civilian Grade, Military Grade, Improved, Advanced)
     computer_processor: s.computerSpec.processor, computer_bis: !!s.computerSpec.bis, computer_fib: !!s.computerSpec.fib,
     fin_maintenance: s.maintenance,
     notes: [s.notes, 'Imported from the Ship Catalogue (' + s.source.book + ' p.' + s.source.page + '). Systems: ' + s.systems.join(', ') +
