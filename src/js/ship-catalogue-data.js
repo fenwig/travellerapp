@@ -1874,8 +1874,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "hg-far-trader-empress-marava",
@@ -2011,8 +2010,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "hg-x-boat-tender-xt",
@@ -2157,8 +2155,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 5,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "hg-destroyer-escort-fer-de-lance",
@@ -2213,7 +2210,7 @@ const SHIP_CATALOGUE = [
     "staterooms": 28,
     "lowBerths": 0,
     "barracks": 0,
-    "cargo": 11,
+    "cargo": 50,
     "craft": [
       "Modular Cutters x2"
     ],
@@ -2321,7 +2318,7 @@ const SHIP_CATALOGUE = [
     "total": 727.735,
     "purchase": 654.9615,
     "maintenance": 54581,
-    "fuelTons": null,
+    "fuelTons": 370,
     "powerReq": {
       "basic": 200,
       "mDrive": 300,
@@ -2344,12 +2341,11 @@ const SHIP_CATALOGUE = [
       "bis": false,
       "fib": true
     },
-    "notes": "Fuel tank tonnage and cargo are not read yet (check the book). Missile barbette stats are not entered yet; the book's weapon power of 78 is 6 turrets x (1 + 3 beam lasers x 4), so the barbettes use none. The beam lasers are accurate and high yield; those options are not applied to the stats.",
+    "notes": "Missile barbette stats are not entered yet; the book's weapon power of 78 is 6 turrets x (1 + 3 beam lasers x 4), so the barbettes use none. The beam lasers are accurate and high yield; those options are not applied to the stats.",
     "softwareBw": {
       "jumpControl": 20,
       "other": 35
-    },
-    "draft": true
+    }
   },
   {
     "id": "pod-harrier",
@@ -2522,7 +2518,6 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 20
-    },
-    "draft": true
+    }
   }
 ];
