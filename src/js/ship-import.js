@@ -12,7 +12,7 @@ const CATALOGUE_ROLE_MAP = {
   Purser: 'Administrator', Administrator: 'Administrator', Scientist: 'Scientist', 'Small Craft Crew': 'Small Craft Crew'
 };
 // The posts Hire Full Crew fills: what it takes to fly the ship
-const FLIGHT_ROLES = new Set(['Pilot', 'Astrogator', 'Engineer', 'Maintenance', 'Turret Gunner']);
+const FLIGHT_ROLES = new Set(['Pilot', 'Astrogator', 'Engineer', 'Maintenance', 'Turret Gunner', 'Sensor Operator']);
 const MOUNT_TYPE_BY_COUNT = { Turret: n => (n >= 3 ? 'Triple Turret' : n === 2 ? 'Double Turret' : 'Single Turret'), Barbette: () => 'Barbette', Fixed: () => 'Fixed Mount' };
 
 // "Triple Turret (beam lasers)" -> "Beam Laser"; plain names such as "Particle Barbette" stay as they are
@@ -50,7 +50,7 @@ function catalogueToRecord(s, opts) {
   // Software: the record's names carry the rating ("Jump Control/2"); bandwidth is the book's table value
   const software = s.software.map(x => ({ name: x.rating != null ? x.name + '/' + x.rating : x.name, bandwidth: x.bw, tl: x.tl, active: false, note: '' }));
 
-  // Crew slots: only the posts that fly the ship (pilots, astrogators, engineers, maintenance, gunners), one empty slot each.
+  // Crew slots: only the posts that fly the ship (pilots, astrogators, engineers, maintenance, gunners, sensor operators), one empty slot each.
   // Captain, officers, medics, stewards, marines, scientists, fighter pilots and the like are left out; they are added by hand when wanted.
   // NPCs are hired later, by hand or with Hire Full Crew.
   const crewSlots = [], skipped = {};
