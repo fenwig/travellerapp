@@ -2527,7 +2527,7 @@ const SHIP_CATALOGUE = [
     "role": "Merchant",
     "source": {
       "book": "Pirates of Drinax, Book 3: Ships of the Reach",
-      "page": null
+      "page": 2
     },
     "tl": 12,
     "tons": 200,
@@ -2618,8 +2618,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "b3-star-ray-interceptor",
@@ -2628,7 +2627,7 @@ const SHIP_CATALOGUE = [
     "role": "Warship",
     "source": {
       "book": "Pirates of Drinax, Book 3: Ships of the Reach",
-      "page": null
+      "page": 4
     },
     "tl": 12,
     "tons": 200,
@@ -2750,8 +2749,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 5,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "b3-herald-fast-messenger",
@@ -2760,7 +2758,7 @@ const SHIP_CATALOGUE = [
     "role": "Courier",
     "source": {
       "book": "Pirates of Drinax, Book 3: Ships of the Reach",
-      "page": null
+      "page": 6
     },
     "tl": 15,
     "tons": 300,
@@ -2900,8 +2898,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 20,
       "other": 15
-    },
-    "draft": true
+    }
   },
   {
     "id": "b3-indigo-pirate-carrier",
@@ -2910,7 +2907,7 @@ const SHIP_CATALOGUE = [
     "role": "Pirate",
     "source": {
       "book": "Pirates of Drinax, Book 3: Ships of the Reach",
-      "page": null
+      "page": 8
     },
     "tl": 15,
     "tons": 300,
@@ -3051,12 +3048,11 @@ const SHIP_CATALOGUE = [
       "bis": false,
       "fib": false
     },
-    "notes": "Power plant is Fusion TL12, Power 135. The book prints manoeuvre 40 and jump 80 on the power block; they do not follow the usual 10% of hull per thrust or jump, so check them.",
+    "notes": "Power plant is Fusion TL12, Power 135. The power block prints manoeuvre 40 and jump 80, as in the book.",
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "b3-vulture-salvage-hauler",
@@ -3065,7 +3061,7 @@ const SHIP_CATALOGUE = [
     "role": "Salvage",
     "source": {
       "book": "Pirates of Drinax, Book 3: Ships of the Reach",
-      "page": null
+      "page": 21
     },
     "tl": 15,
     "tons": 400,
@@ -3181,7 +3177,6 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    },
-    "draft": true
+    }
   }
 ];
