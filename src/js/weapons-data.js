@@ -98,3 +98,39 @@ const SCREENS = [
   ['Meson Screen', 13, 30, 10, 20],
   ['Nuclear Damper', 12, 20, 10, 10]
 ];
+
+// Missile and torpedo ammunition, copied from the book's tables (High Guard, printed pp.36 and 39).
+// Missiles: [name, TL, thrust, damage, cost per 12 (MCr), traits]; twelve missiles take 1 ton.
+// Torpedoes: [name, TL, thrust, damage, cost per 3 (MCr), traits]. Damage multiples do not apply to either.
+// Anti-torpedo missiles inflict only 1D on conventional targets.
+const MISSILES = [
+  ['Advanced', 14, 15, '5D', 0.35, 'Smart'],
+  ['Antimatter', 20, 15, '2DD', 1, 'Radiation, Smart'],
+  ['Anti-Torpedo', 13, 15, '1D*', 0.35, 'Smart'],
+  ['Decoy', 9, 15, '2D', 0.15, 'Smart'],
+  ['Fragmentation', 8, 15, '3D', 0.2, 'Smart'],
+  ['Ion', 12, 12, 'Special', 0.75, 'Ion'],
+  ['Jumpbreaker', 13, 10, '--', 1, 'Smart'],
+  ['Long Range', 8, 15, '3D', 0.5, 'Smart'],
+  ['Multi-Warhead', 8, 10, '3D', 0.75, 'Smart'],
+  ['Nuclear', 6, 10, '1DD', 0.45, 'Radiation, Smart'],
+  ['Ortillery', 7, 6, '1DD', 0.3, 'Orbital Strike'],
+  ['Shockwave', 7, 10, '--', 0.2, 'Smart'],
+  ['Standard', 7, 10, '4D', 0.25, 'Smart']
+];
+
+const TORPEDOES = [
+  ['Advanced', 14, 15, '7D', 0.45, 'Smart'],
+  ['Antimatter', 20, 10, '3DD', 0.9, 'Radiation, Smart'],
+  ['Antimatter Bomb-Pumped', 21, 10, '8D', 0.8, 'AP 10, Radiation, Smart'],
+  ['Antiradiation', 12, 10, '6D', 0.3, 'Smart'],
+  ['Bomb-Pumped', 9, 10, '4D', 0.25, 'Smart'],
+  ['Ion', 9, 10, 'Special', 0.23, 'Smart'],
+  ['Multi-Warhead Antimatter', 21, 10, '1DD', 2, 'Radiation, Smart'],
+  ['Multi-Warhead Standard', 8, 10, '4D', 0.4, 'Smart'],
+  ['Multi-Warhead Nuclear', 8, 10, '6D', 0.6, 'Radiation, Smart'],
+  ['Nuclear', 7, 10, '2DD', 0.225, 'Radiation, Smart'],
+  ['Ortillery', 8, 6, '3DD', 1, 'Orbital Strike'],
+  ['Plasma', 12, 10, '1DD', 0.65, 'AP 10, Smart'],
+  ['Standard', 7, 10, '6D', 0.15, 'Smart']
+];
