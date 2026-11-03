@@ -107,7 +107,6 @@
       if (tn != null) {
         const effect = total - tn;
         text += ' vs ' + tn + '+ → ' + (effect >= 0 ? 'success, Effect ' + effect : 'failure, Effect ' + effect);
-        if (btn.dataset.crit && effect >= 6) text += ' (critical hit if damage gets through)';
         bad = effect < 0;
         btn.closest('.fl-line').dataset.effect = effect;
       }
