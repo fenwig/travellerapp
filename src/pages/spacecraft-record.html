@@ -1642,16 +1642,37 @@ function addCrewSlotFromMenu() {
   if (role) addCrewSlot(role);
 }
 
+// The Ship Catalogue is only loaded when a ship with no crew slots needs its design looked up
+function loadScript(src) {
+  return new Promise((ok, fail) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => fail(new Error('Could not load ' + src)); document.head.appendChild(s); });
+}
+async function catalogueEntryFor(s) {
+  if (typeof SHIP_CATALOGUE === 'undefined') { await loadScript('../js/ship-catalogue-data.js'); await loadScript('../js/ship-import.js'); }
+  // by the saved design id, or for ships added before that was kept, by the class text the import wrote ("Name, Class")
+  return SHIP_CATALOGUE.find(e => e.id === s.catalogue_id) || SHIP_CATALOGUE.find(e => (e.cls ? e.name + ', ' + e.cls : e.name) === s.ship_class) || null;
+}
+
 // Hire Full Crew: an NPC for every empty crew slot, at the chosen skill level, paid the High Guard salary for that level
 async function hireFullCrew() {
   const msg = document.getElementById('hire-msg');
   const say = (text, ok) => { msg.textContent = text; msg.style.color = ok ? '#00ffaa' : '#ff5a4a'; };
   if (document.body.classList.contains('editing')) { say('Save or cancel your edits first.', false); return; }
   const level = parseInt(document.getElementById('hire-level').value) || 1;
-  const { data: slots, error } = await supabaseClient.from('spacecraft_crew_roles').select('id,role')
-    .eq('spacecraft_id', ship.id).is('character_id', null).is('hired_crew_id', null);
-  if (error) { say('Could not read the crew slots: ' + error.message, false); return; }
-  if (!slots.length) { say('There are no empty crew slots. Use Edit, then Add Crew Slot on this tab.', false); return; }
+  const found = await supabaseClient.from('spacecraft_crew_roles').select('id,role,character_id,hired_crew_id').eq('spacecraft_id', ship.id);
+  if (found.error) { say('Could not read the crew slots: ' + found.error.message, false); return; }
+  let slots = found.data.filter(r => !r.character_id && !r.hired_crew_id);
+  if (!found.data.length) {
+    // a ship with no slots at all: take them from its Ship Catalogue design (flight crew only)
+    say("No crew slots yet; looking up the ship's design…", true);
+    let entry = null;
+    try { entry = await catalogueEntryFor(ship); } catch (e) { /* handled below */ }
+    const wanted = entry ? catalogueToRecord(entry, {}).crewSlots : [];
+    if (!wanted.length) { say('This ship has no crew slots and no catalogue design to take them from. Use Edit, then Add Crew Slot on this tab.', false); return; }
+    const made = await supabaseClient.from('spacecraft_crew_roles').insert(wanted.map(w => ({ spacecraft_id: ship.id, role: w.role }))).select('id,role');
+    if (made.error) { say('Could not add the crew slots: ' + made.error.message, false); return; }
+    slots = made.data;
+  }
+  if (!slots.length) { say('Every crew slot already has someone in it. Use Edit, then Add Crew Slot for more.', false); return; }
 
   const seen = {}, perRole = {};
   slots.forEach(s => { perRole[s.role] = (perRole[s.role] || 0) + 1; });
