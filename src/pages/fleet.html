@@ -258,7 +258,7 @@
         }
         h += ln;
       });
-      h += '<div class="fl-legend">Each attack roll reminds you to add the range and target-size DMs; the beam and pulse laser bonuses are already in. Lock-on: +2 against a ship held by Sensor Lock. The target\'s Evasive Action takes its pilot\'s skill off the roll. Effect 6+ with damage getting through is a critical hit. Damage = dice + Effect, less the target\'s armour (armour first reduced by the weapon\'s AP), then × the multiple for barbettes and bays; missiles multiply by the Effect instead.</div>';
+      h += '<div class="fl-legend">Lock-on: +2 against a ship held by Sensor Lock. The target\'s Evasive Action takes its pilot\'s skill off the roll. Effect 6+ with damage getting through is a critical hit.</div>';
       h += '<div class="fl-wh" style="color:#00e5ff">Reactions</div>';
       h += '<div class="fl-note" style="padding:2px 0"><b style="color:#00e5ff">Evasive Action</b>: each unspent Thrust (up to ' + fc.thrust + ') makes one attack on this ship take DM−' + Math.abs(fc.evasiveDm) + '.</div>';
       if (fc.hasLasers) h += line('Point Defence (laser turret)', gAvg, 8, 'The turret cannot attack this round. Effect = missiles removed from the salvo. DM+1 for two lasers in the turret, +2 for three.');
