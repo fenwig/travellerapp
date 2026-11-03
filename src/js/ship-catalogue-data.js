@@ -3338,8 +3338,7 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 10,
       "other": 0
-    },
-    "draft": true
+    }
   },
   {
     "id": "b3-fiery-gunship",
@@ -3558,12 +3557,11 @@ const SHIP_CATALOGUE = [
       "bis": false,
       "fib": true
     },
-    "notes": "Sensors are listed as \"Military Grade, Improved\". Cargo (6) is the last row of the tons column. The small fusion gun bay has no stats here; its 50 power is what is left of the book's weapon total of 79.",
+    "notes": "The small fusion gun bay has no stats here; its 50 power is what is left of the book's weapon total of 79.",
     "softwareBw": {
       "jumpControl": 10,
       "other": 30
-    },
-    "draft": true
+    }
   },
   {
     "id": "b3-ghost-of-the-reach",
@@ -3718,7 +3716,6 @@ const SHIP_CATALOGUE = [
     "softwareBw": {
       "jumpControl": 15,
       "other": 30
-    },
-    "draft": true
+    }
   }
 ];
