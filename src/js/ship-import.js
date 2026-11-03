@@ -11,6 +11,8 @@ const CATALOGUE_ROLE_MAP = {
   Officer: 'Officer', 'Executive Officer': 'Officer', 'Executive Officer/Head Scientist': 'Officer', 'Purser/Executive Officer': 'Officer',
   Purser: 'Administrator', Administrator: 'Administrator', Scientist: 'Scientist', 'Small Craft Crew': 'Small Craft Crew'
 };
+// The posts Hire Full Crew fills: what it takes to fly the ship
+const FLIGHT_ROLES = new Set(['Pilot', 'Astrogator', 'Engineer', 'Maintenance', 'Turret Gunner']);
 const MOUNT_TYPE_BY_COUNT = { Turret: n => (n >= 3 ? 'Triple Turret' : n === 2 ? 'Double Turret' : 'Single Turret'), Barbette: () => 'Barbette', Fixed: () => 'Fixed Mount' };
 
 // "Triple Turret (beam lasers)" -> "Beam Laser"; plain names such as "Particle Barbette" stay as they are
@@ -48,14 +50,17 @@ function catalogueToRecord(s, opts) {
   // Software: the record's names carry the rating ("Jump Control/2"); bandwidth is the book's table value
   const software = s.software.map(x => ({ name: x.rating != null ? x.name + '/' + x.rating : x.name, bandwidth: x.bw, tl: x.tl, active: false, note: '' }));
 
-  // Crew slots: one empty slot for each post the design needs (NPCs are hired later, by hand or with Hire Full Crew)
-  const crewSlots = [];
+  // Crew slots: only the posts that fly the ship (pilots, astrogators, engineers, maintenance, gunners), one empty slot each.
+  // Captain, officers, medics, stewards, marines, scientists, fighter pilots and the like are left out; they are added by hand when wanted.
+  // NPCs are hired later, by hand or with Hire Full Crew.
+  const crewSlots = [], skipped = {};
   s.crew.forEach(c => {
-    const role = CATALOGUE_ROLE_MAP[c.role];
-    if (!role) warnings.push('No crew role in the record for "' + c.role + '" (x' + c.count + '): no slot added');
-    else if (role === 'Marine' && !opts.withMarines) warnings.push(c.count + ' ' + c.role + (c.count > 1 ? 's' : '') + ' (troops carried) are not given crew slots');
-    else for (let i = 0; i < c.count; i++) crewSlots.push({ role });
+    const role = c.role === 'Fighter Pilot' ? null : CATALOGUE_ROLE_MAP[c.role];
+    if (FLIGHT_ROLES.has(role)) for (let i = 0; i < c.count; i++) crewSlots.push({ role });
+    else skipped[c.role] = (skipped[c.role] || 0) + c.count;
   });
+  const skippedList = Object.keys(skipped).map(r => skipped[r] + ' ' + r);
+  if (skippedList.length) warnings.push('No crew slots for ' + skippedList.join(', ') + ' (not needed to fly the ship; add by hand if wanted)');
 
   // Optional (opts.withCrew): the book's posts as NPC crew already filling those slots
   const hiredCrew = [], crewRoles = [];
