@@ -10,6 +10,7 @@
   <script src="../js/supabase-config.js"></script>
   <script src="../js/ship-expenses.js"></script>
   <script src="../js/ship-data.js"></script>
+  <script src="../js/weapons-data.js"></script>
   <script src="../js/export-import.js"></script>
   <style>
     /* ── Header ── */
@@ -706,7 +707,7 @@ const MOUNT_DEFAULTS = {
   "Triple Turret":  { tl:9,    power:1 },
   "Barbette":       { tl:null, power:0 }
 };
-const RANGE_BANDS = ["Close","Short","Medium","Long","Very Long","Distant","Very Distant","Special"];
+const RANGE_BANDS = ["Adjacent","Close","Short","Medium","Long","Very Long","Distant","Very Distant","Special"];
 
 // ── State ────────────────────────────────────────────────
 let ship          = null;
@@ -1219,6 +1220,38 @@ async function deleteMountRow(id, tr) {
   recalcPowerAllocated();
 }
 
+// ── Add a weapon from the catalogue (High Guard weapon tables, js/weapons-data.js) ──
+// The menu on each weapon slot offers what fits the mount: turret weapons for turrets, barbettes for a barbette,
+// and for a fixed mount also the bays and point defence batteries (which the record keeps as fixed mounts).
+function catalogueWeaponGroups(mountType) {
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const w = r => ({ name: r[0], tl: r[1], range: r[2], power: r[3], damage: r[4], traits: r[6] && r[6] !== '--' ? r[6] : '' });
+  if (mountType === 'Barbette') return [['Barbettes', BARBETTE_WEAPONS.map(w)]];
+  const groups = [['Turret and fixed weapons', TURRET_WEAPONS.map(w)]];
+  if (mountType === 'Fixed Mount') {
+    ['small', 'medium', 'large'].forEach(sz => groups.push([cap(sz) + ' bay weapons', BAY_WEAPONS[sz].map(r => Object.assign(w(r), { name: cap(sz) + ' ' + r[0] }))]));
+    groups.push(['Point defence', POINT_DEFENCE.map(r => ({ name: r[0], tl: r[1], range: 'Point defence (intercept ' + r[2] + ')', power: r[3], damage: '', traits: 'Takes ' + r[4] + ' tons and one hardpoint' }))]);
+  }
+  return groups;
+}
+function catalogueWeaponOptions(mountType) {
+  return '<option value="">Add from catalogue…</option>' + catalogueWeaponGroups(mountType).map((g, gi) =>
+    '<optgroup label="' + g[0] + '">' + g[1].map((x, i) => '<option value="' + gi + '|' + i + '">' + x.name + ' (TL' + x.tl + ', ' + (x.damage || 'point defence') + ')</option>').join('') + '</optgroup>').join('');
+}
+function fillWeaponFromCatalogue(sel) {
+  if (!sel.value) return;
+  const tr = sel.closest('tr'), [g, i] = sel.value.split('|').map(Number);
+  const x = catalogueWeaponGroups(tr.dataset.mtype)[g][1][i];
+  const set = (field, v) => {
+    const el = tr.querySelector('[data-f="' + field + '"]');
+    if (el.tagName === 'SELECT' && ![...el.options].some(o => o.value === v)) el.insertAdjacentHTML('beforeend', '<option value="' + v + '">' + v + '</option>');
+    el.value = v;
+  };
+  set('name', x.name); set('tl', x.tl); set('range', x.range); set('damage', x.damage); set('power', x.power); set('traits', x.traits);
+  sel.value = '';
+  recalcPowerAllocated();
+}
+
 function renderWeaponSections() {
   const container = document.getElementById('weapon-sections');
   let html = '';
@@ -1235,9 +1268,9 @@ function renderWeaponSections() {
       for (let slot = 1; slot <= slots; slot++) {
         const w = weaponSlotRows.find(x => String(x.mount_id) === String(m.id) && x.instance === inst && x.slot === slot) || {};
         const hasData = !!(w.name);
-        html += `<tr class="${hasData ? '' : 'edit-only'}" data-mount="${m.id}" data-instance="${inst}" data-slot="${slot}" data-weapon-id="${w.id || ''}">
+        html += `<tr class="${hasData ? '' : 'edit-only'}" data-mount="${m.id}" data-mtype="${m.mount_type}" data-instance="${inst}" data-slot="${slot}" data-weapon-id="${w.id || ''}">
           <td>${slot}</td>
-          <td><span class="view-only">${w.name||''}</span><input class="edit-only" data-f="name" value="${w.name||''}" placeholder="Weapon" /></td>
+          <td><span class="view-only">${w.name||''}</span><select class="edit-only" style="max-width:150px;margin-bottom:3px" onchange="fillWeaponFromCatalogue(this)">${catalogueWeaponOptions(m.mount_type)}</select><input class="edit-only" data-f="name" value="${w.name||''}" placeholder="Weapon" /></td>
           <td><span class="view-only">${w.tl??''}</span><input class="edit-only" data-f="tl" type="number" value="${w.tl??''}" style="width:45px" /></td>
           <td><span class="view-only">${w.range||''}</span>
             <select class="edit-only" data-f="range" style="width:90px">
