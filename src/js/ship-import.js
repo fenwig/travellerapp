@@ -1,5 +1,5 @@
 // Turns a Ship Catalogue entry into the rows the Spacecraft Record stores.
-// catalogueToRecord(entry, { campaignId, name, status }) -> { ship, software, mounts, weapons, hiredCrew, crewRoles, warnings }
+// catalogueToRecord(entry, { campaignId, name, status, withCrew }) -> { ship, software, mounts, weapons, hiredCrew, crewRoles, warnings }
 // It only builds the rows; the caller inserts them (ship first, then mounts, then weapons and the rest, which need ids).
 // weapons[].mountIndex and weapons[].instance/slot say which mount (index into mounts) each weapon sits in.
 
@@ -47,7 +47,8 @@ function catalogueToRecord(s, opts) {
 
   // Crew: the book's posts become NPC crew (hired crew) and are put in the record's crew roles
   const hiredCrew = [], crewRoles = [];
-  s.crew.forEach(c => {
+  // Only when asked for (opts.withCrew): a ship added from the catalogue gets no NPC crew; they are hired by hand
+  if (opts.withCrew) s.crew.forEach(c => {
     const role = CATALOGUE_ROLE_MAP[c.role];
     if (!role) warnings.push('No crew role in the record for "' + c.role + '" (x' + c.count + '): added as hired crew only');
     for (let i = 0; i < c.count; i++) {
@@ -55,7 +56,7 @@ function catalogueToRecord(s, opts) {
     }
   });
   const single = new Set(['Captain', 'Pilot']), used = new Set();
-  hiredCrew.forEach((h, i) => {
+  if (opts.withCrew) hiredCrew.forEach((h, i) => {
     if (!h._recordRole) return;
     if (single.has(h._recordRole) && used.has(h._recordRole)) { warnings.push('Second ' + h._recordRole + ' has no role slot (record allows one)'); return; }
     used.add(h._recordRole);
