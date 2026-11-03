@@ -25,6 +25,8 @@
     .sc-stat span { font-size: 0.62rem; color: #4a9ab8; text-transform: uppercase; letter-spacing: 0.06em; }
     .sc-line { margin-bottom: 4px; line-height: 1.45; }
     .sc-line i { color: #4a9ab8; font-style: normal; }
+    .sc-more { margin-top: 6px; border-top: 1px solid #0a4a60; padding-top: 6px; }
+    .sc-more summary { cursor: pointer; color: #00e5ff; font-size: 0.78rem; margin-bottom: 6px; }
     .sc-note { margin-top: 6px; color: #4a9ab8; font-size: 0.76rem; }
     .sc-src { margin-top: 8px; font-size: 0.7rem; color: #4a9ab8; border-top: 1px solid #0a4a60; padding-top: 6px; }
   </style>
@@ -73,6 +75,27 @@
       return a.join(', ') || 'None';
     }
 
+    // The rest of the sheet, laid out the way the Spacecraft Record's Specs & Tech tab stores it
+    function specDetails(s) {
+      const p = s.powerReq, c = s.computerSpec;
+      const power = [['Basic ship systems', p.basic], ['Manoeuvre drive', p.mDrive], ['Jump drive', p.jDrive], ['Sensors', p.sensors], ['Weapons', p.weapons]]
+        .concat(p.other).filter(x => x[1]).map(x => x[0] + ' ' + x[1]).join(' · ');
+      const sw = s.software.map(x => esc(x.name) + (x.rating != null ? '/' + x.rating : '') + ' (BW ' + x.bw + ')').join(', ');
+      const jcMax = c.processor + (c.bis ? 5 : 0), jcOk = s.softwareBw.jumpControl <= jcMax, otherOk = s.softwareBw.other <= c.processor;
+      const stats = s.weapons.filter(w => w.stats).map(w => esc(w.name) + ': TL' + w.stats.tl + ', ' + w.stats.range + ', power ' + w.stats.power + ', ' + w.stats.damage + ', MCr' + w.stats.cost + ' ' + esc(w.stats.traits)).join('; ');
+      return `<details class="sc-more"><summary>Full specification</summary>
+        <div class="sc-line"><i>Power plant</i> ${s.power} · <i>Fuel tanks</i> ${s.fuelTons} tons</div>
+        <div class="sc-line"><i>Power needed</i> ${esc(power)}</div>
+        <div class="sc-line"><i>Computer</i> processor ${c.processor}${c.bis ? ' · bis' : ''}${c.fib ? ' · fib' : ''}</div>
+        <div class="sc-line"><i>Software</i> ${sw}</div>
+        <div class="sc-line"><i>Jump Control</i> <b style="color:${jcOk ? '#00ffaa' : '#ff5a4a'}">${s.softwareBw.jumpControl} of ${jcMax}</b>${c.bis ? ' (processor ' + c.processor + ' +5 for bis)' : ''} · <i>Other programs</i> <b style="color:${otherOk ? '#00ffaa' : '#ffd166'}">${s.softwareBw.other} of ${c.processor}</b>${otherOk ? '' : ' (not all can run at once)'}</div>
+        ${stats ? '<div class="sc-line"><i>Weapon stats</i> ' + stats + '</div>' : ''}
+        <div class="sc-line"><i>Sensors</i> ${esc(s.sensors)} · <i>Bridge</i> ${esc(s.bridge)}</div>
+        <div class="sc-line"><i>Systems</i> ${esc(s.systems.join(', ') || 'None')}</div>
+        <div class="sc-line"><i>Craft carried</i> ${esc(s.craft.join(', ') || 'None')}</div>
+      </details>`;
+    }
+
     function card(s) {
       return `<div class="sc-card">
         <div class="sc-head"><span class="sc-name">${esc(s.name)}</span><span class="sc-role">${esc(s.role)}</span></div>
@@ -89,6 +112,7 @@
         <div class="sc-line"><i>Crew</i> ${esc(crewText(s))}</div>
         <div class="sc-line"><i>Berths</i> ${esc(accomText(s))} · <i>Cargo</i> ${s.cargo} tons</div>
         <div class="sc-line"><i>Cost</i> ${mcr(s.purchase)} · <i>Maintenance</i> Cr${s.maintenance.toLocaleString('en-US')}/month</div>
+        ${specDetails(s)}
         ${s.notes ? `<div class="sc-note">${esc(s.notes)}</div>` : ''}
         <div class="sc-src">${esc(s.source.book)}, p.${s.source.page}</div>
       </div>`;
