@@ -113,6 +113,146 @@
       }
     };
 
+    // ── Drinax Origins — Pirates of Drinax Book 2 (Creating the Travellers) ──
+    // An optional Step 1 choice. Adds characteristic modifiers (like species
+    // mods) and REPLACES the Core Life Events table (2D) with the origin's
+    // own 1D table. Text is paraphrased, not quoted. Table entries are data:
+    // `fx` is a list of effects run by the origin engine (see
+    // applyOriginFx / originInteractive). Kinds:
+    //   auto:        stat, benefit, benefitDM, cash, skill, psi, note, children, autoQual, item
+    //   interactive: roll, choice, contact, assoc, loseAssoc, injury
+    const ORIGIN_DATA = {
+      standard: { label: 'Standard — Core Rulebook creation (Imperium or elsewhere in the Reach)', mods: {}, careers: '', blurb: '' },
+      floating: {
+        label: 'Drinax — Floating Palace (noble)',
+        homeworld: 'Drinax (Floating Palace)',
+        mods: { str: -1, end_stat: -1, edu: 1, soc: 1 },
+        careers: 'Noble, Scholar, Navy, Entertainer',
+        blurb: 'You grew up among the decaying wonders of the Floating Palace, steeped in the history of Drinax.',
+        lifeEvents: [
+          { text: 'New Contact — you befriended a figure at the court of Drinax.', fx: [
+            { k: 'contact', names: ['Princess Rao', 'Prince Harrick', 'Thao Poloc', 'Lady Hil', 'Rachando'], desc: 'A figure at the court of Drinax, befriended in youth.' }] },
+          { text: 'Family Affairs — roll 1D.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 2, text: 'A birth in the family shifts the line of succession and you lose an inherited title: SOC -1.', fx: [{ k: 'stat', key: 'soc', n: -1 }] },
+            { min: 3, max: 4, text: 'A marriage is arranged for you. Going through with it gives SOC +1.', fx: [{ k: 'choice', prompt: 'Do you go through with the arranged marriage?', options: [
+              { label: 'Marry (SOC +1)', fx: [{ k: 'stat', key: 'soc', n: 1 }, { k: 'note', text: 'Married in an arranged match; the spouse was met only at the ceremony.' }] },
+              { label: 'Refuse', fx: [] }] }] },
+            { min: 5, max: 6, text: 'A death in the family leaves you their estate and titles.', fx: [{ k: 'choice', prompt: 'Take your reward:', options: [
+              { label: 'Extra Benefit roll', fx: [{ k: 'benefit', n: 1 }] },
+              { label: 'SOC +1', fx: [{ k: 'stat', key: 'soc', n: 1 }] }] }] }] }] },
+          { text: 'Romantic Entanglement — you become involved with another courtier. Roll 1D to see how it ended.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 1, text: 'An amicable breakup.', fx: [] },
+            { min: 2, max: 2, text: 'A nasty breakup.', fx: [] },
+            { min: 3, max: 4, text: 'The relationship continues.', fx: [{ k: 'assoc', type: 'contact', label: 'your partner', desc: 'A courtier you became romantically involved with.' }] },
+            { min: 5, max: 5, text: 'You marry.', fx: [{ k: 'note', text: 'Married a fellow courtier.' }] },
+            { min: 6, max: 6, text: 'Tragic death or disappearance.', fx: [] }] }] },
+          { text: 'Misfortune — roll 1D.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 2, text: 'A wicked uncle steals your inheritance: lose 2 Benefit rolls, SOC -2, and gain an Enemy.', fx: [{ k: 'benefit', n: -2 }, { k: 'stat', key: 'soc', n: -2 }, { k: 'assoc', type: 'enemy', label: 'your uncle', desc: 'A wicked relative who stole your family inheritance and titles.' }] },
+            { min: 3, max: 4, text: 'Trading with the Vespexers of the surface, you catch a disease left over from the Aslan attack: END -1.', fx: [{ k: 'stat', key: 'end_stat', n: -1 }] },
+            { min: 5, max: 6, text: 'You fight a duel of honour and the other noble cheats. Gain a Rival and Melee (Blade) 1, and pay a price.', fx: [
+              { k: 'assoc', type: 'rival', label: 'the noble who cheated', desc: 'Cheated you in a duel of honour.' },
+              { k: 'skill', name: 'Melee', specialty: 'Blade', level: 1 },
+              { k: 'choice', prompt: 'Lose one of:', options: [
+                { label: '1 Benefit roll', fx: [{ k: 'benefit', n: -1 }] },
+                { label: '1 SOC', fx: [{ k: 'stat', key: 'soc', n: -1 }] },
+                { label: '1 END', fx: [{ k: 'stat', key: 'end_stat', n: -1 }] }] }] }] }] },
+          { text: 'Good Fortune — roll 1D.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 2, text: 'Rachando the merchant pays well for a family heirloom: gain 1D x Cr10000.', fx: [{ k: 'cash', dice: 1, mult: 10000 }] },
+            { min: 3, max: 4, text: 'You inherit a place in the Star Guard.', fx: [{ k: 'choice', prompt: 'Use the commission how?', options: [
+              { label: 'Sell it (1D x Cr10000)', fx: [{ k: 'cash', dice: 1, mult: 10000 }] },
+              { label: 'Enter the Navy automatically, with an automatic promotion in your first term', fx: [{ k: 'autoQual', careers: ['navy'], promote: true }] }] }] },
+            { min: 5, max: 6, text: 'You find an antique weapon in the palace armoury.', fx: [{ k: 'choice', prompt: 'Which weapon?', options: [
+              { label: 'Ancient rapier', fx: [{ k: 'item', kind: 'weapon', label: 'Ancient rapier' }] },
+              { label: 'Laser pistol', fx: [{ k: 'item', kind: 'weapon', label: 'Laser pistol' }] }] }] }] }] },
+          { text: 'Unusual Event — roll 1D.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 2, text: 'You are psionic! Test your Psionic Strength now with DM+4.', fx: [{ k: 'psi', dm: 4 }] },
+            { min: 3, max: 4, text: 'Great expectations — before the fall, your family held large estates on a world. Roll 1D to see which.', fx: [{ k: 'roll', die: 6, table: [
+              { min: 1, max: 1, text: 'The estates were on Paal.', fx: [{ k: 'note', text: 'Family estates once stood on Paal.' }] },
+              { min: 2, max: 2, text: 'The estates were on Torpol.', fx: [{ k: 'note', text: 'Family estates once stood on Torpol.' }] },
+              { min: 3, max: 3, text: 'The estates were on Clarke.', fx: [{ k: 'note', text: 'Family estates once stood on Clarke.' }] },
+              { min: 4, max: 4, text: 'The estates were on Asim.', fx: [{ k: 'note', text: 'Family estates once stood on Asim.' }] },
+              { min: 5, max: 5, text: 'The estates were on Banks/Khusai.', fx: [{ k: 'note', text: 'Family estates once stood on Banks (Khusai).' }] },
+              { min: 6, max: 6, text: 'The estates were on an old Sindalian world of your choice in Sindal Subsector.', fx: [{ k: 'note', text: 'Family estates once stood on an old Sindalian world (player picks any planet in Sindal Subsector).' }] }] }] },
+            { min: 5, max: 6, text: 'You discover you are the bastard child of King Oleb.', fx: [{ k: 'note', text: 'Secretly the bastard child of King Oleb.' }] }] }] }
+        ]
+      },
+      wasteland: {
+        label: 'Drinax — Wasteland (Vespexer)',
+        homeworld: 'Drinax (Wasteland)',
+        mods: { end_stat: 2, edu: -1, soc: -1 },
+        careers: 'Army, Citizen (colonist), Drifter, Rogue, Scout',
+        blurb: 'You are a Vespexer, born to the tribes that wander the blasted surface of Drinax. You kneel to no-one.',
+        lifeEvents: [
+          { text: 'New Contact — you are not without friends.', fx: [
+            { k: 'contact', names: ['Rachando', 'Chieftain Galx', 'Sal Dancet', 'Prince Harrick'], desc: 'A friend made while growing up on the surface of Drinax.' }] },
+          { text: 'Family Affairs — roll 1D.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 2, text: 'A birth in the tribe, and there is not enough food for another mouth.', fx: [{ k: 'choice', prompt: 'What happens?', options: [
+              { label: 'The child dies', fx: [{ k: 'note', text: 'A child of the tribe died when food ran short.' }] },
+              { label: 'You leave your career and strike out as a Drifter or Rogue', fx: [{ k: 'note', text: 'Must leave the current career and take Drifter or Rogue as the next career (not enforced by the wizard).' }] }] }] },
+            { min: 3, max: 4, text: 'Disease strikes the tribe and a relative dies. Their possessions give an extra Benefit roll.', fx: [{ k: 'benefit', n: 1 }] },
+            { min: 5, max: 6, text: 'A relative is accused of a crime and exiled, perhaps off-world. Gain them as a vengeful Enemy.', fx: [{ k: 'assoc', type: 'enemy', label: 'the exiled relative', desc: 'A kinsman exiled from the tribe, likely vanished off-world.' }] }] }] },
+          { text: 'Romantic Entanglement — the tribe must grow and you are married off. Roll 1D to see how it went.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 2, text: 'Your partner died.', fx: [] },
+            { min: 3, max: 5, text: 'The marriage lasts. Your spouse is an Ally, and you have 1D-3 children.', fx: [{ k: 'assoc', type: 'ally', label: 'your spouse', desc: 'Married to you by the tribe.' }, { k: 'children' }] },
+            { min: 6, max: 6, text: 'Tragic death or disappearance.', fx: [] }] }] },
+          { text: 'Misfortune — roll 1D.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 2, text: 'You are framed for a crime and exiled from the tribe: gain your persecutor as an Enemy, SOC -1.', fx: [{ k: 'assoc', type: 'enemy', label: 'your persecutor', desc: 'Framed you and had you exiled from the tribe.' }, { k: 'stat', key: 'soc', n: -1 }] },
+            { min: 3, max: 4, text: 'Exploring a ruined city, you catch a disease left by the Aslan attack: END -1.', fx: [{ k: 'stat', key: 'end_stat', n: -1 }] },
+            { min: 5, max: 6, text: 'You are wounded hunting and your hazard suit is torn. Lose one Benefit roll to pay for the repair.', fx: [{ k: 'benefit', n: -1 }] }] }] },
+          { text: 'Good Fortune — roll 1D.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 2, text: 'Rachando pays well for a relic from the ruined cities: gain 1D x Cr10000.', fx: [{ k: 'cash', dice: 1, mult: 10000 }] },
+            { min: 3, max: 4, text: 'A travelling merchant or smuggler offers you a berth aboard his ship.', fx: [{ k: 'choice', prompt: 'Which career may you enter automatically?', options: [
+              { label: 'Rogue', fx: [{ k: 'autoQual', careers: ['rogue'] }] },
+              { label: 'Merchant', fx: [{ k: 'autoQual', careers: ['merchant'] }] },
+              { label: 'Decline', fx: [] }] }] },
+            { min: 5, max: 6, text: 'Your tribe prospers: gain an extra Benefit roll.', fx: [{ k: 'benefit', n: 1 }] }] }] },
+          { text: 'Unusual Event — roll 1D.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 2, text: 'You are psionic! Test your Psionic Strength now with DM+4.', fx: [{ k: 'psi', dm: 4 }] },
+            { min: 3, max: 4, text: 'You find the wreckage of an Aslan ship and take a mysterious chest from its hold. It bears the mark of the Syoisuis assassin-clan, and you have never been able to open it.', fx: [{ k: 'note', text: 'Owns a sealed chest bearing the Syoisuis assassin-clan symbol, salvaged from a crashed Aslan ship. It has never been opened.' }] },
+            { min: 5, max: 6, text: 'The tribe\'s wise-woman declared you the Hlax Kur Eaisa, the messiah who will avenge the Vespexers upon the Aslan.', fx: [{ k: 'note', text: 'Proclaimed in infancy as the Hlax Kur Eaisa, the messiah who will avenge the Vespexers upon the Aslan.' }] }] }] }
+        ]
+      },
+      asim: {
+        label: 'Asim (agricultural world of the Drinax kingdom)',
+        homeworld: 'Asim',
+        mods: { end_stat: 1, edu: -1 },
+        careers: 'Army, Citizen (colonist), Drifter, Entertainer, Marine',
+        blurb: 'Asim is a low-tech agricultural backwater, once ruled by the cryptic Foundation and now the last province of the Kings of Drinax.',
+        lifeEvents: [
+          { text: 'New Contact — you have the ear of someone at court.', fx: [
+            { k: 'contact', names: ['Cleon Hardy', 'Rachando', 'Kisayl', 'Lord Wrax'], desc: 'Someone at the court of Drinax who knows you.' }] },
+          { text: 'Family Affairs — roll 1D.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 2, text: 'Your family has thrived since the reconquest: SOC +1.', fx: [{ k: 'stat', key: 'soc', n: 1 }] },
+            { min: 3, max: 4, text: 'A Drinaxi noble killed your father in the war. Gain him as an Enemy.', fx: [{ k: 'assoc', type: 'enemy', label: 'the noble', desc: 'A Drinaxi noble who killed your father during the war.' }] },
+            { min: 5, max: 6, text: 'Your family still lives in desperate poverty. You may give up a Benefit roll to ease their suffering; if you do, DM+1 to your next Advancement roll.', fx: [{ k: 'choice', prompt: 'Help your family?', options: [
+              { label: 'Give up a Benefit roll (DM+1 to next Advancement)', fx: [{ k: 'benefit', n: -1 }, { k: 'advDM', n: 1 }] },
+              { label: 'Do not help', fx: [] }] }] }] }] },
+          { text: 'Romantic Entanglement — roll 1D.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 3, text: 'Your family follows the old ways and the Foundation\'s breeding program, and you are married off despite your objections.', fx: [{ k: 'note', text: 'Married off by the family under the old Foundation breeding program.' }] },
+            { min: 4, max: 6, text: 'You travelled to Drinax to seek your fortune and found someone instead. Roll 1D to see how it ended.', fx: [{ k: 'roll', die: 6, table: [
+              { min: 1, max: 1, text: 'An amicable breakup.', fx: [] },
+              { min: 2, max: 2, text: 'A nasty breakup.', fx: [] },
+              { min: 3, max: 4, text: 'The relationship continues.', fx: [{ k: 'assoc', type: 'contact', label: 'your partner', desc: 'Someone you met when you travelled to Drinax.' }] },
+              { min: 5, max: 5, text: 'You marry.', fx: [{ k: 'note', text: 'Married someone met on Drinax.' }] },
+              { min: 6, max: 6, text: 'Tragic death or disappearance.', fx: [] }] }] }] }] },
+          { text: 'Misfortune — roll 1D.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 2, text: 'Your sheltered homeworld did not prepare you for the wider galaxy and you blunder into danger. Lose 1 Benefit roll, or lose a Contact or Ally.', fx: [{ k: 'choice', prompt: 'What do you lose?', options: [
+              { label: '1 Benefit roll', fx: [{ k: 'benefit', n: -1 }] },
+              { label: 'A Contact or Ally', fx: [{ k: 'loseAssoc' }] }] }] },
+            { min: 3, max: 4, text: 'You are injured while travelling. Roll on the Injury table.', fx: [{ k: 'injury' }] },
+            { min: 5, max: 6, text: 'Aslan slavers from the Glorious Empire kidnap you! Roll 1D for where they put you.', fx: [{ k: 'roll', die: 6, table: [
+              { min: 1, max: 2, text: 'Enslaved in the Navy.', fx: [{ k: 'note', text: 'Enslaved by Aslan slavers and put to work in the Navy career. While enslaved: no Commission and no Benefit rolls. After each term, 2D 8+ to escape; on failure roll on the Injury table. (Not enforced by the wizard.)' }] },
+              { min: 3, max: 4, text: 'Enslaved in the Army.', fx: [{ k: 'note', text: 'Enslaved by Aslan slavers and put to work in the Army career. While enslaved: no Commission and no Benefit rolls. After each term, 2D 8+ to escape; on failure roll on the Injury table. (Not enforced by the wizard.)' }] },
+              { min: 5, max: 6, text: 'Enslaved in the Scouts.', fx: [{ k: 'note', text: 'Enslaved by Aslan slavers and put to work in the Scout career. While enslaved: no Commission and no Benefit rolls. After each term, 2D 8+ to escape; on failure roll on the Injury table. (Not enforced by the wizard.)' }] }] }] }] }] },
+          { text: 'Good Fortune — luck is on your side: DM+1 to any one Benefit roll.', fx: [{ k: 'benefitDM', n: 1 }] },
+          { text: 'Unusual Event — roll 1D.', fx: [{ k: 'roll', die: 6, table: [
+            { min: 1, max: 2, text: 'You spend time in the Aslan Hierate and gain a Contact among the Aslan.', fx: [{ k: 'assoc', type: 'contact', label: 'your Aslan contact', desc: 'Met while travelling in the Aslan Hierate.' }] },
+            { min: 3, max: 4, text: 'A mentor secretly belongs to the Foundation and inducts you. You must spy on the court at Drinax and report to Asim, or your family will be killed.', fx: [{ k: 'note', text: 'Inducted into the Foundation conspiracy by a mentor. Mission: spy on the court at Drinax and report back to Asim; refusal means the family is killed.' }] },
+            { min: 5, max: 6, text: 'You are psionic! Test your Psionic Strength now with DM+4.', fx: [{ k: 'psi', dm: 4 }] }] }] }
+        ]
+      }
+    };
+
     const SPECIES_NOTE_START = '[SPECIES TRAITS]';
     const SPECIES_NOTE_END = '[/SPECIES TRAITS]';
 
@@ -315,9 +455,10 @@
       renderStep();
     }
 
+    // Species modifier plus any Drinax origin modifier (see ORIGIN_DATA).
     function speciesMod(key) {
       const sp = SPECIES_DATA[draft.species] || SPECIES_DATA.Human;
-      return sp.mods[key] || 0;
+      return (sp.mods[key] || 0) + (originData().mods[key] || 0);
     }
 
     function renderAssignment() {
@@ -352,7 +493,7 @@
       return `
         <div class="rule-card wizard-card">
           <div class="wizard-card-title">Assign Your Rolls</div>
-          <div class="wizard-card-sub">Rolled: ${values.join(', ')}${draft.species !== 'Human' ? ` — species modifiers for ${draft.species} are applied automatically.` : ''}</div>
+          <div class="wizard-card-sub">Rolled: ${values.join(', ')}${draft.species !== 'Human' ? ` — species modifiers for ${draft.species} are applied automatically.` : ''}${originId() !== 'standard' ? ` Origin modifiers (${modsLine(originData().mods)}) are applied automatically.` : ''}</div>
           ${rows}
           <div id="step2-error"></div>
           <div class="wizard-actions">
@@ -1540,6 +1681,7 @@
     // Pre-Career Events roll 7 ("Life Event") — rolls on the same Life
     // Events table the Career step uses (Core p.46).
     function renderEvent7(m) {
+      if (originId() !== 'standard') return renderEvent7Origin(m);
       if (!m.rolled) {
         return `
           <div class="wizard-actions" style="justify-content:flex-start; margin-top:0;">
@@ -4285,6 +4427,22 @@
         `;
       }
 
+      if (originAutoQualFor(c.id)) {
+        return `
+          <div class="rule-card wizard-card">
+            <div class="wizard-card-title">${c.name} — Qualification</div>
+            <div class="wizard-card-sub">Your Drinax origin Life Event grants automatic entry into this career.${originAutoQualFor(c.id).promote ? ' You also gain an automatic promotion in this first term.' : ''}</div>
+            <div class="wizard-actions" style="justify-content:flex-start;">
+              <button class="btn-outline" onclick="confirmOriginAutoQual()">Confirm Entry</button>
+              <button class="btn-outline" onclick="doCareerQualify(false)">Roll Qualification Instead</button>
+            </div>
+            <div class="wizard-actions">
+              <button class="btn-outline" onclick="saveStep5State({phase:'choose'}).then(renderStep)">Back</button>
+            </div>
+          </div>
+        `;
+      }
+
       const statLabel = c.qualification.statOptions
         ? c.qualification.statOptions.map(k => (CHARS.find(x => x.key === k) || {}).label || k.toUpperCase()).join(' or ')
         : (CHARS.find(x => x.key === c.qualification.stat) || {}).label || c.qualification.stat.toUpperCase();
@@ -5328,6 +5486,7 @@
     // that lists 'lifeEvent' as a tool. Nests the generic resolver tools
     // for its own associate/skill grants, then closes out the parent tag.
     function openLifeEventResolver(tag) {
+      if (originId() !== 'standard') { openOriginLifeEvent(tag); return; }
       document.getElementById('resolver-' + tag).innerHTML =
         `<button class="btn-outline" onclick="rollLifeEvent('${tag}')">Roll 2D for a Life Event</button>`;
     }
@@ -5483,6 +5642,263 @@
 
     function finishLifeEvent(tag, resultText) {
       markResolverDone(tag, resultText || 'Life Event resolved.');
+    }
+
+    // ── Drinax origin Life Events (Pirates of Drinax Book 2) ──────────────
+    // Replaces the Core 2D Life Events table when the Traveller has a Drinax
+    // origin (ORIGIN_DATA). An entry is a queue of effects (`fx`) processed in
+    // order: automatic ones apply at once, interactive ones (roll, choice,
+    // contact, assoc, loseAssoc, injury) pause for the player. The whole state
+    // {roll, queue, cur, hist, done} is saved so a re-render never re-rolls.
+    // Used by both the career Life Event tool ('event'/'mishap' tags) and
+    // Pre-Career Events roll 7 (tag 'preed7').
+    const ORIGIN_INTERACTIVE = ['roll', 'choice', 'contact', 'assoc', 'loseAssoc', 'injury'];
+    const ORIGIN_ASSOC_LABEL = { ally: 'Ally', contact: 'Contact', rival: 'Rival', enemy: 'Enemy' };
+
+    function originId() { return (draft.creation_data && draft.creation_data.origin) || 'standard'; }
+    function originData() { return ORIGIN_DATA[originId()] || ORIGIN_DATA.standard; }
+    function cloneFx(fx) { return JSON.parse(JSON.stringify(fx || [])); }
+
+    function originEvState(tag) {
+      const base = baseResolverTag(tag);
+      const m = base === 'preed7' ? (step4State().eventMechanic || {}) : mechanicState(base);
+      return m.origin || null;
+    }
+
+    async function saveOriginEvState(tag, st) {
+      const base = baseResolverTag(tag);
+      if (base === 'preed7') await saveEventMechanic({ origin: st });
+      else await saveMechanic(base, { origin: st });
+    }
+
+    // Pre-Career Events roll 7 with a Drinax origin — the card body is just a
+    // container; renderStep() fills it via openOriginLifeEvent('preed7').
+    function renderEvent7Origin(m) {
+      if (m.resolved) {
+        return `<div class="wizard-card-sub" style="color:#00ffaa;">${escapeHtml(m.origin ? m.origin.hist.join(' ') : 'Resolved.')}</div>`;
+      }
+      return `<div id="resolver-preed7"></div>`;
+    }
+
+    function openOriginLifeEvent(tag) {
+      const el = document.getElementById('resolver-' + tag);
+      if (!el) return;
+      const st = originEvState(tag);
+      if (!st) {
+        el.innerHTML = `<button class="btn-outline" onclick="rollOriginLifeEvent('${tag}')">Roll 1D for a Drinax Life Event</button>`;
+        return;
+      }
+      renderOriginEvent(tag, st);
+    }
+
+    async function rollOriginLifeEvent(tag) {
+      if (originEvState(tag)) { openOriginLifeEvent(tag); return; }
+      const roll = rollDie();
+      const e = originData().lifeEvents[roll - 1];
+      const st = { roll, queue: cloneFx(e.fx), cur: null, hist: [`Rolled ${roll} — ${e.text}`], done: false };
+      await logCreation(`Life Event (${originData().label}) roll ${roll}: ${e.text}`);
+      await advanceOrigin(tag, st);
+    }
+
+    // Runs queued effects until one needs the player, or the queue is empty.
+    async function advanceOrigin(tag, st) {
+      st.cur = null;
+      while (st.queue.length) {
+        const fx = st.queue.shift();
+        if (fx.k === 'loseAssoc') {
+          const cands = await listAssociatesOfTypes(['contact', 'ally']);
+          if (!cands.length) { st.hist.push('You have no Contact or Ally to lose, so nothing is lost.'); continue; }
+          fx.cands = cands;
+        }
+        if (ORIGIN_INTERACTIVE.includes(fx.k)) { st.cur = fx; break; }
+        const line = await applyOriginFx(fx);
+        if (line) st.hist.push(line);
+      }
+      if (!st.cur) { await finishOriginEvent(tag, st); return; }
+      await saveOriginEvState(tag, st);
+      // The Injury Table closes the event itself, so keep the result text first.
+      if (st.cur.k === 'injury') await persistResolverNote(tag, 'Life Event — ' + st.hist.join(' '));
+      renderOriginEvent(tag, st);
+    }
+
+    async function finishOriginEvent(tag, st) {
+      st.done = true;
+      await saveOriginEvState(tag, st);
+      await logCreation('Life Event result: ' + st.hist.slice(1).join(' '));
+      markResolverDone(tag, 'Life Event — ' + st.hist.join(' '));
+    }
+
+    function renderOriginEvent(tag, st) {
+      const el = document.getElementById('resolver-' + tag);
+      if (!el) return;
+      const hist = st.hist.map(h => `<div style="margin-bottom:6px;">${escapeHtml(h)}</div>`).join('');
+      el.innerHTML = hist + (st.cur ? originPrompt(tag, st.cur) : '');
+    }
+
+    function originPrompt(tag, fx) {
+      const row = 'display:flex; gap:8px; flex-wrap:wrap; margin:8px 0;';
+      if (fx.k === 'roll') return `<button class="btn-outline" onclick="originRoll('${tag}')">Roll 1D</button>`;
+      if (fx.k === 'choice') {
+        return `<div style="font-size:0.85rem; color:#4a9ab8;">${escapeHtml(fx.prompt)}</div>
+          <div style="${row}">${fx.options.map((o, i) => `<button class="btn-outline" onclick="originChoose('${tag}',${i})">${escapeHtml(o.label)}</button>`).join('')}</div>`;
+      }
+      if (fx.k === 'contact') {
+        return `<div style="font-size:0.85rem; color:#4a9ab8;">Pick one as a Contact, or name someone else:</div>
+          <div style="${row}">${fx.names.map((n, i) => `<button class="btn-outline" onclick="originContactPick('${tag}',${i})">${escapeHtml(n)}</button>`).join('')}</div>
+          <input id="origin-name-${tag}" type="text" placeholder="Someone else (name)" style="margin-bottom:8px;" />
+          <button class="btn-outline" onclick="originAssocName('${tag}')">Add Contact</button>`;
+      }
+      if (fx.k === 'assoc') {
+        return `<div style="font-size:0.85rem; color:#4a9ab8;">Name ${escapeHtml(fx.label)} (gained as ${ORIGIN_ASSOC_LABEL[fx.type]}):</div>
+          <input id="origin-name-${tag}" type="text" placeholder="Name" style="margin:8px 0;" />
+          <button class="btn-outline" onclick="originAssocName('${tag}')">Add ${ORIGIN_ASSOC_LABEL[fx.type]}</button>`;
+      }
+      if (fx.k === 'loseAssoc') {
+        return `<div style="font-size:0.85rem; color:#4a9ab8;">Choose which one you lose:</div>
+          <div style="${row}">${fx.cands.map((c, i) => `<button class="btn-outline" onclick="originLose('${tag}',${i})">${escapeHtml(c.name)} (${ORIGIN_ASSOC_LABEL[c.type]})</button>`).join('')}</div>`;
+      }
+      if (fx.k === 'injury') return `<button class="btn-outline" onclick="openInjuryResolver('${tag}')">Roll on the Injury Table</button>`;
+      return '';
+    }
+
+    // Takes the pending interactive step off the state (synchronously, so a
+    // double click can't run it twice) or returns null.
+    function takeOriginCur(tag) {
+      const st = originEvState(tag);
+      if (!st || !st.cur) return null;
+      const fx = st.cur;
+      st.cur = null;
+      return { st, fx };
+    }
+
+    async function originRoll(tag) {
+      const t = takeOriginCur(tag);
+      if (!t) return;
+      const roll = rollDie();
+      const row = t.fx.table.find(r => roll >= r.min && roll <= r.max);
+      t.st.hist.push(`Rolled ${roll} — ${row.text}`);
+      t.st.queue = cloneFx(row.fx).concat(t.st.queue);
+      await advanceOrigin(tag, t.st);
+    }
+
+    async function originChoose(tag, i) {
+      const t = takeOriginCur(tag);
+      if (!t) return;
+      const opt = t.fx.options[i];
+      t.st.hist.push(`Chosen: ${opt.label}.`);
+      t.st.queue = cloneFx(opt.fx).concat(t.st.queue);
+      await advanceOrigin(tag, t.st);
+    }
+
+    async function originGainAssoc(tag, t, name) {
+      const type = t.fx.type || 'contact';
+      await addAssociate(type, name, t.fx.desc || 'Gained from a Drinax origin Life Event.');
+      t.st.hist.push(`Gained ${name} as a ${ORIGIN_ASSOC_LABEL[type]}.`);
+      await advanceOrigin(tag, t.st);
+    }
+
+    async function originContactPick(tag, i) {
+      const t = takeOriginCur(tag);
+      if (!t) return;
+      await originGainAssoc(tag, t, t.fx.names[i]);
+    }
+
+    async function originAssocName(tag) {
+      const input = document.getElementById('origin-name-' + tag);
+      const name = input ? input.value.trim() : '';
+      if (!name) { alert('Enter a name first.'); return; }
+      const t = takeOriginCur(tag);
+      if (!t) return;
+      await originGainAssoc(tag, t, name);
+    }
+
+    async function originLose(tag, i) {
+      const t = takeOriginCur(tag);
+      if (!t) return;
+      const c = t.fx.cands[i];
+      await supabaseClient.from('character_associates').delete().eq('id', c.id);
+      t.st.hist.push(`Lost ${c.name} (${ORIGIN_ASSOC_LABEL[c.type]}).`);
+      await advanceOrigin(tag, t.st);
+    }
+
+    // Applies one automatic effect; returns the line to show and log.
+    async function applyOriginFx(fx) {
+      const signed = n => (n > 0 ? '+' : '') + n;
+      switch (fx.k) {
+        case 'stat': {
+          await applyStatChange(fx.key, fx.n);
+          const label = (CHARS.find(c => c.key === fx.key) || {}).label || fx.key;
+          return `${label} ${signed(fx.n)} (now ${draft[fx.key]}).`;
+        }
+        case 'benefit':
+          await addPendingMod('extraBenefitRolls', fx.n);
+          return `${fx.n > 0 ? 'Gained' : 'Lost'} ${Math.abs(fx.n)} Benefit roll${Math.abs(fx.n) === 1 ? '' : 's'}.`;
+        case 'benefitDM':
+          await addPendingMod('benefitRollDM', fx.n);
+          return `Banked DM${signed(fx.n)} to one Benefit roll.`;
+        case 'advDM':
+          await addPendingMod('advancementDM', fx.n);
+          return `Banked DM${signed(fx.n)} to your next Advancement roll.`;
+        case 'cash': {
+          let rolled = 0;
+          for (let i = 0; i < fx.dice; i++) rolled += rollDie();
+          const amount = rolled * fx.mult;
+          await applyStatChange('cash_on_hand', amount);
+          return `Gained Cr${amount} (rolled ${rolled}).`;
+        }
+        case 'skill': {
+          const skills = Object.assign({}, draft.skills || {});
+          grantSkillMin(skills, fx.name, fx.specialty, fx.level);
+          await supabaseClient.from('characters').update({ skills }).eq('id', draft.id);
+          draft.skills = skills;
+          return `Gained ${fx.name}${fx.specialty ? ` (${fx.specialty})` : ''} ${fx.level}.`;
+        }
+        case 'psi': {
+          if (draft.psi !== null && draft.psi !== undefined) return `Psionic Strength was already tested (PSI ${draft.psi}), so there is no new test.`;
+          const d1 = rollDie(), d2 = rollDie();
+          const total = Math.max(0, d1 + d2 + fx.dm);
+          draft.psi = total;
+          await supabaseClient.from('characters').update({ psi: total }).eq('id', draft.id);
+          return `Tested Psionic Strength with DM+${fx.dm}: rolled ${d1}+${d2}+${fx.dm} = PSI ${total}.`;
+        }
+        case 'note': {
+          const notes = draft.background_notes ? draft.background_notes + '\n\n' : '';
+          const background_notes = `${notes}[ORIGIN EVENT] ${fx.text}`;
+          await supabaseClient.from('characters').update({ background_notes }).eq('id', draft.id);
+          draft.background_notes = background_notes;
+          return fx.text;
+        }
+        case 'children': {
+          const rolled = rollDie();
+          return `Children: rolled ${rolled}, so ${Math.max(0, rolled - 3)} (1D-3, minimum 0).`;
+        }
+        case 'autoQual': {
+          const list = (pendingMods().autoQualify || []).concat(fx.careers.map(id => ({ career: id, promote: !!fx.promote })));
+          await setPendingFlag('autoQualify', list);
+          return `You may enter the ${fx.careers.join(' or ')} career automatically${fx.promote ? ', with an automatic promotion in that first term' : ''}.`;
+        }
+        case 'item':
+          if (fx.kind === 'weapon') {
+            await supabaseClient.from('character_weapons').insert({ character_id: draft.id, name: fx.label, traits: 'Found during a Drinax origin Life Event; fill in details in Character Record.' });
+          }
+          return `${fx.label} added to your Weapons tab; fill in details there.`;
+      }
+      return '';
+    }
+
+    // Career entry banked by a Drinax origin event: automatic qualification
+    // (and, for the Navy commission, an automatic promotion), used once.
+    function originAutoQualFor(careerId) {
+      return (pendingMods().autoQualify || []).find(a => a.career === careerId) || null;
+    }
+
+    async function confirmOriginAutoQual() {
+      const s = step5State();
+      const entry = originAutoQualFor(s.careerId);
+      if (!entry) return;
+      await setPendingFlag('autoQualify', (pendingMods().autoQualify || []).filter(a => a !== entry && !(a.career === entry.career)));
+      if (entry.promote) await setPendingFlag('autoPromote', true);
+      await doCareerQualify(true);
     }
 
     // ── Bespoke event/mishap mechanics ────────────────────────
@@ -11035,7 +11451,10 @@
       }
 
       shell.innerHTML = renderSteps() + renderCharacteristicsPanel() + renderSkillsPanel() + renderRecentActivity() + body;
-      if (step === 1) renderSpeciesPreview();
+      if (step === 1) { renderSpeciesPreview(); renderOriginPreview(); }
+      // A Drinax-origin Pre-Career Life Event (event 7) draws its card into
+      // this container; refill it so an in-progress table roll survives re-renders.
+      if (step === 4 && document.getElementById('resolver-preed7') && originId() !== 'standard') openOriginLifeEvent('preed7');
       if (step === 4 && !(draft.creation_data && draft.creation_data.seenConnectionsModal)) {
         showConnectionsModal();
       }
@@ -11088,6 +11507,20 @@
       `;
     }
 
+    function renderOriginPreview() {
+      const o = ORIGIN_DATA[document.getElementById('f-origin').value] || ORIGIN_DATA.standard;
+      const el = document.getElementById('origin-preview');
+      if (!o.blurb) { el.innerHTML = ''; return; }
+      el.innerHTML = `
+        <div class="rule-card" style="margin-bottom:16px;">
+          <div style="font-size:0.85rem; margin-bottom:6px;">${o.blurb}</div>
+          <div style="color:#00e5ff; font-size:0.85rem; font-weight:600; margin-bottom:4px;">Characteristics: ${modsLine(o.mods)}</div>
+          <div style="font-size:0.82rem; color:#4a9ab8;">Suggested careers: ${o.careers}. These are only suggestions.</div>
+          <div style="font-size:0.82rem; color:#4a9ab8; margin-top:4px;">Replaces the Core Life Events table with this origin's own table.</div>
+        </div>
+      `;
+    }
+
     function renderStepName() {
       return `
         <div class="rule-card wizard-card">
@@ -11110,6 +11543,17 @@
 
           <div id="species-preview"></div>
 
+          <div class="wizard-field">
+            <label for="f-origin">Origin (Pirates of Drinax)</label>
+            <select id="f-origin" onchange="renderOriginPreview()">
+              ${Object.keys(ORIGIN_DATA).map(id =>
+                `<option value="${id}" ${originId() === id ? 'selected' : ''}>${ORIGIN_DATA[id].label}</option>`
+              ).join('')}
+            </select>
+          </div>
+
+          <div id="origin-preview"></div>
+
           <div id="step1-error"></div>
 
           <div class="wizard-actions">
@@ -11131,9 +11575,15 @@
       }
 
       const background_notes = applySpeciesNote(draft.background_notes, species);
+      const origin = document.getElementById('f-origin').value || 'standard';
+      const creation_data = Object.assign({}, draft.creation_data || {}, { origin });
+      const update = { name, species, background_notes, creation_data, creation_step: 2 };
+      // Pre-fill Homeworld from a Drinax origin, but never overwrite one already typed.
+      const originHome = (ORIGIN_DATA[origin] || {}).homeworld;
+      if (originHome && !draft.homeworld) update.homeworld = originHome;
 
       const { error } = await supabaseClient.from('characters')
-        .update({ name, species, background_notes, creation_step: 2 })
+        .update(update)
         .eq('id', draft.id);
       if (error) {
         errEl.innerHTML = `<p class="wizard-error">${error.message}</p>`;
@@ -11142,8 +11592,10 @@
       draft.name = name;
       draft.species = species;
       draft.background_notes = background_notes;
+      draft.creation_data = creation_data;
+      if (update.homeworld) draft.homeworld = update.homeworld;
       draft.creation_step = 2;
-      await logCreation(`Named the Traveller "${name}" — species ${species}.`);
+      await logCreation(`Named the Traveller "${name}" — species ${species}${origin !== 'standard' ? `, origin: ${ORIGIN_DATA[origin].label}` : ''}.`);
       renderStep();
     }
 
