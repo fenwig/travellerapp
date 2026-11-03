@@ -4526,5 +4526,1426 @@ const SHIP_CATALOGUE = [
       "jumpControl": 10,
       "other": 0
     }
+  },
+  {
+    "id": "b3-eakhau-trader",
+    "name": "Trader",
+    "cls": "Eakhau class (Aslan)",
+    "role": "Merchant",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": 74
+    },
+    "tl": 12,
+    "tons": 400,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 1,
+    "jump": 2,
+    "power": 165,
+    "fuel": "J-2, 4 weeks of operation",
+    "structure": 160,
+    "computer": "Computer/5bis",
+    "sensors": "Civilian Grade",
+    "bridge": "Standard",
+    "weapons": [],
+    "staterooms": 13,
+    "lowBerths": 16,
+    "barracks": 0,
+    "cargo": 173.5,
+    "craft": [],
+    "systems": [
+      "Fuel Processor (20 tons/day)",
+      "Fuel Scoops",
+      "Shrine",
+      "Re-entry Capsules x13"
+    ],
+    "software": [
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Purser",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 1
+      }
+    ],
+    "total": 95.145,
+    "purchase": 95.145,
+    "maintenance": 7928,
+    "fuelTons": 82,
+    "powerReq": {
+      "basic": 80,
+      "mDrive": 40,
+      "jDrive": 80,
+      "sensors": 1,
+      "weapons": 0,
+      "other": [
+        [
+          "Fuel Processor",
+          1
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": true,
+      "fib": false
+    },
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 0
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-hkiyrerao-researcher",
+    "name": "Researcher",
+    "cls": "Hkiyrerao class (Aslan)",
+    "role": "Survey",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": 76
+    },
+    "tl": 14,
+    "tons": 400,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 1,
+    "jump": 3,
+    "power": 240,
+    "fuel": "J-3, 16 weeks of operation",
+    "structure": 160,
+    "computer": "Computer/25",
+    "sensors": "Improved",
+    "bridge": "Standard",
+    "weapons": [],
+    "staterooms": 15,
+    "lowBerths": 10,
+    "barracks": 0,
+    "cargo": 28,
+    "craft": [
+      "Pinnace"
+    ],
+    "systems": [
+      "Fuel Scoops",
+      "Fuel Processor (60 tons/day)",
+      "Shrine",
+      "Laboratories",
+      "Docking Space (40 tons)"
+    ],
+    "software": [
+      {
+        "name": "Jump Control",
+        "rating": 3,
+        "tl": 12,
+        "bw": 15
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Intellect",
+        "rating": null,
+        "tl": 11,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Executive Officer/Head Scientist",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 2
+      }
+    ],
+    "total": 157.832,
+    "purchase": 157.832,
+    "maintenance": 13153,
+    "fuelTons": 128,
+    "powerReq": {
+      "basic": 80,
+      "mDrive": 40,
+      "jDrive": 120,
+      "sensors": 4,
+      "weapons": 0,
+      "other": [
+        [
+          "Fuel Processor",
+          3
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 25,
+      "bis": false,
+      "fib": false
+    },
+    "softwareBw": {
+      "jumpControl": 15,
+      "other": 0
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-khtukhao-clan-transport",
+    "name": "Clan Transport",
+    "cls": "Khtukhao class (Aslan)",
+    "role": "Transport",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": 78
+    },
+    "tl": 12,
+    "tons": 600,
+    "hull": "Standard",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 2,
+    "jump": 2,
+    "power": 255,
+    "fuel": "J-2, 4 weeks of operation",
+    "structure": 240,
+    "computer": "Computer/5bis",
+    "sensors": "Civilian Grade",
+    "bridge": "Standard",
+    "weapons": [],
+    "staterooms": 25,
+    "lowBerths": 30,
+    "barracks": 0,
+    "cargo": 149,
+    "craft": [
+      "Shuttle"
+    ],
+    "systems": [
+      "Shrine",
+      "Docking Space (95 tons)"
+    ],
+    "software": [
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Purser",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 2
+      }
+    ],
+    "total": 187.662,
+    "purchase": 187.662,
+    "maintenance": 15639,
+    "fuelTons": 122,
+    "powerReq": {
+      "basic": 120,
+      "mDrive": 120,
+      "jDrive": 120,
+      "sensors": 1,
+      "weapons": 0,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": true,
+      "fib": false
+    },
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 0
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-owatarl-tender",
+    "name": "Tender",
+    "cls": "Owatarl class (Aslan)",
+    "role": "Tender",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": 80
+    },
+    "tl": 12,
+    "tons": 600,
+    "hull": "Dispersed",
+    "armour": {
+      "type": "Crystaliron",
+      "value": 4
+    },
+    "thrust": 1,
+    "jump": 2,
+    "power": 255,
+    "fuel": "J-2, 4 weeks of operation",
+    "structure": 240,
+    "computer": "Computer/10",
+    "sensors": "Military Grade",
+    "bridge": "Standard",
+    "weapons": [
+      {
+        "name": "Triple Turret (beam lasers x2, sandcaster)",
+        "mount": "Turret",
+        "count": 3,
+        "perMount": 3,
+        "mountPower": 1,
+        "mixed": [
+          {
+            "tl": 10,
+            "range": "Medium",
+            "power": 4,
+            "damage": "1D",
+            "cost": 0.5,
+            "traits": "(beam laser turrets DM+4 to attack)",
+            "source": "High Guard turret weapon table"
+          },
+          {
+            "tl": 10,
+            "range": "Medium",
+            "power": 4,
+            "damage": "1D",
+            "cost": 0.5,
+            "traits": "(beam laser turrets DM+4 to attack)",
+            "source": "High Guard turret weapon table"
+          },
+          {
+            "tl": 9,
+            "range": "Special",
+            "power": 0,
+            "damage": "Special",
+            "cost": 0.25,
+            "traits": "--",
+            "source": "High Guard turret weapon table"
+          }
+        ],
+        "names": [
+          "Beam Laser",
+          "Beam Laser",
+          "Sandcaster"
+        ]
+      }
+    ],
+    "staterooms": 10,
+    "lowBerths": 0,
+    "barracks": 0,
+    "cargo": 211,
+    "craft": [
+      "Shuttle"
+    ],
+    "systems": [
+      "Sandcaster Barrels x20",
+      "Shrine",
+      "Docking Space (95 tons)"
+    ],
+    "software": [
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Fire Control",
+        "rating": 2,
+        "tl": 10,
+        "bw": 10
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 2
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Purser/Executive Officer",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 2
+      },
+      {
+        "role": "Gunner",
+        "count": 3
+      }
+    ],
+    "total": 165.027,
+    "purchase": 165.027,
+    "maintenance": 13752,
+    "fuelTons": 122,
+    "powerReq": {
+      "basic": 120,
+      "mDrive": 60,
+      "jDrive": 120,
+      "sensors": 2,
+      "weapons": 27,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 10,
+      "bis": false,
+      "fib": false
+    },
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 10
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-ekawsiykua-escort",
+    "name": "Escort",
+    "cls": "Ekawsiykua class (Aslan)",
+    "role": "Warship",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": 82
+    },
+    "tl": 13,
+    "tons": 800,
+    "hull": "Dispersed",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 4,
+    "jump": 4,
+    "power": 540,
+    "fuel": "J-4, 4 weeks of operation",
+    "structure": 320,
+    "computer": "Computer/20",
+    "sensors": "Improved",
+    "bridge": "Standard",
+    "weapons": [
+      {
+        "name": "Triple Turret (pulse lasers)",
+        "mount": "Turret",
+        "count": 3,
+        "perMount": 3,
+        "mountPower": 1,
+        "stats": {
+          "tl": 9,
+          "range": "Long",
+          "power": 4,
+          "damage": "2D",
+          "cost": 1,
+          "traits": "--",
+          "source": "High Guard turret weapon table"
+        }
+      },
+      {
+        "name": "Triple Turret (missile racks)",
+        "mount": "Turret",
+        "count": 3,
+        "perMount": 3,
+        "mountPower": 1,
+        "stats": {
+          "tl": 7,
+          "range": "Special",
+          "power": 0,
+          "damage": "4D",
+          "cost": 0.75,
+          "traits": "Smart",
+          "source": "High Guard turret weapon table"
+        }
+      },
+      {
+        "name": "Triple Turret (sandcasters)",
+        "mount": "Turret",
+        "count": 2,
+        "perMount": 3,
+        "mountPower": 1,
+        "stats": {
+          "tl": 9,
+          "range": "Special",
+          "power": 0,
+          "damage": "Special",
+          "cost": 0.25,
+          "traits": "--",
+          "source": "High Guard turret weapon table"
+        }
+      }
+    ],
+    "staterooms": 20,
+    "lowBerths": 0,
+    "barracks": 0,
+    "cargo": 19,
+    "craft": [
+      "Pinnace with pulse laser x2",
+      "Light Fighters x5"
+    ],
+    "systems": [
+      "Missiles x240",
+      "Sandcaster Barrels x240",
+      "Shrine",
+      "Docking Space (40 tons) x2",
+      "Docking Space (10 tons) x5"
+    ],
+    "software": [
+      {
+        "name": "Jump Control",
+        "rating": 4,
+        "tl": 13,
+        "bw": 20
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Fire Control",
+        "rating": 4,
+        "tl": 12,
+        "bw": 20
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Purser/Executive Officer",
+        "count": 1
+      },
+      {
+        "role": "Officer",
+        "count": 3
+      },
+      {
+        "role": "Pilot",
+        "count": 7
+      },
+      {
+        "role": "Medic",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 5
+      },
+      {
+        "role": "Maintenance",
+        "count": 1
+      },
+      {
+        "role": "Gunner",
+        "count": 10
+      },
+      {
+        "role": "Marine",
+        "count": 10
+      }
+    ],
+    "total": 400.464,
+    "purchase": 400.464,
+    "maintenance": 33372,
+    "fuelTons": 324,
+    "powerReq": {
+      "basic": 160,
+      "mDrive": 320,
+      "jDrive": 320,
+      "sensors": 4,
+      "weapons": 44,
+      "other": []
+    },
+    "computerSpec": {
+      "processor": 20,
+      "bis": false,
+      "fib": false
+    },
+    "softwareBw": {
+      "jumpControl": 20,
+      "other": 20
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-aositaoh-cruiser",
+    "name": "Cruiser",
+    "cls": "Aositaoh class (Aslan)",
+    "role": "Warship",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": 84
+    },
+    "tl": 12,
+    "tons": 1000,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "Crystaliron",
+      "value": 6
+    },
+    "thrust": 4,
+    "jump": 3,
+    "power": 705,
+    "fuel": "J-3, 4 weeks of operation",
+    "structure": 400,
+    "computer": "Computer/20",
+    "sensors": "Improved",
+    "bridge": "Holographic Controls",
+    "weapons": [
+      {
+        "name": "Triple Turret (pulse lasers)",
+        "mount": "Turret",
+        "count": 6,
+        "perMount": 3,
+        "mountPower": 1,
+        "stats": {
+          "tl": 9,
+          "range": "Long",
+          "power": 4,
+          "damage": "2D",
+          "cost": 1,
+          "traits": "--",
+          "source": "High Guard turret weapon table"
+        }
+      },
+      {
+        "name": "Triple Turret (missile racks)",
+        "mount": "Turret",
+        "count": 3,
+        "perMount": 3,
+        "mountPower": 1,
+        "stats": {
+          "tl": 7,
+          "range": "Special",
+          "power": 0,
+          "damage": "4D",
+          "cost": 0.75,
+          "traits": "Smart",
+          "source": "High Guard turret weapon table"
+        }
+      },
+      {
+        "name": "Triple Turret (sandcasters)",
+        "mount": "Turret",
+        "count": 1,
+        "perMount": 3,
+        "mountPower": 1,
+        "stats": {
+          "tl": 9,
+          "range": "Special",
+          "power": 0,
+          "damage": "Special",
+          "cost": 0.25,
+          "traits": "--",
+          "source": "High Guard turret weapon table"
+        }
+      }
+    ],
+    "staterooms": 54,
+    "lowBerths": 0,
+    "barracks": 0,
+    "cargo": 13,
+    "craft": [
+      "Pinnace x2",
+      "Air/Raft x2",
+      "ATV x4"
+    ],
+    "systems": [
+      "Missiles x216",
+      "Sandcaster Barrels x120",
+      "Fuel Processor (60 tons/day)",
+      "Fuel Scoops",
+      "Shrine",
+      "Docking Space (40 tons) x2",
+      "Docking Space (4 tons) x2",
+      "Docking Space (10 tons) x4"
+    ],
+    "software": [
+      {
+        "name": "Jump Control",
+        "rating": 3,
+        "tl": 12,
+        "bw": 15
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Fire Control",
+        "rating": 4,
+        "tl": 12,
+        "bw": 20
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Purser/Executive Officer",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 2
+      },
+      {
+        "role": "Engineer",
+        "count": 5
+      },
+      {
+        "role": "Maintenance",
+        "count": 2
+      },
+      {
+        "role": "Gunner",
+        "count": 10
+      },
+      {
+        "role": "Marine",
+        "count": 80
+      }
+    ],
+    "total": 467.48,
+    "purchase": 467.48,
+    "maintenance": 38957,
+    "fuelTons": 305,
+    "powerReq": {
+      "basic": 200,
+      "mDrive": 400,
+      "jDrive": 300,
+      "sensors": 4,
+      "weapons": 82,
+      "other": [
+        [
+          "Fuel Processor",
+          3
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 20,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "The book prints the purchase cost as MCr4567.48, which looks like a typo for the table total of MCr467.48; the total is stored. Carries a launch, two pinnaces, four ATVs and four air/rafts: two full platoons from orbit.",
+    "softwareBw": {
+      "jumpControl": 15,
+      "other": 20
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-hkisyeleaa-slaver",
+    "name": "Slaver",
+    "cls": "Hkisyeleaa class (Aslan)",
+    "role": "Transport",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": 87
+    },
+    "tl": 12,
+    "tons": 1000,
+    "hull": "Streamlined",
+    "armour": {
+      "type": "None",
+      "value": 0
+    },
+    "thrust": 2,
+    "jump": 2,
+    "power": 510,
+    "fuel": "J-2, 4 weeks of operation",
+    "structure": 400,
+    "computer": "Computer/5bis",
+    "sensors": "Military Grade",
+    "bridge": "Standard",
+    "weapons": [
+      {
+        "name": "Triple Turret (beam laser, missile rack, sandcaster)",
+        "mount": "Turret",
+        "count": 3,
+        "perMount": 3,
+        "mountPower": 1,
+        "mixed": [
+          {
+            "tl": 10,
+            "range": "Medium",
+            "power": 4,
+            "damage": "1D",
+            "cost": 0.5,
+            "traits": "(beam laser turrets DM+4 to attack)",
+            "source": "High Guard turret weapon table"
+          },
+          {
+            "tl": 7,
+            "range": "Special",
+            "power": 0,
+            "damage": "4D",
+            "cost": 0.75,
+            "traits": "Smart",
+            "source": "High Guard turret weapon table"
+          },
+          {
+            "tl": 9,
+            "range": "Special",
+            "power": 0,
+            "damage": "Special",
+            "cost": 0.25,
+            "traits": "--",
+            "source": "High Guard turret weapon table"
+          }
+        ],
+        "names": [
+          "Beam Laser",
+          "Missile Rack",
+          "Sandcaster"
+        ]
+      }
+    ],
+    "staterooms": 12,
+    "lowBerths": 750,
+    "barracks": 0,
+    "cargo": 114,
+    "craft": [
+      "ATVs x8"
+    ],
+    "systems": [
+      "Missiles x36",
+      "Sandcaster Barrels x60",
+      "Fuel Processor (60 tons/day)",
+      "Fuel Scoops",
+      "Shrine",
+      "Docking Space (10 tons) x8"
+    ],
+    "software": [
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 2
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Purser",
+        "count": 1
+      },
+      {
+        "role": "Engineer",
+        "count": 4
+      },
+      {
+        "role": "Maintenance",
+        "count": 1
+      },
+      {
+        "role": "Gunner",
+        "count": 3
+      }
+    ],
+    "total": 302.327,
+    "purchase": 302.327,
+    "maintenance": 25194,
+    "fuelTons": 204,
+    "powerReq": {
+      "basic": 200,
+      "mDrive": 200,
+      "jDrive": 200,
+      "sensors": 4,
+      "weapons": 15,
+      "other": [
+        [
+          "Fuel Processor",
+          3
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 5,
+      "bis": true,
+      "fib": false
+    },
+    "notes": "A converted agricultural transport; the 750 low berths were meant for food animals. The book says it can carry 1,500 if the captain crams two bodies into each berth, which is highly dangerous.",
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 0
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-halaheike-pocket-warship",
+    "name": "Pocket Warship",
+    "cls": "Halaheike class (Aslan)",
+    "role": "Warship",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": 90
+    },
+    "tl": 14,
+    "tons": 1200,
+    "hull": "Streamlined, Reinforced",
+    "armour": {
+      "type": "Bonded Superdense",
+      "value": 10
+    },
+    "thrust": 3,
+    "jump": 3,
+    "power": 720,
+    "fuel": "J-3, 4 weeks of operation",
+    "structure": 528,
+    "computer": "Computer/30fib",
+    "sensors": "Improved",
+    "bridge": "Holographic Controls",
+    "weapons": [
+      {
+        "name": "Small Particle Beam Bay",
+        "mount": "Bay",
+        "count": 2,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": null,
+          "range": null,
+          "power": 27,
+          "damage": null,
+          "cost": null,
+          "traits": "Small particle beam bay: stats not entered; power 27 each is what is left of the book's weapon total of 112",
+          "source": "derived"
+        }
+      },
+      {
+        "name": "Triple Turret (beam lasers)",
+        "mount": "Turret",
+        "count": 4,
+        "perMount": 3,
+        "mountPower": 1,
+        "stats": {
+          "tl": 10,
+          "range": "Medium",
+          "power": 4,
+          "damage": "1D",
+          "cost": 0.5,
+          "traits": "(beam laser turrets DM+4 to attack)",
+          "source": "High Guard turret weapon table"
+        }
+      },
+      {
+        "name": "Triple Turret (missile racks x2, sandcaster)",
+        "mount": "Turret",
+        "count": 6,
+        "perMount": 3,
+        "mountPower": 1,
+        "mixed": [
+          {
+            "tl": 7,
+            "range": "Special",
+            "power": 0,
+            "damage": "4D",
+            "cost": 0.75,
+            "traits": "Smart",
+            "source": "High Guard turret weapon table"
+          },
+          {
+            "tl": 7,
+            "range": "Special",
+            "power": 0,
+            "damage": "4D",
+            "cost": 0.75,
+            "traits": "Smart",
+            "source": "High Guard turret weapon table"
+          },
+          {
+            "tl": 9,
+            "range": "Special",
+            "power": 0,
+            "damage": "Special",
+            "cost": 0.25,
+            "traits": "--",
+            "source": "High Guard turret weapon table"
+          }
+        ],
+        "names": [
+          "Missile Rack",
+          "Missile Rack",
+          "Sandcaster"
+        ]
+      }
+    ],
+    "staterooms": 30,
+    "lowBerths": 0,
+    "barracks": 0,
+    "cargo": 65,
+    "craft": [
+      "Light Fighters x10",
+      "Launch x2"
+    ],
+    "systems": [
+      "Missiles x360",
+      "Sandcaster Barrels x240",
+      "Fuel Processor (60 tons/day)",
+      "Fuel Scoops",
+      "Shrine",
+      "Docking Space (10 tons) x10",
+      "Docking Space (20 tons) x2"
+    ],
+    "software": [
+      {
+        "name": "Jump Control",
+        "rating": 3,
+        "tl": 12,
+        "bw": 15
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Fire Control",
+        "rating": 5,
+        "tl": 13,
+        "bw": 25
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 14
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Executive Officer",
+        "count": 1
+      },
+      {
+        "role": "Officer",
+        "count": 3
+      },
+      {
+        "role": "Engineer",
+        "count": 5
+      },
+      {
+        "role": "Maintenance",
+        "count": 3
+      },
+      {
+        "role": "Gunner",
+        "count": 12
+      }
+    ],
+    "total": 720.864,
+    "purchase": 720.864,
+    "maintenance": 60072,
+    "fuelTons": 364,
+    "powerReq": {
+      "basic": 240,
+      "mDrive": 360,
+      "jDrive": 360,
+      "sensors": 4,
+      "weapons": 112,
+      "other": [
+        [
+          "Fuel Processor",
+          3
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 30,
+      "bis": false,
+      "fib": true
+    },
+    "notes": "The bay can be converted to hold troops or about 200 low berths. Known for maintenance problems and jump drive failures.",
+    "softwareBw": {
+      "jumpControl": 15,
+      "other": 25
+    },
+    "draft": true
+  },
+  {
+    "id": "b3-sakhai-assault-carrier",
+    "name": "Assault Carrier",
+    "cls": "Sakhai class (Aslan)",
+    "role": "Warship",
+    "source": {
+      "book": "Pirates of Drinax, Book 3: Ships of the Reach",
+      "page": 93
+    },
+    "tl": 12,
+    "tons": 2000,
+    "hull": "Streamlined, Reinforced",
+    "armour": {
+      "type": "Crystaliron",
+      "value": 8
+    },
+    "thrust": 3,
+    "jump": 3,
+    "power": 1500,
+    "fuel": "J-3, 4 weeks of operation",
+    "structure": 880,
+    "computer": "Computer/25",
+    "sensors": "Improved",
+    "bridge": "Standard",
+    "weapons": [
+      {
+        "name": "Medium Fusion Gun Bay",
+        "mount": "Bay",
+        "count": 1,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": null,
+          "range": null,
+          "power": 90,
+          "damage": null,
+          "cost": null,
+          "traits": "Medium fusion gun bay: stats not entered; power 90 is what is left of the book's weapon total of 218",
+          "source": "derived"
+        }
+      },
+      {
+        "name": "Small Missile Bay",
+        "mount": "Bay",
+        "count": 2,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": null,
+          "range": null,
+          "power": 0,
+          "damage": null,
+          "cost": null,
+          "traits": "Small missile bay: stats not entered",
+          "source": "derived"
+        }
+      },
+      {
+        "name": "Particle Barbette",
+        "mount": "Barbette",
+        "count": 3,
+        "perMount": 1,
+        "mountPower": 0,
+        "stats": {
+          "tl": 11,
+          "range": "Very Long",
+          "power": 15,
+          "damage": "4D",
+          "cost": 8,
+          "traits": "Radiation",
+          "source": "High Guard barbette table (given by user)"
+        }
+      },
+      {
+        "name": "Triple Turret (beam lasers)",
+        "mount": "Turret",
+        "count": 6,
+        "perMount": 3,
+        "mountPower": 1,
+        "stats": {
+          "tl": 10,
+          "range": "Medium",
+          "power": 4,
+          "damage": "1D",
+          "cost": 0.5,
+          "traits": "(beam laser turrets DM+4 to attack)",
+          "source": "High Guard turret weapon table"
+        }
+      },
+      {
+        "name": "Triple Turret (sandcasters)",
+        "mount": "Turret",
+        "count": 5,
+        "perMount": 3,
+        "mountPower": 1,
+        "stats": {
+          "tl": 9,
+          "range": "Special",
+          "power": 0,
+          "damage": "Special",
+          "cost": 0.25,
+          "traits": "--",
+          "source": "High Guard turret weapon table"
+        }
+      }
+    ],
+    "staterooms": 17,
+    "lowBerths": 200,
+    "barracks": 160,
+    "cargo": 6,
+    "craft": [],
+    "systems": [
+      "Missiles x600",
+      "Sandcaster Barrels x120",
+      "Fuel Processor (120 tons/day)",
+      "Fuel Scoops",
+      "Shrine",
+      "Armoury",
+      "Briefing Room"
+    ],
+    "software": [
+      {
+        "name": "Jump Control",
+        "rating": 2,
+        "tl": 11,
+        "bw": 10
+      },
+      {
+        "name": "Library",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Manoeuvre",
+        "rating": null,
+        "tl": 8,
+        "bw": 0
+      },
+      {
+        "name": "Fire Control",
+        "rating": 5,
+        "tl": 13,
+        "bw": 25
+      }
+    ],
+    "crew": [
+      {
+        "role": "Captain",
+        "count": 1
+      },
+      {
+        "role": "Pilot",
+        "count": 1
+      },
+      {
+        "role": "Astrogator",
+        "count": 1
+      },
+      {
+        "role": "Purser/Executive Officer",
+        "count": 1
+      },
+      {
+        "role": "Officer",
+        "count": 18
+      },
+      {
+        "role": "Pilot",
+        "count": 2
+      },
+      {
+        "role": "Engineer",
+        "count": 5
+      },
+      {
+        "role": "Maintenance",
+        "count": 4
+      },
+      {
+        "role": "Gunner",
+        "count": 18
+      },
+      {
+        "role": "Marine",
+        "count": 160
+      }
+    ],
+    "total": 857.15,
+    "purchase": 857.15,
+    "maintenance": 71429,
+    "fuelTons": 610,
+    "powerReq": {
+      "basic": 400,
+      "mDrive": 600,
+      "jDrive": 600,
+      "sensors": 4,
+      "weapons": 218,
+      "other": [
+        [
+          "Fuel Processor",
+          6
+        ]
+      ]
+    },
+    "computerSpec": {
+      "processor": 25,
+      "bis": false,
+      "fib": false
+    },
+    "notes": "Cargo (6) is the last row of the tons column. Carries 160 marines in barracks plus 200 low berths.",
+    "softwareBw": {
+      "jumpControl": 10,
+      "other": 25
+    },
+    "draft": true
   }
 ];

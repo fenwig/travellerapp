@@ -25,6 +25,7 @@ function catalogueToRecord(s, opts) {
   const mounts = [], weapons = [];
   let weaponPower = 0, mountPower = 0;
   s.weapons.forEach(w => {
+    if (!MOUNT_TYPE_BY_COUNT[w.mount]) warnings.push('The record has no "' + w.mount + '" mount: "' + w.name + '" is added as a Fixed Mount');
     const mountType = (MOUNT_TYPE_BY_COUNT[w.mount] || (() => 'Fixed Mount'))(w.perMount || 1);
     const slots = mountType === 'Triple Turret' ? 3 : mountType === 'Double Turret' ? 2 : 1;
     const mountIndex = mounts.length;
