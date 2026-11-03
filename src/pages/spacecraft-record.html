@@ -243,9 +243,10 @@
           </div>
 
           <!-- Current world: used by the Passenger, Freight, Buy Cargo and Sell Cargo calculators. Saves on its own (no Edit mode). -->
-          <div class="ship-meta" style="margin-top:6px;gap:8px 16px;align-items:center">
-            <div><span>Current World:</span><select class="ship-meta-input" id="cw-pick" style="width:190px;display:none" onchange="pickCurrentWorld(this.value)"><option value="">Pick a listed world…</option></select> <input class="ship-meta-input" id="cw-name" placeholder="World name" style="width:150px" /></div>
-            <div><span>Profile:</span><input class="ship-meta-input" id="cw-uwp" placeholder="A9B2887-A" maxlength="10" style="width:100px;text-transform:uppercase" /></div>
+          <div class="ship-meta" style="margin-top:6px;gap:8px 16px;align-items:center;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:6px"><span>Current World:</span><input class="ship-meta-input" id="cw-name" placeholder="World name" style="width:150px;box-sizing:border-box" /></div>
+            <div style="display:flex;align-items:center;gap:6px"><span>Profile:</span><input class="ship-meta-input" id="cw-uwp" placeholder="A9B2887-A" maxlength="10" style="width:100px;text-transform:uppercase;box-sizing:border-box" /></div>
+            <select class="ship-meta-input" id="cw-pick" style="width:190px;display:none;box-sizing:border-box" onchange="pickCurrentWorld(this.value)"><option value="">Pick a listed world…</option></select>
             <button class="btn-primary" style="width:auto;padding:4px 14px;font-size:0.8rem" onclick="saveCurrentWorld()">Update Location</button>
             <span id="cw-msg" style="font-size:0.8rem"></span>
           </div>

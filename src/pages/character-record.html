@@ -349,6 +349,7 @@
               <div class="view-only"><span>Homeworld</span><span id="disp-homeworld">—</span></div>
               <div class="edit-only"><span>Homeworld</span><input class="role-input" id="edit-homeworld" placeholder="Homeworld" /></div>
               <div><span>Age</span><span id="disp-age">—</span></div>
+              <div><span>Currently Onboard</span><span id="disp-onboard">—</span></div>
               <div class="view-only"><span>Primary Role</span><span id="disp-primary">—</span></div>
               <div class="view-only" id="disp-secondary-wrap" style="display:none"><span>Secondary Role</span><span id="disp-secondary"></span></div>
               <div class="edit-only"><span>Primary Role</span><input class="role-input" id="edit-primary" placeholder="Primary Role" /></div>
@@ -785,6 +786,15 @@ async function loadCharacter() {
   await renderWounds();
 }
 
+// The ship this character is aboard (set on the Roster page)
+async function showOnboardShip() {
+  const el = document.getElementById('disp-onboard');
+  el.textContent = '—';
+  if (!character.onboard_ship_id) return;
+  const { data } = await supabaseClient.from('spacecraft').select('name').eq('id', character.onboard_ship_id).maybeSingle();
+  if (data && data.name) el.textContent = data.name;
+}
+
 // ── Header ─────────────────────────────────────────────────
 function renderHeader() {
   document.getElementById('disp-name').textContent      = character.name || '—';
@@ -792,6 +802,7 @@ function renderHeader() {
   document.getElementById('disp-homeworld').textContent = character.homeworld || '—';
   document.getElementById('edit-homeworld').value        = character.homeworld || '';
   document.getElementById('disp-age').textContent       = character.age || '—';
+  showOnboardShip();
   document.getElementById('disp-primary').textContent   = character.primary_role || '—';
   document.getElementById('edit-primary').value          = character.primary_role || '';
   const sec = character.secondary_role;
