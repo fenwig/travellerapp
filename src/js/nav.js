@@ -22,6 +22,7 @@ const NAV_GROUPS = [
     ['attitudes.html',        'Attitudes (GM)', false, true],   // fourth value: GM only
     ['player-attitudes.html', 'Port Attitudes'],
     ['reach-map.html',        'Trojan Reach Map'],
+    ['fleet.html',            'Fleet'],
     ['ship-catalogue.html',   'Ship Catalogue']
   ]},
   { id: 'reference', label: 'Reference', items: [
