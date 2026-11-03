@@ -39,11 +39,6 @@
     .sc-pick { margin-bottom: 6px; }
     .sc-pick select { background: #080d12; border: 1px solid #0a4a60; color: #b0d8e8; border-radius: 4px; padding: 2px 6px; font-size: 0.8rem; }
     .sc-pick-info { color: #4a9ab8; font-size: 0.76rem; }
-    .sc-ammo { margin-bottom: 14px; font-size: 0.8rem; color: #b0d8e8; }
-    .sc-ammo summary { cursor: pointer; color: #00e5ff; }
-    .sc-ammo table { border-collapse: collapse; margin: 8px 18px 8px 0; display: inline-table; vertical-align: top; }
-    .sc-ammo th, .sc-ammo td { border: 1px solid #0a4a60; padding: 2px 8px; text-align: left; }
-    .sc-ammo th { color: #4a9ab8; font-weight: 600; }
     .sc-add { margin-top: 8px; }
     .sc-add-btn { background: transparent; border: 1px solid #00e5ff; color: #00e5ff; border-radius: 4px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer; }
     .sc-add-status { background: #080d12; border: 1px solid #0a4a60; color: #b0d8e8; border-radius: 4px; padding: 4px 6px; font-size: 0.78rem; }
@@ -66,7 +61,6 @@
     <main class="page-main">
       <h1 class="page-title">SHIP CATALOGUE</h1>
       <p class="calc-intro" style="color:#b0d8e8;font-size:0.88rem;max-width:860px;margin-bottom:14px">Published ship designs from High Guard and Pirates of Drinax. Each card shows its weapons the way they are used in combat: range, damage, power and ammunition. Costs are in MCr, maintenance in Cr per month.</p>
-      <details class="sc-ammo"><summary>Missile and torpedo types</summary><div id="sc-ammo"></div></details>
       <div class="sc-bar">
         <input id="sc-q" placeholder="Search ships…" oninput="draw()" />
         <select id="sc-polity" onchange="draw()"><option value="">All polities</option></select>
@@ -260,11 +254,6 @@
         .forEach(x => psel.insertAdjacentHTML('beforeend', `<option>${x}</option>`));
       const sel = document.getElementById('sc-role');
       [...new Set(SHIP_CATALOGUE.map(s => s.role))].sort().forEach(r => sel.insertAdjacentHTML('beforeend', `<option>${esc(r)}</option>`));
-      const cr = m => 'Cr' + Math.round(m * 1e6).toLocaleString('en-US');
-      const tbl = (title, per, rows) => '<table><tr><th colspan="6">' + title + '</th></tr><tr><th>Type</th><th>TL</th><th>Thrust</th><th>Damage</th><th>Cost per ' + per + '</th><th>Traits</th></tr>' +
-        rows.map(r => '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + esc(r[3]) + '</td><td>' + cr(r[4]) + '</td><td>' + esc(r[5]) + '</td></tr>').join('') + '</table>';
-      document.getElementById('sc-ammo').innerHTML = tbl('Missiles (12 per ton)', 12, MISSILES) + tbl('Torpedoes', 3, TORPEDOES) +
-        '<div style="color:#4a9ab8;font-size:0.76rem">Anti-torpedo missiles do only 1D to conventional targets. Damage multiples do not apply to missiles or torpedoes.</div>';
       draw();
     })();
   </script>
