@@ -21,7 +21,8 @@ const NAV_GROUPS = [
     ['piracy-encounter.html', 'Piracy Encounter (GM)', false, true],
     ['player-attitudes.html', 'Port Attitudes'],
     ['reach-map.html',        'Trojan Reach Map'],
-    ['attitudes.html',        'Attitudes (GM)', false, true]   // fourth value: GM only
+    ['attitudes.html',        'Attitudes (GM)', false, true],   // fourth value: GM only
+    ['verify-data.html',      'Verify Data (temp, GM)', false, true]
   ]},
   { id: 'reference', label: 'Reference', items: [
     ['general-rules.html',        'General Rules'],
